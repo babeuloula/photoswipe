@@ -1,5 +1,6 @@
 # CI : qualité (ktlint, detekt, Android Lint), tests unitaires et build debug à chaque push sur main et sur chaque PR.
 # À faire évoluer avec le projet : chaque nouveau check (Konsist, tests instrumentés, ...) y est ajouté.
+# Le nom du job est un check obligatoire du ruleset de main (ADR 0004) : le renommer impose de mettre à jour le ruleset.
 name: CI
 
 on:
@@ -30,8 +31,12 @@ jobs:
           java-version: "17"
 
       # Valide aussi le wrapper Gradle (protection contre un gradle-wrapper.jar altéré).
+      # Cache Gradle (dépendances, build cache, wrapper) : écrit uniquement par les runs de main,
+      # lu seul par les PR, pour qu'une branche ne pollue pas le cache des autres.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Unit tests (modules + build-logic conventions)
         run: ./gradlew test --console=plain
@@ -41,6 +46,18 @@ jobs:
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --console=plain
+
+      # Récapitulatif des tests JUnit dans le résumé du run, même en cas d'échec d'une étape.
+      # annotate_only : annotations et résumé seulement, sans créer de check (aucune permission en écriture).
+      - name: Test summary
+        if: ${{ !cancelled() }}
+        uses: mikepenz/action-junit-report@v6
+        with:
+          report_paths: "**/build/test-results/**/TEST-*.xml"
+          annotate_only: true
+          require_tests: true
+          detailed_summary: true
+          include_passed: true
 
       - name: Upload reports
         if: failure()

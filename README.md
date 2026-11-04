@@ -1,5 +1,7 @@
 # PhotoSwipe
 
+[![CI](https://github.com/babeuloula/photoswipe/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/babeuloula/photoswipe/actions/workflows/ci.yml)
+
 Application Android qui fait revoir chaque jour les photos et vidéos prises le même jour lors des années précédentes. On les trie d'un geste : à gauche pour marquer à supprimer, à droite pour garder, vers le haut pour mettre en favori ou partager. L'application est 100 % locale, sans accès à Internet.
 
 ## Documentation
