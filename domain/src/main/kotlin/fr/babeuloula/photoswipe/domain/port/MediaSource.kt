@@ -22,8 +22,9 @@ interface MediaSource {
     suspend fun mediaTakenIn(ranges: List<OpenEndRange<Instant>>): List<MediaItem>
 
     /**
-     * Médias encore présents parmi [ids]. Un identifiant absent du résultat désigne un média
-     * supprimé ou mis à la corbeille : c'est ainsi qu'on repère les entrées orphelines (SPEC §6).
+     * Médias encore présents et accessibles parmi [ids]. Un identifiant absent du résultat désigne
+     * un média supprimé, mis à la corbeille **ou hors de la sélection** quand l'accès est partiel
+     * (Android 14+, SPEC §4) : il ne suffit donc pas à conclure qu'une entrée est orpheline (SPEC §6).
      */
     suspend fun mediaByIds(ids: Set<MediaId>): List<MediaItem>
 }

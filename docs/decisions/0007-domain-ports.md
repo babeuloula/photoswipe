@@ -11,7 +11,7 @@ La SPEC (§5.2) nomme cinq ports (`MediaSource`, `ReviewRepository`, `SettingsRe
 - **Package** : `fr.babeuloula.photoswipe.domain.port`. Il ne contient **que des interfaces** ; une règle Konsist le vérifie (`domain ports declare only interfaces`). Les types de données qu'ils échangent vont dans `model`.
 - **Appels `suspend`, sans `Flow`** : Room et DataStore font des entrées-sorties, donc les lectures et écritures sont des fonctions `suspend`. `suspend` est un mot-clé du langage et n'ajoute aucune dépendance au domaine. `Flow` demanderait kotlinx-coroutines-core dans `:domain` alors qu'aucun besoin réactif n'est encore écrit ; il sera ajouté, avec sa justification, par le premier ticket qui en a besoin. `MediaActionRequestFactory` et `ReminderScheduler` restent synchrones : `createTrashRequest` et la mise en file WorkManager ne bloquent pas.
 - **Plages de dates** : `MediaSource.mediaTakenIn` reçoit des `OpenEndRange<Instant>` (`début..<fin`), type de la bibliothèque standard Kotlin, stable. Le domaine calcule les plages (un jour par année, dans le fuseau de l'appareil), `:data` les traduit en millisecondes epoch sans fonction SQL de date (SPEC §5.3).
-- **Orphelins** : `MediaSource.mediaByIds` renvoie les médias encore présents ; `ReviewRepository.knownMediaIds` et `deleteAllFor` permettent de purger les autres (SPEC §6). La même lecture par identifiants fournit les `MediaItem` (et donc leur URI) des demandes de corbeille et de favori.
+- **Orphelins** : `MediaSource.mediaByIds` renvoie les médias encore présents et accessibles ; `ReviewRepository.knownMediaIds` et `deleteAllFor` permettent de purger les autres (SPEC §6). La même lecture par identifiants fournit les `MediaItem` (et donc leur URI) des demandes de corbeille et de favori.
 - **Nouveaux modèles** :
   - `ReviewEntry` : une ligne de décision (SPEC §6), avec `favoritePending`. Un favori est toujours gardé (SPEC §2) : `favoritePending` n'est accepté qu'avec `KEPT`.
   - `ReminderSettings` : rappel activé et heure. Par défaut **désactivé, à 18:00** : la permission `POST_NOTIFICATIONS` n'est demandée qu'au moment du réglage (SPEC §3.6), l'activer d'office n'aurait donc aucun effet.
@@ -26,5 +26,7 @@ La SPEC (§5.2) nomme cinq ports (`MediaSource`, `ReviewRepository`, `SettingsRe
 
 ## Conséquences
 - Les fakes de PS-15 implémentent ces interfaces en mémoire.
+- Avec l'accès partiel d'Android 14+, `mediaByIds` ne renvoie que les médias sélectionnés : la purge des orphelins ne doit pas tourner (ou doit se restreindre) tant que l'accès est partiel, sous peine d'effacer de vraies décisions.
+- L'écran a besoin de l'`IntentSender` caché derrière `MediaActionRequest`, mais `:app` n'importe `:data` que depuis `di` : le déballage passera par un adaptateur fourni par le package `di` (ticket de confirmation, epic 7).
 - Ajouter un `Flow` à un port imposera d'ajouter kotlinx-coroutines-core à `:domain` (justification dans `docs/architecture.md`).
 - Le rappel désactivé par défaut est un choix à valider avec Jérémy (complète le point 5 de la SPEC §16).
