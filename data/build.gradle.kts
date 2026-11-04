@@ -11,4 +11,6 @@ dependencies {
     implementation(project(":domain"))
 
     testImplementation(libs.junit4)
+    // Builders, fakes et FixedClock du domaine (SPEC §10).
+    testImplementation(testFixtures(project(":domain")))
 }

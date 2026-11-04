@@ -37,7 +37,7 @@ Règles :
 |---|---|---|---|
 | `:app` | `photoswipe.android.application`, `photoswipe.android.hilt`, `photoswipe.android.compose` | `fr.babeuloula.photoswipe` | Point d'entrée (`PhotoSwipeApplication`, `MainActivity`), assemblage Hilt (package `di`), UI Compose et thème Material 3 (package `ui`), écrans et ViewModels *(prévu)* |
 | `:data` | `photoswipe.android.library` | `fr.babeuloula.photoswipe.data` | Implémentations Android des ports : `MediaStoreMediaSource`, `RoomReviewRepository`, etc. *(prévu)* |
-| `:domain` | `photoswipe.jvm.library` | `fr.babeuloula.photoswipe.domain` | Modèles du package `model` (`MediaItem`, `ReviewDecision`, `ReviewDay`, `SessionSummary`…, ADR [0006](decisions/0006-domain-model-types.md)). Services purs du package `service` (`SameDayMatcher`, SPEC §3.1, y compris le 29 février ; `ReviewWindowProvider`, fenêtre de 7 jours lue sur la `Clock` injectée ; `DeckOrdering` *(prévu)*). Ports du package `port`, uniquement des interfaces aux appels `suspend` : `MediaSource`, `ReviewRepository`, `SettingsRepository`, `MediaActionRequestFactory` (demandes `MediaActionRequest` opaques) et `ReminderScheduler` (ADR [0007](decisions/0007-domain-ports.md)). Use cases *(prévu)* |
+| `:domain` | `photoswipe.jvm.library` | `fr.babeuloula.photoswipe.domain` | Modèles du package `model` (`MediaItem`, `ReviewDecision`, `ReviewDay`, `SessionSummary`…, ADR [0006](decisions/0006-domain-model-types.md)). Services purs du package `service` (`SameDayMatcher`, SPEC §3.1, y compris le 29 février ; `ReviewWindowProvider`, fenêtre de 7 jours lue sur la `Clock` injectée ; `DeckOrdering` *(prévu)*). Ports du package `port`, uniquement des interfaces aux appels `suspend` : `MediaSource`, `ReviewRepository`, `SettingsRepository`, `MediaActionRequestFactory` (demandes `MediaActionRequest` opaques) et `ReminderScheduler` (ADR [0007](decisions/0007-domain-ports.md)). Use cases *(prévu)*. Fixtures de test partagées dans `src/testFixtures` (plugin `java-test-fixtures`, package `fixtures`) : builders `aMediaItem()` et `aReviewEntry()`, `FakeMediaSource`, `FakeReviewRepository` et `FixedClock`, consommés par les tests de `:data` et `:app` via `testImplementation(testFixtures(project(":domain")))` |
 | `:architecture-tests` | `photoswipe.jvm.library` | `fr.babeuloula.photoswipe.architecture` | Tests d'architecture Konsist uniquement (aucun code de production). Dépend d'aucun module : Konsist lit les sources de `:app`, `:data` et `:domain`, déclarées en entrées de sa tâche `test` pour que Gradle la relance quand elles changent |
 
 ### Conventions Gradle (`build-logic/`)
@@ -49,7 +49,7 @@ La configuration commune est portée par des plugins de convention, dans le buil
 | `photoswipe.android.application` | `com.android.application`, `photoswipe.quality` | `compileSdk` 37, `minSdk` 33, `targetSdk` 37, toolchain JVM 17, Android Lint bloquant |
 | `photoswipe.android.library` | `com.android.library`, `photoswipe.quality` | `compileSdk` 37, `minSdk` 33, toolchain JVM 17, Android Lint bloquant |
 | `photoswipe.jvm.library` | `org.jetbrains.kotlin.jvm`, `photoswipe.quality` | toolchain JVM 17, tests sur la plateforme JUnit |
-| `photoswipe.quality` | `org.jlleitschuh.gradle.ktlint`, `io.gitlab.arturbosch.detekt` | ktlint et detekt bloquants, tâche `quality` par module (ktlint + detekt + Android Lint sur les modules Android). Appliqué d'office par les trois conventions ci-dessus (ADR [0003](decisions/0003-static-analysis-tooling.md)) |
+| `photoswipe.quality` | `org.jlleitschuh.gradle.ktlint`, `io.gitlab.arturbosch.detekt` | ktlint et detekt bloquants (detekt lit aussi `src/testFixtures`, absent de ses sources par défaut), tâche `quality` par module (ktlint + detekt + Android Lint sur les modules Android). Appliqué d'office par les trois conventions ci-dessus (ADR [0003](decisions/0003-static-analysis-tooling.md)) |
 | `photoswipe.android.hilt` | `com.google.devtools.ksp`, `com.google.dagger.hilt.android` | dépendances `hilt-android` et `hilt-compiler` (processeur via KSP, jamais kapt). À appliquer après une convention Android |
 | `photoswipe.android.compose` | `org.jetbrains.kotlin.plugin.compose` | `buildFeatures.compose`, BOM Compose (`implementation` et `testImplementation`), `ui`, `ui-tooling-preview`, et `ui-tooling` en `debugImplementation` seulement. À appliquer après une convention Android |
 
@@ -123,6 +123,7 @@ Relevées le 2026-11-03 sur les sources officielles (Google Maven, Maven Central
 | Compose BOM | 2026.09.00 | Compose UI 1.12.1, Material 3 1.4.0 |
 | Kotlin Compose compiler plugin | 2.4.21 | Même version que Kotlin |
 | Robolectric | 4.17 | Tests sur l'API 34 (ADR 0002) |
+| kotlinx-coroutines-test | 1.11.0 | Relevée le 2026-11-04 sur Maven Central |
 | Konsist | 0.18.1 | Dernière stable (la 1.0 n'est qu'en bêta), compilée avec Kotlin 2.4.21 |
 | ktlint-gradle (plugin) | 14.2.0 | |
 | ktlint | 1.8.0 | Moteur utilisé par le plugin, style `ktlint_official` |
@@ -145,12 +146,13 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Hilt Android Testing | `:app` (tests) | `@HiltAndroidTest` et `HiltAndroidRule` pour vérifier l'injection dans les tests |
 | Robolectric | `:app` (tests) | Exécute le framework Android sur la JVM : tests Hilt sans émulateur, en local comme en CI |
 | Robolectric `android-all-instrumented` | `:app` (tests) | Jar Android de l'API 34 résolu par Gradle (configuration `robolectricRuntime`) : Robolectric tourne hors ligne, sans téléchargement à chaque test ni erreur 429 de Maven Central en CI. Sa version suit celle de Robolectric |
+| kotlinx-coroutines-test | `:domain` (tests) | `runTest` pour appeler depuis les tests les fonctions `suspend` des ports et de leurs fakes (SPEC §11) |
 | Konsist | `:architecture-tests` (tests) | Tests d'architecture imposés par la SPEC §5.1 et §11 : lit le code Kotlin (imports, packages) de tous les modules, sans les compiler ni dépendre d'eux (ADR 0005) |
 | ktlint (plugin `org.jlleitschuh.gradle.ktlint`) | tous (build) | Format du code imposé par la SPEC §12 ; le plugin crée les tâches `ktlintCheck` et `ktlintFormat` par source set |
 | detekt | tous (build) | Analyse statique imposée par la SPEC §12 (complexité, code mort, mauvaises pratiques) |
 | `mikepenz/action-junit-report` | CI | Affiche le récapitulatif des tests JUnit dans le résumé du run GitHub Actions, sans fouiller les logs |
 
-Prévues dans la SPEC, ajoutées avec leur ticket : Navigation Compose, Room, DataStore, Coil 3, Media3 ExoPlayer, WorkManager, MockK, Turbine, kotlinx-coroutines-test.
+Prévues dans la SPEC, ajoutées avec leur ticket : Navigation Compose, Room, DataStore, Coil 3, Media3 ExoPlayer, WorkManager, MockK, Turbine.
 
 ## 7. CI
 

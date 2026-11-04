@@ -19,8 +19,14 @@ style:
     # Les aperçus (@Preview, @PreviewLightDark) sont privés et appelés uniquement par l'IDE.
     ignoreAnnotated: ['Preview', 'PreviewLightDark']
   MagicNumber:
-    # Les tests et les palettes de couleurs (Color(0xFF...)) sont faits de littéraux.
-    excludes: ['**/test/**', '**/ui/theme/**']
+    # Les tests, leurs fixtures et les palettes de couleurs (Color(0xFF...)) sont faits de littéraux.
+    excludes: ['**/test/**', '**/testFixtures/**', '**/ui/theme/**']
   # Le formatage relève de ktlint : la règle detekt ferait doublon.
   MaxLineLength:
     active: false
+
+complexity:
+  LongParameterList:
+    # Les builders de test (aMediaItem(), aReviewEntry()…) ont un paramètre par propriété du modèle,
+    # tous avec une valeur par défaut : c'est leur raison d'être.
+    excludes: ['**/test/**', '**/testFixtures/**']
