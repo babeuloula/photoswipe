@@ -12,6 +12,7 @@ robolectric = "4.17"
 ktlintGradle = "14.2.0"
 ktlint = "1.8.0"
 detekt = "1.23.8"
+konsist = "0.18.1"
 
 [libraries]
 # AndroidX
@@ -36,6 +37,7 @@ junit-bom = { module = "org.junit:junit-bom", version.ref = "junitBom" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 
 # Plugins Gradle utilisés par build-logic
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }

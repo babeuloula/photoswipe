@@ -33,7 +33,7 @@ Un petit script fourni dans le dépôt. Il télécharge automatiquement **la bon
 L'extension de Gradle, maintenue par Google, qui sait construire une application Android : gestion des ressources, du manifeste, de l'APK, etc.
 
 ### Module
-Un sous-projet Gradle, avec son propre code et sa propre configuration. Découper en modules impose des frontières : un module ne peut utiliser que les modules dont il dépend explicitement. PhotoSwipe a trois modules : `app`, `data` et `domain` (voir plus bas).
+Un sous-projet Gradle, avec son propre code et sa propre configuration. Découper en modules impose des frontières : un module ne peut utiliser que les modules dont il dépend explicitement. PhotoSwipe a trois modules : `app`, `data` et `domain` (voir plus bas), plus un module `architecture-tests` qui ne contient que des tests.
 
 ### Version catalog (`libs.versions.toml`)
 Un fichier unique qui liste toutes les bibliothèques et leurs versions. Les modules y font référence (`libs.junit4`) au lieu de répéter les numéros de version partout.
@@ -104,6 +104,11 @@ photoswipe/
 │       │   └── res/                  Ressources : textes (values/ en anglais, values-fr/ en français), thème de la fenêtre (themes.xml), icônes
 │       └── test/                     Tests unitaires du module (Robolectric pour ce qui touche à Android)
 ├── .editorconfig              Règles de mise en forme partagées par l'éditeur et ktlint
+├── architecture-tests/        Tests d'architecture (Konsist) : vérifient que chaque module n'utilise que ce qu'il a le droit d'utiliser
+│   ├── build.gradle.kts
+│   └── src/test/
+│       ├── kotlin/                   Les règles et leurs tests
+│       └── resources/fixtures/       Faux fichiers Kotlin (jamais compilés) qui servent d'exemples pour tester les règles
 ├── build-logic/               Plugins de convention : réglages Gradle communs à tous les modules
 │   └── convention/src/
 │       ├── main/kotlin/              Les plugins (Android, JVM, Hilt, Compose, qualité) et ProjectConfig (SDK, version de Java)
@@ -138,6 +143,8 @@ Une analogie avec un restaurant :
 - **`app`, la salle** : ce que voit l'utilisateur (les écrans, les gestes de swipe). C'est aussi là que tout est assemblé.
 
 Comme la recette ne dépend pas de la cuisine, on pourrait changer la manière de stocker les données sans toucher aux règles métier.
+
+Ces frontières sont vérifiées automatiquement par des **tests d'architecture** écrits avec **Konsist**, une bibliothèque qui lit le code Kotlin comme du texte structuré (fichiers, packages, imports). Si quelqu'un importe par exemple une classe Android dans `domain`, ou une classe de `data` dans un écran de `app`, `./gradlew test` échoue et la CI devient rouge.
 
 ## 3. Lancer le projet
 

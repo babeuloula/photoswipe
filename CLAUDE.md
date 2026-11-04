@@ -39,12 +39,13 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 - `:app` : UI, navigation, assemblage DI (modules Hilt dans le package `di`), point d'entrée Android (`fr.babeuloula.photoswipe`). Le thème Material 3 vit dans `ui/theme` (`PhotoSwipeTheme`) : les écrans lisent couleurs, typo et formes via `MaterialTheme`, jamais en dur.
 - `:data` : implémentations Android des ports du domaine : MediaStore, Room, DataStore, WorkManager (`fr.babeuloula.photoswipe.data`).
 - `:domain` : modèles, use cases, ports, en Kotlin JVM pur (`fr.babeuloula.photoswipe.domain`).
+- `:architecture-tests` : tests d'architecture Konsist seulement (ADR 0005). `:domain` n'importe ni `android.*`, ni `androidx.*`, ni `com.google.android.*`, ni rien du projet hors `…domain` ; `:app` n'importe `…data` que depuis son package `di`. Chaque règle est testée sur des fixtures (`src/test/resources/fixtures`). Un nouveau module ou une nouvelle règle de dépendance s'ajoute ici, et ses sources dans les entrées de la tâche `test` du module.
 - `build-logic/` (build inclus) : plugins de convention `photoswipe.android.application`, `photoswipe.android.library`, `photoswipe.jvm.library`, `photoswipe.android.hilt` (KSP + Hilt) et `photoswipe.android.compose` (compilateur Compose + BOM), ces deux derniers à appliquer après une convention Android, et `photoswipe.quality` (ktlint + detekt + tâche `quality`), appliqué d'office par les trois conventions de module (ADR 0003). Les valeurs partagées (SDK, JVM) sont dans `ProjectConfig`. Un module applique sa convention et ne déclare que ce qui lui est propre (namespace, dépendances). Toute nouvelle configuration commune (Compose, Hilt, qualité) devient un plugin de convention (ADR 0001).
 - Qualité : style ktlint `ktlint_official` (`.editorconfig`), règles detekt ajustées et justifiées dans `config/detekt/detekt.yml`, Android Lint avec `MissingTranslation` en erreur.
 - Versions : `gradle/libs.versions.toml`, sans aucune version en dur ailleurs. CI : `.github/workflows/ci.yml` ; son job est un check obligatoire du ruleset de `main` (ADR 0004), le renommer impose de mettre à jour le ruleset.
 
 ## Tests
-- `:domain` : JUnit Jupiter (JUnit 6).
+- `:domain` et `:architecture-tests` : JUnit Jupiter (JUnit 6).
 - Modules Android (`:app`, `:data`) : JUnit 4, en attendant une décision ADR sur JUnit 5/6 côté Android.
 - Tests qui ont besoin d'Android ou de Hilt : Robolectric + `@HiltAndroidTest` (`HiltTestApplication`), sur l'API 34 (ADR 0002).
 - Tests Compose : `androidx.compose.ui.test.junit4.v2.createAndroidComposeRule<MainActivity>()` (les API v1 sont dépréciées). Pas de `createComposeRule()` : son activité hôte (`ui-test-manifest`) n'est pas visible des tests unitaires Robolectric ; pour lire des valeurs de thème, composer dans `Robolectric.buildActivity(ComponentActivity::class.java)`.
@@ -71,4 +72,4 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 10. Ne rien faire qui dépasse le périmètre du ticket et de l'epic en cours.
 
 ## État d'avancement
-- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 mergé (PR #3), PS-4 mergé (PR #4), PS-5 mergé (PR #5), PS-6 en revue (compléments CI, protection de `main`). Suivent PS-7 (Konsist), PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
+- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 mergé (PR #3), PS-4 mergé (PR #4), PS-5 mergé (PR #5), PS-6 mergé (PR #6), PS-7 en revue (tests d'architecture Konsist). Suivent PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
