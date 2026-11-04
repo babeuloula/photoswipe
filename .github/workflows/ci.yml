@@ -101,6 +101,9 @@ jobs:
           api-level: 34
           arch: x86_64
           target: google_apis
+          # La partition de données par défaut (7 Go) dépasse l'espace libre du runner : 2 Go suffisent aux tests.
+          disk-size: 2048M
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -no-metrics
           disable-animations: true
           script: ./gradlew connectedDebugAndroidTest --console=plain
 
