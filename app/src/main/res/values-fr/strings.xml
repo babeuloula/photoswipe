@@ -24,4 +24,9 @@
     <string name="home_retry">Réessayer</string>
     <string name="home_previous_days">À rattraper</string>
     <string name="home_pending_deletions_review">Vérifier</string>
+    <string name="home_today_done">Tout est trié pour aujourd\'hui\u00A0!</string>
+    <string name="home_today_no_memories">Aucun souvenir pour ce jour</string>
+    <string name="home_today_come_back">Rattrapez les jours ci-dessous, ou revenez demain.</string>
+    <string name="home_empty_title">Aucun souvenir cette semaine</string>
+    <string name="home_empty_body">Aucune photo ni vidéo n\'a été prise ces jours-là les années précédentes. De nouveaux souvenirs apparaîtront ici jour après jour.</string>
 </resources>

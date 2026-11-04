@@ -56,7 +56,7 @@ class GetReviewDays(
         val treatedByYear = entries.groupBy({ it.reviewYear }, { it.mediaId }).mapValues { it.value.toSet() }
         return mediaByDay.map { (day, media) ->
             val treated = treatedByYear[day.year].orEmpty()
-            ReviewDay(date = day, remainingCount = media.count { it !in treated })
+            ReviewDay(date = day, remainingCount = media.count { it !in treated }, memoryCount = media.size)
         }
     }
 }

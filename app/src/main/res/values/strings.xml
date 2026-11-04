@@ -30,4 +30,10 @@
     <string name="home_retry">Try again</string>
     <string name="home_previous_days">Catch up</string>
     <string name="home_pending_deletions_review">Review</string>
+    <!-- États vides de l'accueil (SPEC §4, §14). -->
+    <string name="home_today_done">All done for today!</string>
+    <string name="home_today_no_memories">No memories from this day</string>
+    <string name="home_today_come_back">Catch up on the days below, or come back tomorrow.</string>
+    <string name="home_empty_title">No memories this week</string>
+    <string name="home_empty_body">No photos or videos were taken on these days in previous years. New memories will show up here day after day.</string>
 </resources>

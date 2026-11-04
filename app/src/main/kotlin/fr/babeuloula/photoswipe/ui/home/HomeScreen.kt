@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -36,6 +39,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
@@ -104,7 +108,8 @@ fun HomeScreen(
  * Carte « Aujourd'hui », puis les 6 jours précédents à rattraper.
  *
  * Un jour sans média à trier reste dans la liste, grisé et sans action : la semaine garde ses
- * 7 jours, et l'utilisateur voit qu'il n'a rien manqué (choix de PS-38).
+ * 7 jours, et l'utilisateur voit qu'il n'a rien manqué (choix de PS-38). Sans aucun souvenir sur
+ * les 7 jours, un état vide dédié remplace la carte et la liste (PS-40).
  */
 @Composable
 private fun HomeDays(
@@ -120,19 +125,23 @@ private fun HomeDays(
         if (state.pendingDeletionCount > 0) {
             item { PendingDeletionsBanner(state.pendingDeletionCount, onClick = onOpenPendingDeletions) }
         }
-        item { TodayCard(state.today, onClick = { onOpenDay(state.today.date) }) }
-        item {
-            Text(
-                text = stringResource(R.string.home_previous_days),
-                style = MaterialTheme.typography.titleMedium,
-                modifier =
-                    Modifier
-                        .padding(top = 16.dp, start = 8.dp)
-                        .semantics { heading() },
-            )
-        }
-        items(state.previousDays, key = { it.date.toEpochDay() }) { day ->
-            PreviousDay(day, onClick = { onOpenDay(day.date) })
+        if (!state.hasMemories) {
+            item { NoMemories() }
+        } else {
+            item { TodayCard(state.today, onClick = { onOpenDay(state.today.date) }) }
+            item {
+                Text(
+                    text = stringResource(R.string.home_previous_days),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier =
+                        Modifier
+                            .padding(top = 16.dp, start = 8.dp)
+                            .semantics { heading() },
+                )
+            }
+            items(state.previousDays, key = { it.date.toEpochDay() }) { day ->
+                PreviousDay(day, onClick = { onOpenDay(day.date) })
+            }
         }
     }
 }
@@ -191,13 +200,18 @@ private fun PendingDeletionsBanner(
 /** Opacité d'un jour sans média, celle des contenus désactivés de Material 3. */
 private const val DISABLED_ALPHA = 0.38f
 
-/** Carte « Aujourd'hui » : la date et le nombre de médias à trier ; elle ouvre la pile du jour. */
+/**
+ * Carte « Aujourd'hui » : la date et le nombre de médias à trier ; elle ouvre la pile du jour.
+ * Sans rien à trier, elle le dit clairement (tout est trié, ou aucun souvenir ce jour-là), invite à
+ * rattraper les jours précédents, et devient inactive.
+ */
 @Composable
 private fun TodayCard(
     today: ReviewDay,
     onClick: () -> Unit,
 ) {
-    ElevatedCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    val hasMedia = today.remainingCount > 0
+    ElevatedCard(onClick = onClick, enabled = hasMedia, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = stringResource(R.string.home_today),
@@ -209,12 +223,69 @@ private fun TodayCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text = pluralStringResource(R.plurals.home_remaining, today.remainingCount, today.remainingCount),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            if (hasMedia) {
+                Text(
+                    text = pluralStringResource(R.plurals.home_remaining, today.remainingCount, today.remainingCount),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            } else {
+                NothingToSortToday(allSorted = today.memoryCount > 0)
+            }
         }
+    }
+}
+
+/** Rien à trier aujourd'hui : tout est trié ([allSorted]) ou aucun souvenir ce jour-là. */
+@Composable
+private fun NothingToSortToday(allSorted: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Icon(
+            imageVector = if (allSorted) Icons.Filled.CheckCircle else Icons.Filled.DateRange,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = stringResource(if (allSorted) R.string.home_today_done else R.string.home_today_no_memories),
+            style = MaterialTheme.typography.titleMedium,
+        )
+    }
+    Text(
+        text = stringResource(R.string.home_today_come_back),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/** Aucun souvenir sur les 7 jours de la fenêtre : galerie récente, ou jours sans photo les années passées. */
+@Composable
+private fun NoMemories() {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.DateRange,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(64.dp),
+        )
+        Text(
+            text = stringResource(R.string.home_empty_title),
+            style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.semantics { heading() },
+        )
+        Text(
+            text = stringResource(R.string.home_empty_body),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
