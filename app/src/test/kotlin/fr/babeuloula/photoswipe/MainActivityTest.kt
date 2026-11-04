@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe
 
+import android.content.pm.ActivityInfo
 import android.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -25,6 +26,14 @@ class MainActivityTest {
 
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @Test
+    fun `main activity stays in portrait`() {
+        val activity = composeRule.activity
+        val declared = activity.packageManager.getActivityInfo(activity.componentName, 0)
+
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, declared.screenOrientation)
+    }
 
     @Test
     fun `main activity starts on the media access explanation`() {
