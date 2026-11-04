@@ -85,7 +85,7 @@ Une seule commande lance les trois : `./gradlew quality`.
 ### Tests unitaires
 Du code qui vérifie automatiquement que le code fonctionne. Ils se trouvent dans `src/test/` et se lancent avec `./gradlew test`, sans téléphone ni émulateur.
 
-Dans `app`, certains tests ont besoin d'Android (par exemple pour démarrer `MainActivity`). **Robolectric** simule Android directement sur l'ordinateur, ce qui évite l'émulateur. Il est réglé sur Android 14 (API 34) dans `app/src/test/resources/robolectric.properties`, car les versions plus récentes demanderaient Java 21.
+Dans `app` et `data`, certains tests ont besoin d'Android (par exemple pour démarrer `MainActivity` ou ouvrir la base de données). **Robolectric** simule Android directement sur l'ordinateur, ce qui évite l'émulateur. Il est réglé sur Android 14 (API 34) dans `src/test/resources/robolectric.properties` de chaque module, car les versions plus récentes demanderaient Java 21.
 
 Le module `domain` fournit aussi des **fixtures de test** dans `src/testFixtures/` : du code qui n'est jamais livré dans l'application, mais que les tests de tous les modules peuvent utiliser. On y trouve des *builders* (`aMediaItem()` crée un média valide, on ne précise que ce qui compte pour le test), des *fakes* (de fausses implémentations des ports, en mémoire, à la place de MediaStore ou de Room) et `FixedClock`, une horloge figée que le test avance à la main.
 
@@ -118,11 +118,13 @@ photoswipe/
 │       └── resources/fixtures/       Faux fichiers Kotlin (jamais compilés) qui servent d'exemples pour tester les règles
 ├── build-logic/               Plugins de convention : réglages Gradle communs à tous les modules
 │   └── convention/src/
-│       ├── main/kotlin/              Les plugins (Android, JVM, Hilt, Compose, qualité) et ProjectConfig (SDK, version de Java)
+│       ├── main/kotlin/              Les plugins (Android, JVM, Hilt, Compose, Room, Robolectric, qualité) et ProjectConfig (SDK, version de Java)
 │       └── test/kotlin/              Tests qui vérifient que les plugins appliquent les bons réglages
 ├── config/detekt/detekt.yml   Réglages de detekt (analyse statique)
 ├── data/                      Module « données » : accès aux photos du téléphone, base de données…
 │   ├── build.gradle.kts
+│   ├── schemas/                      Description de la base Room, générée à la compilation et versionnée (sert à tester les migrations)
+│   ├── src/main/kotlin/…/database/   La base Room : la table des décisions (ReviewEntryEntity) et ses requêtes (ReviewEntryDao)
 │   └── src/test/
 ├── domain/                    Module « domaine » : les règles métier, en Kotlin pur
 │   ├── build.gradle.kts

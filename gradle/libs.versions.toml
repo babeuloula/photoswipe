@@ -16,6 +16,7 @@ ktlint = "1.8.0"
 detekt = "1.23.8"
 konsist = "0.18.1"
 kotlinxCoroutines = "1.11.0"
+room = "2.8.5"
 
 [libraries]
 # AndroidX
@@ -28,6 +29,10 @@ androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+
+# Persistance locale des décisions (SPEC §6)
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
 # Injection de dépendances
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
@@ -51,6 +56,7 @@ kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", ve
 ksp-gradlePlugin = { module = "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
 compose-gradlePlugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
 hilt-gradlePlugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hilt" }
+room-gradlePlugin = { module = "androidx.room:room-gradle-plugin", version.ref = "room" }
 ktlint-gradlePlugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintGradle" }
 detekt-gradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 
@@ -61,6 +67,7 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+room = { id = "androidx.room", version.ref = "room" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintGradle" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 
@@ -70,4 +77,6 @@ photoswipe-android-library = { id = "photoswipe.android.library" }
 photoswipe-jvm-library = { id = "photoswipe.jvm.library" }
 photoswipe-android-hilt = { id = "photoswipe.android.hilt" }
 photoswipe-android-compose = { id = "photoswipe.android.compose" }
+photoswipe-android-room = { id = "photoswipe.android.room" }
+photoswipe-android-robolectric = { id = "photoswipe.android.robolectric" }
 photoswipe-quality = { id = "photoswipe.quality" }

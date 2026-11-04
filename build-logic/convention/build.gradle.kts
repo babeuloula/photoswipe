@@ -7,11 +7,12 @@ kotlin {
 }
 
 dependencies {
-    // compileOnly : les plugins AGP, Kotlin, Compose, KSP, Hilt, ktlint et detekt sont fournis à l'exécution par le build principal.
+    // compileOnly : les plugins AGP, Kotlin, Compose, KSP, Hilt, Room, ktlint et detekt sont fournis à l'exécution par le build principal.
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin)
     compileOnly(libs.ksp.gradlePlugin)
     compileOnly(libs.hilt.gradlePlugin)
+    compileOnly(libs.room.gradlePlugin)
     compileOnly(libs.compose.gradlePlugin)
     compileOnly(libs.ktlint.gradlePlugin)
     compileOnly(libs.detekt.gradlePlugin)
@@ -20,6 +21,7 @@ dependencies {
     testImplementation(libs.kotlin.gradlePlugin)
     testImplementation(libs.ksp.gradlePlugin)
     testImplementation(libs.hilt.gradlePlugin)
+    testImplementation(libs.room.gradlePlugin)
     testImplementation(libs.compose.gradlePlugin)
     testImplementation(libs.ktlint.gradlePlugin)
     testImplementation(libs.detekt.gradlePlugin)
@@ -49,6 +51,14 @@ gradlePlugin {
         register("androidCompose") {
             id = libs.plugins.photoswipe.android.compose.get().pluginId
             implementationClass = "fr.babeuloula.photoswipe.buildlogic.AndroidComposeConventionPlugin"
+        }
+        register("androidRoom") {
+            id = libs.plugins.photoswipe.android.room.get().pluginId
+            implementationClass = "fr.babeuloula.photoswipe.buildlogic.AndroidRoomConventionPlugin"
+        }
+        register("androidRobolectric") {
+            id = libs.plugins.photoswipe.android.robolectric.get().pluginId
+            implementationClass = "fr.babeuloula.photoswipe.buildlogic.AndroidRobolectricConventionPlugin"
         }
         register("quality") {
             id = libs.plugins.photoswipe.quality.get().pluginId
