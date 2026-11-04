@@ -24,6 +24,7 @@ room = "2.8.5"
 datastore = "1.3.0"
 androidxTestRunner = "1.7.0"
 androidxTestExtJunit = "1.3.0"
+coil = "3.6.3"
 
 [libraries]
 # AndroidX
@@ -50,6 +51,9 @@ room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
 
 # Préférences utilisateur (SPEC §5.3)
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+
+# Chargement des images (SPEC §7) : coil-compose-core, sans le singleton global de coil-compose (ADR 0016)
+coil-compose-core = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil" }
 
 # Injection de dépendances
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }

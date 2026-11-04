@@ -6,8 +6,11 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
+import fr.babeuloula.photoswipe.domain.service.DeckOrdering
+import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
+import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import java.time.Clock
@@ -37,4 +40,16 @@ object DomainModule {
     @Provides
     fun provideGetSessionSummary(reviewRepository: ReviewRepository): GetSessionSummary =
         GetSessionSummary(reviewRepository)
+
+    @Provides
+    fun provideDeckOrdering(): DeckOrdering = RecentYearsFirstOrdering()
+
+    @Provides
+    fun provideGetDeckForDay(
+        sameDayMatcher: SameDayMatcher,
+        mediaSource: MediaSource,
+        reviewRepository: ReviewRepository,
+        deckOrdering: DeckOrdering,
+        clock: Clock,
+    ): GetDeckForDay = GetDeckForDay(sameDayMatcher, mediaSource, reviewRepository, deckOrdering, clock)
 }

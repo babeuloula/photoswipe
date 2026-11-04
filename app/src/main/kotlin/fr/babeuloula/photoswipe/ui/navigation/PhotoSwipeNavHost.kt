@@ -7,12 +7,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.common.ShellAction
 import fr.babeuloula.photoswipe.ui.common.ShellScreen
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import fr.babeuloula.photoswipe.ui.deck.DeckRoute as DeckDestination
 import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
 
 /**
@@ -36,19 +34,10 @@ fun PhotoSwipeNavHost(
                 onOpenSummary = { navController.navigate(SummaryRoute) },
             )
         }
-        composable<DeckRoute> { entry ->
-            val day = entry.toRoute<DeckRoute>().day
-            ShellScreen(
-                title =
-                    stringResource(
-                        R.string.deck_title,
-                        day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)),
-                    ),
+        composable<DeckRoute> {
+            DeckDestination(
                 onBack = navController::popBackStack,
-                actions =
-                    listOf(
-                        ShellAction(stringResource(R.string.deck_finish)) { navController.navigate(SummaryRoute) },
-                    ),
+                onOpenSummary = { navController.navigate(SummaryRoute) },
             )
         }
         composable<SummaryRoute> {
