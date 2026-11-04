@@ -3,9 +3,13 @@ package fr.babeuloula.photoswipe.domain.model
 /**
  * Bilan affiché en fin de session, avant la confirmation système (SPEC §3.5).
  *
- * @property keptCount nombre de médias gardés.
- * @property markedForDeletionCount nombre de médias marqués pour suppression.
- * @property favoriteCount nombre de favoris en attente d'application.
+ * Les marqués, les favoris et l'espace libéré décrivent ce que la confirmation enverra aux demandes
+ * système : **toutes** les demandes en attente, y compris celles d'une session précédente non
+ * confirmée (SPEC §3.4). Les gardés, eux, ne concernent que la session (ADR 0011).
+ *
+ * @property keptCount médias gardés pendant la session, sans les favoris.
+ * @property markedForDeletionCount médias marqués pour suppression et pas encore confirmés.
+ * @property favoriteCount favoris en attente d'application.
  * @property estimatedFreedBytes espace libéré estimé, somme des tailles des médias marqués.
  */
 data class SessionSummary(
