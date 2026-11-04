@@ -8,6 +8,7 @@ Application Android (Kotlin + Jetpack Compose) qui fait revoir chaque jour les p
 - `SPEC.md` : la spécification complète. **Elle fait foi**, en particulier le §0 (règles non négociables) et le §16 (points ouverts, valeurs par défaut appliquées sauf avis contraire).
 - `docs/architecture.md` : les modules, le sens des dépendances, les versions et la justification de chaque bibliothèque.
 - `docs/beginners-guide.md` : le guide pour les néophytes (Kotlin, Gradle, Android, rôle de chaque dossier).
+- `README.md` : présentation courte et liens vers la documentation.
 - `docs/decisions/` : les ADR. Toute décision structurante absente de la spec y est écrite au lieu d'être improvisée en silence.
 
 ## Règles permanentes (résumé du SPEC §0)
@@ -60,4 +61,4 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 8. Ne rien faire qui dépasse le périmètre du ticket et de l'epic en cours.
 
 ## État d'avancement
-- Epic 1 « Squelette & outillage » : PS-1 en revue (PR #1). Suivent PS-2 (catalogue et conventions), PS-3 (Hilt), PS-4 (thème M3), PS-5 (ktlint, detekt, lint), PS-6 (compléments CI), PS-7 (Konsist), PS-8 (i18n) et PS-9 (README et docs).
+- Epic 1 « Squelette & outillage » : PS-1 en revue (PR #1). Suivent PS-2 (catalogue et conventions), PS-3 (Hilt), PS-4 (thème M3), PS-5 (ktlint, detekt, lint), PS-6 (compléments CI), PS-7 (Konsist), PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).

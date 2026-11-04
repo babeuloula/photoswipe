@@ -91,6 +91,7 @@ photoswipe/
 ├── gradle.properties          Réglages de Gradle (mémoire, cache…)
 ├── gradlew, gradlew.bat       Scripts du Gradle Wrapper (macOS/Linux et Windows)
 ├── local.properties           Chemin du SDK Android sur ta machine (non versionné)
+├── README.md                  Présentation courte du projet et liens vers la doc
 ├── CLAUDE.md                  Règles et commandes pour Claude Code et les contributeurs
 └── SPEC.md                    La spécification du projet
 ```
