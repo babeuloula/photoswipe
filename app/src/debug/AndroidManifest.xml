@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Variante debug seulement : outils développeur (SPEC §10), absents de la release. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name=".debug.DeveloperToolsActivity"
+            android:exported="true"
+            android:label="@string/developer_tools_title"
+            android:screenOrientation="portrait"
+            android:taskAffinity="fr.babeuloula.photoswipe.devtools"
+            xmlns:tools="http://schemas.android.com/tools"
+            tools:ignore="LockedOrientationActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

@@ -26,6 +26,18 @@ android {
     }
 }
 
+// Tests propres à la variante release (src/testRelease) : AGP 9 n'active les tests unitaires que pour
+// debug. On les active pour release, en ne rejouant que les tests de src/testRelease : le reste de la
+// suite tourne déjà en debug.
+androidComponents {
+    beforeVariants(selector().withBuildType("release")) {
+        it.hostTests[com.android.build.api.variant.HostTestBuilder.UNIT_TEST_TYPE]?.enable = true
+    }
+}
+tasks.matching { it.name == "testReleaseUnitTest" }.withType<Test>().configureEach {
+    filter.includeTestsMatching("fr.babeuloula.photoswipe.di.MediaSourceBindingTest")
+}
+
 dependencies {
     implementation(project(":domain"))
     // :data n'est utilisé que pour le câblage DI (règle vérifiée par le test d'architecture, PS-7).
@@ -36,6 +48,9 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.core)
+
+    // Données de démo des outils développeur (SPEC §10, niveau 2) : jamais dans la variante release.
+    debugImplementation(testFixtures(project(":domain")))
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)

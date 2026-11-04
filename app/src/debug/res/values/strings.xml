@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textes des outils développeur, variante debug seulement (SPEC §10). -->
+<resources>
+    <string name="developer_tools_title">PhotoSwipe dev tools</string>
+    <string name="developer_tools_demo_data">Demo data</string>
+    <string name="developer_tools_demo_data_hint">Replaces the gallery with generated memories for the last 7 days. Reopen PhotoSwipe to apply.</string>
+</resources>

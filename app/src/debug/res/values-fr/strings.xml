@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="developer_tools_title">Outils dev PhotoSwipe</string>
+    <string name="developer_tools_demo_data">Données de démo</string>
+    <string name="developer_tools_demo_data_hint">Remplace la galerie par des souvenirs générés pour les 7 derniers jours. Rouvrez PhotoSwipe pour appliquer.</string>
+</resources>

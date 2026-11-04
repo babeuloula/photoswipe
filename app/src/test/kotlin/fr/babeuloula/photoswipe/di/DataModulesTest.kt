@@ -4,10 +4,8 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.data.di.IoDispatcher
-import fr.babeuloula.photoswipe.data.media.MediaStoreMediaSource
 import fr.babeuloula.photoswipe.data.review.RoomReviewRepository
 import fr.babeuloula.photoswipe.data.settings.DataStoreSettingsRepository
-import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -22,7 +20,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import javax.inject.Inject
 
-/** Vérifie que les modules Hilt de `:data` lient chaque port à son implémentation, une seule fois. */
+/**
+ * Vérifie que les modules Hilt de `:data` lient chaque port à son implémentation, une seule fois.
+ * `MediaSource`, lié par variante, est vérifié dans `testDebug` et `testRelease`.
+ */
 @HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)
 @Config(application = HiltTestApplication::class)
@@ -35,8 +36,6 @@ class DataModulesTest {
     @Inject lateinit var sameReviewRepository: ReviewRepository
 
     @Inject lateinit var settingsRepository: SettingsRepository
-
-    @Inject lateinit var mediaSource: MediaSource
 
     @Inject
     @IoDispatcher
@@ -51,7 +50,6 @@ class DataModulesTest {
     fun `binds each domain port to its android implementation`() {
         assertTrue(reviewRepository is RoomReviewRepository)
         assertTrue(settingsRepository is DataStoreSettingsRepository)
-        assertTrue(mediaSource is MediaStoreMediaSource)
     }
 
     @Test
