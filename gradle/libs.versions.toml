@@ -42,6 +42,7 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 robolectric-androidAll = { module = "org.robolectric:android-all-instrumented", version.ref = "robolectric-androidAll" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 
 # Plugins Gradle utilisés par build-logic

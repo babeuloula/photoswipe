@@ -7,6 +7,9 @@ plugins {
 }
 
 dependencies {
+    // Flow dans les signatures publiques des ports et des use cases (ADR 0008) : exposé en api.
+    api(libs.kotlinx.coroutines.core)
+
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
