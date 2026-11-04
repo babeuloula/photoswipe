@@ -31,7 +31,7 @@ Règles :
 
 | Module | Plugin de convention | Package | Rôle |
 |---|---|---|---|
-| `:app` | `photoswipe.android.application` | `fr.babeuloula.photoswipe` | Point d'entrée (`MainActivity`), UI Compose *(prévu)*, ViewModels *(prévu)*, assemblage Hilt *(prévu)* |
+| `:app` | `photoswipe.android.application`, `photoswipe.android.hilt` | `fr.babeuloula.photoswipe` | Point d'entrée (`PhotoSwipeApplication`, `MainActivity`), assemblage Hilt (package `di`), UI Compose *(prévu)*, ViewModels *(prévu)* |
 | `:data` | `photoswipe.android.library` | `fr.babeuloula.photoswipe.data` | Implémentations Android des ports : `MediaStoreMediaSource`, `RoomReviewRepository`, etc. *(prévu)* |
 | `:domain` | `photoswipe.jvm.library` | `fr.babeuloula.photoswipe.domain` | Modèles, services purs (`SameDayMatcher`, etc.), use cases, ports *(prévu)* |
 
@@ -44,10 +44,18 @@ La configuration commune est portée par des plugins de convention, dans le buil
 | `photoswipe.android.application` | `com.android.application` | `compileSdk` 37, `minSdk` 33, `targetSdk` 37, toolchain JVM 17 |
 | `photoswipe.android.library` | `com.android.library` | `compileSdk` 37, `minSdk` 33, toolchain JVM 17 |
 | `photoswipe.jvm.library` | `org.jetbrains.kotlin.jvm` | toolchain JVM 17, tests sur la plateforme JUnit |
+| `photoswipe.android.hilt` | `com.google.devtools.ksp`, `com.google.dagger.hilt.android` | dépendances `hilt-android` et `hilt-compiler` (processeur via KSP, jamais kapt). À appliquer après une convention Android |
 
 - Les valeurs sont centralisées dans `ProjectConfig`.
 - Les tests (`ProjectBuilder`) vérifient que chaque plugin applique les bonnes valeurs ; `./gradlew test` les lance.
-- Les versions sont toutes dans `gradle/libs.versions.toml`, y compris celles des plugins AGP et Kotlin, que `build-logic` utilise en `compileOnly`.
+- Les versions sont toutes dans `gradle/libs.versions.toml`, y compris celles des plugins AGP, Kotlin, KSP et Hilt, que `build-logic` utilise en `compileOnly`.
+
+### Injection de dépendances (Hilt)
+
+- `PhotoSwipeApplication` porte `@HiltAndroidApp` : c'est la racine du graphe. `MainActivity` porte `@AndroidEntryPoint` (Hilt exige une `ComponentActivity`).
+- Les modules Hilt de `:app` vivent dans le package `fr.babeuloula.photoswipe.di`. `TimeModule` fournit l'horloge (`java.time.Clock`) en singleton.
+- Les modules Hilt de `:data` arriveront avec leurs implémentations *(prévu)*.
+- Les tests Hilt tournent sur la JVM avec Robolectric (`@HiltAndroidTest` + `HiltTestApplication`), sur l'API 34 (ADR [0002](decisions/0002-robolectric-api-level.md)).
 
 ## 3. Flux de données *(prévu, SPEC §5.4)*
 
@@ -85,6 +93,10 @@ Relevées le 2026-11-03 sur les sources officielles (Google Maven, Maven Central
 | JDK | 17 | |
 | JUnit Jupiter (BOM) | 6.1.3 | Tests de `:domain` |
 | JUnit 4 | 4.13.2 | Tests unitaires des modules Android |
+| KSP | 2.3.13 | Versionné indépendamment de Kotlin depuis KSP 2.3 |
+| Hilt (Dagger) | 2.60.1 | Bibliothèque, processeur et plugin Gradle |
+| AndroidX Activity | 1.13.0 | |
+| Robolectric | 4.17 | Tests sur l'API 34 (ADR 0002) |
 | GitHub Actions | `checkout@v7`, `setup-java@v6`, `gradle/actions/setup-gradle@v6`, `upload-artifact@v7` | CI |
 
 ## 6. Bibliothèques et justification
@@ -95,8 +107,12 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 |---|---|---|
 | JUnit Jupiter 6 | `:domain` (tests) | Standard actuel des tests JVM. La SPEC demande JUnit 5 ; JUnit 6 en est la version suivante, avec la même API |
 | JUnit 4 | `:app`, `:data` (tests) | Fonctionne nativement sur Android sans plugin supplémentaire |
+| Hilt + KSP | `:app` | Injection de dépendances imposée par la SPEC §5.5 ; KSP plutôt que kapt, plus rapide et maintenu |
+| AndroidX Activity | `:app` | `ComponentActivity`, classe de base exigée par `@AndroidEntryPoint` (et par Compose ensuite) |
+| Hilt Android Testing | `:app` (tests) | `@HiltAndroidTest` et `HiltAndroidRule` pour vérifier l'injection dans les tests |
+| Robolectric | `:app` (tests) | Exécute le framework Android sur la JVM : tests Hilt sans émulateur, en local comme en CI |
 
-Prévues dans la SPEC, ajoutées avec leur ticket : Jetpack Compose + Material 3, Hilt (KSP), Navigation Compose, Room, DataStore, Coil 3, Media3 ExoPlayer, WorkManager, ktlint, detekt, Konsist, MockK, Turbine, kotlinx-coroutines-test.
+Prévues dans la SPEC, ajoutées avec leur ticket : Jetpack Compose + Material 3, Navigation Compose, Room, DataStore, Coil 3, Media3 ExoPlayer, WorkManager, ktlint, detekt, Konsist, MockK, Turbine, kotlinx-coroutines-test.
 
 ## 7. CI
 

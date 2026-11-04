@@ -4,24 +4,42 @@ agp = "9.5.0"
 kotlin = "2.4.21"
 junit4 = "4.13.2"
 junitBom = "6.1.3"
+ksp = "2.3.13"
+hilt = "2.60.1"
+androidxActivity = "1.13.0"
+robolectric = "4.17"
 
 [libraries]
+# AndroidX
+androidx-activity = { module = "androidx.activity:activity", version.ref = "androidxActivity" }
+
+# Injection de dépendances
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
+
 # Tests
 junit4 = { module = "junit:junit", version.ref = "junit4" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junitBom" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 
 # Plugins Gradle utilisés par build-logic
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+ksp-gradlePlugin = { module = "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
+hilt-gradlePlugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hilt" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 
 # Plugins de convention (build-logic), sans version car fournis par le build inclus
 photoswipe-android-application = { id = "photoswipe.android.application" }
 photoswipe-android-library = { id = "photoswipe.android.library" }
 photoswipe-jvm-library = { id = "photoswipe.jvm.library" }
+photoswipe-android-hilt = { id = "photoswipe.android.hilt" }

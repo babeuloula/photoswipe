@@ -35,15 +35,16 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 ```
 
 ## Structure
-- `:app` : UI, navigation, assemblage DI, point d'entrée Android (`fr.babeuloula.photoswipe`).
+- `:app` : UI, navigation, assemblage DI (modules Hilt dans le package `di`), point d'entrée Android (`fr.babeuloula.photoswipe`).
 - `:data` : implémentations Android des ports du domaine : MediaStore, Room, DataStore, WorkManager (`fr.babeuloula.photoswipe.data`).
 - `:domain` : modèles, use cases, ports, en Kotlin JVM pur (`fr.babeuloula.photoswipe.domain`).
-- `build-logic/` (build inclus) : plugins de convention `photoswipe.android.application`, `photoswipe.android.library` et `photoswipe.jvm.library`. Les valeurs partagées (SDK, JVM) sont dans `ProjectConfig`. Un module applique sa convention et ne déclare que ce qui lui est propre (namespace, dépendances). Toute nouvelle configuration commune (Compose, Hilt, qualité) devient un plugin de convention (ADR 0001).
+- `build-logic/` (build inclus) : plugins de convention `photoswipe.android.application`, `photoswipe.android.library`, `photoswipe.jvm.library` et `photoswipe.android.hilt` (KSP + Hilt, à appliquer après une convention Android). Les valeurs partagées (SDK, JVM) sont dans `ProjectConfig`. Un module applique sa convention et ne déclare que ce qui lui est propre (namespace, dépendances). Toute nouvelle configuration commune (Compose, Hilt, qualité) devient un plugin de convention (ADR 0001).
 - Versions : `gradle/libs.versions.toml`, sans aucune version en dur ailleurs. CI : `.github/workflows/ci.yml`.
 
 ## Tests
 - `:domain` : JUnit Jupiter (JUnit 6).
 - Modules Android (`:app`, `:data`) : JUnit 4, en attendant une décision ADR sur JUnit 5/6 côté Android.
+- Tests qui ont besoin d'Android ou de Hilt : Robolectric + `@HiltAndroidTest` (`HiltTestApplication`), sur l'API 34 (ADR 0002).
 - Les noms des tests sont en anglais et décrivent le comportement, par exemple `` `moves leap day media to February 28 on non-leap years` ``.
 
 ## Processus de travail
@@ -67,4 +68,4 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 10. Ne rien faire qui dépasse le périmètre du ticket et de l'epic en cours.
 
 ## État d'avancement
-- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 en revue (catalogue et conventions). Suivent PS-3 (Hilt), PS-4 (thème M3), PS-5 (ktlint, detekt, lint), PS-6 (compléments CI), PS-7 (Konsist), PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
+- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 en revue (Hilt). Suivent PS-4 (thème M3), PS-5 (ktlint, detekt, lint), PS-6 (compléments CI), PS-7 (Konsist), PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
