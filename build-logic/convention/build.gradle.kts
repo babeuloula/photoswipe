@@ -7,18 +7,22 @@ kotlin {
 }
 
 dependencies {
-    // compileOnly : les plugins AGP, Kotlin, Compose, KSP et Hilt sont fournis à l'exécution par le build principal.
+    // compileOnly : les plugins AGP, Kotlin, Compose, KSP, Hilt, ktlint et detekt sont fournis à l'exécution par le build principal.
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin)
     compileOnly(libs.ksp.gradlePlugin)
     compileOnly(libs.hilt.gradlePlugin)
     compileOnly(libs.compose.gradlePlugin)
+    compileOnly(libs.ktlint.gradlePlugin)
+    compileOnly(libs.detekt.gradlePlugin)
 
     testImplementation(libs.android.gradlePlugin)
     testImplementation(libs.kotlin.gradlePlugin)
     testImplementation(libs.ksp.gradlePlugin)
     testImplementation(libs.hilt.gradlePlugin)
     testImplementation(libs.compose.gradlePlugin)
+    testImplementation(libs.ktlint.gradlePlugin)
+    testImplementation(libs.detekt.gradlePlugin)
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
@@ -45,6 +49,10 @@ gradlePlugin {
         register("androidCompose") {
             id = libs.plugins.photoswipe.android.compose.get().pluginId
             implementationClass = "fr.babeuloula.photoswipe.buildlogic.AndroidComposeConventionPlugin"
+        }
+        register("quality") {
+            id = libs.plugins.photoswipe.quality.get().pluginId
+            implementationClass = "fr.babeuloula.photoswipe.buildlogic.QualityConventionPlugin"
         }
         register("jvmLibrary") {
             id = libs.plugins.photoswipe.jvm.library.get().pluginId

@@ -6,7 +6,6 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
-import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -17,7 +16,7 @@ import org.junit.jupiter.api.Test as JupiterTest
  * sur un projet Gradle de test.
  */
 class ConventionPluginsTest {
-    private fun newProject(): Project = ProjectBuilder.builder().build()
+    private fun newProject(): Project = projectWithFakeCatalog()
 
     @JupiterTest
     fun `android application convention sets sdk levels and jvm toolchain 17`() {

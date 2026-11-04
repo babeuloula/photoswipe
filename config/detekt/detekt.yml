@@ -1,0 +1,26 @@
+# Configuration detekt (PS-5). Elle complète la configuration par défaut
+# (`buildUponDefaultConfig = true`) : seuls les écarts sont listés ici, chacun justifié.
+
+config:
+  # Une règle inconnue ou une option mal orthographiée fait échouer detekt.
+  validation: true
+
+build:
+  # Bloquant : le moindre problème fait échouer la tâche.
+  maxIssues: 0
+
+naming:
+  FunctionNaming:
+    # Les fonctions @Composable s'écrivent en PascalCase (convention Compose).
+    ignoreAnnotated: ['Composable']
+
+style:
+  UnusedPrivateMember:
+    # Les aperçus (@Preview, @PreviewLightDark) sont privés et appelés uniquement par l'IDE.
+    ignoreAnnotated: ['Preview', 'PreviewLightDark']
+  MagicNumber:
+    # Les tests et les palettes de couleurs (Color(0xFF...)) sont faits de littéraux.
+    excludes: ['**/test/**', '**/ui/theme/**']
+  # Le formatage relève de ktlint : la règle detekt ferait doublon.
+  MaxLineLength:
+    active: false

@@ -9,6 +9,9 @@ hilt = "2.60.1"
 androidxActivity = "1.13.0"
 composeBom = "2026.09.00"
 robolectric = "4.17"
+ktlintGradle = "14.2.0"
+ktlint = "1.8.0"
+detekt = "1.23.8"
 
 [libraries]
 # AndroidX
@@ -40,6 +43,8 @@ kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", ve
 ksp-gradlePlugin = { module = "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
 compose-gradlePlugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
 hilt-gradlePlugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hilt" }
+ktlint-gradlePlugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintGradle" }
+detekt-gradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -48,6 +53,8 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintGradle" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 
 # Plugins de convention (build-logic), sans version car fournis par le build inclus
 photoswipe-android-application = { id = "photoswipe.android.application" }
@@ -55,3 +62,4 @@ photoswipe-android-library = { id = "photoswipe.android.library" }
 photoswipe-jvm-library = { id = "photoswipe.jvm.library" }
 photoswipe-android-hilt = { id = "photoswipe.android.hilt" }
 photoswipe-android-compose = { id = "photoswipe.android.compose" }
+photoswipe-quality = { id = "photoswipe.quality" }

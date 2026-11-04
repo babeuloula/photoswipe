@@ -28,7 +28,8 @@ internal class FakeVersionCatalogs(private val project: Project) : VersionCatalo
             Optional.of(project.provider { dependency(alias) })
 
         override fun findBundle(alias: String): Optional<Provider<ExternalModuleDependencyBundle>> = Optional.empty()
-        override fun findVersion(alias: String): Optional<VersionConstraint> = Optional.empty()
+        override fun findVersion(alias: String): Optional<VersionConstraint> =
+            Optional.of(DefaultMutableVersionConstraint("1.0"))
         override fun findPlugin(alias: String): Optional<Provider<PluginDependency>> = Optional.empty()
         override fun getLibraryAliases(): List<String> = emptyList()
         override fun getBundleAliases(): List<String> = emptyList()
