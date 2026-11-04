@@ -5,15 +5,17 @@ import android.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
+import androidx.lifecycle.Lifecycle
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
+import fr.babeuloula.photoswipe.permission.MEDIA_PERMISSIONS
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /** Vérifie que `MainActivity` démarre comme point d'entrée Hilt et affiche l'interface Compose bord à bord. */
@@ -43,13 +45,34 @@ class MainActivityTest {
     }
 
     @Test
-    fun `main activity shows the home screen after continue`() {
-        composeRule
-            .onNodeWithText(
-                composeRule.activity.getString(R.string.permission_rationale_continue),
-            ).performClick()
+    fun `main activity shows the home screen once media access is granted`() {
+        shadowOf(composeRule.activity.application).grantPermissions(*MEDIA_PERMISSIONS)
+
+        resume()
 
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.home_placeholder)).assertIsDisplayed()
+    }
+
+    @Test
+    fun `main activity goes back to the explanation when media access is revoked`() {
+        val application = shadowOf(composeRule.activity.application)
+        application.grantPermissions(*MEDIA_PERMISSIONS)
+        resume()
+        application.denyPermissions(*MEDIA_PERMISSIONS)
+
+        resume()
+
+        composeRule
+            .onNodeWithText(
+                composeRule.activity.getString(R.string.permission_rationale_title),
+            ).assertIsDisplayed()
+    }
+
+    /** Simule un retour au premier plan, par exemple depuis les réglages système. */
+    private fun resume() {
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.CREATED)
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        composeRule.waitForIdle()
     }
 
     @Test

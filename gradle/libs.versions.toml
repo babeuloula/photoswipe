@@ -8,6 +8,7 @@ ksp = "2.3.13"
 hilt = "2.60.1"
 androidxActivity = "1.13.0"
 androidxLifecycle = "2.11.0"
+androidxHilt = "1.4.0"
 composeBom = "2026.09.00"
 robolectric = "4.17"
 # Jar Android (API 34) que Robolectric 4.17 charge ; le suffixe -iN suit la version de Robolectric.
@@ -26,6 +27,8 @@ androidxTestExtJunit = "1.3.0"
 # AndroidX
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
+androidx-hilt-lifecycle-viewmodel-compose = { module = "androidx.hilt:hilt-lifecycle-viewmodel-compose", version.ref = "androidxHilt" }
 
 # Jetpack Compose : versions alignées par la BOM, d'où l'absence de version.ref
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }

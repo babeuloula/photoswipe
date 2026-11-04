@@ -12,39 +12,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
-
-/**
- * Écran d'explication relié à son ViewModel : il exécute l'effet [PermissionRationaleEffect]
- * en appelant [onRequestMediaAccess].
- */
-@Composable
-fun PermissionRationaleRoute(
-    onRequestMediaAccess: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: PermissionRationaleViewModel = viewModel(),
-) {
-    LaunchedEffect(viewModel) {
-        viewModel.uiEffects.collect { effect ->
-            when (effect) {
-                PermissionRationaleEffect.RequestMediaAccess -> onRequestMediaAccess()
-            }
-        }
-    }
-    PermissionRationaleScreen(
-        onContinue = { viewModel.onEvent(PermissionRationaleEvent.Continue) },
-        modifier = modifier,
-    )
-}
 
 /**
  * Écran court qui explique, avant la demande système, ce que fait l'application, pourquoi elle a

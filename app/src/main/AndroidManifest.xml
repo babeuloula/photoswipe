@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Aucune permission déclarée à ce stade ; INTERNET est interdite (SPEC §0.6). -->
+<!-- INTERNET est interdite (SPEC §0.6). -->
 <!-- Application en portrait uniquement (décision de Jérémy, PS-32). -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Lecture des photos et vidéos de la galerie (Android 13+, SPEC §4.1). -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
     <application
         android:name=".PhotoSwipeApplication"

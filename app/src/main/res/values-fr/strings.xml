@@ -6,4 +6,8 @@
     <string name="permission_rationale_why">Pour les retrouver, l\'application a besoin d\'accéder à vos photos et vidéos.</string>
     <string name="permission_rationale_private">Rien ne quitte votre téléphone : l\'application n\'a pas accès à internet, et rien n\'est supprimé sans votre confirmation.</string>
     <string name="permission_rationale_continue">Continuer</string>
+    <string name="media_access_denied_title">L\'accès à vos photos est nécessaire</string>
+    <string name="media_access_denied_body">PhotoSwipe ne peut pas vous montrer vos souvenirs sans accès à vos photos et vidéos. Vous pouvez l\'autoriser à tout moment dans les réglages de l\'application.</string>
+    <string name="media_access_open_settings">Ouvrir les réglages</string>
+    <string name="media_access_try_again">Réessayer</string>
 </resources>

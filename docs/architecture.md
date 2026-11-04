@@ -122,7 +122,8 @@ Relevées le 2026-11-03 sur les sources officielles (Google Maven, Maven Central
 | KSP | 2.3.13 | Versionné indépendamment de Kotlin depuis KSP 2.3 |
 | Hilt (Dagger) | 2.60.1 | Bibliothèque, processeur et plugin Gradle |
 | AndroidX Activity (`activity-compose`) | 1.13.0 | |
-| AndroidX Lifecycle (`lifecycle-viewmodel-compose`) | 2.11.0 | Relevée le 2026-11-04 sur Google Maven |
+| AndroidX Lifecycle (`lifecycle-viewmodel-compose`, `lifecycle-runtime-compose`) | 2.11.0 | Relevée le 2026-11-04 sur Google Maven |
+| AndroidX Hilt (`hilt-lifecycle-viewmodel-compose`) | 1.4.0 | Relevée le 2026-11-04 sur Google Maven |
 | Compose BOM | 2026.09.00 | Compose UI 1.12.1, Material 3 1.4.0 |
 | Kotlin Compose compiler plugin | 2.4.21 | Même version que Kotlin |
 | Robolectric | 4.17 | Tests sur l'API 34 (ADR 0002) |
@@ -149,7 +150,9 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | DataStore Preferences | `:data` | Préférences clé-valeur imposées par la SPEC §5.3 (réglages du rappel) : écritures atomiques et asynchrones, lecture en `Flow`, à la place de `SharedPreferences` |
 | AndroidX Test (`runner`, `ext:junit`) | `:data` (tests instrumentés) | `AndroidJUnitRunner` et `AndroidJUnit4` pour lancer JUnit 4 sur un appareil ou un émulateur |
 | Room Testing | `:data` (tests instrumentés) | `MigrationTestHelper` : vérifie les migrations contre les schémas exportés (SPEC §6) |
-| Lifecycle ViewModel Compose | `:app` | `ViewModel` des écrans (état et effets survivent à la rotation) et `viewModel()` dans Compose (SPEC §5.4) |
+| Lifecycle ViewModel Compose | `:app` | `ViewModel` des écrans (état et effets survivent à la recréation de l'activité, SPEC §5.4) |
+| Lifecycle Runtime Compose | `:app` | `collectAsStateWithLifecycle` (l'état n'est lu qu'au premier plan) et `LifecycleResumeEffect` (relire l'accès aux médias au retour des réglages) |
+| Hilt Lifecycle ViewModel Compose | `:app` | `hiltViewModel()` : ViewModels `@HiltViewModel` injectés par constructeur dans Compose |
 | Hilt + KSP | `:app` | Injection de dépendances imposée par la SPEC §5.5 ; KSP plutôt que kapt, plus rapide et maintenu |
 | AndroidX Activity Compose | `:app` | `ComponentActivity` (classe de base exigée par `@AndroidEntryPoint`), `setContent` et `enableEdgeToEdge` |
 | Jetpack Compose (BOM, UI, tooling) | `:app` | UI imposée par la SPEC §7 ; la BOM aligne les versions des bibliothèques Compose |

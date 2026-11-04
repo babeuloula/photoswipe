@@ -9,4 +9,9 @@
     <string name="permission_rationale_why">To find them, the app needs access to your photos and videos.</string>
     <string name="permission_rationale_private">Nothing leaves your phone: the app has no internet access, and nothing is deleted without your confirmation.</string>
     <string name="permission_rationale_continue">Continue</string>
+    <!-- Accès aux médias refusé (SPEC §4.1). -->
+    <string name="media_access_denied_title">Access to your photos is needed</string>
+    <string name="media_access_denied_body">PhotoSwipe can\'t show your memories without access to your photos and videos. You can allow it at any time in the app settings.</string>
+    <string name="media_access_open_settings">Open settings</string>
+    <string name="media_access_try_again">Try again</string>
 </resources>
