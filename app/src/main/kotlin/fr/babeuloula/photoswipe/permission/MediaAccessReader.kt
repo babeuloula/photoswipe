@@ -8,9 +8,21 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import fr.babeuloula.photoswipe.domain.model.MediaAccess
 import javax.inject.Inject
 
-/** Permissions demandées pour lire la galerie (SPEC §4.1). */
+/** Permissions qui donnent l'accès complet à la galerie (SPEC §4.1). */
 val MEDIA_PERMISSIONS: Array<String> =
     arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
+
+/**
+ * Permissions à demander : celles de l'accès complet et, sur Android 14+, celle de l'accès
+ * partiel. La déclarer laisse l'utilisateur choisir « Autoriser l'accès limité », puis modifier
+ * sa sélection en relançant la même demande (SPEC §4.1).
+ */
+val MEDIA_PERMISSION_REQUEST: Array<String> =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        MEDIA_PERMISSIONS + Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+    } else {
+        MEDIA_PERMISSIONS
+    }
 
 /** Lit l'accès actuel de l'application aux photos et vidéos. */
 fun interface MediaAccessReader {

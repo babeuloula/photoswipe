@@ -27,8 +27,15 @@ sealed interface MediaAccessUiState {
         val canAskAgain: Boolean,
     ) : MediaAccessUiState
 
-    /** Accès accordé, complet ou partiel : l'application peut s'afficher. */
-    data object Granted : MediaAccessUiState
+    /**
+     * Accès accordé : l'application peut s'afficher.
+     *
+     * @property partial vrai si seule une sélection de médias est lisible (Android 14+) : les
+     * souvenirs peuvent être incomplets.
+     */
+    data class Granted(
+        val partial: Boolean,
+    ) : MediaAccessUiState
 }
 
 /** Action de l'utilisateur ou du système sur le parcours d'accès. */
@@ -45,6 +52,9 @@ sealed interface MediaAccessEvent {
         val canAskAgain: Boolean,
     ) : MediaAccessEvent
 
+    /** « Gérer l'accès » sur la bannière d'accès limité : relance la demande pour changer la sélection. */
+    data object ExtendSelection : MediaAccessEvent
+
     /** « Ouvrir les réglages » après un refus. */
     data object OpenSettings : MediaAccessEvent
 
@@ -54,7 +64,7 @@ sealed interface MediaAccessEvent {
 
 /** Effet ponctuel que l'écran exécute. */
 sealed interface MediaAccessEffect {
-    /** Afficher la demande système de `READ_MEDIA_IMAGES` et `READ_MEDIA_VIDEO`. */
+    /** Afficher la demande système d'accès aux photos et vidéos. */
     data object LaunchPermissionRequest : MediaAccessEffect
 
     /** Ouvrir la page de l'application dans les réglages système. */
@@ -66,8 +76,8 @@ sealed interface MediaAccessEffect {
  * avec chemin vers les réglages, et retour à l'explication si l'accès est retiré en cours d'usage.
  *
  * L'état se déduit toujours de l'accès réel lu par [MediaAccessReader] : il est relu à chaque
- * réponse et à chaque retour au premier plan. L'accès partiel (Android 14+) compte comme accordé ;
- * sa bannière arrive avec PS-34.
+ * réponse et à chaque retour au premier plan. L'accès partiel (Android 14+) compte comme accordé,
+ * avec une bannière qui permet d'étendre la sélection.
  */
 @HiltViewModel
 class MediaAccessViewModel
@@ -75,8 +85,7 @@ class MediaAccessViewModel
     constructor(
         private val accessReader: MediaAccessReader,
     ) : ViewModel() {
-        private val state =
-            MutableStateFlow(if (hasAccess()) MediaAccessUiState.Granted else MediaAccessUiState.Rationale)
+        private val state = MutableStateFlow(granted() ?: MediaAccessUiState.Rationale)
         private val effects = Channel<MediaAccessEffect>(Channel.BUFFERED)
 
         /** Étape actuelle. */
@@ -88,24 +97,37 @@ class MediaAccessViewModel
         /** Traite une action de l'utilisateur ou du système. */
         fun onEvent(event: MediaAccessEvent) {
             when (event) {
-                MediaAccessEvent.RequestAccess -> effects.trySend(MediaAccessEffect.LaunchPermissionRequest)
-                is MediaAccessEvent.RequestAnswered -> state.value = afterAnswer(event.canAskAgain)
-                MediaAccessEvent.OpenSettings -> effects.trySend(MediaAccessEffect.OpenAppSettings)
-                MediaAccessEvent.Resumed -> state.value = afterResume(state.value)
+                MediaAccessEvent.RequestAccess, MediaAccessEvent.ExtendSelection -> {
+                    effects.trySend(MediaAccessEffect.LaunchPermissionRequest)
+                }
+
+                is MediaAccessEvent.RequestAnswered -> {
+                    state.value = afterAnswer(event.canAskAgain)
+                }
+
+                MediaAccessEvent.OpenSettings -> {
+                    effects.trySend(MediaAccessEffect.OpenAppSettings)
+                }
+
+                MediaAccessEvent.Resumed -> {
+                    state.value = afterResume(state.value)
+                }
             }
         }
 
         /** Étape après la réponse à la demande système. */
         private fun afterAnswer(canAskAgain: Boolean): MediaAccessUiState =
-            if (hasAccess()) MediaAccessUiState.Granted else MediaAccessUiState.Denied(canAskAgain)
+            granted() ?: MediaAccessUiState.Denied(canAskAgain)
 
         /** Étape après un retour au premier plan, depuis l'étape [current]. */
         private fun afterResume(current: MediaAccessUiState): MediaAccessUiState =
-            when {
-                hasAccess() -> MediaAccessUiState.Granted
-                current == MediaAccessUiState.Granted -> MediaAccessUiState.Rationale
-                else -> current
-            }
+            granted() ?: if (current is MediaAccessUiState.Granted) MediaAccessUiState.Rationale else current
 
-        private fun hasAccess(): Boolean = accessReader.currentAccess() != MediaAccess.NONE
+        /** Étape « accordé » selon l'accès réel, ou `null` sans accès. */
+        private fun granted(): MediaAccessUiState.Granted? =
+            when (accessReader.currentAccess()) {
+                MediaAccess.FULL -> MediaAccessUiState.Granted(partial = false)
+                MediaAccess.PARTIAL -> MediaAccessUiState.Granted(partial = true)
+                MediaAccess.NONE -> null
+            }
     }

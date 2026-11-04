@@ -19,11 +19,11 @@ class MediaAccessViewModelTest {
 
     @Test
     fun `starts on the app when media access is already granted, even partially`() {
-        listOf(MediaAccess.FULL, MediaAccess.PARTIAL).forEach { granted ->
-            access = granted
+        access = MediaAccess.FULL
+        assertEquals(MediaAccessUiState.Granted(partial = false), MediaAccessViewModel(reader).uiState.value)
 
-            assertEquals(MediaAccessUiState.Granted, MediaAccessViewModel(reader).uiState.value)
-        }
+        access = MediaAccess.PARTIAL
+        assertEquals(MediaAccessUiState.Granted(partial = true), MediaAccessViewModel(reader).uiState.value)
     }
 
     @Test
@@ -43,7 +43,7 @@ class MediaAccessViewModelTest {
 
         viewModel.onEvent(MediaAccessEvent.RequestAnswered(canAskAgain = false))
 
-        assertEquals(MediaAccessUiState.Granted, viewModel.uiState.value)
+        assertEquals(MediaAccessUiState.Granted(partial = false), viewModel.uiState.value)
     }
 
     @Test
@@ -75,7 +75,7 @@ class MediaAccessViewModelTest {
 
         viewModel.onEvent(MediaAccessEvent.Resumed)
 
-        assertEquals(MediaAccessUiState.Granted, viewModel.uiState.value)
+        assertEquals(MediaAccessUiState.Granted(partial = false), viewModel.uiState.value)
     }
 
     @Test
@@ -97,5 +97,38 @@ class MediaAccessViewModelTest {
         viewModel.onEvent(MediaAccessEvent.Resumed)
 
         assertEquals(MediaAccessUiState.Denied(canAskAgain = true), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `relaunches the system request to extend a limited selection`() =
+        runTest {
+            access = MediaAccess.PARTIAL
+            val viewModel = MediaAccessViewModel(reader)
+
+            viewModel.onEvent(MediaAccessEvent.ExtendSelection)
+
+            assertEquals(MediaAccessEffect.LaunchPermissionRequest, viewModel.uiEffects.first())
+        }
+
+    @Test
+    fun `drops the limited access banner once full access is granted`() {
+        access = MediaAccess.PARTIAL
+        val viewModel = MediaAccessViewModel(reader)
+        access = MediaAccess.FULL
+
+        viewModel.onEvent(MediaAccessEvent.RequestAnswered(canAskAgain = false))
+
+        assertEquals(MediaAccessUiState.Granted(partial = false), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `shows the limited access banner when the selection is reduced from the settings`() {
+        access = MediaAccess.FULL
+        val viewModel = MediaAccessViewModel(reader)
+        access = MediaAccess.PARTIAL
+
+        viewModel.onEvent(MediaAccessEvent.Resumed)
+
+        assertEquals(MediaAccessUiState.Granted(partial = true), viewModel.uiState.value)
     }
 }

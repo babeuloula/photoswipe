@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,10 +16,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.babeuloula.photoswipe.permission.MEDIA_PERMISSIONS
+import fr.babeuloula.photoswipe.permission.MEDIA_PERMISSION_REQUEST
 
 /**
  * Affiche [content] seulement quand l'application peut lire les photos et vidéos ; sinon, le
- * parcours d'accès (explication, demande système, refus). Il exécute les effets de
+ * parcours d'accès (explication, demande système, refus). En accès partiel, une bannière surmonte
+ * [content]. [modifier] s'applique à l'écran affiché, [content] gère lui-même ses marges. Il exécute les effets de
  * [MediaAccessViewModel] : demande système et ouverture des réglages.
  */
 @Composable
@@ -45,7 +48,7 @@ fun MediaAccessGate(
         viewModel.uiEffects.collect { effect ->
             when (effect) {
                 MediaAccessEffect.LaunchPermissionRequest -> {
-                    permissionRequest.launch(MEDIA_PERMISSIONS)
+                    permissionRequest.launch(MEDIA_PERMISSION_REQUEST)
                 }
 
                 MediaAccessEffect.OpenAppSettings -> {
@@ -77,8 +80,13 @@ fun MediaAccessGate(
             )
         }
 
-        MediaAccessUiState.Granted -> {
-            content()
+        is MediaAccessUiState.Granted -> {
+            Column(modifier = modifier) {
+                if (current.partial) {
+                    LimitedAccessBanner(onManageAccess = { viewModel.onEvent(MediaAccessEvent.ExtendSelection) })
+                }
+                content()
+            }
         }
     }
 }
