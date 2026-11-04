@@ -32,6 +32,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
