@@ -30,10 +30,10 @@ Rapports : `<module>/build/reports/tests/<tâche>/index.html` (HTML lisible) et 
 
 | Module | Framework | Ce qui est testé |
 |---|---|---|
-| `:domain` | JUnit Jupiter (JUnit 6) | Mise en place du module (pas de framework Android sur le classpath), invariants des modèles, `SameDayMatcher` (même jour, fuseau, 29 février), `ReviewWindowProvider` (milieu d'année, changement d'année, 29 février, fuseau de l'horloge, avec `Clock.fixed`). Use cases *(prévu, epic 2)* |
+| `:domain` | JUnit Jupiter (JUnit 6) | Mise en place du module (pas de framework Android sur le classpath), invariants des modèles, `SameDayMatcher` (même jour, fuseau, 29 février), `ReviewWindowProvider` (milieu d'année, changement d'année, 29 février, fuseau de l'horloge, avec `Clock.fixed`). Les ports n'ont pas de comportement à tester : leurs fakes arrivent avec PS-15. Use cases *(prévu, epic 2)* |
 | `:data` | JUnit 4 | Mise en place du module. DAO Room en mémoire, migrations, DataStore *(prévu, epic 3)* |
 | `:app` | JUnit 4 + Robolectric (API 34) | Démarrage de `MainActivity` (Hilt, Compose, bord à bord), `TimeModule`, thème Material 3, i18n |
-| `:architecture-tests` | JUnit Jupiter + Konsist | Sens des dépendances entre modules (ADR [0005](decisions/0005-konsist-architecture-tests.md)) |
+| `:architecture-tests` | JUnit Jupiter + Konsist | Sens des dépendances entre modules (ADR [0005](decisions/0005-konsist-architecture-tests.md)), ports du domaine limités aux interfaces (ADR [0007](decisions/0007-domain-ports.md)) |
 | `build-logic` | JUnit Jupiter + `ProjectBuilder` | Chaque plugin de convention applique les bonnes valeurs (SDK, JVM, Hilt, Compose, qualité) |
 
 Les modules Android restent sur JUnit 4 en attendant une décision ADR sur JUnit 5/6 côté Android.
