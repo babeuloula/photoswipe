@@ -68,9 +68,16 @@ La bibliothèque de Google pour décrire l'interface en Kotlin plutôt qu'en XML
 - **Clair / sombre** : le thème suit le réglage du téléphone.
 - **Edge-to-edge** : l'application se dessine sur tout l'écran, y compris sous la barre d'état et la barre de navigation. Les **insets** sont les marges qu'il faut laisser pour que le contenu ne passe pas sous ces barres ; le `Scaffold` de Material 3 les calcule pour nous.
 
+### Outils de qualité : ktlint, detekt, Android Lint
+Trois « relecteurs automatiques », qui font échouer le build au moindre problème :
+- **ktlint** vérifie la **mise en forme** (espaces, indentation, ordre des imports). Les règles sont dans `.editorconfig`. `./gradlew ktlintFormat` corrige tout seul la plupart des problèmes.
+- **detekt** cherche les **mauvaises pratiques** : fonction trop longue ou trop complexe, code inutilisé, « nombre magique » sans nom… Ses réglages sont dans `config/detekt/detekt.yml`.
+- **Android Lint** connaît Android : ressource manquante, API trop récente pour le téléphone, **traduction manquante**. Une chaîne présente en anglais mais pas en français fait échouer le build.
+
+Une seule commande lance les trois : `./gradlew quality`.
+
 ### Outils qui arrivent dans les prochains tickets
 - **Room** et **DataStore** : le stockage local, pour les décisions de tri et les préférences.
-- **ktlint**, **detekt** et **Android Lint** : des outils qui vérifient la mise en forme et la qualité du code.
 
 ### Tests unitaires
 Du code qui vérifie automatiquement que le code fonctionne. Ils se trouvent dans `src/test/` et se lancent avec `./gradlew test`, sans téléphone ni émulateur.
@@ -96,10 +103,12 @@ photoswipe/
 │       │   ├── kotlin/               Code Kotlin : PhotoSwipeApplication, MainActivity, di/ (modules Hilt), ui/ (écrans Compose) et ui/theme/ (thème Material 3)
 │       │   └── res/                  Ressources : textes (values/ en anglais, values-fr/ en français), thème de la fenêtre (themes.xml), icônes
 │       └── test/                     Tests unitaires du module (Robolectric pour ce qui touche à Android)
+├── .editorconfig              Règles de mise en forme partagées par l'éditeur et ktlint
 ├── build-logic/               Plugins de convention : réglages Gradle communs à tous les modules
 │   └── convention/src/
-│       ├── main/kotlin/              Les plugins (Android, JVM, Hilt, Compose) et ProjectConfig (SDK, version de Java)
+│       ├── main/kotlin/              Les plugins (Android, JVM, Hilt, Compose, qualité) et ProjectConfig (SDK, version de Java)
 │       └── test/kotlin/              Tests qui vérifient que les plugins appliquent les bons réglages
+├── config/detekt/detekt.yml   Réglages de detekt (analyse statique)
 ├── data/                      Module « données » : accès aux photos du téléphone, base de données…
 │   ├── build.gradle.kts
 │   └── src/test/
@@ -138,6 +147,8 @@ Comme la recette ne dépend pas de la cuisine, on pourrait changer la manière d
 
 ```bash
 ./gradlew test            # lancer les tests
+./gradlew quality         # vérifier le format et la qualité (ktlint, detekt, Android Lint)
+./gradlew ktlintFormat    # corriger automatiquement la mise en forme
 ./gradlew assembleDebug   # construire l'APK de développement
 ```
 

@@ -41,13 +41,15 @@ La configuration commune est portée par des plugins de convention, dans le buil
 
 | Plugin | Applique | Configure |
 |---|---|---|
-| `photoswipe.android.application` | `com.android.application` | `compileSdk` 37, `minSdk` 33, `targetSdk` 37, toolchain JVM 17 |
-| `photoswipe.android.library` | `com.android.library` | `compileSdk` 37, `minSdk` 33, toolchain JVM 17 |
-| `photoswipe.jvm.library` | `org.jetbrains.kotlin.jvm` | toolchain JVM 17, tests sur la plateforme JUnit |
+| `photoswipe.android.application` | `com.android.application`, `photoswipe.quality` | `compileSdk` 37, `minSdk` 33, `targetSdk` 37, toolchain JVM 17, Android Lint bloquant |
+| `photoswipe.android.library` | `com.android.library`, `photoswipe.quality` | `compileSdk` 37, `minSdk` 33, toolchain JVM 17, Android Lint bloquant |
+| `photoswipe.jvm.library` | `org.jetbrains.kotlin.jvm`, `photoswipe.quality` | toolchain JVM 17, tests sur la plateforme JUnit |
+| `photoswipe.quality` | `org.jlleitschuh.gradle.ktlint`, `io.gitlab.arturbosch.detekt` | ktlint et detekt bloquants, tâche `quality` par module (ktlint + detekt + Android Lint sur les modules Android). Appliqué d'office par les trois conventions ci-dessus (ADR [0003](decisions/0003-static-analysis-tooling.md)) |
 | `photoswipe.android.hilt` | `com.google.devtools.ksp`, `com.google.dagger.hilt.android` | dépendances `hilt-android` et `hilt-compiler` (processeur via KSP, jamais kapt). À appliquer après une convention Android |
 | `photoswipe.android.compose` | `org.jetbrains.kotlin.plugin.compose` | `buildFeatures.compose`, BOM Compose (`implementation` et `testImplementation`), `ui`, `ui-tooling-preview`, et `ui-tooling` en `debugImplementation` seulement. À appliquer après une convention Android |
 
 - Les valeurs sont centralisées dans `ProjectConfig`.
+- Android Lint : `abortOnError` et `MissingTranslation` en erreur (SPEC §0.2), réglés dans la configuration Android commune (`KotlinAndroid.kt`).
 - Les tests (`ProjectBuilder`) vérifient que chaque plugin applique les bonnes valeurs ; `./gradlew test` les lance.
 - Les versions sont toutes dans `gradle/libs.versions.toml`, y compris celles des plugins AGP, Kotlin, Compose, KSP et Hilt, que `build-logic` utilise en `compileOnly`.
 
@@ -109,6 +111,9 @@ Relevées le 2026-11-03 sur les sources officielles (Google Maven, Maven Central
 | Compose BOM | 2026.09.00 | Compose UI 1.12.1, Material 3 1.4.0 |
 | Kotlin Compose compiler plugin | 2.4.21 | Même version que Kotlin |
 | Robolectric | 4.17 | Tests sur l'API 34 (ADR 0002) |
+| ktlint-gradle (plugin) | 14.2.0 | |
+| ktlint | 1.8.0 | Moteur utilisé par le plugin, style `ktlint_official` |
+| detekt | 1.23.8 | Dernière stable ; la 2.0 n'est qu'en alpha (ADR 0003) |
 | GitHub Actions | `checkout@v7`, `setup-java@v6`, `gradle/actions/setup-gradle@v6`, `upload-artifact@v7` | CI |
 
 ## 6. Bibliothèques et justification
@@ -126,9 +131,11 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Compose UI Test (JUnit 4) | `:app` (tests) | Tests de rendu Compose (`createAndroidComposeRule`) sur Robolectric |
 | Hilt Android Testing | `:app` (tests) | `@HiltAndroidTest` et `HiltAndroidRule` pour vérifier l'injection dans les tests |
 | Robolectric | `:app` (tests) | Exécute le framework Android sur la JVM : tests Hilt sans émulateur, en local comme en CI |
+| ktlint (plugin `org.jlleitschuh.gradle.ktlint`) | tous (build) | Format du code imposé par la SPEC §12 ; le plugin crée les tâches `ktlintCheck` et `ktlintFormat` par source set |
+| detekt | tous (build) | Analyse statique imposée par la SPEC §12 (complexité, code mort, mauvaises pratiques) |
 
-Prévues dans la SPEC, ajoutées avec leur ticket : Navigation Compose, Room, DataStore, Coil 3, Media3 ExoPlayer, WorkManager, ktlint, detekt, Konsist, MockK, Turbine, kotlinx-coroutines-test.
+Prévues dans la SPEC, ajoutées avec leur ticket : Navigation Compose, Room, DataStore, Coil 3, Media3 ExoPlayer, WorkManager, Konsist, MockK, Turbine, kotlinx-coroutines-test.
 
 ## 7. CI
 
-`.github/workflows/ci.yml` se lance à chaque push sur `main` et sur chaque PR. Il installe le JDK 17 (Temurin) et Gradle, valide le wrapper, puis exécute `test` (modules + conventions `build-logic`), `lint` et `assembleDebug`. En cas d'échec, les rapports sont publiés en artefact. Chaque nouveau check du projet y est ajouté dans la PR qui l'introduit.
+`.github/workflows/ci.yml` se lance à chaque push sur `main` et sur chaque PR. Il installe le JDK 17 (Temurin) et Gradle, valide le wrapper, puis exécute `test` (modules + conventions `build-logic`), `quality` (ktlint, detekt et Android Lint) et `assembleDebug`. En cas d'échec, les rapports sont publiés en artefact. Chaque nouveau check du projet y est ajouté dans la PR qui l'introduit.

@@ -1,5 +1,5 @@
-# CI : lint Android, tests unitaires et build debug à chaque push sur main et sur chaque PR.
-# À faire évoluer avec le projet : chaque nouveau check (ktlint, detekt, Konsist, ...) y est ajouté.
+# CI : qualité (ktlint, detekt, Android Lint), tests unitaires et build debug à chaque push sur main et sur chaque PR.
+# À faire évoluer avec le projet : chaque nouveau check (Konsist, tests instrumentés, ...) y est ajouté.
 name: CI
 
 on:
@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   build:
-    name: Lint, unit tests and debug build
+    name: Quality, unit tests and debug build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -36,8 +36,8 @@ jobs:
       - name: Unit tests (modules + build-logic conventions)
         run: ./gradlew test --console=plain
 
-      - name: Android Lint
-        run: ./gradlew lint --console=plain
+      - name: Quality (ktlint, detekt, Android Lint)
+        run: ./gradlew quality --console=plain
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --console=plain

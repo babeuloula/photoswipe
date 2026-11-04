@@ -43,10 +43,11 @@ class PhotoSwipeThemeTest {
     @Test
     fun `uses wallpaper based colors when dynamic color is on`() {
         lateinit var expected: ColorScheme
-        val colors = colorSchemeOf { content ->
-            expected = dynamicDarkColorScheme(LocalContext.current)
-            PhotoSwipeTheme(darkTheme = true, dynamicColor = true, content = content)
-        }
+        val colors =
+            colorSchemeOf { content ->
+                expected = dynamicDarkColorScheme(LocalContext.current)
+                PhotoSwipeTheme(darkTheme = true, dynamicColor = true, content = content)
+            }
 
         assertEquals(expected.primary, colors.primary)
         assertEquals(expected.surface, colors.surface)
@@ -93,7 +94,11 @@ class PhotoSwipeThemeTest {
     }
 
     private fun compose(content: @Composable () -> Unit) {
-        Robolectric.buildActivity(ComponentActivity::class.java).setup().get().setContent(content = content)
+        Robolectric
+            .buildActivity(ComponentActivity::class.java)
+            .setup()
+            .get()
+            .setContent(content = content)
         ShadowLooper.idleMainLooper()
     }
 }

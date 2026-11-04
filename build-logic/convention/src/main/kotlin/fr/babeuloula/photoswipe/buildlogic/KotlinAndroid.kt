@@ -7,12 +7,24 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 /**
  * Configuration commune aux modules Android (application et bibliothèque).
  * Le Kotlin intégré d'AGP 9 est utilisé : aucun plugin `kotlin-android` n'est appliqué.
+ * Elle applique aussi Android Lint bloquant et la convention qualité (ktlint, detekt).
  * La version Java (`compileOptions`) n'est pas fixée ici : AGP la déduit du toolchain JVM.
  */
 internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
     commonExtension.compileSdk = ProjectConfig.COMPILE_SDK
     commonExtension.defaultConfig.minSdk = ProjectConfig.MIN_SDK
     configureKotlinToolchain()
+    configureAndroidLint(commonExtension)
+    pluginManager.apply(QualityConventionPlugin::class.java)
+}
+
+/**
+ * Android Lint bloquant (SPEC §0.2) : une traduction manquante (`MissingTranslation`)
+ * est une erreur, et toute erreur fait échouer le build.
+ */
+private fun configureAndroidLint(commonExtension: CommonExtension) {
+    commonExtension.lint.abortOnError = true
+    commonExtension.lint.error += "MissingTranslation"
 }
 
 /** Aligne Kotlin et Java sur la JVM du projet via le toolchain Gradle. */

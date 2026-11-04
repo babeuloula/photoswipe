@@ -29,16 +29,18 @@ Prérequis : JDK 17 et le SDK Android (`local.properties` contient `sdk.dir`, ce
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 
 ./gradlew test            # tests unitaires de tous les modules + tests des conventions build-logic
-./gradlew lint            # Android Lint
+./gradlew quality         # ktlint + detekt + Android Lint sur tous les modules (bloquant)
+./gradlew ktlintFormat    # corrige automatiquement la mise en forme
 ./gradlew assembleDebug   # APK debug dans app/build/outputs/apk/debug/
-./gradlew test lint assembleDebug   # ce que lance la CI
+./gradlew test quality assembleDebug   # ce que lance la CI
 ```
 
 ## Structure
 - `:app` : UI, navigation, assemblage DI (modules Hilt dans le package `di`), point d'entrée Android (`fr.babeuloula.photoswipe`). Le thème Material 3 vit dans `ui/theme` (`PhotoSwipeTheme`) : les écrans lisent couleurs, typo et formes via `MaterialTheme`, jamais en dur.
 - `:data` : implémentations Android des ports du domaine : MediaStore, Room, DataStore, WorkManager (`fr.babeuloula.photoswipe.data`).
 - `:domain` : modèles, use cases, ports, en Kotlin JVM pur (`fr.babeuloula.photoswipe.domain`).
-- `build-logic/` (build inclus) : plugins de convention `photoswipe.android.application`, `photoswipe.android.library`, `photoswipe.jvm.library`, `photoswipe.android.hilt` (KSP + Hilt) et `photoswipe.android.compose` (compilateur Compose + BOM), ces deux derniers à appliquer après une convention Android. Les valeurs partagées (SDK, JVM) sont dans `ProjectConfig`. Un module applique sa convention et ne déclare que ce qui lui est propre (namespace, dépendances). Toute nouvelle configuration commune (Compose, Hilt, qualité) devient un plugin de convention (ADR 0001).
+- `build-logic/` (build inclus) : plugins de convention `photoswipe.android.application`, `photoswipe.android.library`, `photoswipe.jvm.library`, `photoswipe.android.hilt` (KSP + Hilt) et `photoswipe.android.compose` (compilateur Compose + BOM), ces deux derniers à appliquer après une convention Android, et `photoswipe.quality` (ktlint + detekt + tâche `quality`), appliqué d'office par les trois conventions de module (ADR 0003). Les valeurs partagées (SDK, JVM) sont dans `ProjectConfig`. Un module applique sa convention et ne déclare que ce qui lui est propre (namespace, dépendances). Toute nouvelle configuration commune (Compose, Hilt, qualité) devient un plugin de convention (ADR 0001).
+- Qualité : style ktlint `ktlint_official` (`.editorconfig`), règles detekt ajustées et justifiées dans `config/detekt/detekt.yml`, Android Lint avec `MissingTranslation` en erreur.
 - Versions : `gradle/libs.versions.toml`, sans aucune version en dur ailleurs. CI : `.github/workflows/ci.yml`.
 
 ## Tests
@@ -50,7 +52,7 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 
 ## Processus de travail
 1. On travaille un ticket (PS-N) à la fois, dans l'ordre de l'epic. Chaque ticket a sa branche `ps-N-description` et sa PR vers `main`.
-2. Avant de commiter, `./gradlew test lint assembleDebug` doit passer.
+2. Avant de commiter, `./gradlew test quality assembleDebug` doit passer.
 3. Les commits suivent Conventional Commits et citent le ticket, par exemple `feat(core): add multi-module skeleton (PS-1)`.
 4. Chaque PR est assignée à `babeuloula` et porte :
    - un label `epic: N-nom` ;
@@ -69,4 +71,4 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 10. Ne rien faire qui dépasse le périmètre du ticket et de l'epic en cours.
 
 ## État d'avancement
-- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 mergé (PR #3), PS-4 en revue (thème M3). Suivent PS-5 (ktlint, detekt, lint), PS-6 (compléments CI), PS-7 (Konsist), PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
+- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 mergé (PR #3), PS-4 mergé (PR #4), PS-5 en revue (ktlint, detekt, lint). Suivent PS-6 (compléments CI), PS-7 (Konsist), PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
