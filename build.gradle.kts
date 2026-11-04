@@ -5,3 +5,10 @@ plugins {
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.jvm) apply false
 }
+
+// `./gradlew test` lance aussi les tests des plugins de convention (build inclus build-logic).
+tasks.register("test") {
+    group = "verification"
+    description = "Runs the build-logic convention plugin tests."
+    dependsOn(gradle.includedBuild("build-logic").task(":convention:test"))
+}

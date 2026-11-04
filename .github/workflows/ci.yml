@@ -33,7 +33,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Unit tests
+      - name: Unit tests (modules + build-logic conventions)
         run: ./gradlew test --console=plain
 
       - name: Android Lint

@@ -28,7 +28,7 @@ Prérequis : JDK 17 et le SDK Android (`local.properties` contient `sdk.dir`, ce
 # En local sur la machine de Jérémy : le JBR d'Android Studio est en version 25, on force le JDK 17
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 
-./gradlew test            # tests unitaires de tous les modules
+./gradlew test            # tests unitaires de tous les modules + tests des conventions build-logic
 ./gradlew lint            # Android Lint
 ./gradlew assembleDebug   # APK debug dans app/build/outputs/apk/debug/
 ./gradlew test lint assembleDebug   # ce que lance la CI
@@ -38,7 +38,8 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 - `:app` : UI, navigation, assemblage DI, point d'entrée Android (`fr.babeuloula.photoswipe`).
 - `:data` : implémentations Android des ports du domaine : MediaStore, Room, DataStore, WorkManager (`fr.babeuloula.photoswipe.data`).
 - `:domain` : modèles, use cases, ports, en Kotlin JVM pur (`fr.babeuloula.photoswipe.domain`).
-- Versions : `gradle/libs.versions.toml`. CI : `.github/workflows/ci.yml`.
+- `build-logic/` (build inclus) : plugins de convention `photoswipe.android.application`, `photoswipe.android.library` et `photoswipe.jvm.library`. Les valeurs partagées (SDK, JVM) sont dans `ProjectConfig`. Un module applique sa convention et ne déclare que ce qui lui est propre (namespace, dépendances). Toute nouvelle configuration commune (Compose, Hilt, qualité) devient un plugin de convention (ADR 0001).
+- Versions : `gradle/libs.versions.toml`, sans aucune version en dur ailleurs. CI : `.github/workflows/ci.yml`.
 
 ## Tests
 - `:domain` : JUnit Jupiter (JUnit 6).
@@ -57,8 +58,9 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
    Lancer `gh label list` avant de créer un nouveau label.
 5. **La CI est maintenue au fil du projet.** Tout nouveau check (ktlint, detekt, Konsist, tests instrumentés, nouveau module, etc.) est ajouté à `.github/workflows/ci.yml` dans la même PR. Une PR n'est prête que si son run CI est vert.
 6. **La documentation est maintenue au fil du projet.** On met à jour `CLAUDE.md`, `docs/architecture.md` et `docs/beginners-guide.md` dès qu'un module, un dossier, un outil ou une commande change.
-7. Après avoir ouvert la PR, on s'arrête et on attend la revue avant le ticket suivant.
-8. Ne rien faire qui dépasse le périmètre du ticket et de l'epic en cours.
+7. **Démo sur émulateur** : si le ticket a un effet visible, on lance l'émulateur (`~/Library/Android/sdk/emulator/emulator -avd Medium_Phone_API_37.0`), on installe l'app (`./gradlew installDebug`) et on donne à Jérémy la liste de ce qu'il faut tester et comment. Si le ticket n'a rien de visible, on le dit explicitement.
+8. Après avoir ouvert la PR, on s'arrête et on attend la revue avant le ticket suivant.
+9. Ne rien faire qui dépasse le périmètre du ticket et de l'epic en cours.
 
 ## État d'avancement
-- Epic 1 « Squelette & outillage » : PS-1 en revue (PR #1). Suivent PS-2 (catalogue et conventions), PS-3 (Hilt), PS-4 (thème M3), PS-5 (ktlint, detekt, lint), PS-6 (compléments CI), PS-7 (Konsist), PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
+- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 en revue (catalogue et conventions). Suivent PS-3 (Hilt), PS-4 (thème M3), PS-5 (ktlint, detekt, lint), PS-6 (compléments CI), PS-7 (Konsist), PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
