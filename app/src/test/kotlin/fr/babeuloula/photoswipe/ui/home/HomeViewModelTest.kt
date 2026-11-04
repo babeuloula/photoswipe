@@ -40,7 +40,7 @@ class HomeViewModelTest {
             val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025), takenOn(2, 2020), takenOn(3, 2019))))
             repository.save(aReviewEntry(mediaId = 2, reviewYear = 2026))
 
-            assertEquals(HomeUiState.Loaded(ReviewDay(today, remainingCount = 2)), loaded(viewModel))
+            assertEquals(loadedWithToday(2), loaded(viewModel))
         }
 
     @Test
@@ -51,7 +51,7 @@ class HomeViewModelTest {
 
             repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
 
-            assertEquals(HomeUiState.Loaded(ReviewDay(today, remainingCount = 1)), viewModel.uiState.value)
+            assertEquals(loadedWithToday(1), viewModel.uiState.value)
         }
 
     @Test
@@ -70,7 +70,7 @@ class HomeViewModelTest {
 
             viewModel.onEvent(HomeEvent.Retry)
 
-            assertEquals(HomeUiState.Loaded(ReviewDay(today, remainingCount = 1)), viewModel.uiState.value)
+            assertEquals(loadedWithToday(1), viewModel.uiState.value)
         }
 
     @Test
@@ -83,18 +83,39 @@ class HomeViewModelTest {
 
             viewModel.onEvent(HomeEvent.Resumed)
 
-            assertEquals(HomeUiState.Loaded(ReviewDay(today, remainingCount = 2)), viewModel.uiState.value)
+            assertEquals(loadedWithToday(2), viewModel.uiState.value)
         }
 
     @Test
-    fun `opens the deck of today from its card`() =
+    fun `opens the deck of the chosen day`() =
         runTest {
-            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
-            loaded(viewModel)
+            val viewModel = homeViewModel(FakeMediaSource())
 
-            viewModel.onEvent(HomeEvent.OpenToday)
+            viewModel.onEvent(HomeEvent.OpenDay(today.minusDays(3)))
 
-            assertEquals(HomeEffect.OpenDeck(ReviewDay(today, remainingCount = 1)), viewModel.uiEffects.first())
+            assertEquals(HomeEffect.OpenDeck(today.minusDays(3)), viewModel.uiEffects.first())
+        }
+
+    @Test
+    fun `lists the six previous days with their own count`() =
+        runTest {
+            val yesterday2024 =
+                aMediaItem(
+                    id = 9,
+                    takenAt =
+                        LocalDateTime
+                            .of(
+                                today.minusDays(1).withYear(2024),
+                                NOON,
+                            ).atZone(FixedClock.PARIS)
+                            .toInstant(),
+                )
+            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025), yesterday2024)))
+
+            val state = loaded(viewModel) as HomeUiState.Loaded
+
+            assertEquals((1L..6L).map { today.minusDays(it) }, state.previousDays.map { it.date })
+            assertEquals(listOf(1, 0, 0, 0, 0, 0), state.previousDays.map { it.remainingCount })
         }
 
     @Test
@@ -106,6 +127,13 @@ class HomeViewModelTest {
 
             assertEquals(HomeEffect.OpenSettings, viewModel.uiEffects.first())
         }
+
+    /** État chargé avec [count] médias à trier aujourd'hui et aucun les jours précédents. */
+    private fun loadedWithToday(count: Int): HomeUiState =
+        HomeUiState.Loaded(
+            today = ReviewDay(today, remainingCount = count),
+            previousDays = (1L..6L).map { ReviewDay(today.minusDays(it), remainingCount = 0) },
+        )
 
     private fun homeViewModel(source: MediaSource): HomeViewModel =
         HomeViewModel(GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, clock))
@@ -148,6 +176,6 @@ class HomeViewModelTest {
 
             viewModel.onEvent(HomeEvent.Resumed)
 
-            assertEquals(listOf(HomeUiState.Loading, HomeUiState.Loaded(ReviewDay(today, remainingCount = 1))), states)
+            assertEquals(listOf(HomeUiState.Loading, loadedWithToday(1)), states)
         }
 }

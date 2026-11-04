@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import java.time.LocalDate
 import javax.inject.Inject
 
 /** État de l'accueil (SPEC §4.2). */
@@ -31,16 +32,20 @@ sealed interface HomeUiState {
      * Jours de la fenêtre calculés.
      *
      * @property today aujourd'hui et son nombre de médias à trier.
+     * @property previousDays les 6 jours précédents, du plus récent au plus ancien, à rattraper.
      */
     data class Loaded(
         val today: ReviewDay,
+        val previousDays: List<ReviewDay>,
     ) : HomeUiState
 }
 
 /** Action de l'utilisateur ou du système sur l'accueil. */
 sealed interface HomeEvent {
-    /** Tap sur la carte « Aujourd'hui ». */
-    data object OpenToday : HomeEvent
+    /** Tap sur la carte « Aujourd'hui » ou sur un jour à rattraper. */
+    data class OpenDay(
+        val date: LocalDate,
+    ) : HomeEvent
 
     /** « Réessayer » après une erreur. */
     data object Retry : HomeEvent
@@ -54,9 +59,9 @@ sealed interface HomeEvent {
 
 /** Navigation demandée par l'accueil. */
 sealed interface HomeEffect {
-    /** Ouvrir la pile de [day]. */
+    /** Ouvrir la pile du jour [date]. */
     data class OpenDeck(
-        val day: ReviewDay,
+        val date: LocalDate,
     ) : HomeEffect
 
     /** Ouvrir les réglages. */
@@ -64,7 +69,8 @@ sealed interface HomeEffect {
 }
 
 /**
- * ViewModel de l'accueil : la carte « Aujourd'hui » et son nombre de médias à trier (SPEC §4.2).
+ * ViewModel de l'accueil : la carte « Aujourd'hui » et les 6 jours précédents, chacun avec son
+ * nombre de médias à trier (SPEC §4.2).
  *
  * Les nombres suivent les décisions en direct (`GetReviewDays` est un flux). Ils sont recalculés
  * depuis le début à chaque retour au premier plan et après « Réessayer » : la galerie, le jour ou
@@ -93,12 +99,8 @@ class HomeViewModel
         /** Traite une action de l'utilisateur ou du système. */
         fun onEvent(event: HomeEvent) {
             when (event) {
-                HomeEvent.OpenToday -> {
-                    (uiState.value as? HomeUiState.Loaded)?.let {
-                        effects.trySend(
-                            HomeEffect.OpenDeck(it.today),
-                        )
-                    }
+                is HomeEvent.OpenDay -> {
+                    effects.trySend(HomeEffect.OpenDeck(event.date))
                 }
 
                 HomeEvent.Retry -> {
@@ -121,8 +123,9 @@ class HomeViewModel
          */
         private fun loadDays(showLoading: Boolean): Flow<HomeUiState> =
             getReviewDays()
-                .map<List<ReviewDay>, HomeUiState> { days -> HomeUiState.Loaded(today = days.first()) }
-                .onStart { if (showLoading) emit(HomeUiState.Loading) }
+                .map<List<ReviewDay>, HomeUiState> { days ->
+                    HomeUiState.Loaded(today = days.first(), previousDays = days.drop(1))
+                }.onStart { if (showLoading) emit(HomeUiState.Loading) }
                 .catch { emit(HomeUiState.Error) }
 
         private companion object {

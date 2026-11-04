@@ -25,7 +25,7 @@ fun HomeRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEffects.collect { effect ->
             when (effect) {
-                is HomeEffect.OpenDeck -> onOpenDeck(effect.day.date)
+                is HomeEffect.OpenDeck -> onOpenDeck(effect.date)
                 HomeEffect.OpenSettings -> onOpenSettings()
             }
         }
