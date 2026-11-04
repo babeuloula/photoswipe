@@ -116,6 +116,49 @@ class SameDayMatcherTest {
         assertEquals(listOf(from2025), selected)
     }
 
+    @Test
+    fun `moves leap day media to February 28 on non-leap years`() {
+        val leapDay = mediaTakenOn(id = 1, date = LocalDateTime.of(2024, 2, 29, 12, 0))
+
+        assertTrue(matcher.matches(leapDay, target = LocalDate.of(2027, 2, 28), zone = PARIS))
+    }
+
+    @Test
+    fun `keeps February 28 media alongside leap day media on non-leap years`() {
+        val leapDay = mediaTakenOn(id = 1, date = LocalDateTime.of(2024, 2, 29, 12, 0))
+        val feb28 = mediaTakenOn(id = 2, date = LocalDateTime.of(2025, 2, 28, 12, 0))
+
+        val selected =
+            matcher.select(listOf(leapDay, feb28), target = LocalDate.of(2027, 2, 28), zone = PARIS)
+
+        assertEquals(listOf(leapDay, feb28), selected)
+    }
+
+    @Test
+    fun `does not show leap day media on March 1 of non-leap years`() {
+        val leapDay = mediaTakenOn(id = 1, date = LocalDateTime.of(2024, 2, 29, 12, 0))
+
+        assertFalse(matcher.matches(leapDay, target = LocalDate.of(2027, 3, 1), zone = PARIS))
+    }
+
+    @Test
+    fun `shows leap day media on February 29 of leap years`() {
+        val leapDay = mediaTakenOn(id = 1, date = LocalDateTime.of(2024, 2, 29, 12, 0))
+
+        assertTrue(matcher.matches(leapDay, target = LocalDate.of(2028, 2, 29), zone = PARIS))
+    }
+
+    @Test
+    fun `does not show leap day media on February 28 of leap years`() {
+        val leapDay = mediaTakenOn(id = 1, date = LocalDateTime.of(2024, 2, 29, 12, 0))
+        val feb28 = mediaTakenOn(id = 2, date = LocalDateTime.of(2025, 2, 28, 12, 0))
+
+        val selected =
+            matcher.select(listOf(leapDay, feb28), target = LocalDate.of(2028, 2, 28), zone = PARIS)
+
+        assertEquals(listOf(feb28), selected)
+    }
+
     private fun mediaTakenOn(
         id: Long,
         date: LocalDateTime,
