@@ -129,6 +129,7 @@ photoswipe/
 │   ├── src/main/kotlin/…/model/  Les modèles : MediaItem, ReviewDecision, ReviewDay, ReviewEntry, SessionSummary…
 │   ├── src/main/kotlin/…/port/  Les ports : des interfaces (MediaSource, ReviewRepository…) que le module data implémente
 │   ├── src/main/kotlin/…/service/  Les services purs : SameDayMatcher (médias « du même jour »), ReviewWindowProvider (les 7 jours de rattrapage)…
+│   ├── src/main/kotlin/…/usecase/  Les cas d'usage, un par intention de l'utilisateur : GetReviewDays (combien de médias à trier par jour)…
 │   ├── src/testFixtures/kotlin/…/fixtures/  Outils de test partagés avec data et app : builders aMediaItem(), aReviewEntry(), faux ports (FakeMediaSource, FakeReviewRepository), FixedClock
 │   └── src/test/
 ├── docs/                      Documentation (ce guide, l'architecture, les décisions)
@@ -157,7 +158,7 @@ Comme la recette ne dépend pas de la cuisine, on pourrait changer la manière d
 
 Ces frontières sont vérifiées automatiquement par des **tests d'architecture** écrits avec **Konsist**, une bibliothèque qui lit le code Kotlin comme du texte structuré (fichiers, packages, imports). Si quelqu'un importe par exemple une classe Android dans `domain`, ou une classe de `data` dans un écran de `app`, `./gradlew test` échoue et la CI devient rouge.
 
-Le domaine décrit ce dont il a besoin sous forme d'**interfaces**, appelées « ports » (package `port`) : par exemple `MediaSource`, « donne-moi les médias pris entre telle et telle date ». Le module `data` fournit les classes qui font vraiment le travail avec MediaStore ou Room, et Hilt les branche. Les fonctions de ces interfaces sont marquées `suspend` : elles peuvent attendre (lecture disque, base de données) sans bloquer l'écran.
+Le domaine décrit ce dont il a besoin sous forme d'**interfaces**, appelées « ports » (package `port`) : par exemple `MediaSource`, « donne-moi les médias pris entre telle et telle date ». Le module `data` fournit les classes qui font vraiment le travail avec MediaStore ou Room, et Hilt les branche. Les fonctions de ces interfaces sont marquées `suspend` : elles peuvent attendre (lecture disque, base de données) sans bloquer l'écran. Certaines renvoient un `Flow` : un flux de valeurs qui se met à jour tout seul, par exemple le nombre de médias à trier, qui baisse à chaque décision.
 
 ## 3. Lancer le projet
 

@@ -28,5 +28,5 @@ La SPEC (§5.2) nomme cinq ports (`MediaSource`, `ReviewRepository`, `SettingsRe
 - Les fakes de PS-15 implémentent ces interfaces en mémoire.
 - Avec l'accès partiel d'Android 14+, `mediaByIds` ne renvoie que les médias sélectionnés : la purge des orphelins ne doit pas tourner (ou doit se restreindre) tant que l'accès est partiel, sous peine d'effacer de vraies décisions.
 - L'écran a besoin de l'`IntentSender` caché derrière `MediaActionRequest`, mais `:app` n'importe `:data` que depuis `di` : le déballage passera par un adaptateur fourni par le package `di` (ticket de confirmation, epic 7).
-- Ajouter un `Flow` à un port imposera d'ajouter kotlinx-coroutines-core à `:domain` (justification dans `docs/architecture.md`).
+- Ajouter un `Flow` à un port imposera d'ajouter kotlinx-coroutines-core à `:domain` (justification dans `docs/architecture.md`). C'est fait par PS-16 : `ReviewRepository.observeEntries`, ADR [0008](0008-reactive-review-days.md).
 - Le rappel désactivé par défaut est un choix à valider avec Jérémy (complète le point 5 de la SPEC §16).

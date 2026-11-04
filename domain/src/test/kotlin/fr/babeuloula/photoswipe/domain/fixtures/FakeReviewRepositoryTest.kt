@@ -4,6 +4,11 @@ import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.TRASHED
+import fr.babeuloula.photoswipe.domain.model.ReviewEntry
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -118,5 +123,31 @@ class FakeReviewRepositoryTest {
             repository.deleteAllFor(setOf(MediaId(1)))
 
             assertEquals(listOf(kept), repository.entries)
+        }
+
+    @Test
+    fun `observes the current entries of the requested review years`() =
+        runTest {
+            val wanted =
+                listOf(aReviewEntry(mediaId = 1, reviewYear = 2026), aReviewEntry(mediaId = 2, reviewYear = 2027))
+            val repository = FakeReviewRepository(wanted + aReviewEntry(mediaId = 3, reviewYear = 2025))
+
+            assertEquals(wanted, repository.observeEntries(setOf(2026, 2027)).first())
+        }
+
+    @Test
+    fun `emits the entries again after each write`() =
+        runTest {
+            val repository = FakeReviewRepository()
+            val emissions = mutableListOf<List<ReviewEntry>>()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                repository.observeEntries(setOf(2026)).toList(emissions)
+            }
+            val kept = aReviewEntry(mediaId = 1, reviewYear = 2026)
+
+            repository.save(kept)
+            repository.delete(MediaId(1), 2026)
+
+            assertEquals(listOf(emptyList(), listOf(kept), emptyList<ReviewEntry>()), emissions)
         }
 }

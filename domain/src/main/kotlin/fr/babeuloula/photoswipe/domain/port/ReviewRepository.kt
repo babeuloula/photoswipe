@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.domain.port
 
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Stockage des décisions, une par couple (média, année de revue) (SPEC §3.3 et §6). Implémenté
@@ -16,6 +17,16 @@ interface ReviewRepository {
         reviewYear: Int,
         mediaIds: Set<MediaId>,
     ): List<ReviewEntry>
+
+    /**
+     * Entrées des années de revue [reviewYears], observées : le flux émet la liste actuelle dès la
+     * collecte, puis une nouvelle liste après chaque écriture qui peut la modifier. Il peut réémettre
+     * une liste identique (Room réémet à chaque écriture dans la table) : à l'appelant de filtrer.
+     *
+     * On observe par année et non par média : la fenêtre de revue couvre au plus deux années, alors
+     * qu'une liste de médias peut dépasser la limite de paramètres d'une requête SQLite (ADR 0008).
+     */
+    fun observeEntries(reviewYears: Set<Int>): Flow<List<ReviewEntry>>
 
     /** Enregistre [entry], en remplaçant l'éventuelle entrée du même couple (média, année de revue). */
     suspend fun save(entry: ReviewEntry)

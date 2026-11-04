@@ -7,9 +7,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Year
 import java.time.ZoneId
 import java.time.ZoneOffset
 
@@ -158,6 +160,85 @@ class SameDayMatcherTest {
 
         assertEquals(listOf(feb28), selected)
     }
+
+    @Test
+    fun `gives one midnight-to-midnight range per earlier year since 1970`() {
+        val ranges = matcher.rangesFor(target = LocalDate.of(2026, 11, 4), zone = PARIS)
+
+        assertEquals(2026 - SameDayMatcher.EARLIEST_YEAR, ranges.size)
+        assertEquals(midnight(1970, 11, 4)..<midnight(1970, 11, 5), ranges.first())
+        assertEquals(midnight(2025, 11, 4)..<midnight(2025, 11, 5), ranges.last())
+    }
+
+    @Test
+    fun `follows daylight saving time so a range may last 23 hours`() {
+        val ranges = matcher.rangesFor(target = LocalDate.of(2026, 3, 29), zone = PARIS)
+
+        val springForward2020 = ranges.single { it.start == midnight(2020, 3, 29) }
+        assertEquals(Duration.ofHours(23), Duration.between(springForward2020.start, springForward2020.endExclusive))
+    }
+
+    @Test
+    fun `extends February 28 ranges of leap years to February 29 when the target year is not leap`() {
+        val ranges = matcher.rangesFor(target = LocalDate.of(2027, 2, 28), zone = PARIS)
+
+        assertTrue(midnight(2024, 2, 28)..<midnight(2024, 3, 1) in ranges)
+        assertTrue(midnight(2025, 2, 28)..<midnight(2025, 3, 1) in ranges)
+        assertEquals(2027 - SameDayMatcher.EARLIEST_YEAR, ranges.size)
+    }
+
+    @Test
+    fun `keeps February 28 to one day when the target year is leap`() {
+        val ranges = matcher.rangesFor(target = LocalDate.of(2028, 2, 28), zone = PARIS)
+
+        assertTrue(midnight(2024, 2, 28)..<midnight(2024, 2, 29) in ranges)
+    }
+
+    @Test
+    fun `gives February 29 ranges for leap years only`() {
+        val ranges = matcher.rangesFor(target = LocalDate.of(2028, 2, 29), zone = PARIS)
+
+        val leapYears = (SameDayMatcher.EARLIEST_YEAR until 2028).filter { Year.isLeap(it.toLong()) }
+        assertEquals(leapYears.map { midnight(it, 2, 29)..<midnight(it, 3, 1) }, ranges)
+    }
+
+    @Test
+    fun `gives no range when no earlier year is searched`() {
+        assertEquals(emptyList<Any>(), matcher.rangesFor(LocalDate.of(SameDayMatcher.EARLIEST_YEAR, 6, 1), PARIS))
+    }
+
+    @Test
+    fun `ranges cover exactly the media that match, hour by hour over two years`() {
+        val targets =
+            listOf(
+                LocalDate.of(2026, 11, 4),
+                LocalDate.of(2026, 3, 29),
+                LocalDate.of(2026, 10, 25),
+                LocalDate.of(2027, 1, 1),
+                LocalDate.of(2027, 2, 28),
+                LocalDate.of(2028, 2, 28),
+                LocalDate.of(2028, 2, 29),
+            )
+        val instants =
+            generateSequence(midnight(2023, 1, 1)) { it.plus(Duration.ofHours(1)) }
+                .takeWhile { it < midnight(2025, 1, 1) }
+                .toList()
+
+        targets.forEach { target ->
+            val ranges = matcher.rangesFor(target, PARIS)
+            val mismatches =
+                instants.filter { instant ->
+                    ranges.any { instant in it } != matcher.matches(mediaTakenAt(1, instant), target, PARIS)
+                }
+            assertEquals(emptyList<Instant>(), mismatches, "target $target")
+        }
+    }
+
+    private fun midnight(
+        year: Int,
+        month: Int,
+        day: Int,
+    ): Instant = LocalDate.of(year, month, day).atStartOfDay(PARIS).toInstant()
 
     private fun mediaTakenOn(
         id: Long,
