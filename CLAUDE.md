@@ -39,7 +39,7 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 ## Structure
 - `:app` : UI, navigation, assemblage DI (modules Hilt dans le package `di`), point d'entrée Android (`fr.babeuloula.photoswipe`). Le thème Material 3 vit dans `ui/theme` (`PhotoSwipeTheme`) : les écrans lisent couleurs, typo et formes via `MaterialTheme`, jamais en dur.
 - `:data` : implémentations Android des ports du domaine : MediaStore, Room, DataStore, WorkManager (`fr.babeuloula.photoswipe.data`).
-- `:domain` : modèles, use cases, ports, en Kotlin JVM pur (`fr.babeuloula.photoswipe.domain`).
+- `:domain` : modèles (`model`), services purs (`service`), use cases, ports, en Kotlin JVM pur (`fr.babeuloula.photoswipe.domain`).
 - `:architecture-tests` : tests d'architecture Konsist seulement (ADR 0005). `:domain` n'importe ni `android.*`, ni `androidx.*`, ni `com.google.android.*`, ni rien du projet hors `…domain` ; `:app` n'importe `…data` que depuis son package `di`. Chaque règle est testée sur des fixtures (`src/test/resources/fixtures`). Un nouveau module ou une nouvelle règle de dépendance s'ajoute ici, et ses sources dans les entrées de la tâche `test` du module.
 - `build-logic/` (build inclus) : plugins de convention `photoswipe.android.application`, `photoswipe.android.library`, `photoswipe.jvm.library`, `photoswipe.android.hilt` (KSP + Hilt) et `photoswipe.android.compose` (compilateur Compose + BOM), ces deux derniers à appliquer après une convention Android, et `photoswipe.quality` (ktlint + detekt + tâche `quality`), appliqué d'office par les trois conventions de module (ADR 0003). Les valeurs partagées (SDK, JVM) sont dans `ProjectConfig`. Un module applique sa convention et ne déclare que ce qui lui est propre (namespace, dépendances). Toute nouvelle configuration commune (Compose, Hilt, qualité) devient un plugin de convention (ADR 0001).
 - i18n : `values/` (anglais) et `values-fr/`, un fichier par type (`strings.xml`, `plurals.xml`). Une nouvelle langue `values-xx` s'ajoute aussi dans `res/xml/locales_config.xml` ; `LocalizationTest` vérifie la parité des clés et la déclaration des langues.
@@ -75,4 +75,4 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 
 ## État d'avancement
 - Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 mergé (PR #3), PS-4 mergé (PR #4), PS-5 mergé (PR #5), PS-6 mergé (PR #6), PS-7 mergé (PR #7), PS-8 mergé (PR #8), PS-9 mergé (PR #9). Epic 1 terminé.
-- Epic 2 « Domaine » : PS-10 en revue (modèles du domaine dans `domain/model`, ADR 0006).
+- Epic 2 « Domaine » : PS-10 mergé (PR #10, modèles du domaine dans `domain/model`, ADR 0006), PS-11 en revue (`SameDayMatcher` dans `domain/service`, fuseau passé à chaque appel).
