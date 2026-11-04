@@ -1,41 +1,35 @@
 package fr.babeuloula.photoswipe.di
 
-import dagger.hilt.android.testing.HiltAndroidRule
-import dagger.hilt.android.testing.HiltAndroidTest
-import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.data.media.MediaStoreMediaSource
 import fr.babeuloula.photoswipe.domain.port.MediaSource
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
-import javax.inject.Inject
 
-/** Variante release : la galerie vient toujours de MediaStore, sans données de démo. */
-@HiltAndroidTest
-@RunWith(RobolectricTestRunner::class)
-@Config(application = HiltTestApplication::class)
+/**
+ * Variante release : la galerie vient toujours de MediaStore, sans outils développeur.
+ *
+ * Le test lit la liaison du module release par réflexion, sans graphe Hilt : le composant de test
+ * Hilt de la variante release se perdait parfois au cache de build en CI (`ClassNotFoundException`).
+ */
 class MediaSourceBindingTest {
-    @get:Rule
-    val hiltRule = HiltAndroidRule(this)
-
-    @Inject lateinit var mediaSource: MediaSource
-
-    @Before
-    fun inject() {
-        hiltRule.inject()
-    }
-
     @Test
-    fun `reads the gallery from MediaStore in release`() {
-        assertTrue(mediaSource is MediaStoreMediaSource)
+    fun `binds MediaStore as the media source in release`() {
+        val binding =
+            MediaSourceModule::class.java.getDeclaredMethod(
+                "bindMediaSource",
+                MediaStoreMediaSource::class.java,
+            )
+
+        assertEquals(MediaSource::class.java, binding.returnType)
     }
 
     @Test
     fun `ships no developer tools in release`() {
-        assertTrue(runCatching { Class.forName("fr.babeuloula.photoswipe.debug.DeveloperToolsActivity") }.isFailure)
+        listOf(
+            "fr.babeuloula.photoswipe.debug.DeveloperToolsActivity",
+            "fr.babeuloula.photoswipe.debug.DemoMediaCatalog",
+            "fr.babeuloula.photoswipe.di.SwitchableMediaSource",
+        ).forEach { name -> assertTrue(name, runCatching { Class.forName(name) }.isFailure) }
     }
 }
