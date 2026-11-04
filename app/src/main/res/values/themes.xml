@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Thème de la fenêtre, affiché avant que Compose ne dessine le premier écran.
+        Les couleurs, la typographie et les formes de l'interface viennent de PhotoSwipeTheme (Compose).
+        DayNight suit le thème clair ou sombre du système, sans barre d'action : Compose dessine tout.
+    -->
+    <style name="Theme.PhotoSwipe" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

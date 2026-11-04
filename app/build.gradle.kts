@@ -2,6 +2,7 @@
 plugins {
     alias(libs.plugins.photoswipe.android.application)
     alias(libs.plugins.photoswipe.android.hilt)
+    alias(libs.plugins.photoswipe.android.compose)
 }
 
 android {
@@ -32,11 +33,13 @@ dependencies {
     // :data n'est utilisé que pour le câblage DI (règle vérifiée par le test d'architecture, PS-7).
     implementation(project(":data"))
 
-    implementation(libs.androidx.activity)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.material3)
 
     testImplementation(libs.junit4)
     // Tests Hilt sur la JVM : Robolectric fournit le framework Android sans émulateur.
     testImplementation(libs.robolectric)
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.compiler)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
 }
