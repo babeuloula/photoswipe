@@ -29,11 +29,25 @@ Règles :
 
 ## 2. Modules
 
-| Module | Plugin Gradle | Package | Rôle |
+| Module | Plugin de convention | Package | Rôle |
 |---|---|---|---|
-| `:app` | `com.android.application` | `fr.babeuloula.photoswipe` | Point d'entrée (`MainActivity`), UI Compose *(prévu)*, ViewModels *(prévu)*, assemblage Hilt *(prévu)* |
-| `:data` | `com.android.library` | `fr.babeuloula.photoswipe.data` | Implémentations Android des ports : `MediaStoreMediaSource`, `RoomReviewRepository`, etc. *(prévu)* |
-| `:domain` | `org.jetbrains.kotlin.jvm` | `fr.babeuloula.photoswipe.domain` | Modèles, services purs (`SameDayMatcher`, etc.), use cases, ports *(prévu)* |
+| `:app` | `photoswipe.android.application` | `fr.babeuloula.photoswipe` | Point d'entrée (`MainActivity`), UI Compose *(prévu)*, ViewModels *(prévu)*, assemblage Hilt *(prévu)* |
+| `:data` | `photoswipe.android.library` | `fr.babeuloula.photoswipe.data` | Implémentations Android des ports : `MediaStoreMediaSource`, `RoomReviewRepository`, etc. *(prévu)* |
+| `:domain` | `photoswipe.jvm.library` | `fr.babeuloula.photoswipe.domain` | Modèles, services purs (`SameDayMatcher`, etc.), use cases, ports *(prévu)* |
+
+### Conventions Gradle (`build-logic/`)
+
+La configuration commune est portée par des plugins de convention, dans le build inclus `build-logic/` (voir l'ADR [0001](decisions/0001-build-logic-convention-plugins.md)).
+
+| Plugin | Applique | Configure |
+|---|---|---|
+| `photoswipe.android.application` | `com.android.application` | `compileSdk` 37, `minSdk` 33, `targetSdk` 37, toolchain JVM 17 |
+| `photoswipe.android.library` | `com.android.library` | `compileSdk` 37, `minSdk` 33, toolchain JVM 17 |
+| `photoswipe.jvm.library` | `org.jetbrains.kotlin.jvm` | toolchain JVM 17, tests sur la plateforme JUnit |
+
+- Les valeurs sont centralisées dans `ProjectConfig`.
+- Les tests (`ProjectBuilder`) vérifient que chaque plugin applique les bonnes valeurs ; `./gradlew test` les lance.
+- Les versions sont toutes dans `gradle/libs.versions.toml`, y compris celles des plugins AGP et Kotlin, que `build-logic` utilise en `compileOnly`.
 
 ## 3. Flux de données *(prévu, SPEC §5.4)*
 
@@ -56,7 +70,7 @@ L'UI suit **MVVM** avec un **flux unidirectionnel de données (UDF)** :
 | `applicationId` | `fr.babeuloula.photoswipe` | SPEC §7 |
 | `minSdk` | 33 (Android 13) | SPEC §2 : permissions médias granulaires, choix de langue par application |
 | `compileSdk` / `targetSdk` | 37 (Android 17) | Dernière version stable, et le Play Store impose une cible récente |
-| JVM cible | 17 | Minimum requis par AGP 9.5 |
+| JVM cible | 17 (toolchain) | Minimum requis par AGP 9.5. AGP déduit `compileOptions` du toolchain |
 | Permissions | aucune pour l'instant | `INTERNET` est interdite (SPEC §0.6). Les permissions médias et notifications viendront avec leurs epics |
 
 ## 5. Versions
@@ -86,4 +100,4 @@ Prévues dans la SPEC, ajoutées avec leur ticket : Jetpack Compose + Material 3
 
 ## 7. CI
 
-`.github/workflows/ci.yml` se lance à chaque push sur `main` et sur chaque PR. Il installe le JDK 17 (Temurin) et Gradle, valide le wrapper, puis exécute `test`, `lint` et `assembleDebug`. En cas d'échec, les rapports sont publiés en artefact. Chaque nouveau check du projet y est ajouté dans la PR qui l'introduit.
+`.github/workflows/ci.yml` se lance à chaque push sur `main` et sur chaque PR. Il installe le JDK 17 (Temurin) et Gradle, valide le wrapper, puis exécute `test` (modules + conventions `build-logic`), `lint` et `assembleDebug`. En cas d'échec, les rapports sont publiés en artefact. Chaque nouveau check du projet y est ajouté dans la PR qui l'introduit.

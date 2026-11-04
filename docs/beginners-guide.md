@@ -38,6 +38,9 @@ Un sous-projet Gradle, avec son propre code et sa propre configuration. Découpe
 ### Version catalog (`libs.versions.toml`)
 Un fichier unique qui liste toutes les bibliothèques et leurs versions. Les modules y font référence (`libs.junit4`) au lieu de répéter les numéros de version partout.
 
+### Plugin de convention (`build-logic/`)
+Un plugin Gradle propre au projet, qui regroupe les réglages communs à plusieurs modules : version d'Android visée, version de Java, etc. Au lieu de recopier ces réglages dans chaque module, celui-ci applique simplement `photoswipe.android.library` (ou `photoswipe.android.application`, ou `photoswipe.jvm.library`). Pour changer un réglage partout, on le modifie à un seul endroit : `build-logic/.../ProjectConfig.kt`.
+
 ### Manifeste (`AndroidManifest.xml`)
 La carte d'identité de l'application pour Android : son nom, ses écrans (« activités ») et les **permissions** demandées. PhotoSwipe ne demandera jamais l'accès à Internet.
 
@@ -76,6 +79,10 @@ photoswipe/
 │       │   ├── kotlin/               Code Kotlin (MainActivity, et plus tard les écrans)
 │       │   └── res/                  Ressources : textes, icônes, couleurs
 │       └── test/                     Tests unitaires du module
+├── build-logic/               Plugins de convention : réglages Gradle communs à tous les modules
+│   └── convention/src/
+│       ├── main/kotlin/              Les plugins et ProjectConfig (SDK, version de Java)
+│       └── test/kotlin/              Tests qui vérifient que les plugins appliquent les bons réglages
 ├── data/                      Module « données » : accès aux photos du téléphone, base de données…
 │   ├── build.gradle.kts
 │   └── src/test/
@@ -86,8 +93,8 @@ photoswipe/
 ├── gradle/
 │   ├── libs.versions.toml     Version catalog : toutes les bibliothèques et versions
 │   └── wrapper/               Fichiers du Gradle Wrapper (ne pas modifier à la main)
-├── build.gradle.kts           Configuration Gradle commune à tous les modules
-├── settings.gradle.kts        Liste des modules et des dépôts de bibliothèques
+├── build.gradle.kts           Configuration Gradle du projet racine (déclaration des plugins)
+├── settings.gradle.kts        Liste des modules, des dépôts de bibliothèques et inclusion de build-logic
 ├── gradle.properties          Réglages de Gradle (mémoire, cache…)
 ├── gradlew, gradlew.bat       Scripts du Gradle Wrapper (macOS/Linux et Windows)
 ├── local.properties           Chemin du SDK Android sur ta machine (non versionné)

@@ -1,16 +1,13 @@
 // Module application : point d'entrée Android, UI et assemblage DI (SPEC §5.4).
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.photoswipe.android.application)
 }
 
 android {
     namespace = "fr.babeuloula.photoswipe"
-    compileSdk = 37
 
     defaultConfig {
         applicationId = "fr.babeuloula.photoswipe"
-        minSdk = 33
-        targetSdk = 37
         versionCode = 1
         versionName = "0.1.0"
     }
@@ -22,15 +19,6 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
         }
     }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-}
-
-kotlin {
-    jvmToolchain(17)
 }
 
 dependencies {
