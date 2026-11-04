@@ -13,4 +13,9 @@
         <item quantity="one">%d item to sort</item>
         <item quantity="other">%d items to sort</item>
     </plurals>
+    <!-- Bannière des suppressions en attente sur l'accueil (SPEC §3.4). -->
+    <plurals name="home_pending_deletions">
+        <item quantity="one">%d item waiting to be deleted</item>
+        <item quantity="other">%d items waiting to be deleted</item>
+    </plurals>
 </resources>

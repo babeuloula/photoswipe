@@ -29,4 +29,5 @@
     <string name="home_error">Your memories could not be loaded.</string>
     <string name="home_retry">Try again</string>
     <string name="home_previous_days">Catch up</string>
+    <string name="home_pending_deletions_review">Review</string>
 </resources>

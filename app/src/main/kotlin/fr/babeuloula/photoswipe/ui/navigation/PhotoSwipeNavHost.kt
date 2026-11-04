@@ -33,6 +33,7 @@ fun PhotoSwipeNavHost(
             HomeDestination(
                 onOpenDeck = { day -> navController.navigate(DeckRoute.of(day)) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
+                onOpenSummary = { navController.navigate(SummaryRoute) },
             )
         }
         composable<DeckRoute> { entry ->

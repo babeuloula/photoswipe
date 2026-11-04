@@ -11,4 +11,9 @@
         <item quantity="many">%d de médias à trier</item>
         <item quantity="other">%d médias à trier</item>
     </plurals>
+    <plurals name="home_pending_deletions">
+        <item quantity="one">%d média en attente de suppression</item>
+        <item quantity="many">%d de médias en attente de suppression</item>
+        <item quantity="other">%d médias en attente de suppression</item>
+    </plurals>
 </resources>
