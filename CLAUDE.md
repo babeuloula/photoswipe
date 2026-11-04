@@ -74,4 +74,5 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 10. Ne rien faire qui dépasse le périmètre du ticket et de l'epic en cours.
 
 ## État d'avancement
-- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 mergé (PR #3), PS-4 mergé (PR #4), PS-5 mergé (PR #5), PS-6 mergé (PR #6), PS-7 mergé (PR #7), PS-8 mergé (PR #8), PS-9 en revue (README complet, `docs/testing.md`, CI accélérée). Fin de l'epic 1 une fois PS-9 mergé.
+- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 mergé (PR #3), PS-4 mergé (PR #4), PS-5 mergé (PR #5), PS-6 mergé (PR #6), PS-7 mergé (PR #7), PS-8 mergé (PR #8), PS-9 mergé (PR #9). Epic 1 terminé.
+- Epic 2 « Domaine » : PS-10 en revue (modèles du domaine dans `domain/model`, ADR 0006).

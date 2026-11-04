@@ -36,7 +36,7 @@ Règles :
 |---|---|---|---|
 | `:app` | `photoswipe.android.application`, `photoswipe.android.hilt`, `photoswipe.android.compose` | `fr.babeuloula.photoswipe` | Point d'entrée (`PhotoSwipeApplication`, `MainActivity`), assemblage Hilt (package `di`), UI Compose et thème Material 3 (package `ui`), écrans et ViewModels *(prévu)* |
 | `:data` | `photoswipe.android.library` | `fr.babeuloula.photoswipe.data` | Implémentations Android des ports : `MediaStoreMediaSource`, `RoomReviewRepository`, etc. *(prévu)* |
-| `:domain` | `photoswipe.jvm.library` | `fr.babeuloula.photoswipe.domain` | Modèles, services purs (`SameDayMatcher`, etc.), use cases, ports *(prévu)* |
+| `:domain` | `photoswipe.jvm.library` | `fr.babeuloula.photoswipe.domain` | Modèles du package `model` (`MediaItem`, `ReviewDecision`, `ReviewDay`, `SessionSummary`…, ADR [0006](decisions/0006-domain-model-types.md)). Services purs (`SameDayMatcher`, etc.), use cases, ports *(prévu)* |
 | `:architecture-tests` | `photoswipe.jvm.library` | `fr.babeuloula.photoswipe.architecture` | Tests d'architecture Konsist uniquement (aucun code de production). Dépend d'aucun module : Konsist lit les sources de `:app`, `:data` et `:domain`, déclarées en entrées de sa tâche `test` pour que Gradle la relance quand elles changent |
 
 ### Conventions Gradle (`build-logic/`)
