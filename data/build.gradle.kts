@@ -1,6 +1,7 @@
 // Module données : implémentations Android des ports du domaine (SPEC §5.3).
 plugins {
     alias(libs.plugins.photoswipe.android.library)
+    alias(libs.plugins.photoswipe.android.hilt)
     alias(libs.plugins.photoswipe.android.room)
     alias(libs.plugins.photoswipe.android.robolectric)
 }
