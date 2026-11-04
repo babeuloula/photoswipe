@@ -126,6 +126,7 @@ photoswipe/
 │   ├── schemas/                      Description de la base Room, générée à la compilation et versionnée (sert à tester les migrations)
 │   ├── src/main/kotlin/…/database/   La base Room : la table des décisions (ReviewEntryEntity) et ses requêtes (ReviewEntryDao)
 │   ├── src/main/kotlin/…/review/     RoomReviewRepository : enregistre les décisions du domaine dans la base
+│   ├── src/main/kotlin/…/settings/   DataStoreSettingsRepository : enregistre les réglages (rappel quotidien)
 │   └── src/test/
 ├── domain/                    Module « domaine » : les règles métier, en Kotlin pur
 │   ├── build.gradle.kts

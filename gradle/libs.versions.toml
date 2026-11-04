@@ -17,6 +17,7 @@ detekt = "1.23.8"
 konsist = "0.18.1"
 kotlinxCoroutines = "1.11.0"
 room = "2.8.5"
+datastore = "1.3.0"
 
 [libraries]
 # AndroidX
@@ -33,6 +34,9 @@ androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
 # Persistance locale des décisions (SPEC §6)
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+
+# Préférences utilisateur (SPEC §5.3)
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 # Injection de dépendances
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
