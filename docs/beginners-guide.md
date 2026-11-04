@@ -124,6 +124,7 @@ photoswipe/
 │   └── src/test/
 ├── domain/                    Module « domaine » : les règles métier, en Kotlin pur
 │   ├── build.gradle.kts
+│   ├── src/main/kotlin/…/model/  Les modèles : MediaItem, ReviewDecision, ReviewDay, SessionSummary…
 │   └── src/test/
 ├── docs/                      Documentation (ce guide, l'architecture, les décisions)
 ├── gradle/
