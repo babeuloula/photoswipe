@@ -87,6 +87,8 @@ Du code qui vérifie automatiquement que le code fonctionne. Ils se trouvent dan
 
 Dans `app`, certains tests ont besoin d'Android (par exemple pour démarrer `MainActivity`). **Robolectric** simule Android directement sur l'ordinateur, ce qui évite l'émulateur. Il est réglé sur Android 14 (API 34) dans `app/src/test/resources/robolectric.properties`, car les versions plus récentes demanderaient Java 21.
 
+Le détail (outils par module, commandes pour lancer un seul test, fixtures) est dans [`docs/testing.md`](testing.md).
+
 ### CI (intégration continue)
 À chaque envoi de code sur GitHub, des serveurs de GitHub (**GitHub Actions**) construisent le projet et lancent les tests et le lint. Si quelque chose casse, la PR le signale en rouge, et GitHub refuse de la fusionner dans `main` tant que la CI n'est pas verte. Le résumé du run liste les tests passés et échoués.
 

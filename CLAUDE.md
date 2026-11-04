@@ -8,6 +8,7 @@ Application Android (Kotlin + Jetpack Compose) qui fait revoir chaque jour les p
 - `SPEC.md` : la spécification complète. **Elle fait foi**, en particulier le §0 (règles non négociables) et le §16 (points ouverts, valeurs par défaut appliquées sauf avis contraire).
 - `docs/architecture.md` : les modules, le sens des dépendances, les versions et la justification de chaque bibliothèque.
 - `docs/beginners-guide.md` : le guide pour les néophytes (Kotlin, Gradle, Android, rôle de chaque dossier).
+- `docs/testing.md` : la stratégie de tests, les outils par module et les commandes.
 - `README.md` : présentation courte et liens vers la documentation.
 - `docs/decisions/` : les ADR. Toute décision structurante absente de la spec y est écrite au lieu d'être improvisée en silence.
 
@@ -63,7 +64,7 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 
    Lancer `gh label list` avant de créer un nouveau label.
 5. **La CI est maintenue au fil du projet.** Tout nouveau check (ktlint, detekt, Konsist, tests instrumentés, nouveau module, etc.) est ajouté à `.github/workflows/ci.yml` dans la même PR. Une PR n'est prête que si son run CI est vert.
-6. **La documentation est maintenue au fil du projet.** On met à jour `CLAUDE.md`, `docs/architecture.md` et `docs/beginners-guide.md` dès qu'un module, un dossier, un outil ou une commande change.
+6. **La documentation est maintenue au fil du projet.** On met à jour `CLAUDE.md`, `docs/architecture.md`, `docs/beginners-guide.md` et `docs/testing.md` dès qu'un module, un dossier, un outil ou une commande change.
 7. **Démo sur émulateur** : si le ticket a un effet visible, on lance l'émulateur (`~/Library/Android/sdk/emulator/emulator -avd Medium_Phone_API_37.0`), on installe l'app (`./gradlew installDebug`) et on donne à Jérémy la liste de ce qu'il faut tester et comment. Si le ticket n'a rien de visible, on le dit explicitement.
 8. **Suivi Notion** : les tickets vivent dans le kanban Notion « Tickets de développement » (page PhotoSwipe). Le `Ticket ID` Notion (PS-N) fait foi pour la numérotation. Le statut avance au fil du travail :
    - « En cours » quand on commence le ticket ;
@@ -73,4 +74,4 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 10. Ne rien faire qui dépasse le périmètre du ticket et de l'epic en cours.
 
 ## État d'avancement
-- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 mergé (PR #3), PS-4 mergé (PR #4), PS-5 mergé (PR #5), PS-6 mergé (PR #6), PS-7 mergé (PR #7), PS-8 en revue (i18n EN/FR). Suit PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
+- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 mergé (PR #3), PS-4 mergé (PR #4), PS-5 mergé (PR #5), PS-6 mergé (PR #6), PS-7 mergé (PR #7), PS-8 mergé (PR #8), PS-9 en revue (README complet, `docs/testing.md`, CI accélérée). Fin de l'epic 1 une fois PS-9 mergé.
