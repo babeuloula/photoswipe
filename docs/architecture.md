@@ -114,7 +114,7 @@ Relevées le 2026-11-03 sur les sources officielles (Google Maven, Maven Central
 | ktlint-gradle (plugin) | 14.2.0 | |
 | ktlint | 1.8.0 | Moteur utilisé par le plugin, style `ktlint_official` |
 | detekt | 1.23.8 | Dernière stable ; la 2.0 n'est qu'en alpha (ADR 0003) |
-| GitHub Actions | `checkout@v7`, `setup-java@v6`, `gradle/actions/setup-gradle@v6`, `upload-artifact@v7` | CI |
+| GitHub Actions | `checkout@v7`, `setup-java@v6`, `gradle/actions/setup-gradle@v6`, `upload-artifact@v7`, `mikepenz/action-junit-report@v6` | CI |
 
 ## 6. Bibliothèques et justification
 
@@ -133,9 +133,13 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Robolectric | `:app` (tests) | Exécute le framework Android sur la JVM : tests Hilt sans émulateur, en local comme en CI |
 | ktlint (plugin `org.jlleitschuh.gradle.ktlint`) | tous (build) | Format du code imposé par la SPEC §12 ; le plugin crée les tâches `ktlintCheck` et `ktlintFormat` par source set |
 | detekt | tous (build) | Analyse statique imposée par la SPEC §12 (complexité, code mort, mauvaises pratiques) |
+| `mikepenz/action-junit-report` | CI | Affiche le récapitulatif des tests JUnit dans le résumé du run GitHub Actions, sans fouiller les logs |
 
 Prévues dans la SPEC, ajoutées avec leur ticket : Navigation Compose, Room, DataStore, Coil 3, Media3 ExoPlayer, WorkManager, Konsist, MockK, Turbine, kotlinx-coroutines-test.
 
 ## 7. CI
 
-`.github/workflows/ci.yml` se lance à chaque push sur `main` et sur chaque PR. Il installe le JDK 17 (Temurin) et Gradle, valide le wrapper, puis exécute `test` (modules + conventions `build-logic`), `quality` (ktlint, detekt et Android Lint) et `assembleDebug`. En cas d'échec, les rapports sont publiés en artefact. Chaque nouveau check du projet y est ajouté dans la PR qui l'introduit.
+`.github/workflows/ci.yml` se lance à chaque push sur `main` et sur chaque PR. Il installe le JDK 17 (Temurin) et Gradle, valide le wrapper, puis exécute `test` (modules + conventions `build-logic`), `quality` (ktlint, detekt et Android Lint) et `assembleDebug`. Le récapitulatif des tests JUnit s'affiche dans le résumé du run. En cas d'échec, les rapports sont publiés en artefact. Chaque nouveau check du projet y est ajouté dans la PR qui l'introduit.
+
+- **Cache Gradle** : géré par `setup-gradle` (dépendances, build cache, wrapper). Seuls les runs de `main` écrivent le cache ; les PR le lisent sans le modifier.
+- **Blocage** : un ruleset GitHub sur `main` exige que le job « Quality, unit tests and debug build » soit vert avant tout merge (ADR [0004](decisions/0004-required-ci-check-on-main.md)). Renommer ce job impose de mettre à jour le ruleset.

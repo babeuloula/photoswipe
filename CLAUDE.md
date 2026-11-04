@@ -41,7 +41,7 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 - `:domain` : modèles, use cases, ports, en Kotlin JVM pur (`fr.babeuloula.photoswipe.domain`).
 - `build-logic/` (build inclus) : plugins de convention `photoswipe.android.application`, `photoswipe.android.library`, `photoswipe.jvm.library`, `photoswipe.android.hilt` (KSP + Hilt) et `photoswipe.android.compose` (compilateur Compose + BOM), ces deux derniers à appliquer après une convention Android, et `photoswipe.quality` (ktlint + detekt + tâche `quality`), appliqué d'office par les trois conventions de module (ADR 0003). Les valeurs partagées (SDK, JVM) sont dans `ProjectConfig`. Un module applique sa convention et ne déclare que ce qui lui est propre (namespace, dépendances). Toute nouvelle configuration commune (Compose, Hilt, qualité) devient un plugin de convention (ADR 0001).
 - Qualité : style ktlint `ktlint_official` (`.editorconfig`), règles detekt ajustées et justifiées dans `config/detekt/detekt.yml`, Android Lint avec `MissingTranslation` en erreur.
-- Versions : `gradle/libs.versions.toml`, sans aucune version en dur ailleurs. CI : `.github/workflows/ci.yml`.
+- Versions : `gradle/libs.versions.toml`, sans aucune version en dur ailleurs. CI : `.github/workflows/ci.yml` ; son job est un check obligatoire du ruleset de `main` (ADR 0004), le renommer impose de mettre à jour le ruleset.
 
 ## Tests
 - `:domain` : JUnit Jupiter (JUnit 6).
@@ -71,4 +71,4 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 10. Ne rien faire qui dépasse le périmètre du ticket et de l'epic en cours.
 
 ## État d'avancement
-- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 mergé (PR #3), PS-4 mergé (PR #4), PS-5 en revue (ktlint, detekt, lint). Suivent PS-6 (compléments CI), PS-7 (Konsist), PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
+- Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 mergé (PR #2), PS-3 mergé (PR #3), PS-4 mergé (PR #4), PS-5 mergé (PR #5), PS-6 en revue (compléments CI, protection de `main`). Suivent PS-7 (Konsist), PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
