@@ -75,6 +75,22 @@ class GetSessionSummaryTest {
         }
 
     @Test
+    fun `counts once a media pending for two review years`() =
+        runTest {
+            val repository =
+                FakeReviewRepository(
+                    listOf(
+                        aReviewEntry(mediaId = 1, reviewYear = 2025, decision = MARKED_FOR_DELETION, sizeBytes = 4_000),
+                        aReviewEntry(mediaId = 1, reviewYear = 2026, decision = MARKED_FOR_DELETION, sizeBytes = 4_000),
+                        aReviewEntry(mediaId = 2, reviewYear = 2025, decision = KEPT, favoritePending = true),
+                        aReviewEntry(mediaId = 2, reviewYear = 2026, decision = KEPT, favoritePending = true),
+                    ),
+                )
+
+            assertEquals(SessionSummary(0, 1, 1, 4_000), GetSessionSummary(repository)(ReviewSession()))
+        }
+
+    @Test
     fun `does not count a decision that was undone or replaced`() =
         runTest {
             var session =
