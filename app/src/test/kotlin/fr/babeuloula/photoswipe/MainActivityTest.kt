@@ -4,6 +4,7 @@ import android.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -26,10 +27,20 @@ class MainActivityTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun `main activity shows the compose home screen`() {
-        val placeholder = composeRule.activity.getString(R.string.home_placeholder)
+    fun `main activity starts on the media access explanation`() {
+        val title = composeRule.activity.getString(R.string.permission_rationale_title)
 
-        composeRule.onNodeWithText(placeholder).assertIsDisplayed()
+        composeRule.onNodeWithText(title).assertIsDisplayed()
+    }
+
+    @Test
+    fun `main activity shows the home screen after continue`() {
+        composeRule
+            .onNodeWithText(
+                composeRule.activity.getString(R.string.permission_rationale_continue),
+            ).performClick()
+
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.home_placeholder)).assertIsDisplayed()
     }
 
     @Test

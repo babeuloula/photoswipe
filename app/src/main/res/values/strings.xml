@@ -3,4 +3,10 @@
     <string name="app_name" translatable="false">PhotoSwipe</string>
     <!-- Écran d'accueil provisoire, remplacé par la pile de swipe (epic 5). -->
     <string name="home_placeholder">Your memories from this day will show up here.</string>
+    <!-- Écran d'explication avant la demande d'accès aux médias (SPEC §4.1). -->
+    <string name="permission_rationale_title">Relive your memories</string>
+    <string name="permission_rationale_what">Every day, PhotoSwipe shows you the photos and videos you took on the same day in previous years, so you can keep the ones you love and clear out the rest.</string>
+    <string name="permission_rationale_why">To find them, the app needs access to your photos and videos.</string>
+    <string name="permission_rationale_private">Nothing leaves your phone: the app has no internet access, and nothing is deleted without your confirmation.</string>
+    <string name="permission_rationale_continue">Continue</string>
 </resources>
