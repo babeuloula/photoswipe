@@ -9,10 +9,12 @@ import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
+import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
+import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -136,7 +138,10 @@ class HomeViewModelTest {
         )
 
     private fun homeViewModel(source: MediaSource): HomeViewModel =
-        HomeViewModel(GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, clock))
+        HomeViewModel(
+            GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, clock),
+            GetSessionSummary(repository),
+        )
 
     private suspend fun loaded(viewModel: HomeViewModel): HomeUiState =
         viewModel.uiState.first { it is HomeUiState.Loaded }
@@ -177,5 +182,38 @@ class HomeViewModelTest {
             viewModel.onEvent(HomeEvent.Resumed)
 
             assertEquals(listOf(HomeUiState.Loading, loadedWithToday(1)), states)
+        }
+
+    @Test
+    fun `counts the deletions waiting for confirmation, whatever their review year`() =
+        runTest {
+            repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026, decision = MARKED_FOR_DELETION))
+            repository.save(aReviewEntry(mediaId = 2, reviewYear = 2025, decision = MARKED_FOR_DELETION))
+            repository.save(aReviewEntry(mediaId = 3, reviewYear = 2026))
+            val viewModel = homeViewModel(FakeMediaSource())
+
+            assertEquals(2, (loaded(viewModel) as HomeUiState.Loaded).pendingDeletionCount)
+        }
+
+    @Test
+    fun `refreshes the pending deletions when coming back to home`() =
+        runTest {
+            val viewModel = homeViewModel(FakeMediaSource())
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+            repository.save(aReviewEntry(mediaId = 1, decision = MARKED_FOR_DELETION))
+
+            viewModel.onEvent(HomeEvent.Resumed)
+
+            assertEquals(1, (viewModel.uiState.value as HomeUiState.Loaded).pendingDeletionCount)
+        }
+
+    @Test
+    fun `opens the summary from the pending deletions banner`() =
+        runTest {
+            val viewModel = homeViewModel(FakeMediaSource())
+
+            viewModel.onEvent(HomeEvent.OpenPendingDeletions)
+
+            assertEquals(HomeEffect.OpenSummary, viewModel.uiEffects.first())
         }
 }

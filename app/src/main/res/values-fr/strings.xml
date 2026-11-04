@@ -23,4 +23,5 @@
     <string name="home_error">Impossible de charger vos souvenirs.</string>
     <string name="home_retry">Réessayer</string>
     <string name="home_previous_days">À rattraper</string>
+    <string name="home_pending_deletions_review">Vérifier</string>
 </resources>

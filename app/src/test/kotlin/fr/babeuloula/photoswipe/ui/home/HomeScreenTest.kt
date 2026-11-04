@@ -64,6 +64,31 @@ class HomeScreenTest {
         )
 
     @Test
+    fun `shows the pending deletions banner and opens the summary`() {
+        show(loaded(todayCount = 1).copy(pendingDeletionCount = 4))
+
+        composeRule.onNodeWithText("4 items waiting to be deleted").assertIsDisplayed().performClick()
+
+        assertEquals(listOf<HomeEvent>(HomeEvent.OpenPendingDeletions), events)
+    }
+
+    @Test
+    fun `hides the pending deletions banner when nothing is waiting`() {
+        show(loaded(todayCount = 1))
+
+        composeRule.onNodeWithText(text(R.string.home_pending_deletions_review)).assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `shows the pending deletions banner in french`() {
+        show(loaded(todayCount = 1).copy(pendingDeletionCount = 1))
+
+        composeRule.onNodeWithText("1 média en attente de suppression").assertIsDisplayed()
+        composeRule.onNodeWithText("Vérifier").assertIsDisplayed()
+    }
+
+    @Test
     fun `lists the six previous days with their localized date and count`() {
         show(loaded(todayCount = 1))
 

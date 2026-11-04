@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,6 +25,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,8 +47,8 @@ import java.time.format.FormatStyle
 
 /**
  * Accueil (SPEC §4.2) : carte « Aujourd'hui » et les 6 jours précédents, chacun avec son nombre de
- * médias à trier ; un tap ouvre la pile du jour. Gère le chargement et l'erreur. La bannière des
- * suppressions en attente arrive avec PS-39.
+ * médias à trier ; un tap ouvre la pile du jour. Une bannière signale les suppressions en attente
+ * et ouvre le résumé. Gère le chargement et l'erreur.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,7 +89,11 @@ fun HomeScreen(
                 }
 
                 is HomeUiState.Loaded -> {
-                    HomeDays(state, onOpenDay = { onEvent(HomeEvent.OpenDay(it)) })
+                    HomeDays(
+                        state = state,
+                        onOpenDay = { onEvent(HomeEvent.OpenDay(it)) },
+                        onOpenPendingDeletions = { onEvent(HomeEvent.OpenPendingDeletions) },
+                    )
                 }
             }
         }
@@ -102,12 +110,16 @@ fun HomeScreen(
 private fun HomeDays(
     state: HomeUiState.Loaded,
     onOpenDay: (LocalDate) -> Unit,
+    onOpenPendingDeletions: () -> Unit,
 ) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
+        if (state.pendingDeletionCount > 0) {
+            item { PendingDeletionsBanner(state.pendingDeletionCount, onClick = onOpenPendingDeletions) }
+        }
         item { TodayCard(state.today, onClick = { onOpenDay(state.today.date) }) }
         item {
             Text(
@@ -145,6 +157,35 @@ private fun PreviousDay(
                 .clickable(enabled = hasMedia, onClick = onClick)
                 .alpha(if (hasMedia) 1f else DISABLED_ALPHA),
     )
+}
+
+/**
+ * Bannière des suppressions en attente (SPEC §3.4) : des médias sont marqués mais pas encore
+ * envoyés à la corbeille. Un tap ouvre le résumé pour les confirmer.
+ */
+@Composable
+private fun PendingDeletionsBanner(
+    count: Int,
+    onClick: () -> Unit,
+) {
+    Card(
+        onClick = onClick,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = pluralStringResource(R.plurals.home_pending_deletions, count, count),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onClick) { Text(stringResource(R.string.home_pending_deletions_review)) }
+        }
+    }
 }
 
 /** Opacité d'un jour sans média, celle des contenus désactivés de Material 3. */
@@ -202,6 +243,7 @@ private val PREVIEW_DAYS =
                 ReviewDay(LocalDate.parse("2026-07-14"), remainingCount = 1),
                 ReviewDay(LocalDate.parse("2026-07-13"), remainingCount = 0),
             ),
+        pendingDeletionCount = 1,
     )
 
 @PreviewLightDark

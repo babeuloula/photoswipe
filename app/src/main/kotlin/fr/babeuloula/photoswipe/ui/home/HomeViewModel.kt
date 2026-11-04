@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
+import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
+import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -12,7 +14,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -33,10 +37,13 @@ sealed interface HomeUiState {
      *
      * @property today aujourd'hui et son nombre de médias à trier.
      * @property previousDays les 6 jours précédents, du plus récent au plus ancien, à rattraper.
+     * @property pendingDeletionCount médias marqués pour suppression et pas encore confirmés, toutes
+     * sessions confondues (SPEC §3.4) ; 0 masque la bannière.
      */
     data class Loaded(
         val today: ReviewDay,
         val previousDays: List<ReviewDay>,
+        val pendingDeletionCount: Int = 0,
     ) : HomeUiState
 }
 
@@ -55,6 +62,9 @@ sealed interface HomeEvent {
 
     /** Bouton des réglages. */
     data object OpenSettings : HomeEvent
+
+    /** Tap sur la bannière des suppressions en attente. */
+    data object OpenPendingDeletions : HomeEvent
 }
 
 /** Navigation demandée par l'accueil. */
@@ -66,6 +76,9 @@ sealed interface HomeEffect {
 
     /** Ouvrir les réglages. */
     data object OpenSettings : HomeEffect
+
+    /** Ouvrir le résumé, pour confirmer les suppressions en attente (SPEC §3.5). */
+    data object OpenSummary : HomeEffect
 }
 
 /**
@@ -82,6 +95,7 @@ class HomeViewModel
     @Inject
     constructor(
         private val getReviewDays: GetReviewDays,
+        private val getSessionSummary: GetSessionSummary,
     ) : ViewModel() {
         /** Demandes de calcul ; la valeur dit s'il faut repasser par l'état de chargement. */
         private val reloads = MutableSharedFlow<Boolean>(replay = 1).apply { tryEmit(false) }
@@ -114,19 +128,35 @@ class HomeViewModel
                 HomeEvent.OpenSettings -> {
                     effects.trySend(HomeEffect.OpenSettings)
                 }
+
+                HomeEvent.OpenPendingDeletions -> {
+                    effects.trySend(HomeEffect.OpenSummary)
+                }
             }
         }
 
         /**
          * Calcule les jours. Après « Réessayer » ([showLoading]), l'écran repasse par le chargement ;
          * au retour au premier plan, il garde l'état affiché jusqu'au nouveau résultat, sans clignoter.
+         * Le nombre de suppressions en attente est lu à chaque calcul : les marquages se font dans la
+         * pile, et l'accueil se recalcule en y revenant.
          */
-        private fun loadDays(showLoading: Boolean): Flow<HomeUiState> =
-            getReviewDays()
-                .map<List<ReviewDay>, HomeUiState> { days ->
-                    HomeUiState.Loaded(today = days.first(), previousDays = days.drop(1))
-                }.onStart { if (showLoading) emit(HomeUiState.Loading) }
+        private fun loadDays(showLoading: Boolean): Flow<HomeUiState> {
+            val loaded: Flow<HomeUiState> =
+                combine(getReviewDays(), flow { emit(pendingDeletionCount()) }) { days, pending ->
+                    HomeUiState.Loaded(
+                        today = days.first(),
+                        previousDays = days.drop(1),
+                        pendingDeletionCount = pending,
+                    )
+                }
+            return loaded
+                .onStart { if (showLoading) emit(HomeUiState.Loading) }
                 .catch { emit(HomeUiState.Error) }
+        }
+
+        /** Marquages à confirmer : le même nombre que le résumé annoncera (ADR 0011). */
+        private suspend fun pendingDeletionCount(): Int = getSessionSummary(ReviewSession()).markedForDeletionCount
 
         private companion object {
             /** Garde le calcul actif pendant une rotation ou un court passage en arrière-plan. */

@@ -14,6 +14,7 @@ import java.time.LocalDate
 fun HomeRoute(
     onOpenDeck: (LocalDate) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenSummary: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -27,6 +28,7 @@ fun HomeRoute(
             when (effect) {
                 is HomeEffect.OpenDeck -> onOpenDeck(effect.date)
                 HomeEffect.OpenSettings -> onOpenSettings()
+                HomeEffect.OpenSummary -> onOpenSummary()
             }
         }
     }

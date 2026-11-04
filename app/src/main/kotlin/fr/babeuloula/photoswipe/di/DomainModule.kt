@@ -9,6 +9,7 @@ import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
+import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import java.time.Clock
 
 /**
@@ -32,4 +33,8 @@ object DomainModule {
         reviewRepository: ReviewRepository,
         clock: Clock,
     ): GetReviewDays = GetReviewDays(windowProvider, sameDayMatcher, mediaSource, reviewRepository, clock)
+
+    @Provides
+    fun provideGetSessionSummary(reviewRepository: ReviewRepository): GetSessionSummary =
+        GetSessionSummary(reviewRepository)
 }
