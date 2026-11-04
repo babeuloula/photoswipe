@@ -7,8 +7,6 @@ import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import fr.babeuloula.photoswipe.ui.PhotoSwipeApp
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
-import java.time.Clock
-import javax.inject.Inject
 
 /**
  * Point d'entrée de l'application, branché sur Hilt, qui affiche l'interface Compose.
@@ -18,16 +16,12 @@ import javax.inject.Inject
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    /** Horloge de l'appareil, transmise à l'interface (jamais lue en statique). */
-    @Inject
-    lateinit var clock: Clock
-
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
             PhotoSwipeTheme {
-                PhotoSwipeApp(clock = clock)
+                PhotoSwipeApp()
             }
         }
     }

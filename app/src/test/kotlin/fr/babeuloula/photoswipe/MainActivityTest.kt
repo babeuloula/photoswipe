@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo
 import android.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.Lifecycle
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -51,7 +52,7 @@ class MainActivityTest {
 
         resume()
 
-        composeRule.onNodeWithText(composeRule.activity.getString(R.string.home_sort_today)).assertIsDisplayed()
+        awaitText(composeRule.activity.getString(R.string.home_today))
     }
 
     @Test
@@ -77,7 +78,7 @@ class MainActivityTest {
 
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.limited_access_message)).assertIsDisplayed()
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.limited_access_manage)).assertIsDisplayed()
-        composeRule.onNodeWithText(composeRule.activity.getString(R.string.home_sort_today)).assertIsDisplayed()
+        awaitText(composeRule.activity.getString(R.string.home_today))
     }
 
     @Test
@@ -87,6 +88,12 @@ class MainActivityTest {
         resume()
 
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.limited_access_message)).assertDoesNotExist()
+    }
+
+    /** Attend [value] : l'accueil se calcule hors du thread principal (MediaStore, Room). */
+    private fun awaitText(value: String) {
+        composeRule.waitUntil(5_000) { composeRule.onAllNodesWithText(value).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText(value).assertIsDisplayed()
     }
 
     /** Simule un retour au premier plan, par exemple depuis les réglages système. */

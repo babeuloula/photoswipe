@@ -8,4 +8,9 @@
         <item quantity="one">%d media item</item>
         <item quantity="other">%d media items</item>
     </plurals>
+    <!-- Nombre de médias à trier pour un jour de l'accueil (SPEC §4.2). -->
+    <plurals name="home_remaining">
+        <item quantity="one">%d item to sort</item>
+        <item quantity="other">%d items to sort</item>
+    </plurals>
 </resources>

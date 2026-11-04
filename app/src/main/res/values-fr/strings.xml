@@ -13,11 +13,13 @@
     <string name="limited_access_manage">Gérer l\'accès</string>
     <string name="navigate_back">Retour</string>
     <string name="shell_coming_soon">Cet écran arrive bientôt.</string>
-    <string name="home_sort_today">Trier les souvenirs du jour</string>
     <string name="home_open_settings">Réglages</string>
     <string name="deck_title">Souvenirs du %1$s</string>
     <string name="deck_finish">Terminer</string>
     <string name="summary_title">Résumé</string>
     <string name="summary_done">Terminé</string>
     <string name="settings_title">Réglages</string>
+    <string name="home_today">Aujourd\'hui</string>
+    <string name="home_error">Impossible de charger vos souvenirs.</string>
+    <string name="home_retry">Réessayer</string>
 </resources>
