@@ -5,7 +5,7 @@
 ## 1. Principes
 
 - **Chaque ticket est livré avec ses tests.** Rien n'est terminé sans tests verts, en local comme en CI.
-- **Sans émulateur** : tous les tests actuels tournent sur la JVM, y compris ceux qui ont besoin d'Android (Robolectric).
+- **Sur la JVM d'abord** : les tests unitaires tournent sans émulateur, y compris ceux qui ont besoin d'Android (Robolectric). Seuls les vrais chemins de données (MediaStore réel, migrations Room) passent par des tests instrumentés (`src/androidTest`, émulateur ou appareil).
 - **Noms en anglais, qui décrivent le comportement** : `` `moves leap day media to February 28 on non-leap years` ``. Commentaires et KDoc en français.
 - **Un test qui ne peut pas échouer ne sert à rien.** Quand un test s'appuie sur un outil maison (lecteur de ressources, règle Konsist), cet outil est lui-même testé sur des fixtures qui contiennent volontairement des erreurs.
 - Le temps (`Clock`) et la concurrence sont injectés, jamais appelés en statique, pour rester testables.
@@ -22,16 +22,21 @@ Prérequis : JDK 17 (`export JAVA_HOME=/opt/homebrew/opt/openjdk@17` sur la mach
 ./gradlew :app:testDebugUnitTest --tests '*LocalizationTest'          # une classe
 ./gradlew :app:testDebugUnitTest --tests '*PluralsTest.uses*English'  # une méthode (motif)
 ./gradlew :app:testDebugUnitTest --rerun         # relance même si Gradle croit le résultat à jour
+
+# Tests instrumentés : un émulateur (ou un appareil) doit être démarré et visible par `adb devices`
+~/Library/Android/sdk/emulator/emulator -avd Medium_Phone_API_37.0 &   # sur la machine de Jérémy
+./gradlew connectedDebugAndroidTest              # tous les modules
+./gradlew :data:connectedDebugAndroidTest        # un seul module
 ```
 
-Rapports : `<module>/build/reports/tests/<tâche>/index.html` (HTML lisible) et `<module>/build/test-results/` (XML JUnit, repris par la CI).
+Rapports : `<module>/build/reports/tests/<tâche>/index.html` (HTML lisible) et `<module>/build/test-results/` (XML JUnit, repris par la CI). Tests instrumentés : `<module>/build/reports/androidTests/connected/` et `<module>/build/outputs/androidTest-results/connected/`.
 
 ## 3. Les tests par module
 
 | Module | Framework | Ce qui est testé |
 |---|---|---|
 | `:domain` | JUnit Jupiter (JUnit 6) | Mise en place du module (pas de framework Android sur le classpath), invariants des modèles, `SameDayMatcher` (même jour, fuseau, 29 février), `ReviewWindowProvider` (milieu d'année, changement d'année, 29 février, fuseau de l'horloge, avec `Clock.fixed`), plages de dates de `SameDayMatcher` (changement d'heure, 29 février, accord avec `matches` heure par heure sur deux ans), fixtures partagées (builders, `FixedClock`, contrat des ports respecté par `FakeMediaSource` et `FakeReviewRepository`, avec `runTest`), use cases (`GetReviewDays` : jours vides, partiellement triés, année suivante, fenêtre à cheval sur deux années, réaction aux décisions ; `GetDeckForDay` : ordre multi-années, médias déjà décidés exclus, 29 février, stratégie injectée, taille du paquet égale au compteur de `GetReviewDays` ; `KeepMedia` : entrée enregistrée, année du jour cible, remplacement d'une décision, cycle annuel sur deux années ; `MarkForDeletion` : entrée et taille enregistrées, média en attente sans passage à la corbeille, remplacement d'une décision, retrait du paquet ; `UndoLastDecision` : session vide, undo simple, undo multiple dans l'ordre inverse, restauration de la décision remplacée, suppression confirmée refusée ; `FavoriteMedia` : gardé avec favori en attente, favori sur un média déjà gardé, favori puis undo ; `GetSessionSummary` : session vide, compteurs, somme des tailles, demandes en attente d'une session précédente, décision annulée ou remplacée, suppression confirmée, média en attente pour deux années compté une fois ; `PrepareTrash` et `RecordTrashResult` : aucun marqué, lots multiples, média marqué pour deux années demandé une fois, média illisible écarté, confirmation, refus, confirmation partielle, accord avec le résumé ; `CleanOrphanEntries` : aucun orphelin, plusieurs orphelins, média dans la corbeille, idempotence, aucune purge en accès partiel ou sans accès), `FakeMediaActionRequestFactory` (découpage en lots), `ReviewSession` (pile, invariants de `SessionDecision`), `RecentYearsFirstOrdering` (année décroissante, heure croissante, fuseau, départage par identifiant). Les flux se testent sans bibliothèque de plus : on collecte dans une liste depuis `backgroundScope` avec `UnconfinedTestDispatcher(testScheduler)`, puis on vérifie les émissions |
-| `:data` | JUnit 4 + Robolectric (API 34) | Mise en place du module, accès aux fixtures de `:domain`, DAO Room sur une base en mémoire (insertion, unicité du couple média / année, lecture par année, suppression, flux observé, marquages, corbeille, purge), `RoomReviewRepository` sur la même base (écriture, remplacement, suppression, flux après écriture, listes plus longues qu'une requête) et ses mappers, `DataStoreSettingsRepository` sur un vrai DataStore dans un dossier temporaire (valeurs par défaut, écriture puis relecture, persistance dans le fichier, flux, heure invalide), `MediaStoreMediaSource` face à `FakeMediaStoreProvider`, un faux MediaStore adossé à une vraie table SQLite en mémoire (plages ouvertes à droite, plages du domaine, mapping des photos et des vidéos avec durée, aucune fonction SQL de date, repli sur `DATE_ADDED` dans la sélection et au mapping, corbeille exclue, identifiants nombreux) et la construction des sélections. Migrations et MediaStore réel en instrumenté *(prévu, PS-30)* |
+| `:data` | JUnit 4 + Robolectric (API 34) | Mise en place du module, accès aux fixtures de `:domain`, DAO Room sur une base en mémoire (insertion, unicité du couple média / année, lecture par année, suppression, flux observé, marquages, corbeille, purge), `RoomReviewRepository` sur la même base (écriture, remplacement, suppression, flux après écriture, listes plus longues qu'une requête) et ses mappers, `DataStoreSettingsRepository` sur un vrai DataStore dans un dossier temporaire (valeurs par défaut, écriture puis relecture, persistance dans le fichier, flux, heure invalide), `MediaStoreMediaSource` face à `FakeMediaStoreProvider`, un faux MediaStore adossé à une vraie table SQLite en mémoire (plages ouvertes à droite, plages du domaine, mapping des photos et des vidéos avec durée, aucune fonction SQL de date, repli sur `DATE_ADDED` dans la sélection et au mapping, corbeille exclue, identifiants nombreux) et la construction des sélections. En instrumenté : MediaStore réel (photos datées par EXIF, plages du domaine, mapping) et migration Room depuis le schéma exporté |
 | `:app` | JUnit 4 + Robolectric (API 34) | Démarrage de `MainActivity` (Hilt, Compose, bord à bord), `TimeModule`, thème Material 3, i18n, accès aux fixtures de `:domain` |
 | `:architecture-tests` | JUnit Jupiter + Konsist | Sens des dépendances entre modules (ADR [0005](decisions/0005-konsist-architecture-tests.md)), ports du domaine limités aux interfaces (ADR [0007](decisions/0007-domain-ports.md)) |
 | `build-logic` | JUnit Jupiter + `ProjectBuilder` | Chaque plugin de convention applique les bonnes valeurs (SDK, JVM, Hilt, Compose, qualité) |
@@ -47,6 +52,12 @@ Les modules Android restent sur JUnit 4 en attendant une décision ADR sur JUnit
 - Tests qui ont besoin de Hilt : `@HiltAndroidTest`, `HiltAndroidRule` et `@Config(application = HiltTestApplication::class)`.
 - Tests Compose : `androidx.compose.ui.test.junit4.v2.createAndroidComposeRule<MainActivity>()`. Pas de `createComposeRule()` : son activité hôte n'est pas visible des tests Robolectric. Pour lire des valeurs du thème, composer dans `Robolectric.buildActivity(ComponentActivity::class.java)`.
 - Langue d'un test : `@Config(qualifiers = "fr")`.
+
+### Tests instrumentés (`:data`, `src/androidTest`)
+
+- JUnit 4 avec `AndroidJUnit4` et `AndroidJUnitRunner` (réglé par la convention Android commune). Les noms entre backticks avec espaces fonctionnent comme ailleurs : le format DEX les accepte depuis l'API 30, et le `minSdk` est 33.
+- `MediaStoreMediaSourceInstrumentedTest` : le test insère ses propres photos JPEG, datées par leur EXIF (`DateTimeOriginal` et décalage horaire) comme de vraies photos, puis les supprime. MediaStore recalcule `DATE_TAKEN` depuis le fichier : un `DATE_TAKEN` posé à la main serait écrasé. L'application lit sans permission les médias qu'elle a ajoutés, ceux de l'appareil restent invisibles.
+- `PhotoSwipeDatabaseMigrationTest` : `MigrationTestHelper` crée la base depuis le schéma exporté (`data/schemas/`, ajouté aux assets des tests par le plugin Room) et vérifie qu'il correspond à l'entité. Chaque nouvelle version de la base y ajoute sa migration.
 
 ### Localisation (`:app`, package `i18n`)
 
@@ -85,4 +96,9 @@ Objectifs : couverture du domaine **≥ 90 %**, tous les ViewModels testés, cha
 
 ## 6. CI
 
-`.github/workflows/ci.yml` lance `./gradlew test quality assembleDebug --continue` en une seule invocation parallèle, à chaque push sur `main` et sur chaque PR. Le résumé du run liste les tests passés et échoués ; en cas d'échec, les rapports sont publiés en artefact. Un nouveau type de test (par exemple les tests instrumentés) s'ajoute à la CI dans la PR qui l'introduit.
+`.github/workflows/ci.yml` a deux jobs, à chaque push sur `main` et sur chaque PR :
+
+- **Quality, unit tests and debug build** (check obligatoire du ruleset, ADR 0004) : `./gradlew test quality assembleDebug --continue` en une seule invocation parallèle ;
+- **Instrumented tests (emulator)** : `./gradlew connectedDebugAndroidTest` sur un émulateur API 34 (`reactivecircus/android-emulator-runner`, accélération KVM).
+
+ Le résumé du run liste les tests passés et échoués ; en cas d'échec, les rapports sont publiés en artefact. Un nouveau type de test s'ajoute à la CI dans la PR qui l'introduit.
