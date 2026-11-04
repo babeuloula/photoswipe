@@ -13,7 +13,7 @@ La SPEC §5.4 demande Navigation Compose avec des routes typées, et le ticket d
 - **Les permissions ne sont pas une destination** : `MediaAccessGate` entoure le `NavHost`. Un accès retiré remplace tout le graphe par l'explication, sans pile de retour incohérente ; l'accès rendu fait réapparaître le graphe.
 - **Coquilles** : un `ShellScreen` commun (barre du haut avec retour, message d'attente, actions), remplacé écran par écran dans les tickets suivants.
 - **Retour prédictif** : `android:enableOnBackInvokedCallback="true"` sur l'application (SPEC §8).
-- **Horloge** : `MainActivity` reçoit la `Clock` par injection et la transmet à l'interface pour calculer « aujourd'hui ».
+- **Horloge** : `MainActivity` reçoit la `Clock` par injection et la transmet à l'interface pour calculer « aujourd'hui ». *(Remplacé par PS-37 : l'accueil reçoit le jour de son ViewModel, plus d'horloge dans l'interface.)*
 
 ## Alternatives envisagées
 - **Navigation 3** : API plus récente, mais la SPEC nomme Navigation Compose et ses routes typées couvrent le besoin.

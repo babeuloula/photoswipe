@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.ui.navigation
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -23,7 +24,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-/** Parcours entre les coquilles d'écrans, avec l'accès aux médias accordé avant le démarrage. */
+/** Parcours entre les écrans, avec l'accès aux médias accordé avant le démarrage. */
 @HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)
 @Config(application = HiltTestApplication::class)
@@ -44,7 +45,16 @@ class PhotoSwipeNavHostTest {
 
     private fun text(id: Int): String = composeRule.activity.getString(id)
 
+    /** Attend [value] : l'accueil se calcule hors du thread principal (MediaStore, Room). */
+    private fun awaitText(value: String) {
+        composeRule.waitUntil(
+            TIMEOUT_MILLIS,
+        ) { composeRule.onAllNodesWithText(value).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText(value).assertIsDisplayed()
+    }
+
     private fun clickOn(id: Int) {
+        awaitText(text(id))
         composeRule.onNodeWithText(text(id)).performClick()
     }
 
@@ -54,39 +64,44 @@ class PhotoSwipeNavHostTest {
 
     @Test
     fun `starts on the home screen`() {
-        composeRule.onNodeWithText(text(R.string.home_sort_today)).assertIsDisplayed()
+        awaitText(text(R.string.home_today))
         composeRule.onNodeWithContentDescription(text(R.string.navigate_back)).assertDoesNotExist()
     }
 
     @Test
-    fun `opens the deck of today from home and comes back`() {
-        clickOn(R.string.home_sort_today)
+    fun `opens the deck of today from its card and comes back`() {
+        clickOn(R.string.home_today)
 
         val today = LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
-        composeRule.onNodeWithText(composeRule.activity.getString(R.string.deck_title, today)).assertIsDisplayed()
+        awaitText(composeRule.activity.getString(R.string.deck_title, today))
 
         goBack()
-        composeRule.onNodeWithText(text(R.string.home_sort_today)).assertIsDisplayed()
+        awaitText(text(R.string.home_today))
     }
 
     @Test
     fun `goes from the deck to the summary then back home when done`() {
-        clickOn(R.string.home_sort_today)
+        clickOn(R.string.home_today)
         clickOn(R.string.deck_finish)
-        composeRule.onNodeWithText(text(R.string.summary_title)).assertIsDisplayed()
+        awaitText(text(R.string.summary_title))
 
         clickOn(R.string.summary_done)
 
-        composeRule.onNodeWithText(text(R.string.home_sort_today)).assertIsDisplayed()
+        awaitText(text(R.string.home_today))
     }
 
     @Test
     fun `opens the settings from home and comes back`() {
-        clickOn(R.string.home_open_settings)
-        composeRule.onNodeWithText(text(R.string.settings_title)).assertIsDisplayed()
+        awaitText(text(R.string.home_today))
+        composeRule.onNodeWithContentDescription(text(R.string.home_open_settings)).performClick()
+        awaitText(text(R.string.settings_title))
 
         goBack()
 
-        composeRule.onNodeWithText(text(R.string.home_sort_today)).assertIsDisplayed()
+        awaitText(text(R.string.home_today))
+    }
+
+    private companion object {
+        const val TIMEOUT_MILLIS = 5_000L
     }
 }
