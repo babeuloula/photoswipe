@@ -2,10 +2,13 @@ package fr.babeuloula.photoswipe.ui.home
 
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -40,9 +43,58 @@ class HomeScreenTest {
 
     private fun text(id: Int): String = composeRule.activity.getString(id)
 
+    /** Le 15 juillet 2026 avec [todayCount] médias ; la veille en a 3, les autres jours aucun. */
+    private fun loaded(todayCount: Int): HomeUiState.Loaded =
+        HomeUiState.Loaded(
+            today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = todayCount),
+            previousDays =
+                (1L..6L).map {
+                    ReviewDay(
+                        LocalDate.of(2026, 7, 15).minusDays(it),
+                        remainingCount =
+                            if (it ==
+                                1L
+                            ) {
+                                3
+                            } else {
+                                0
+                            },
+                    )
+                },
+        )
+
+    @Test
+    fun `lists the six previous days with their localized date and count`() {
+        show(loaded(todayCount = 1))
+
+        composeRule.onNodeWithText(text(R.string.home_previous_days)).assertIsDisplayed()
+        composeRule.onNodeWithText("Tuesday, July 14, 2026").assertIsDisplayed()
+        composeRule.onNodeWithText("3 items to sort").assertIsDisplayed()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Thursday, July 9, 2026"))
+        composeRule.onNodeWithText("Thursday, July 9, 2026").assertIsDisplayed()
+    }
+
+    @Test
+    fun `opens the deck of a previous day`() {
+        show(loaded(todayCount = 1))
+
+        composeRule.onNodeWithText("Tuesday, July 14, 2026").performClick()
+
+        assertEquals(listOf<HomeEvent>(HomeEvent.OpenDay(LocalDate.of(2026, 7, 14))), events)
+    }
+
+    @Test
+    fun `greys out a previous day without media and ignores taps`() {
+        show(loaded(todayCount = 1))
+
+        composeRule.onNodeWithText("Monday, July 13, 2026").performClick()
+
+        assertEquals(emptyList<HomeEvent>(), events)
+    }
+
     @Test
     fun `shows the today card with the date and the count of media to sort`() {
-        show(HomeUiState.Loaded(ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 12)))
+        show(loaded(todayCount = 12))
 
         composeRule.onNodeWithText(text(R.string.home_today)).assertIsDisplayed()
         composeRule.onNodeWithText("Wednesday, July 15, 2026").assertIsDisplayed()
@@ -51,11 +103,11 @@ class HomeScreenTest {
 
     @Test
     fun `opens the deck of today when the card is tapped`() {
-        show(HomeUiState.Loaded(ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 1)))
+        show(loaded(todayCount = 1))
 
         composeRule.onNodeWithText("1 item to sort").performClick()
 
-        assertEquals(listOf<HomeEvent>(HomeEvent.OpenToday), events)
+        assertEquals(listOf<HomeEvent>(HomeEvent.OpenDay(LocalDate.of(2026, 7, 15))), events)
     }
 
     @Test
@@ -87,7 +139,7 @@ class HomeScreenTest {
     @Test
     @Config(qualifiers = "fr")
     fun `shows the today card in french`() {
-        show(HomeUiState.Loaded(ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 12)))
+        show(loaded(todayCount = 12))
 
         composeRule.onNodeWithText("Aujourd'hui").assertIsDisplayed()
         composeRule.onNodeWithText("mercredi 15 juillet 2026").assertIsDisplayed()
