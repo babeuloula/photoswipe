@@ -9,7 +9,8 @@ import java.time.Clock
 import java.time.LocalDate
 
 /**
- * Écrit la décision [decision] pour le couple ([media], année de [day]) et renvoie la
+ * Écrit la décision [decision] pour le couple ([media], année de [day]), avec un favori en attente
+ * si [favoritePending] est vrai, et renvoie la
  * [SessionDecision] à empiler pour l'undo, avec l'entrée qu'elle remplace.
  *
  * Partagé par les use cases de décision (garder, marquer, favori) pour qu'ils enregistrent tous
@@ -20,6 +21,7 @@ internal suspend fun ReviewRepository.recordDecision(
     day: LocalDate,
     decision: ReviewDecision,
     clock: Clock,
+    favoritePending: Boolean = false,
 ): SessionDecision {
     val previous = entriesFor(day.year, setOf(media.id)).singleOrNull()
     save(
@@ -29,6 +31,7 @@ internal suspend fun ReviewRepository.recordDecision(
             decision = decision,
             sizeBytes = media.sizeBytes,
             decidedAt = clock.instant(),
+            favoritePending = favoritePending,
         ),
     )
     return SessionDecision(media, day, previous)
