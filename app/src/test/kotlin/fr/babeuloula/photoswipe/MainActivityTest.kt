@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe
 
+import android.Manifest
 import android.content.pm.ActivityInfo
 import android.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
@@ -66,6 +67,26 @@ class MainActivityTest {
             .onNodeWithText(
                 composeRule.activity.getString(R.string.permission_rationale_title),
             ).assertIsDisplayed()
+    }
+
+    @Test
+    fun `main activity warns about limited access and keeps the home screen`() {
+        shadowOf(composeRule.activity.application).grantPermissions(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+
+        resume()
+
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.limited_access_message)).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.limited_access_manage)).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.home_placeholder)).assertIsDisplayed()
+    }
+
+    @Test
+    fun `main activity shows no limited access banner with full access`() {
+        shadowOf(composeRule.activity.application).grantPermissions(*MEDIA_PERMISSIONS)
+
+        resume()
+
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.limited_access_message)).assertDoesNotExist()
     }
 
     /** Simule un retour au premier plan, par exemple depuis les réglages système. */

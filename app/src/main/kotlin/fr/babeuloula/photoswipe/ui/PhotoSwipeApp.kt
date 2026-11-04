@@ -30,7 +30,7 @@ import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 fun PhotoSwipeApp(modifier: Modifier = Modifier) {
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
         MediaAccessGate(modifier = Modifier.padding(innerPadding)) {
-            HomePlaceholder(Modifier.padding(innerPadding))
+            HomePlaceholder()
         }
     }
 }

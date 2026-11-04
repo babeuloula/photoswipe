@@ -7,6 +7,8 @@
     <!-- Lecture des photos et vidéos de la galerie (Android 13+, SPEC §4.1). -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <!-- Accès partiel d'Android 14+ : l'utilisateur ne partage qu'une sélection (SPEC §4.1). -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
 
     <application
         android:name=".PhotoSwipeApplication"

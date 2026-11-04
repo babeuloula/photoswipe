@@ -14,4 +14,7 @@
     <string name="media_access_denied_body">PhotoSwipe can\'t show your memories without access to your photos and videos. You can allow it at any time in the app settings.</string>
     <string name="media_access_open_settings">Open settings</string>
     <string name="media_access_try_again">Try again</string>
+    <!-- Bannière d'accès partiel, Android 14+ (SPEC §4.1). -->
+    <string name="limited_access_message">Limited access: your memories may be incomplete.</string>
+    <string name="limited_access_manage">Manage access</string>
 </resources>
