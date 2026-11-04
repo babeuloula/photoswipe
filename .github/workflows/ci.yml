@@ -87,6 +87,13 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
+      # L'émulateur réserve plus de 7 Go pour sa partition de données : on retire du runner des outils
+      # inutiles ici (.NET, GHC, Boost, CodeQL, NDK Android) pour libérer la place.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/lib/android/sdk/ndk
+          df -h /
+
       # L'émulateur x86_64 a besoin de l'accélération matérielle KVM, disponible sur les runners Linux.
       - name: Enable KVM
         run: |
@@ -101,7 +108,6 @@ jobs:
           api-level: 34
           arch: x86_64
           target: google_apis
-          # La partition de données par défaut (7 Go) dépasse l'espace libre du runner : 2 Go suffisent aux tests.
           disk-size: 2048M
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -no-metrics
           disable-animations: true
