@@ -73,6 +73,13 @@ La configuration commune est portée par des plugins de convention, dans le buil
 - Insets : le `Scaffold` transmet les marges des barres système (`innerPadding`), que chaque écran applique.
 - `PhotoSwipeApp` affiche pour l'instant un écran d'accueil provisoire, remplacé par la pile de swipe (epic 5).
 
+### Internationalisation (SPEC §9)
+
+- Ressources par défaut en anglais (`values/`), traduction française (`values-fr/`). Chaque type de ressource a son fichier : `strings.xml`, `plurals.xml`.
+- Les pluriels passent par `getQuantityString` (`plurals/media_count` sert d'exemple), jamais par concaténation. Le français déclare `one`, `many` et `other`.
+- `res/xml/locales_config.xml`, référencé par `android:localeConfig` dans le manifeste, liste les langues du réglage de langue par application d'Android 13+.
+- Deux filets : `MissingTranslation` en erreur dans Android Lint, et `LocalizationTest` (`:app`, package `i18n`) qui vérifie que chaque clé existe en anglais et en français, sans clé orpheline, et que chaque dossier `values-xx` traduit figure dans `locales_config.xml`. Son lecteur de ressources (`TranslatableResources`) est lui-même testé sur des fixtures (`src/test/resources/fixtures/i18n`).
+
 ## 3. Flux de données *(prévu, SPEC §5.4)*
 
 L'UI suit **MVVM** avec un **flux unidirectionnel de données (UDF)** :
