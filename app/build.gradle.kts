@@ -31,8 +31,10 @@ dependencies {
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     testImplementation(libs.junit4)
+    testImplementation(libs.kotlinx.coroutines.test)
     // Builders, fakes et FixedClock du domaine (SPEC §10).
     testImplementation(testFixtures(project(":domain")))
     // Tests Hilt sur la JVM : Robolectric (convention photoswipe.android.robolectric) fournit le framework Android.

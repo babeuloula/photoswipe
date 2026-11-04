@@ -7,6 +7,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -15,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.Wallpapers
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.permission.PermissionRationaleRoute
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 
 /**
@@ -22,24 +27,34 @@ import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
  *
  * L'application est dessinée bord à bord (edge-to-edge) : le `Scaffold` transmet les marges des
  * barres système (`innerPadding`), que le contenu applique pour ne jamais passer dessous.
- * L'écran d'accueil est provisoire, en attendant la pile de swipe (epic 5).
+ * Enchaînement provisoire, en attendant la navigation typée (PS-35) : l'écran d'explication des
+ * permissions, puis l'accueil provisoire une fois « Continuer » touché. La vraie demande système
+ * arrive avec PS-33, la pile de swipe avec l'epic 5.
  */
 @Composable
 fun PhotoSwipeApp(modifier: Modifier = Modifier) {
+    var mediaAccessRequested by rememberSaveable { mutableStateOf(false) }
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = stringResource(R.string.home_placeholder),
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center,
+        if (!mediaAccessRequested) {
+            PermissionRationaleRoute(
+                onRequestMediaAccess = { mediaAccessRequested = true },
+                modifier = Modifier.padding(innerPadding),
             )
+        } else {
+            HomePlaceholder(Modifier.padding(innerPadding))
         }
+    }
+}
+
+/** Accueil provisoire, remplacé par le vrai accueil (PS-37). */
+@Composable
+private fun HomePlaceholder(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(
+            text = stringResource(R.string.home_placeholder),
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
