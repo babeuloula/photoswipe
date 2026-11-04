@@ -51,7 +51,7 @@ class MainActivityTest {
 
         resume()
 
-        composeRule.onNodeWithText(composeRule.activity.getString(R.string.home_placeholder)).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.home_sort_today)).assertIsDisplayed()
     }
 
     @Test
@@ -77,7 +77,7 @@ class MainActivityTest {
 
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.limited_access_message)).assertIsDisplayed()
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.limited_access_manage)).assertIsDisplayed()
-        composeRule.onNodeWithText(composeRule.activity.getString(R.string.home_placeholder)).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.home_sort_today)).assertIsDisplayed()
     }
 
     @Test

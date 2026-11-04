@@ -9,6 +9,8 @@ hilt = "2.60.1"
 androidxActivity = "1.13.0"
 androidxLifecycle = "2.11.0"
 androidxHilt = "1.4.0"
+navigation = "2.10.2"
+kotlinxSerialization = "1.12.0"
 composeBom = "2026.09.00"
 robolectric = "4.17"
 # Jar Android (API 34) que Robolectric 4.17 charge ; le suffixe -iN suit la version de Robolectric.
@@ -29,6 +31,8 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
 androidx-hilt-lifecycle-viewmodel-compose = { module = "androidx.hilt:hilt-lifecycle-viewmodel-compose", version.ref = "androidxHilt" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 
 # Jetpack Compose : versions alignées par la BOM, d'où l'absence de version.ref
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
@@ -37,6 +41,7 @@ androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-compose-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
 
 # Persistance locale des décisions (SPEC §6)
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
@@ -79,6 +84,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 room = { id = "androidx.room", version.ref = "room" }

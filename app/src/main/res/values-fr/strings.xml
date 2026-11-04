@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="home_placeholder">Vos souvenirs de ce jour apparaîtront ici.</string>
     <string name="permission_rationale_title">Revivez vos souvenirs</string>
     <string name="permission_rationale_what">Chaque jour, PhotoSwipe vous montre les photos et vidéos prises le même jour les années précédentes, pour garder celles que vous aimez et faire le tri dans les autres.</string>
     <string name="permission_rationale_why">Pour les retrouver, l\'application a besoin d\'accéder à vos photos et vidéos.</string>
@@ -12,4 +11,13 @@
     <string name="media_access_try_again">Réessayer</string>
     <string name="limited_access_message">Accès limité : vos souvenirs peuvent être incomplets.</string>
     <string name="limited_access_manage">Gérer l\'accès</string>
+    <string name="navigate_back">Retour</string>
+    <string name="shell_coming_soon">Cet écran arrive bientôt.</string>
+    <string name="home_sort_today">Trier les souvenirs du jour</string>
+    <string name="home_open_settings">Réglages</string>
+    <string name="deck_title">Souvenirs du %1$s</string>
+    <string name="deck_finish">Terminer</string>
+    <string name="summary_title">Résumé</string>
+    <string name="summary_done">Terminé</string>
+    <string name="settings_title">Réglages</string>
 </resources>

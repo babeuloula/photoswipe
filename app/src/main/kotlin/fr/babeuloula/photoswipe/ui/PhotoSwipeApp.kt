@@ -1,58 +1,52 @@
 package fr.babeuloula.photoswipe.ui
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.Wallpapers
-import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.navigation.PhotoSwipeNavHost
 import fr.babeuloula.photoswipe.ui.permission.MediaAccessGate
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 
 /**
  * Racine de l'interface Compose.
  *
- * L'application est dessinée bord à bord (edge-to-edge) : le `Scaffold` transmet les marges des
- * barres système (`innerPadding`), que le contenu applique pour ne jamais passer dessous.
- * Le contenu n'apparaît qu'avec l'accès aux photos et vidéos ([MediaAccessGate]) ; l'accueil est
- * provisoire, en attendant le vrai accueil (PS-37) et la navigation typée (PS-35).
+ * L'application est dessinée bord à bord (edge-to-edge). Les écrans du parcours d'accès reçoivent
+ * les marges des barres système (`safeDrawingPadding`) ; ceux de la navigation ont chacun leur
+ * `Scaffold`, qui les gère lui-même. La navigation n'apparaît qu'avec l'accès aux photos et vidéos
+ * ([MediaAccessGate]).
+ *
+ * @param clock horloge de l'appareil, injectée dans `MainActivity`.
  */
 @Composable
-fun PhotoSwipeApp(modifier: Modifier = Modifier) {
-    Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
-        MediaAccessGate(modifier = Modifier.padding(innerPadding)) {
-            HomePlaceholder()
+fun PhotoSwipeApp(
+    clock: Clock,
+    modifier: Modifier = Modifier,
+) {
+    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        MediaAccessGate(modifier = Modifier.safeDrawingPadding()) {
+            PhotoSwipeNavHost(clock = clock)
         }
     }
 }
 
-/** Accueil provisoire, remplacé par le vrai accueil (PS-37). */
-@Composable
-private fun HomePlaceholder(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(
-            text = stringResource(R.string.home_placeholder),
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
+/** Horloge figée des aperçus. */
+private val PREVIEW_CLOCK: Clock = Clock.fixed(Instant.parse("2026-07-15T10:00:00Z"), ZoneOffset.UTC)
 
 /** Aperçus clair et sombre avec la palette de repli. */
 @PreviewLightDark
 @Composable
 private fun PhotoSwipeAppFallbackPreview() {
     PhotoSwipeTheme(dynamicColor = false) {
-        PhotoSwipeApp()
+        PhotoSwipeApp(clock = PREVIEW_CLOCK)
     }
 }
 
@@ -61,6 +55,6 @@ private fun PhotoSwipeAppFallbackPreview() {
 @Composable
 private fun PhotoSwipeAppDynamicPreview() {
     PhotoSwipeTheme(dynamicColor = true) {
-        PhotoSwipeApp()
+        PhotoSwipeApp(clock = PREVIEW_CLOCK)
     }
 }
