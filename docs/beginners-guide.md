@@ -124,7 +124,8 @@ photoswipe/
 │   └── src/test/
 ├── domain/                    Module « domaine » : les règles métier, en Kotlin pur
 │   ├── build.gradle.kts
-│   ├── src/main/kotlin/…/model/  Les modèles : MediaItem, ReviewDecision, ReviewDay, SessionSummary…
+│   ├── src/main/kotlin/…/model/  Les modèles : MediaItem, ReviewDecision, ReviewDay, ReviewEntry, SessionSummary…
+│   ├── src/main/kotlin/…/port/  Les ports : des interfaces (MediaSource, ReviewRepository…) que le module data implémente
 │   ├── src/main/kotlin/…/service/  Les services purs : SameDayMatcher (médias « du même jour »), ReviewWindowProvider (les 7 jours de rattrapage)…
 │   └── src/test/
 ├── docs/                      Documentation (ce guide, l'architecture, les décisions)
@@ -152,6 +153,8 @@ Une analogie avec un restaurant :
 Comme la recette ne dépend pas de la cuisine, on pourrait changer la manière de stocker les données sans toucher aux règles métier.
 
 Ces frontières sont vérifiées automatiquement par des **tests d'architecture** écrits avec **Konsist**, une bibliothèque qui lit le code Kotlin comme du texte structuré (fichiers, packages, imports). Si quelqu'un importe par exemple une classe Android dans `domain`, ou une classe de `data` dans un écran de `app`, `./gradlew test` échoue et la CI devient rouge.
+
+Le domaine décrit ce dont il a besoin sous forme d'**interfaces**, appelées « ports » (package `port`) : par exemple `MediaSource`, « donne-moi les médias pris entre telle et telle date ». Le module `data` fournit les classes qui font vraiment le travail avec MediaStore ou Room, et Hilt les branche. Les fonctions de ces interfaces sont marquées `suspend` : elles peuvent attendre (lecture disque, base de données) sans bloquer l'écran.
 
 ## 3. Lancer le projet
 

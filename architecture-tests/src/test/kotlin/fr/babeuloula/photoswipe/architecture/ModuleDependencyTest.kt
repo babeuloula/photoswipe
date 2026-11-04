@@ -20,6 +20,20 @@ class ModuleDependencyTest {
     }
 
     @Test
+    fun `domain ports declare only interfaces`() {
+        val domain = Konsist.scopeFromProduction("domain")
+        val violations = domain.nonInterfacePortDeclarations()
+
+        // Sans aucun port, la règle serait toujours vraie : on vérifie qu'elle lit bien le package.
+        assertTrue(domain.interfaces().any { it.packagee?.name == "fr.babeuloula.photoswipe.domain.port" }) {
+            "No interface found in the domain port package"
+        }
+        assertTrue(violations.isEmpty()) {
+            violations.joinToString(prefix = "Non-interface declarations in ports:\n", separator = "\n") { it.name }
+        }
+    }
+
+    @Test
     fun `app uses data classes only from the di package`() {
         // Production seulement : un test peut légitimement remplacer une implémentation de :data.
         val app = Konsist.scopeFromProduction("app")

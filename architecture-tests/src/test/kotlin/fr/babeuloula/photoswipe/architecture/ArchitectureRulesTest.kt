@@ -37,6 +37,22 @@ class ArchitectureRulesTest {
     }
 
     @Test
+    fun `flags classes, objects and enums in the domain ports, nested packages included`() {
+        val scope = Konsist.scopeFromFile("$FIXTURES/domain/port/PortImplementations.kt")
+
+        val violations = scope.nonInterfacePortDeclarations().map { it.name }.toSet()
+
+        assertEquals(setOf("InMemoryPort", "AbstractPort", "PortValue", "SingletonPort", "PortKind"), violations)
+    }
+
+    @Test
+    fun `allows interfaces and functional interfaces in the domain ports`() {
+        val scope = Konsist.scopeFromFile("$FIXTURES/domain/port/PortInterfaces.kt")
+
+        assertEquals(emptyList<String>(), scope.nonInterfacePortDeclarations().map { it.name })
+    }
+
+    @Test
     fun `flags data imports in app files outside the di package`() {
         val scope =
             Konsist.scopeFromFiles(
