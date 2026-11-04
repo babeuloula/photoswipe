@@ -26,3 +26,4 @@ rootProject.name = "PhotoSwipe"
 include(":app")
 include(":data")
 include(":domain")
+include(":architecture-tests")

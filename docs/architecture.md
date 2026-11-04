@@ -25,7 +25,10 @@ Règles :
 - `:domain` ne dépend d'**aucun** autre module ni d'aucune bibliothèque Android.
 - `:data` dépend de `:domain` pour implémenter ses ports.
 - `:app` dépend de `:domain` (use cases, modèles). Il ne dépend de `:data` que pour que Hilt puisse brancher les implémentations : le code de l'UI n'importe jamais de classe de `:data` en dehors du package `di`.
-- Le test d'architecture (Konsist, PS-7) vérifiera ces règles *(prévu)*. En attendant, un test de `:domain` vérifie que le framework Android n'est pas sur son classpath.
+- Ces règles sont vérifiées par les tests Konsist du module `:architecture-tests` (ADR [0005](decisions/0005-konsist-architecture-tests.md)) :
+  - `:domain` (production et tests) n'importe rien de `android.*`, `androidx.*` (dont Room et Compose) ni `com.google.android.*`, et, du projet, que ses propres packages `fr.babeuloula.photoswipe.domain` ;
+  - le code de production de `:app` n'importe `fr.babeuloula.photoswipe.data` que depuis le package `di`.
+- Chaque règle est elle-même testée sur des fichiers d'exemple (`architecture-tests/src/test/resources/fixtures`, jamais compilés), et chaque test vérifie que le module scanné n'est pas vide. Un test de `:domain` vérifie en plus que le framework Android n'est pas sur son classpath.
 
 ## 2. Modules
 
@@ -34,6 +37,7 @@ Règles :
 | `:app` | `photoswipe.android.application`, `photoswipe.android.hilt`, `photoswipe.android.compose` | `fr.babeuloula.photoswipe` | Point d'entrée (`PhotoSwipeApplication`, `MainActivity`), assemblage Hilt (package `di`), UI Compose et thème Material 3 (package `ui`), écrans et ViewModels *(prévu)* |
 | `:data` | `photoswipe.android.library` | `fr.babeuloula.photoswipe.data` | Implémentations Android des ports : `MediaStoreMediaSource`, `RoomReviewRepository`, etc. *(prévu)* |
 | `:domain` | `photoswipe.jvm.library` | `fr.babeuloula.photoswipe.domain` | Modèles, services purs (`SameDayMatcher`, etc.), use cases, ports *(prévu)* |
+| `:architecture-tests` | `photoswipe.jvm.library` | `fr.babeuloula.photoswipe.architecture` | Tests d'architecture Konsist uniquement (aucun code de production). Dépend d'aucun module : Konsist lit les sources de `:app`, `:data` et `:domain`, déclarées en entrées de sa tâche `test` pour que Gradle la relance quand elles changent |
 
 ### Conventions Gradle (`build-logic/`)
 
@@ -111,6 +115,7 @@ Relevées le 2026-11-03 sur les sources officielles (Google Maven, Maven Central
 | Compose BOM | 2026.09.00 | Compose UI 1.12.1, Material 3 1.4.0 |
 | Kotlin Compose compiler plugin | 2.4.21 | Même version que Kotlin |
 | Robolectric | 4.17 | Tests sur l'API 34 (ADR 0002) |
+| Konsist | 0.18.1 | Dernière stable (la 1.0 n'est qu'en bêta), compilée avec Kotlin 2.4.21 |
 | ktlint-gradle (plugin) | 14.2.0 | |
 | ktlint | 1.8.0 | Moteur utilisé par le plugin, style `ktlint_official` |
 | detekt | 1.23.8 | Dernière stable ; la 2.0 n'est qu'en alpha (ADR 0003) |
@@ -131,15 +136,16 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Compose UI Test (JUnit 4) | `:app` (tests) | Tests de rendu Compose (`createAndroidComposeRule`) sur Robolectric |
 | Hilt Android Testing | `:app` (tests) | `@HiltAndroidTest` et `HiltAndroidRule` pour vérifier l'injection dans les tests |
 | Robolectric | `:app` (tests) | Exécute le framework Android sur la JVM : tests Hilt sans émulateur, en local comme en CI |
+| Konsist | `:architecture-tests` (tests) | Tests d'architecture imposés par la SPEC §5.1 et §11 : lit le code Kotlin (imports, packages) de tous les modules, sans les compiler ni dépendre d'eux (ADR 0005) |
 | ktlint (plugin `org.jlleitschuh.gradle.ktlint`) | tous (build) | Format du code imposé par la SPEC §12 ; le plugin crée les tâches `ktlintCheck` et `ktlintFormat` par source set |
 | detekt | tous (build) | Analyse statique imposée par la SPEC §12 (complexité, code mort, mauvaises pratiques) |
 | `mikepenz/action-junit-report` | CI | Affiche le récapitulatif des tests JUnit dans le résumé du run GitHub Actions, sans fouiller les logs |
 
-Prévues dans la SPEC, ajoutées avec leur ticket : Navigation Compose, Room, DataStore, Coil 3, Media3 ExoPlayer, WorkManager, Konsist, MockK, Turbine, kotlinx-coroutines-test.
+Prévues dans la SPEC, ajoutées avec leur ticket : Navigation Compose, Room, DataStore, Coil 3, Media3 ExoPlayer, WorkManager, MockK, Turbine, kotlinx-coroutines-test.
 
 ## 7. CI
 
-`.github/workflows/ci.yml` se lance à chaque push sur `main` et sur chaque PR. Il installe le JDK 17 (Temurin) et Gradle, valide le wrapper, puis exécute `test` (modules + conventions `build-logic`), `quality` (ktlint, detekt et Android Lint) et `assembleDebug`. Le récapitulatif des tests JUnit s'affiche dans le résumé du run. En cas d'échec, les rapports sont publiés en artefact. Chaque nouveau check du projet y est ajouté dans la PR qui l'introduit.
+`.github/workflows/ci.yml` se lance à chaque push sur `main` et sur chaque PR. Il installe le JDK 17 (Temurin) et Gradle, valide le wrapper, puis exécute `test` (modules, règles d'architecture Konsist et conventions `build-logic`), `quality` (ktlint, detekt et Android Lint) et `assembleDebug`. Le récapitulatif des tests JUnit s'affiche dans le résumé du run. En cas d'échec, les rapports sont publiés en artefact. Chaque nouveau check du projet y est ajouté dans la PR qui l'introduit.
 
 - **Cache Gradle** : géré par `setup-gradle` (dépendances, build cache, wrapper). Seuls les runs de `main` écrivent le cache ; les PR le lisent sans le modifier.
 - **Blocage** : un ruleset GitHub sur `main` exige que le job « Quality, unit tests and debug build » soit vert avant tout merge (ADR [0004](decisions/0004-required-ci-check-on-main.md)). Renommer ce job impose de mettre à jour le ruleset.

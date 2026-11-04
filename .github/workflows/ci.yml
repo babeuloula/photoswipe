@@ -1,5 +1,6 @@
 # CI : qualité (ktlint, detekt, Android Lint), tests unitaires et build debug à chaque push sur main et sur chaque PR.
-# À faire évoluer avec le projet : chaque nouveau check (Konsist, tests instrumentés, ...) y est ajouté.
+# À faire évoluer avec le projet : chaque nouveau check (tests instrumentés, ...) y est ajouté.
+# Les tests d'architecture Konsist (module :architecture-tests) tournent avec `test`.
 # Le nom du job est un check obligatoire du ruleset de main (ADR 0004) : le renommer impose de mettre à jour le ruleset.
 name: CI
 
@@ -38,7 +39,7 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
-      - name: Unit tests (modules + build-logic conventions)
+      - name: Unit tests (modules, Konsist architecture rules, build-logic conventions)
         run: ./gradlew test --console=plain
 
       - name: Quality (ktlint, detekt, Android Lint)
