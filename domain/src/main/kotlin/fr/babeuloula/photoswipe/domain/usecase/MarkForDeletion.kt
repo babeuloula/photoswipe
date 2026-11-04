@@ -2,7 +2,7 @@ package fr.babeuloula.photoswipe.domain.usecase
 
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
-import fr.babeuloula.photoswipe.domain.model.ReviewEntry
+import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import java.time.Clock
 import java.time.LocalDate
@@ -21,19 +21,12 @@ class MarkForDeletion(
     private val reviewRepository: ReviewRepository,
     private val clock: Clock,
 ) {
-    /** Marque [media], présenté dans la pile du jour cible [day], pour suppression. */
+    /**
+     * Marque [media], présenté dans la pile du jour cible [day], pour suppression ; renvoie la
+     * décision à empiler pour l'undo.
+     */
     suspend operator fun invoke(
         media: MediaItem,
         day: LocalDate,
-    ) {
-        reviewRepository.save(
-            ReviewEntry(
-                mediaId = media.id,
-                reviewYear = day.year,
-                decision = ReviewDecision.MARKED_FOR_DELETION,
-                sizeBytes = media.sizeBytes,
-                decidedAt = clock.instant(),
-            ),
-        )
-    }
+    ): SessionDecision = reviewRepository.recordDecision(media, day, ReviewDecision.MARKED_FOR_DELETION, clock)
 }

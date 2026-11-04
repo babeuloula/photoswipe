@@ -2,7 +2,7 @@ package fr.babeuloula.photoswipe.domain.usecase
 
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
-import fr.babeuloula.photoswipe.domain.model.ReviewEntry
+import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import java.time.Clock
 import java.time.LocalDate
@@ -21,19 +21,9 @@ class KeepMedia(
     private val reviewRepository: ReviewRepository,
     private val clock: Clock,
 ) {
-    /** Garde [media], présenté dans la pile du jour cible [day]. */
+    /** Garde [media], présenté dans la pile du jour cible [day] ; renvoie la décision à empiler pour l'undo. */
     suspend operator fun invoke(
         media: MediaItem,
         day: LocalDate,
-    ) {
-        reviewRepository.save(
-            ReviewEntry(
-                mediaId = media.id,
-                reviewYear = day.year,
-                decision = ReviewDecision.KEPT,
-                sizeBytes = media.sizeBytes,
-                decidedAt = clock.instant(),
-            ),
-        )
-    }
+    ): SessionDecision = reviewRepository.recordDecision(media, day, ReviewDecision.KEPT, clock)
 }

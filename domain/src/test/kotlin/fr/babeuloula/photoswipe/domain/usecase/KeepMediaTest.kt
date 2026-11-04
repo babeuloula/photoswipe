@@ -9,6 +9,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
+import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import kotlinx.coroutines.test.runTest
@@ -82,6 +83,28 @@ class KeepMediaTest {
             assertEquals(emptyList<MediaItem>(), deck(listOf(media), LocalDate.of(2027, 7, 15)))
             assertEquals(listOf(media), deck(listOf(media), LocalDate.of(2028, 7, 15)))
             assertEquals(listOf(2026, 2027), repository.entries.map { it.reviewYear })
+        }
+
+    @Test
+    fun `returns the decision to stack for undo with the entry it replaced`() =
+        runTest {
+            val replaced = aReviewEntry(mediaId = 1, reviewYear = 2026, decision = MARKED_FOR_DELETION)
+            val repository = FakeReviewRepository(listOf(replaced))
+            val media = aMediaItem(id = 1)
+
+            val decision = KeepMedia(repository, clock)(media, LocalDate.of(2026, 7, 15))
+
+            assertEquals(SessionDecision(media, LocalDate.of(2026, 7, 15), previous = replaced), decision)
+        }
+
+    @Test
+    fun `returns a decision without previous entry for a media to sort`() =
+        runTest {
+            val media = aMediaItem(id = 1)
+
+            val decision = keepMedia(media, LocalDate.of(2026, 7, 15))
+
+            assertEquals(SessionDecision(media, LocalDate.of(2026, 7, 15)), decision)
         }
 
     /** Paquet du jour [day], lu avec le même dépôt que [keepMedia]. */
