@@ -1,0 +1,17 @@
+# Catalogue minimal pour PS-1 ; complété en PS-2.
+[versions]
+agp = "9.5.0"
+kotlin = "2.4.21"
+junit4 = "4.13.2"
+junitBom = "6.1.3"
+
+[libraries]
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junitBom" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
