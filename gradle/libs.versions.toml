@@ -9,6 +9,8 @@ hilt = "2.60.1"
 androidxActivity = "1.13.0"
 composeBom = "2026.09.00"
 robolectric = "4.17"
+# Jar Android (API 34) que Robolectric 4.17 charge ; le suffixe -iN suit la version de Robolectric.
+robolectric-androidAll = "14-robolectric-10818077-i7"
 ktlintGradle = "14.2.0"
 ktlint = "1.8.0"
 detekt = "1.23.8"
@@ -37,6 +39,7 @@ junit-bom = { module = "org.junit:junit-bom", version.ref = "junitBom" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+robolectric-androidAll = { module = "org.robolectric:android-all-instrumented", version.ref = "robolectric-androidAll" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 
 # Plugins Gradle utilisés par build-logic

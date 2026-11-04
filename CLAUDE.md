@@ -48,7 +48,7 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 ## Tests
 - `:domain` et `:architecture-tests` : JUnit Jupiter (JUnit 6).
 - Modules Android (`:app`, `:data`) : JUnit 4, en attendant une décision ADR sur JUnit 5/6 côté Android.
-- Tests qui ont besoin d'Android ou de Hilt : Robolectric + `@HiltAndroidTest` (`HiltTestApplication`), sur l'API 34 (ADR 0002).
+- Tests qui ont besoin d'Android ou de Hilt : Robolectric + `@HiltAndroidTest` (`HiltTestApplication`), sur l'API 34 (ADR 0002). Robolectric tourne hors ligne : monter sa version impose de mettre à jour `robolectric-androidAll` dans le catalogue (sinon « Path is not a file »).
 - Tests Compose : `androidx.compose.ui.test.junit4.v2.createAndroidComposeRule<MainActivity>()` (les API v1 sont dépréciées). Pas de `createComposeRule()` : son activité hôte (`ui-test-manifest`) n'est pas visible des tests unitaires Robolectric ; pour lire des valeurs de thème, composer dans `Robolectric.buildActivity(ComponentActivity::class.java)`.
 - Les noms des tests sont en anglais et décrivent le comportement, par exemple `` `moves leap day media to February 28 on non-leap years` ``.
 

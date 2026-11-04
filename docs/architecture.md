@@ -143,6 +143,7 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Compose UI Test (JUnit 4) | `:app` (tests) | Tests de rendu Compose (`createAndroidComposeRule`) sur Robolectric |
 | Hilt Android Testing | `:app` (tests) | `@HiltAndroidTest` et `HiltAndroidRule` pour vérifier l'injection dans les tests |
 | Robolectric | `:app` (tests) | Exécute le framework Android sur la JVM : tests Hilt sans émulateur, en local comme en CI |
+| Robolectric `android-all-instrumented` | `:app` (tests) | Jar Android de l'API 34 résolu par Gradle (configuration `robolectricRuntime`) : Robolectric tourne hors ligne, sans téléchargement à chaque test ni erreur 429 de Maven Central en CI. Sa version suit celle de Robolectric |
 | Konsist | `:architecture-tests` (tests) | Tests d'architecture imposés par la SPEC §5.1 et §11 : lit le code Kotlin (imports, packages) de tous les modules, sans les compiler ni dépendre d'eux (ADR 0005) |
 | ktlint (plugin `org.jlleitschuh.gradle.ktlint`) | tous (build) | Format du code imposé par la SPEC §12 ; le plugin crée les tâches `ktlintCheck` et `ktlintFormat` par source set |
 | detekt | tous (build) | Analyse statique imposée par la SPEC §12 (complexité, code mort, mauvaises pratiques) |
@@ -155,5 +156,6 @@ Prévues dans la SPEC, ajoutées avec leur ticket : Navigation Compose, Room, Da
 `.github/workflows/ci.yml` se lance à chaque push sur `main` et sur chaque PR. Il installe le JDK 17 (Temurin) et Gradle, valide le wrapper, puis exécute en une seule invocation Gradle `test` (modules, règles d'architecture Konsist et conventions `build-logic`), `quality` (ktlint, detekt et Android Lint) et `assembleDebug`, avec `--continue` pour remonter toutes les erreurs d'un coup. Le récapitulatif des tests JUnit s'affiche dans le résumé du run. En cas d'échec, les rapports sont publiés en artefact. Chaque nouveau check du projet y est ajouté dans la PR qui l'introduit.
 
 - **Parallélisme** : `org.gradle.parallel=true` (`gradle.properties`) fait tourner les modules indépendants en parallèle. Un seul job plutôt que plusieurs : chaque job repartirait d'un runner neuf et recompilerait `:app`.
+- **Robolectric hors ligne** : son jar Android passe par le cache Gradle au lieu d'être téléchargé à chaque run.
 - **Cache Gradle** : géré par `setup-gradle` (dépendances, build cache, wrapper). Seuls les runs de `main` écrivent le cache ; les PR le lisent sans le modifier.
 - **Blocage** : un ruleset GitHub sur `main` exige que le job « Quality, unit tests and debug build » soit vert avant tout merge (ADR [0004](decisions/0004-required-ci-check-on-main.md)). Renommer ce job impose de mettre à jour le ruleset.
