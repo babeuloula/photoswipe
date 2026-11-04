@@ -18,4 +18,9 @@
         <item quantity="one">%d item waiting to be deleted</item>
         <item quantity="other">%d items waiting to be deleted</item>
     </plurals>
+    <!-- Ancienneté d'un souvenir sur sa carte, « 3 years ago » (SPEC §4.3). -->
+    <plurals name="deck_years_ago">
+        <item quantity="one">%d year ago</item>
+        <item quantity="other">%d years ago</item>
+    </plurals>
 </resources>

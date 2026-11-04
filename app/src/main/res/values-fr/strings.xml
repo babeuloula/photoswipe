@@ -16,6 +16,13 @@
     <string name="home_open_settings">Réglages</string>
     <string name="deck_title">Souvenirs du %1$s</string>
     <string name="deck_finish">Terminer</string>
+    <string name="deck_memory_label">%1$s · %2$s</string>
+    <string name="deck_photo_description">Photo prise le %1$s</string>
+    <string name="deck_video_description">Vidéo prise le %1$s</string>
+    <string name="deck_media_unavailable">Aperçu indisponible</string>
+    <string name="deck_error">Les souvenirs de ce jour n\'ont pas pu être chargés.</string>
+    <string name="deck_retry">Réessayer</string>
+    <string name="deck_empty">Plus rien à trier pour ce jour.</string>
     <string name="summary_title">Résumé</string>
     <string name="summary_done">Terminé</string>
     <string name="settings_title">Réglages</string>

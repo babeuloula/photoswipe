@@ -16,4 +16,9 @@
         <item quantity="many">%d de médias en attente de suppression</item>
         <item quantity="other">%d médias en attente de suppression</item>
     </plurals>
+    <plurals name="deck_years_ago">
+        <item quantity="one">Il y a %d an</item>
+        <item quantity="many">Il y a %d d\'ans</item>
+        <item quantity="other">Il y a %d ans</item>
+    </plurals>
 </resources>

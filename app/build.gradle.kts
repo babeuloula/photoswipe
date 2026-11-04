@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.core)
+    implementation(libs.coil.compose.core)
 
     // Données de démo des outils développeur (SPEC §10, niveau 2) : jamais dans la variante release.
     debugImplementation(testFixtures(project(":domain")))
