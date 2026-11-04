@@ -152,7 +152,8 @@ Prévues dans la SPEC, ajoutées avec leur ticket : Navigation Compose, Room, Da
 
 ## 7. CI
 
-`.github/workflows/ci.yml` se lance à chaque push sur `main` et sur chaque PR. Il installe le JDK 17 (Temurin) et Gradle, valide le wrapper, puis exécute `test` (modules, règles d'architecture Konsist et conventions `build-logic`), `quality` (ktlint, detekt et Android Lint) et `assembleDebug`. Le récapitulatif des tests JUnit s'affiche dans le résumé du run. En cas d'échec, les rapports sont publiés en artefact. Chaque nouveau check du projet y est ajouté dans la PR qui l'introduit.
+`.github/workflows/ci.yml` se lance à chaque push sur `main` et sur chaque PR. Il installe le JDK 17 (Temurin) et Gradle, valide le wrapper, puis exécute en une seule invocation Gradle `test` (modules, règles d'architecture Konsist et conventions `build-logic`), `quality` (ktlint, detekt et Android Lint) et `assembleDebug`, avec `--continue` pour remonter toutes les erreurs d'un coup. Le récapitulatif des tests JUnit s'affiche dans le résumé du run. En cas d'échec, les rapports sont publiés en artefact. Chaque nouveau check du projet y est ajouté dans la PR qui l'introduit.
 
+- **Parallélisme** : `org.gradle.parallel=true` (`gradle.properties`) fait tourner les modules indépendants en parallèle. Un seul job plutôt que plusieurs : chaque job repartirait d'un runner neuf et recompilerait `:app`.
 - **Cache Gradle** : géré par `setup-gradle` (dépendances, build cache, wrapper). Seuls les runs de `main` écrivent le cache ; les PR le lisent sans le modifier.
 - **Blocage** : un ruleset GitHub sur `main` exige que le job « Quality, unit tests and debug build » soit vert avant tout merge (ADR [0004](decisions/0004-required-ci-check-on-main.md)). Renommer ce job impose de mettre à jour le ruleset.
