@@ -47,7 +47,7 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 - Versions : `gradle/libs.versions.toml`, sans aucune version en dur ailleurs. CI : `.github/workflows/ci.yml` ; son job est un check obligatoire du ruleset de `main` (ADR 0004), le renommer impose de mettre à jour le ruleset.
 
 ## Tests
-- `:domain` et `:architecture-tests` : JUnit Jupiter (JUnit 6). Les fonctions `suspend` se testent dans `runTest` (kotlinx-coroutines-test). Un `Flow` se teste avec `first()`, ou en collectant dans une liste depuis `backgroundScope` avec `UnconfinedTestDispatcher(testScheduler)` (pas de Turbine).
+- `:domain` et `:architecture-tests` : JUnit Jupiter (JUnit 6). Les fonctions `suspend` se testent dans `runTest` (kotlinx-coroutines-test). Un `Flow` se teste avec `first()`, ou en collectant dans une liste depuis `backgroundScope` avec `UnconfinedTestDispatcher(testScheduler)`. Turbine, prévu par la SPEC §11, n'est pas encore ajouté (ADR 0008).
 - Données de test : les builders, fakes et `FixedClock` de `:domain` (`testFixtures`) plutôt que des objets construits à la main ; un nouveau fake respecte le contrat de son port et est lui-même testé.
 - Modules Android (`:app`, `:data`) : JUnit 4, en attendant une décision ADR sur JUnit 5/6 côté Android.
 - Tests qui ont besoin d'Android ou de Hilt : Robolectric + `@HiltAndroidTest` (`HiltTestApplication`), sur l'API 34 (ADR 0002). Robolectric tourne hors ligne : monter sa version impose de mettre à jour `robolectric-androidAll` dans le catalogue (sinon « Path is not a file »).

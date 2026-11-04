@@ -26,6 +26,7 @@ Pour compter, il faut aussi lire les médias de chaque jour. `MediaSource.mediaT
 
 ## Conséquences
 - `RoomReviewRepository` (epic 3) implémente `observeEntries` avec une requête `@Query` qui renvoie un `Flow`.
+- Les flux se testent pour l'instant sans Turbine (prévu par la SPEC §11) : collecter dans une liste depuis `backgroundScope` suffit à ces tests. Turbine sera ajouté, avec sa justification, quand un test en aura besoin (ViewModels, epic 4).
 - `FakeReviewRepository` garde ses entrées dans un `MutableStateFlow` pour émettre après chaque écriture.
 - Les médias datés d'avant 1970 ne sont jamais proposés : limite connue.
 - Un média marqué pour suppression une année et jamais confirmé n'a pas d'entrée l'année suivante : il y est de nouveau compté à trier, conformément au §3.3 (une décision vaut pour un couple média, année de revue). Le bandeau « N médias en attente de suppression » le signale par ailleurs.
