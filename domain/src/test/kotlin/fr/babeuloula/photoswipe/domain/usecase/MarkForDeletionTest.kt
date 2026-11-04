@@ -9,6 +9,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
+import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import kotlinx.coroutines.test.runTest
@@ -99,5 +100,27 @@ class MarkForDeletionTest {
             MarkForDeletion(repository, clock)(aMediaItem(id = 1), today)
 
             assertEquals(listOf(kept), repository.entries.filter { it.mediaId.value == 2L })
+        }
+
+    @Test
+    fun `returns the decision to stack for undo with the entry it replaced`() =
+        runTest {
+            val replaced = aReviewEntry(mediaId = 1, reviewYear = 2026, decision = KEPT)
+            val repository = FakeReviewRepository(listOf(replaced))
+            val media = aMediaItem(id = 1)
+
+            val decision = MarkForDeletion(repository, clock)(media, LocalDate.of(2026, 7, 15))
+
+            assertEquals(SessionDecision(media, LocalDate.of(2026, 7, 15), previous = replaced), decision)
+        }
+
+    @Test
+    fun `returns a decision without previous entry for a media to sort`() =
+        runTest {
+            val media = aMediaItem(id = 1)
+
+            val decision = markForDeletion(media, LocalDate.of(2026, 7, 15))
+
+            assertEquals(SessionDecision(media, LocalDate.of(2026, 7, 15)), decision)
         }
 }
