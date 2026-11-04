@@ -50,15 +50,25 @@ Tout ce qui n'est pas du code : textes traduits (`strings.xml`), icônes, couleu
 ### Activity
 Un « écran » au sens Android, et le point d'entrée de l'application. PhotoSwipe n'en aura qu'une (`MainActivity`) ; les différents écrans seront dessinés en Compose à l'intérieur.
 
+### Hilt (injection de dépendances)
+Une classe a souvent besoin d'autres objets pour travailler : une horloge, une base de données… Plutôt que de les créer elle-même, elle les reçoit dans son constructeur. **Hilt** se charge de fabriquer ces objets et de les lui fournir. Avantage : dans un test, on peut lui donner une fausse horloge ou une fausse base.
+- `@HiltAndroidApp` sur `PhotoSwipeApplication` démarre Hilt au lancement de l'application.
+- `@AndroidEntryPoint` sur `MainActivity` permet à Hilt d'y injecter des objets.
+- Un **module Hilt** (`@Module`, dans le dossier `di/`) explique à Hilt comment fabriquer un objet qu'il ne sait pas construire seul, par exemple `TimeModule` pour l'horloge.
+
+### KSP
+Un outil qui lit les annotations du code (comme `@Inject`) pendant la compilation et génère du code Kotlin. Hilt s'en sert pour écrire automatiquement le code d'assemblage. Il remplace l'ancien outil, **kapt**, plus lent.
+
 ### Outils qui arrivent dans les prochains tickets
 - **Jetpack Compose** : la bibliothèque de Google pour décrire l'interface en Kotlin plutôt qu'en XML.
 - **Material 3** : le système de design de Google (composants, couleurs, typographie).
-- **Hilt** : l'outil d'**injection de dépendances**. Il fournit automatiquement à chaque classe les objets dont elle a besoin, ce qui facilite les tests.
 - **Room** et **DataStore** : le stockage local, pour les décisions de tri et les préférences.
 - **ktlint**, **detekt** et **Android Lint** : des outils qui vérifient la mise en forme et la qualité du code.
 
 ### Tests unitaires
 Du code qui vérifie automatiquement que le code fonctionne. Ils se trouvent dans `src/test/` et se lancent avec `./gradlew test`, sans téléphone ni émulateur.
+
+Dans `app`, certains tests ont besoin d'Android (par exemple pour démarrer `MainActivity`). **Robolectric** simule Android directement sur l'ordinateur, ce qui évite l'émulateur. Il est réglé sur Android 14 (API 34) dans `app/src/test/resources/robolectric.properties`, car les versions plus récentes demanderaient Java 21.
 
 ### CI (intégration continue)
 À chaque envoi de code sur GitHub, des serveurs de GitHub (**GitHub Actions**) construisent le projet et lancent les tests et le lint. Si quelque chose casse, la PR le signale en rouge.
@@ -76,12 +86,12 @@ photoswipe/
 │   └── src/
 │       ├── main/
 │       │   ├── AndroidManifest.xml   Carte d'identité de l'application
-│       │   ├── kotlin/               Code Kotlin (MainActivity, et plus tard les écrans)
+│       │   ├── kotlin/               Code Kotlin : PhotoSwipeApplication, MainActivity, di/ (modules Hilt), et plus tard les écrans
 │       │   └── res/                  Ressources : textes, icônes, couleurs
-│       └── test/                     Tests unitaires du module
+│       └── test/                     Tests unitaires du module (Robolectric pour ce qui touche à Android)
 ├── build-logic/               Plugins de convention : réglages Gradle communs à tous les modules
 │   └── convention/src/
-│       ├── main/kotlin/              Les plugins et ProjectConfig (SDK, version de Java)
+│       ├── main/kotlin/              Les plugins (Android, JVM, Hilt) et ProjectConfig (SDK, version de Java)
 │       └── test/kotlin/              Tests qui vérifient que les plugins appliquent les bons réglages
 ├── data/                      Module « données » : accès aux photos du téléphone, base de données…
 │   ├── build.gradle.kts

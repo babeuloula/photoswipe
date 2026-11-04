@@ -1,11 +1,12 @@
 package fr.babeuloula.photoswipe
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Point d'entrée de l'application.
+ * Point d'entrée de l'application, branché sur Hilt.
  *
- * Volontairement vide pour le squelette (PS-1) : Hilt (PS-3) puis Compose et le thème
- * Material 3 (PS-4) viendront s'y greffer.
+ * Hilt exige une `ComponentActivity`. Compose et le thème Material 3 (PS-4) viendront s'y greffer.
  */
-class MainActivity : Activity()
+@AndroidEntryPoint
+class MainActivity : ComponentActivity()
