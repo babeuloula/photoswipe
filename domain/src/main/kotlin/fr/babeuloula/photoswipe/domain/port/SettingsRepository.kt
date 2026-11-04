@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.domain.port
 
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Préférences de l'utilisateur (SPEC §5.2). Implémenté dans `:data` sur DataStore.
@@ -11,6 +12,13 @@ import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 interface SettingsRepository {
     /** Réglages du rappel quotidien, [ReminderSettings.DEFAULT] tant que rien n'a été enregistré. */
     suspend fun reminderSettings(): ReminderSettings
+
+    /**
+     * Réglages du rappel quotidien, observés pour l'écran des réglages : le flux émet la valeur
+     * actuelle dès la collecte ([ReminderSettings.DEFAULT] si rien n'est enregistré), puis chaque
+     * nouvelle valeur enregistrée.
+     */
+    fun observeReminderSettings(): Flow<ReminderSettings>
 
     /** Enregistre les réglages du rappel quotidien. */
     suspend fun saveReminderSettings(settings: ReminderSettings)
