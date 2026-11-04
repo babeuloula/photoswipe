@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.data.media
 
+import android.content.ContentResolver
 import android.provider.MediaStore
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
@@ -9,11 +10,13 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -81,13 +84,17 @@ class MediaStoreMediaSourceTest {
         runTest {
             source.mediaTakenIn(SameDayMatcher().rangesFor(LocalDate.of(2026, 7, 15), paris))
 
-            val selection =
-                provider.selections
-                    .single()
-                    .orEmpty()
-                    .lowercase()
+            val selections =
+                provider.queries.map {
+                    it
+                        .getString(
+                            ContentResolver.QUERY_ARG_SQL_SELECTION,
+                        ).orEmpty()
+                        .lowercase()
+                }
+            assertEquals(2, selections.size)
             listOf("date(", "datetime(", "strftime(", "julianday(").forEach { function ->
-                assertFalse("selection uses $function", function in selection)
+                selections.forEach { assertFalse("selection uses $function", function in it) }
             }
         }
 
@@ -97,7 +104,7 @@ class MediaStoreMediaSourceTest {
             provider.addImage(id = 1, dateTaken = july15th2025.toEpochMilli())
 
             assertEquals(emptyList<MediaItem>(), source.mediaTakenIn(emptyList()))
-            assertEquals(emptyList<String?>(), provider.selections)
+            assertEquals(0, provider.queries.size)
         }
 
     @Test
@@ -127,5 +134,75 @@ class MediaStoreMediaSourceTest {
             provider.addImage(id = 1, dateTaken = july15th2025.toEpochMilli(), size = null)
 
             assertEquals(0L, source.mediaByIds(setOf(MediaId(1))).single().sizeBytes)
+        }
+
+    @Test
+    fun `reads the videos with their duration and size`() =
+        runTest {
+            provider.addVideo(id = 7, dateTaken = july15th2025.toEpochMilli(), size = 80_000_000, duration = 12_500)
+            provider.addImage(id = 8, dateTaken = july15th2025.toEpochMilli())
+
+            val media = source.mediaTakenIn(listOf(july15th2025..<july15th2025.plusSeconds(1))).sortedBy { it.id.value }
+
+            assertEquals(
+                MediaItem(
+                    id = MediaId(7),
+                    uri = "content://media/external/video/media/7",
+                    type = MediaType.VIDEO,
+                    takenAt = july15th2025,
+                    sizeBytes = 80_000_000,
+                    duration = Duration.ofMillis(12_500),
+                ),
+                media.first(),
+            )
+            assertEquals(MediaType.IMAGE, media[1].type)
+        }
+
+    @Test
+    fun `leaves the duration of a video unknown when it is missing`() =
+        runTest {
+            provider.addVideo(id = 1, dateTaken = july15th2025.toEpochMilli(), duration = null)
+
+            assertNull(source.mediaByIds(setOf(MediaId(1))).single().duration)
+        }
+
+    @Test
+    fun `finds a media without date taken within the ranges by its date added`() =
+        runTest {
+            val start = Instant.parse("2025-07-14T22:00:00Z")
+            val end = Instant.parse("2025-07-15T22:00:00Z")
+            provider.addImage(id = 1, dateTaken = null, dateAdded = start.epochSecond)
+            provider.addVideo(id = 2, dateTaken = 0, dateAdded = end.epochSecond - 1)
+            provider.addImage(id = 3, dateTaken = null, dateAdded = end.epochSecond)
+            provider.addImage(
+                id = 4,
+                dateTaken = Instant.parse("2020-01-01T00:00:00Z").toEpochMilli(),
+                dateAdded = start.epochSecond,
+            )
+
+            val media = source.mediaTakenIn(listOf(start..<end))
+
+            assertEquals(listOf(1L, 2L), media.map { it.id.value }.sorted())
+            assertEquals(start, media.single { it.id.value == 1L }.takenAt)
+        }
+
+    @Test
+    fun `excludes the media already in the system trash`() =
+        runTest {
+            provider.addImage(id = 1, dateTaken = july15th2025.toEpochMilli(), trashed = true)
+            provider.addVideo(id = 2, dateTaken = july15th2025.toEpochMilli(), trashed = true)
+            provider.addImage(id = 3, dateTaken = july15th2025.toEpochMilli())
+
+            assertEquals(
+                listOf(3L),
+                source.mediaTakenIn(listOf(july15th2025..<july15th2025.plusSeconds(1))).map { it.id.value },
+            )
+            assertEquals(listOf(3L), source.mediaByIds(setOf(MediaId(1), MediaId(2), MediaId(3))).map { it.id.value })
+            provider.queries.forEach {
+                assertEquals(
+                    MediaStore.MATCH_EXCLUDE,
+                    it.getInt(MediaStore.QUERY_ARG_MATCH_TRASHED),
+                )
+            }
         }
 }

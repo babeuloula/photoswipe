@@ -127,7 +127,7 @@ photoswipe/
 │   ├── src/main/kotlin/…/database/   La base Room : la table des décisions (ReviewEntryEntity) et ses requêtes (ReviewEntryDao)
 │   ├── src/main/kotlin/…/review/     RoomReviewRepository : enregistre les décisions du domaine dans la base
 │   ├── src/main/kotlin/…/settings/   DataStoreSettingsRepository : enregistre les réglages (rappel quotidien)
-│   ├── src/main/kotlin/…/media/      MediaStoreMediaSource : lit les photos de la galerie du téléphone (MediaStore)
+│   ├── src/main/kotlin/…/media/      MediaStoreMediaSource : lit les photos et vidéos de la galerie du téléphone (MediaStore)
 │   └── src/test/
 ├── domain/                    Module « domaine » : les règles métier, en Kotlin pur
 │   ├── build.gradle.kts

@@ -1,29 +1,42 @@
 package fr.babeuloula.photoswipe.data.media
 
 import android.content.ContentProvider
+import android.content.ContentResolver
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
+import android.os.Bundle
+import android.os.CancellationSignal
 import android.provider.MediaStore
 
 /**
- * Faux fournisseur MediaStore pour Robolectric : une vraie table SQLite en mémoire par collection,
- * avec les colonnes de MediaStore. La sélection envoyée par [MediaStoreMediaSource] est donc
- * réellement exécutée par SQLite, comme sur un appareil.
+ * Faux fournisseur MediaStore pour Robolectric : une vraie table SQLite en mémoire par collection
+ * (images, vidéos), avec les colonnes de MediaStore. La sélection envoyée par
+ * [MediaStoreMediaSource] est donc réellement exécutée par SQLite, comme sur un appareil.
+ *
+ * Comme MediaStore, il exclut les médias de la corbeille (`is_trashed`) sauf si la requête demande
+ * `MATCH_INCLUDE` ou `MATCH_ONLY`.
  */
 class FakeMediaStoreProvider : ContentProvider() {
     private lateinit var database: SQLiteDatabase
 
+    /** Arguments des requêtes reçues, dans l'ordre. */
+    val queries = mutableListOf<Bundle>()
+
     override fun onCreate(): Boolean {
         database = SQLiteDatabase.create(null)
-        database.execSQL(
-            "CREATE TABLE images (" +
-                "${MediaStore.MediaColumns._ID} INTEGER PRIMARY KEY, " +
-                "${MediaStore.MediaColumns.DATE_TAKEN} INTEGER, " +
-                "${MediaStore.MediaColumns.DATE_ADDED} INTEGER NOT NULL, " +
-                "${MediaStore.MediaColumns.SIZE} INTEGER)",
-        )
+        listOf(IMAGES, VIDEOS).forEach { table ->
+            database.execSQL(
+                "CREATE TABLE $table (" +
+                    "${MediaStore.MediaColumns._ID} INTEGER PRIMARY KEY, " +
+                    "${MediaStore.MediaColumns.DATE_TAKEN} INTEGER, " +
+                    "${MediaStore.MediaColumns.DATE_ADDED} INTEGER NOT NULL, " +
+                    "${MediaStore.MediaColumns.SIZE} INTEGER, " +
+                    "${MediaStore.MediaColumns.DURATION} INTEGER, " +
+                    "${MediaStore.MediaColumns.IS_TRASHED} INTEGER NOT NULL DEFAULT 0)",
+            )
+        }
         return true
     }
 
@@ -33,6 +46,32 @@ class FakeMediaStoreProvider : ContentProvider() {
         dateTaken: Long?,
         dateAdded: Long = 0,
         size: Long? = 1_000,
+        trashed: Boolean = false,
+    ) {
+        insert(IMAGES, id, dateTaken, dateAdded, size, duration = null, trashed)
+    }
+
+    /** Ajoute une vidéo ; [duration] en millisecondes. */
+    fun addVideo(
+        id: Long,
+        dateTaken: Long?,
+        dateAdded: Long = 0,
+        size: Long? = 1_000,
+        duration: Long? = 5_000,
+        trashed: Boolean = false,
+    ) {
+        insert(VIDEOS, id, dateTaken, dateAdded, size, duration, trashed)
+    }
+
+    @Suppress("LongParameterList")
+    private fun insert(
+        table: String,
+        id: Long,
+        dateTaken: Long?,
+        dateAdded: Long,
+        size: Long?,
+        duration: Long?,
+        trashed: Boolean,
     ) {
         val values =
             ContentValues().apply {
@@ -40,12 +79,34 @@ class FakeMediaStoreProvider : ContentProvider() {
                 put(MediaStore.MediaColumns.DATE_TAKEN, dateTaken)
                 put(MediaStore.MediaColumns.DATE_ADDED, dateAdded)
                 put(MediaStore.MediaColumns.SIZE, size)
+                put(MediaStore.MediaColumns.DURATION, duration)
+                put(MediaStore.MediaColumns.IS_TRASHED, if (trashed) 1 else 0)
             }
-        database.insertOrThrow("images", null, values)
+        database.insertOrThrow(table, null, values)
     }
 
-    /** Clauses `WHERE` reçues, dans l'ordre des requêtes. */
-    val selections = mutableListOf<String?>()
+    override fun query(
+        uri: Uri,
+        projection: Array<out String>?,
+        queryArgs: Bundle?,
+        cancellationSignal: CancellationSignal?,
+    ): Cursor {
+        val arguments = queryArgs ?: Bundle()
+        queries += arguments
+        val trashed = arguments.getInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_EXCLUDE)
+        val trashFilter =
+            when (trashed) {
+                MediaStore.MATCH_INCLUDE -> null
+                MediaStore.MATCH_ONLY -> "${MediaStore.MediaColumns.IS_TRASHED} = 1"
+                else -> "${MediaStore.MediaColumns.IS_TRASHED} = 0"
+            }
+        val selection =
+            listOfNotNull(arguments.getString(ContentResolver.QUERY_ARG_SQL_SELECTION), trashFilter)
+                .joinToString(" AND ") { "($it)" }
+                .ifEmpty { null }
+        val selectionArgs = arguments.getStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS)
+        return database.query(table(uri), projection, selection, selectionArgs, null, null, null)
+    }
 
     override fun query(
         uri: Uri,
@@ -53,14 +114,12 @@ class FakeMediaStoreProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String>?,
         sortOrder: String?,
-    ): Cursor {
-        selections += selection
-        return database.query(table(uri), projection, selection, selectionArgs, null, null, sortOrder)
-    }
+    ): Cursor = throw UnsupportedOperationException("queries go through a Bundle of arguments")
 
     private fun table(uri: Uri): String =
         when (uri) {
-            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL) -> "images"
+            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL) -> IMAGES
+            MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL) -> VIDEOS
             else -> error("unexpected uri $uri")
         }
 
@@ -83,4 +142,9 @@ class FakeMediaStoreProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String>?,
     ): Int = throw UnsupportedOperationException()
+
+    private companion object {
+        const val IMAGES = "images"
+        const val VIDEOS = "video"
+    }
 }
