@@ -59,9 +59,16 @@ Une classe a souvent besoin d'autres objets pour travailler : une horloge, une b
 ### KSP
 Un outil qui lit les annotations du code (comme `@Inject`) pendant la compilation et génère du code Kotlin. Hilt s'en sert pour écrire automatiquement le code d'assemblage. Il remplace l'ancien outil, **kapt**, plus lent.
 
+### Jetpack Compose
+La bibliothèque de Google pour décrire l'interface en Kotlin plutôt qu'en XML. Un écran est une fonction annotée `@Composable` ; quand les données changent, Compose redessine seulement ce qui doit l'être. Une fonction annotée `@Preview` s'affiche directement dans Android Studio, sans lancer l'application.
+
+### Material 3 et thème
+**Material 3** est le système de design de Google : composants (boutons, barres, cartes), couleurs, typographie et formes. Le **thème** (`PhotoSwipeTheme`, dans `ui/theme/`) rassemble ces choix à un seul endroit ; les écrans les lisent via `MaterialTheme` au lieu d'écrire des couleurs ou des tailles en dur.
+- **Couleurs dynamiques (Material You)** : Android calcule une palette à partir du fond d'écran du téléphone, et l'application l'adopte. Une palette « de repli » fixe existe aussi (`Color.kt`).
+- **Clair / sombre** : le thème suit le réglage du téléphone.
+- **Edge-to-edge** : l'application se dessine sur tout l'écran, y compris sous la barre d'état et la barre de navigation. Les **insets** sont les marges qu'il faut laisser pour que le contenu ne passe pas sous ces barres ; le `Scaffold` de Material 3 les calcule pour nous.
+
 ### Outils qui arrivent dans les prochains tickets
-- **Jetpack Compose** : la bibliothèque de Google pour décrire l'interface en Kotlin plutôt qu'en XML.
-- **Material 3** : le système de design de Google (composants, couleurs, typographie).
 - **Room** et **DataStore** : le stockage local, pour les décisions de tri et les préférences.
 - **ktlint**, **detekt** et **Android Lint** : des outils qui vérifient la mise en forme et la qualité du code.
 
@@ -86,12 +93,12 @@ photoswipe/
 │   └── src/
 │       ├── main/
 │       │   ├── AndroidManifest.xml   Carte d'identité de l'application
-│       │   ├── kotlin/               Code Kotlin : PhotoSwipeApplication, MainActivity, di/ (modules Hilt), et plus tard les écrans
-│       │   └── res/                  Ressources : textes, icônes, couleurs
+│       │   ├── kotlin/               Code Kotlin : PhotoSwipeApplication, MainActivity, di/ (modules Hilt), ui/ (écrans Compose) et ui/theme/ (thème Material 3)
+│       │   └── res/                  Ressources : textes (values/ en anglais, values-fr/ en français), thème de la fenêtre (themes.xml), icônes
 │       └── test/                     Tests unitaires du module (Robolectric pour ce qui touche à Android)
 ├── build-logic/               Plugins de convention : réglages Gradle communs à tous les modules
 │   └── convention/src/
-│       ├── main/kotlin/              Les plugins (Android, JVM, Hilt) et ProjectConfig (SDK, version de Java)
+│       ├── main/kotlin/              Les plugins (Android, JVM, Hilt, Compose) et ProjectConfig (SDK, version de Java)
 │       └── test/kotlin/              Tests qui vérifient que les plugins appliquent les bons réglages
 ├── data/                      Module « données » : accès aux photos du téléphone, base de données…
 │   ├── build.gradle.kts
