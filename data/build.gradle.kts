@@ -17,4 +17,10 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     // Builders, fakes et FixedClock du domaine (SPEC §10).
     testImplementation(testFixtures(project(":domain")))
+
+    // Tests instrumentés sur appareil ou émulateur : ./gradlew :data:connectedDebugAndroidTest
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 }

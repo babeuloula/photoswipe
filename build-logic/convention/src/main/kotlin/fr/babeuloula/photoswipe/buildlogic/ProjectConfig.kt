@@ -16,4 +16,7 @@ object ProjectConfig {
 
     /** Version de JVM minimale requise par AGP 9.5. */
     const val JVM_VERSION = 17
+
+    /** Runner des tests instrumentés (`src/androidTest`), fourni par `androidx.test:runner`. */
+    const val TEST_INSTRUMENTATION_RUNNER = "androidx.test.runner.AndroidJUnitRunner"
 }

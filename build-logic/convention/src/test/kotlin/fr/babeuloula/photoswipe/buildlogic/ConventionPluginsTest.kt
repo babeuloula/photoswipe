@@ -42,6 +42,18 @@ class ConventionPluginsTest {
     }
 
     @JupiterTest
+    fun `android conventions run instrumented tests with the androidx junit runner`() {
+        val library = newProject()
+        library.pluginManager.apply(AndroidLibraryConventionPlugin::class.java)
+        val application = newProject()
+        application.pluginManager.apply(AndroidApplicationConventionPlugin::class.java)
+
+        val runner = "androidx.test.runner.AndroidJUnitRunner"
+        assertEquals(runner, library.extensions.getByType(LibraryExtension::class.java).defaultConfig.testInstrumentationRunner)
+        assertEquals(runner, application.extensions.getByType(ApplicationExtension::class.java).defaultConfig.testInstrumentationRunner)
+    }
+
+    @JupiterTest
     fun `jvm library convention stays free of android and runs tests on junit platform`() {
         val project = newProject()
         project.pluginManager.apply(JvmLibraryConventionPlugin::class.java)

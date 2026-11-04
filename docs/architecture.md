@@ -125,8 +125,10 @@ Relevées le 2026-11-03 sur les sources officielles (Google Maven, Maven Central
 | Compose BOM | 2026.09.00 | Compose UI 1.12.1, Material 3 1.4.0 |
 | Kotlin Compose compiler plugin | 2.4.21 | Même version que Kotlin |
 | Robolectric | 4.17 | Tests sur l'API 34 (ADR 0002) |
-| Room (runtime, compiler, plugin Gradle) | 2.8.5 | Relevée le 2026-11-04 sur Google Maven, dernière stable |
+| Room (runtime, compiler, testing, plugin Gradle) | 2.8.5 | Relevée le 2026-11-04 sur Google Maven, dernière stable |
 | DataStore Preferences | 1.3.0 | Relevée le 2026-11-04 sur Google Maven, dernière stable |
+| AndroidX Test (`runner`, `ext:junit`) | 1.7.0, 1.3.0 | Relevées le 2026-11-04 sur Google Maven |
+| `reactivecircus/android-emulator-runner` (CI) | v2 (2.38.0) | Relevée le 2026-11-04 sur GitHub |
 | kotlinx-coroutines (core, test) | 1.11.0 | Relevée le 2026-11-04 sur Maven Central ; core et test partagent la même version |
 | Konsist | 0.18.1 | Dernière stable (la 1.0 n'est qu'en bêta), compilée avec Kotlin 2.4.21 |
 | ktlint-gradle (plugin) | 14.2.0 | |
@@ -144,6 +146,8 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | JUnit 4 | `:app`, `:data` (tests) | Fonctionne nativement sur Android sans plugin supplémentaire |
 | Room | `:data` | Base SQLite locale des décisions imposée par la SPEC §6 ; requêtes vérifiées à la compilation, `Flow` observable, schéma exporté pour tester les migrations |
 | DataStore Preferences | `:data` | Préférences clé-valeur imposées par la SPEC §5.3 (réglages du rappel) : écritures atomiques et asynchrones, lecture en `Flow`, à la place de `SharedPreferences` |
+| AndroidX Test (`runner`, `ext:junit`) | `:data` (tests instrumentés) | `AndroidJUnitRunner` et `AndroidJUnit4` pour lancer JUnit 4 sur un appareil ou un émulateur |
+| Room Testing | `:data` (tests instrumentés) | `MigrationTestHelper` : vérifie les migrations contre les schémas exportés (SPEC §6) |
 | Hilt + KSP | `:app` | Injection de dépendances imposée par la SPEC §5.5 ; KSP plutôt que kapt, plus rapide et maintenu |
 | AndroidX Activity Compose | `:app` | `ComponentActivity` (classe de base exigée par `@AndroidEntryPoint`), `setContent` et `enableEdgeToEdge` |
 | Jetpack Compose (BOM, UI, tooling) | `:app` | UI imposée par la SPEC §7 ; la BOM aligne les versions des bibliothèques Compose |
