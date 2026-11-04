@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- En français, « one » couvre 0 et 1 ; « many » sert aux grands nombres ronds (1 000 000 de médias). -->
+    <plurals name="media_count">
+        <item quantity="one">%d média</item>
+        <item quantity="many">%d de médias</item>
+        <item quantity="other">%d médias</item>
+    </plurals>
+</resources>

@@ -46,6 +46,9 @@ La carte d'identité de l'application pour Android : son nom, ses écrans (« ac
 
 ### Ressources (`res/`)
 Tout ce qui n'est pas du code : textes traduits (`strings.xml`), icônes, couleurs, etc. `values/` contient la version par défaut (anglais) et `values-fr/` la traduction française. Android choisit automatiquement selon la langue du téléphone.
+- **Pluriels** (`plurals.xml`) : « 1 média », « 3 médias ». Chaque langue a ses règles (en français, 0 est au singulier), donc on ne colle jamais un nombre et un mot nous-mêmes : on demande la bonne forme à Android avec `getQuantityString`.
+- **Langue par application** (`res/xml/locales_config.xml`) : la liste des langues que l'on peut choisir pour PhotoSwipe seule, dans les réglages d'Android 13+, sans changer la langue du téléphone.
+- **Ajouter une langue** : créer `values-xx/` avec toutes les clés, puis ajouter `xx` dans `locales_config.xml`. Un test (`LocalizationTest`) échoue si une clé manque ou si la langue n'est pas déclarée.
 
 ### Activity
 Un « écran » au sens Android, et le point d'entrée de l'application. PhotoSwipe n'en aura qu'une (`MainActivity`) ; les différents écrans seront dessinés en Compose à l'intérieur.

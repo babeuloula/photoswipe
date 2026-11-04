@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+        Exemple de pluriel (SPEC §9) : jamais de concaténation, toujours getQuantityString.
+        Utilisé par le résumé de session (epic 7) ; d'ici là, seul LocalizationTest le lit.
+    -->
+    <plurals name="media_count" tools:ignore="UnusedResources">
+        <item quantity="one">%d media item</item>
+        <item quantity="other">%d media items</item>
+    </plurals>
+</resources>
