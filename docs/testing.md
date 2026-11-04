@@ -30,9 +30,9 @@ Rapports : `<module>/build/reports/tests/<tâche>/index.html` (HTML lisible) et 
 
 | Module | Framework | Ce qui est testé |
 |---|---|---|
-| `:domain` | JUnit Jupiter (JUnit 6) | Mise en place du module (pas de framework Android sur le classpath), invariants des modèles, `SameDayMatcher` (même jour, fuseau, 29 février), `ReviewWindowProvider` (milieu d'année, changement d'année, 29 février, fuseau de l'horloge, avec `Clock.fixed`). Les ports n'ont pas de comportement à tester : leurs fakes arrivent avec PS-15. Use cases *(prévu, epic 2)* |
-| `:data` | JUnit 4 | Mise en place du module. DAO Room en mémoire, migrations, DataStore *(prévu, epic 3)* |
-| `:app` | JUnit 4 + Robolectric (API 34) | Démarrage de `MainActivity` (Hilt, Compose, bord à bord), `TimeModule`, thème Material 3, i18n |
+| `:domain` | JUnit Jupiter (JUnit 6) | Mise en place du module (pas de framework Android sur le classpath), invariants des modèles, `SameDayMatcher` (même jour, fuseau, 29 février), `ReviewWindowProvider` (milieu d'année, changement d'année, 29 février, fuseau de l'horloge, avec `Clock.fixed`), fixtures partagées (builders, `FixedClock`, contrat des ports respecté par `FakeMediaSource` et `FakeReviewRepository`, avec `runTest`). Use cases *(prévu, epic 2)* |
+| `:data` | JUnit 4 | Mise en place du module, accès aux fixtures de `:domain`. DAO Room en mémoire, migrations, DataStore *(prévu, epic 3)* |
+| `:app` | JUnit 4 + Robolectric (API 34) | Démarrage de `MainActivity` (Hilt, Compose, bord à bord), `TimeModule`, thème Material 3, i18n, accès aux fixtures de `:domain` |
 | `:architecture-tests` | JUnit Jupiter + Konsist | Sens des dépendances entre modules (ADR [0005](decisions/0005-konsist-architecture-tests.md)), ports du domaine limités aux interfaces (ADR [0007](decisions/0007-domain-ports.md)) |
 | `build-logic` | JUnit Jupiter + `ProjectBuilder` | Chaque plugin de convention applique les bonnes valeurs (SDK, JVM, Hilt, Compose, qualité) |
 
@@ -59,7 +59,14 @@ Konsist lit les sources de `:app`, `:data` et `:domain` sans les compiler. Chaqu
 ## 4. Fixtures
 
 - Fixtures de fichiers : `src/test/resources/fixtures/` de chaque module qui en a besoin (architecture, i18n).
-- Fixtures en mémoire de `:domain` (`testFixtures`) : builders `aMediaItem()`, `aReviewEntry()`, `FakeMediaSource`, `FakeReviewRepository`, `FixedClock` *(prévu, epic 2)*.
+- Fixtures en mémoire de `:domain` : `domain/src/testFixtures/kotlin`, package `fr.babeuloula.photoswipe.domain.fixtures` (plugin Gradle `java-test-fixtures`). Un module les utilise avec `testImplementation(testFixtures(project(":domain")))` ; `:data` et `:app` le font déjà.
+  - **Builders** `aMediaItem()` et `aReviewEntry()` : un objet valide aux valeurs par défaut fixes (média 1, photo, prise le 15 juillet 2020 ; entrée gardée en 2026). Le test ne précise que ce qui compte pour lui. Les identifiants sont explicites, sans compteur global.
+  - **`FakeMediaSource`** : galerie en mémoire (`add`, `remove` pour simuler une suppression, une mise à la corbeille ou un accès partiel). Plages ouvertes à droite, chaque média renvoyé une seule fois.
+  - **`FakeReviewRepository`** : une entrée par couple (média, année de revue), comme l'index unique Room ; `entries` expose ce qui a été enregistré.
+  - **`FixedClock`** : horloge figée que le test déplace (`advanceBy`, `setTo`), par exemple pour franchir minuit ; `FixedClock.at(LocalDateTime)` la crée dans le fuseau de Paris par défaut.
+  - Les fakes sont eux-mêmes testés (`domain/src/test/.../fixtures`) : ils doivent respecter le contrat des ports, sinon les tests qui s'appuient dessus mentiraient.
+  - Les fonctions `suspend` s'appellent dans `runTest { }` (kotlinx-coroutines-test).
+  - Qualité : ktlint et detekt analysent aussi `src/testFixtures` ; `MagicNumber` et `LongParameterList` y sont désactivées comme dans les tests.
 - Seeder MediaStore en debug et script `scripts/seed-emulator.sh` pour tester sur émulateur *(prévu, epic 10)*.
 
 ## 5. Prévu par la SPEC (§11)

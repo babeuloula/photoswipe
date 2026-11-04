@@ -52,6 +52,9 @@ class QualityConventionPlugin : Plugin<Project> {
             ignoreFailures = false
             parallel = true
             config.setFrom(configFile)
+            // Par défaut, detekt ne lit que src/main et src/test : on y ajoute les fixtures de
+            // test partagées (plugin `java-test-fixtures`, PS-15), sinon elles échapperaient au contrôle.
+            source.from(*TEST_FIXTURES_SOURCE_DIRS)
         }
         // detekt embarque son propre compilateur Kotlin : on l'isole de la version Kotlin
         // du projet, que Gradle tenterait sinon d'imposer à sa configuration (ADR 0003).
@@ -67,6 +70,7 @@ class QualityConventionPlugin : Plugin<Project> {
     internal companion object {
         const val QUALITY_TASK = "quality"
         const val DETEKT_CONFIG = "config/detekt/detekt.yml"
+        val TEST_FIXTURES_SOURCE_DIRS = arrayOf("src/testFixtures/java", "src/testFixtures/kotlin")
         private val ANDROID_PLUGINS = listOf("com.android.application", "com.android.library")
     }
 }

@@ -87,6 +87,8 @@ Du code qui vérifie automatiquement que le code fonctionne. Ils se trouvent dan
 
 Dans `app`, certains tests ont besoin d'Android (par exemple pour démarrer `MainActivity`). **Robolectric** simule Android directement sur l'ordinateur, ce qui évite l'émulateur. Il est réglé sur Android 14 (API 34) dans `app/src/test/resources/robolectric.properties`, car les versions plus récentes demanderaient Java 21.
 
+Le module `domain` fournit aussi des **fixtures de test** dans `src/testFixtures/` : du code qui n'est jamais livré dans l'application, mais que les tests de tous les modules peuvent utiliser. On y trouve des *builders* (`aMediaItem()` crée un média valide, on ne précise que ce qui compte pour le test), des *fakes* (de fausses implémentations des ports, en mémoire, à la place de MediaStore ou de Room) et `FixedClock`, une horloge figée que le test avance à la main.
+
 Le détail (outils par module, commandes pour lancer un seul test, fixtures) est dans [`docs/testing.md`](testing.md).
 
 ### CI (intégration continue)
@@ -127,6 +129,7 @@ photoswipe/
 │   ├── src/main/kotlin/…/model/  Les modèles : MediaItem, ReviewDecision, ReviewDay, ReviewEntry, SessionSummary…
 │   ├── src/main/kotlin/…/port/  Les ports : des interfaces (MediaSource, ReviewRepository…) que le module data implémente
 │   ├── src/main/kotlin/…/service/  Les services purs : SameDayMatcher (médias « du même jour »), ReviewWindowProvider (les 7 jours de rattrapage)…
+│   ├── src/testFixtures/kotlin/…/fixtures/  Outils de test partagés avec data et app : builders aMediaItem(), aReviewEntry(), faux ports (FakeMediaSource, FakeReviewRepository), FixedClock
 │   └── src/test/
 ├── docs/                      Documentation (ce guide, l'architecture, les décisions)
 ├── gradle/

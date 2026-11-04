@@ -53,6 +53,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     testImplementation(libs.junit4)
+    // Builders, fakes et FixedClock du domaine (SPEC §10).
+    testImplementation(testFixtures(project(":domain")))
     // Tests Hilt sur la JVM : Robolectric fournit le framework Android sans émulateur.
     testImplementation(libs.robolectric)
     robolectricRuntime(libs.robolectric.androidAll)

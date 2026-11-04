@@ -44,6 +44,14 @@ class QualityConventionPluginTest {
     }
 
     @Test
+    fun `detekt also analyses shared test fixtures`() {
+        val project = jvmProject()
+        val sources = project.extensions.getByType(DetektExtension::class.java).source.from.map { it.toString() }
+
+        assertTrue(sources.containsAll(listOf("src/main/kotlin", "src/test/kotlin", "src/testFixtures/kotlin")), "$sources")
+    }
+
+    @Test
     fun `android lint treats missing translations as errors and aborts the build`() {
         val project = projectWithFakeCatalog()
         project.pluginManager.apply(AndroidLibraryConventionPlugin::class.java)
