@@ -6,11 +6,17 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
+import dagger.hilt.android.testing.UninstallModules
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.di.MediaSourceModule
+import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
+import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
+import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.permission.MEDIA_PERMISSIONS
 import org.junit.Rule
 import org.junit.Test
@@ -21,11 +27,16 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-/** Parcours entre les écrans, avec l'accès aux médias accordé avant le démarrage. */
+/**
+ * Parcours entre les écrans, avec l'accès aux médias accordé avant le démarrage et une galerie qui
+ * contient un souvenir du jour (la carte « Aujourd'hui » est donc active).
+ */
 @HiltAndroidTest
+@UninstallModules(MediaSourceModule::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(application = HiltTestApplication::class)
 class PhotoSwipeNavHostTest {
@@ -42,6 +53,25 @@ class PhotoSwipeNavHostTest {
 
     @get:Rule(order = 2)
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    /** Un souvenir pris aujourd'hui il y a un an, à midi. */
+    @BindValue
+    @JvmField
+    val mediaSource: MediaSource =
+        FakeMediaSource(
+            listOf(
+                aMediaItem(
+                    id = 1,
+                    takenAt =
+                        LocalDate
+                            .now()
+                            .minusYears(1)
+                            .atTime(12, 0)
+                            .atZone(ZoneId.systemDefault())
+                            .toInstant(),
+                ),
+            ),
+        )
 
     private fun text(id: Int): String = composeRule.activity.getString(id)
 

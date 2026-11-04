@@ -89,6 +89,51 @@ class HomeScreenTest {
     }
 
     @Test
+    fun `says that everything is sorted today and keeps the card inactive`() {
+        show(
+            loaded(
+                todayCount = 0,
+            ).copy(today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 0, memoryCount = 4)),
+        )
+
+        composeRule.onNodeWithText("All done for today!").assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.home_today_come_back)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.home_today)).performClick()
+
+        assertEquals(emptyList<HomeEvent>(), events)
+    }
+
+    @Test
+    fun `says that today has no memories while other days do`() {
+        show(loaded(todayCount = 0))
+
+        composeRule.onNodeWithText("No memories from this day").assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.home_previous_days)).assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows a dedicated message when no memory is found in the whole week`() {
+        val empty = (0L..6L).map { ReviewDay(LocalDate.of(2026, 7, 15).minusDays(it), remainingCount = 0) }
+        show(HomeUiState.Loaded(today = empty.first(), previousDays = empty.drop(1)))
+
+        composeRule.onNodeWithText(text(R.string.home_empty_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.home_empty_body)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.home_today)).assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `shows the empty states in french`() {
+        show(
+            loaded(
+                todayCount = 0,
+            ).copy(today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 0, memoryCount = 2)),
+        )
+
+        composeRule.onNodeWithText("Tout est trié pour aujourd'hui\u00A0!").assertIsDisplayed()
+    }
+
+    @Test
     fun `lists the six previous days with their localized date and count`() {
         show(loaded(todayCount = 1))
 

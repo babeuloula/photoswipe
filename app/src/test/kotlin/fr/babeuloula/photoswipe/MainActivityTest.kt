@@ -52,7 +52,7 @@ class MainActivityTest {
 
         resume()
 
-        awaitText(composeRule.activity.getString(R.string.home_today))
+        awaitText(composeRule.activity.getString(R.string.app_name))
     }
 
     @Test
@@ -78,7 +78,7 @@ class MainActivityTest {
 
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.limited_access_message)).assertIsDisplayed()
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.limited_access_manage)).assertIsDisplayed()
-        awaitText(composeRule.activity.getString(R.string.home_today))
+        awaitText(composeRule.activity.getString(R.string.app_name))
     }
 
     @Test

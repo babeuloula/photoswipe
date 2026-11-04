@@ -42,7 +42,7 @@ class HomeViewModelTest {
             val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025), takenOn(2, 2020), takenOn(3, 2019))))
             repository.save(aReviewEntry(mediaId = 2, reviewYear = 2026))
 
-            assertEquals(loadedWithToday(2), loaded(viewModel))
+            assertEquals(loadedWithToday(2, memories = 3), loaded(viewModel))
         }
 
     @Test
@@ -53,7 +53,7 @@ class HomeViewModelTest {
 
             repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
 
-            assertEquals(loadedWithToday(1), viewModel.uiState.value)
+            assertEquals(loadedWithToday(1, memories = 2), viewModel.uiState.value)
         }
 
     @Test
@@ -130,10 +130,13 @@ class HomeViewModelTest {
             assertEquals(HomeEffect.OpenSettings, viewModel.uiEffects.first())
         }
 
-    /** État chargé avec [count] médias à trier aujourd'hui et aucun les jours précédents. */
-    private fun loadedWithToday(count: Int): HomeUiState =
+    /** État chargé avec [count] médias à trier sur [memories] souvenirs aujourd'hui, et aucun les jours précédents. */
+    private fun loadedWithToday(
+        count: Int,
+        memories: Int = count,
+    ): HomeUiState =
         HomeUiState.Loaded(
-            today = ReviewDay(today, remainingCount = count),
+            today = ReviewDay(today, remainingCount = count, memoryCount = memories),
             previousDays = (1L..6L).map { ReviewDay(today.minusDays(it), remainingCount = 0) },
         )
 
@@ -215,5 +218,25 @@ class HomeViewModelTest {
             viewModel.onEvent(HomeEvent.OpenPendingDeletions)
 
             assertEquals(HomeEffect.OpenSummary, viewModel.uiEffects.first())
+        }
+
+    @Test
+    fun `tells memories already sorted apart from days without memories`() =
+        runTest {
+            repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
+            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
+
+            val state = loaded(viewModel) as HomeUiState.Loaded
+
+            assertEquals(ReviewDay(today, remainingCount = 0, memoryCount = 1), state.today)
+            assertEquals(true, state.hasMemories)
+        }
+
+    @Test
+    fun `reports no memories for an empty week`() =
+        runTest {
+            val state = loaded(homeViewModel(FakeMediaSource())) as HomeUiState.Loaded
+
+            assertEquals(false, state.hasMemories)
         }
 }

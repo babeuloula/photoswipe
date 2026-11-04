@@ -25,4 +25,20 @@ class ReviewDayTest {
             ReviewDay(date = LocalDate.of(2026, 11, 4), remainingCount = -1)
         }
     }
+
+    @Test
+    fun `counts every memory of the day by default as left to sort`() {
+        assertEquals(3, ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 3).memoryCount)
+    }
+
+    @Test
+    fun `rejects fewer memories than media left to sort`() {
+        assertThrows<IllegalArgumentException> {
+            ReviewDay(
+                LocalDate.of(2026, 7, 15),
+                remainingCount = 2,
+                memoryCount = 1,
+            )
+        }
+    }
 }

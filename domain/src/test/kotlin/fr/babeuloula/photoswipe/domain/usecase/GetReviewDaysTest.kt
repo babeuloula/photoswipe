@@ -57,7 +57,7 @@ class GetReviewDaysTest {
 
             val days = getReviewDays(today = LocalDate.of(2026, 7, 15), media, entries)().first()
 
-            assertEquals(ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 1), days[0])
+            assertEquals(ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 1, memoryCount = 3), days[0])
             assertEquals(ReviewDay(LocalDate.of(2026, 7, 14), remainingCount = 1), days[1])
         }
 
@@ -100,7 +100,7 @@ class GetReviewDaysTest {
             val days = getReviewDays(today = LocalDate.of(2027, 1, 2), media, entries)().first()
 
             assertEquals(ReviewDay(LocalDate.of(2027, 1, 2), remainingCount = 1), days.first())
-            assertEquals(ReviewDay(LocalDate.of(2026, 12, 28), remainingCount = 0), days[5])
+            assertEquals(ReviewDay(LocalDate.of(2026, 12, 28), remainingCount = 0, memoryCount = 1), days[5])
         }
 
     @Test

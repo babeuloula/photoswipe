@@ -44,7 +44,10 @@ sealed interface HomeUiState {
         val today: ReviewDay,
         val previousDays: List<ReviewDay>,
         val pendingDeletionCount: Int = 0,
-    ) : HomeUiState
+    ) : HomeUiState {
+        /** Vrai si au moins un souvenir existe sur la fenêtre, trié ou non (SPEC §4, états vides). */
+        val hasMemories: Boolean get() = today.memoryCount > 0 || previousDays.any { it.memoryCount > 0 }
+    }
 }
 
 /** Action de l'utilisateur ou du système sur l'accueil. */
