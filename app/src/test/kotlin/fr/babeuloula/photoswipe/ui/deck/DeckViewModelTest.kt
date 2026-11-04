@@ -9,13 +9,18 @@ import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
+import fr.babeuloula.photoswipe.domain.model.ReviewDecision
+import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import fr.babeuloula.photoswipe.domain.port.MediaSource
+import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
+import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,12 +55,22 @@ class DeckViewModelTest {
                     .toInstant(),
         )
 
-    private fun deckViewModel(source: MediaSource): DeckViewModel =
+    private fun deckViewModel(
+        source: MediaSource,
+        reviews: ReviewRepository = repository,
+    ): DeckViewModel =
         DeckViewModel(
             savedStateHandle = SavedStateHandle(mapOf("epochDay" to day.toEpochDay())),
-            getDeckForDay = GetDeckForDay(SameDayMatcher(), source, repository, RecentYearsFirstOrdering(), clock),
+            getDeckForDay = GetDeckForDay(SameDayMatcher(), source, reviews, RecentYearsFirstOrdering(), clock),
+            keepMedia = KeepMedia(reviews, clock),
             clock = clock,
         )
+
+    private fun DeckViewModel.cardIds(): List<MediaId> =
+        when (val state = uiState.value) {
+            is DeckUiState.Loaded -> state.cards.map { it.id }
+            else -> emptyList()
+        }
 
     @Test
     fun `reads the day of the deck from its route`() {
@@ -104,6 +119,71 @@ class DeckViewModelTest {
 
             assertEquals(DeckEffect.OpenSummary, viewModel.uiEffects.first())
         }
+
+    @Test
+    fun `keeps the top card, records it for the year of the deck and shows the next one`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+
+            viewModel.onEvent(DeckEvent.Keep)
+
+            assertEquals(listOf(MediaId(1)), viewModel.cardIds())
+            val entry = repository.entries.single()
+            assertEquals(MediaId(2), entry.mediaId)
+            assertEquals(2026, entry.reviewYear)
+            assertEquals(ReviewDecision.KEPT, entry.decision)
+        }
+
+    @Test
+    fun `remembers each kept media in the session for undo`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+
+            viewModel.onEvent(DeckEvent.Keep)
+            viewModel.onEvent(DeckEvent.Keep)
+
+            assertEquals(listOf(MediaId(2), MediaId(1)), viewModel.session.decisions.map { it.media.id })
+        }
+
+    @Test
+    fun `is empty once the last card is kept`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
+
+            viewModel.onEvent(DeckEvent.Keep)
+
+            assertEquals(DeckUiState.Empty, viewModel.uiState.value)
+        }
+
+    @Test
+    fun `puts the card back on top when the decision cannot be saved`() =
+        runTest {
+            val viewModel =
+                deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))), FailingSaveRepository())
+
+            viewModel.onEvent(DeckEvent.Keep)
+
+            assertEquals(listOf(MediaId(2), MediaId(1)), viewModel.cardIds())
+            assertTrue(viewModel.session.isEmpty)
+        }
+
+    @Test
+    fun `ignores a keep when there is no card`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource())
+
+            viewModel.onEvent(DeckEvent.Keep)
+
+            assertEquals(DeckUiState.Empty, viewModel.uiState.value)
+            assertTrue(repository.entries.isEmpty())
+        }
+
+    /** Dépôt qui lit normalement mais refuse toute écriture. */
+    private class FailingSaveRepository(
+        private val delegate: FakeReviewRepository = FakeReviewRepository(),
+    ) : ReviewRepository by delegate {
+        override suspend fun save(entry: ReviewEntry): Unit = throw IOException("database unavailable")
+    }
 
     private class FailingOnceMediaSource(
         media: List<MediaItem>,

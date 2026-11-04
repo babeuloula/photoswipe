@@ -13,6 +13,7 @@ import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
+import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import java.time.Clock
 
 /**
@@ -52,4 +53,10 @@ object DomainModule {
         deckOrdering: DeckOrdering,
         clock: Clock,
     ): GetDeckForDay = GetDeckForDay(sameDayMatcher, mediaSource, reviewRepository, deckOrdering, clock)
+
+    @Provides
+    fun provideKeepMedia(
+        reviewRepository: ReviewRepository,
+        clock: Clock,
+    ): KeepMedia = KeepMedia(reviewRepository, clock)
 }

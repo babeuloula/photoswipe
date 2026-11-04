@@ -8,6 +8,9 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -18,6 +21,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -118,6 +122,40 @@ class DeckScreenTest {
         composeRule.onNodeWithText(text(R.string.deck_retry)).performClick()
 
         assertEquals(listOf<DeckEvent>(DeckEvent.Retry), events)
+    }
+
+    private fun card() = composeRule.onNodeWithContentDescription("Photo taken on May 14, 2023")
+
+    @Test
+    fun `keeps the card when swiped right past the threshold`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        card().performTouchInput { swipeRight() }
+        composeRule.waitForIdle()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.Keep), events)
+    }
+
+    @Test
+    fun `brings the card back to the center after a short swipe`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+        val start = card().fetchSemanticsNode().boundsInRoot
+
+        card().performTouchInput { swipeRight(startX = centerX, endX = centerX + width * SWIPE_THRESHOLD / 2) }
+        composeRule.waitForIdle()
+
+        assertTrue(events.isEmpty())
+        assertEquals(start, card().fetchSemanticsNode().boundsInRoot)
+    }
+
+    @Test
+    fun `does not keep the card when swiped left`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        card().performTouchInput { swipeLeft() }
+        composeRule.waitForIdle()
+
+        assertTrue(events.isEmpty())
     }
 
     private companion object {
