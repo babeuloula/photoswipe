@@ -22,6 +22,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,7 +39,8 @@ import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import java.time.LocalDate
 
 /**
- * Pile de swipe d'un jour (SPEC §4.3) : la carte plein écran du média du dessus, avec retour et
+ * Pile de swipe d'un jour (SPEC §4.3) : la carte plein écran du média du dessus, à glisser à droite
+ * pour la garder, avec retour et
  * « Terminer » dans la barre du haut. Gère le chargement, l'erreur et la pile vide.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -115,13 +117,16 @@ private fun BoxScope.DeckContent(
         }
 
         is DeckUiState.Loaded -> {
-            MediaCard(
-                card = state.current,
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-            )
+            key(state.current.id) {
+                SwipeableMediaCard(
+                    card = state.current,
+                    onKeep = { onEvent(DeckEvent.Keep) },
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                )
+            }
         }
     }
 }

@@ -5,7 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import fr.babeuloula.photoswipe.domain.model.MediaItem
+import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
+import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.ui.navigation.DeckRoute
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -53,6 +56,9 @@ sealed interface DeckEvent {
 
     /** « Terminer » : passer au résumé. */
     data object Finish : DeckEvent
+
+    /** Carte du dessus glissée à droite : la garder (SPEC §2). */
+    data object Keep : DeckEvent
 }
 
 /** Navigation demandée par la pile. */
@@ -62,8 +68,9 @@ sealed interface DeckEffect {
 }
 
 /**
- * ViewModel de la pile d'un jour : charge une fois le paquet du jour de la route (ADR 0009) et
- * prépare la carte de chaque média. Les gestes de tri arrivent avec les tickets suivants.
+ * ViewModel de la pile d'un jour : charge une fois le paquet du jour de la route (ADR 0009), puis
+ * retire lui-même chaque carte triée et enregistre la décision. Les décisions de la session sont
+ * gardées dans une [ReviewSession], pour l'undo.
  */
 @HiltViewModel
 class DeckViewModel
@@ -71,6 +78,7 @@ class DeckViewModel
     constructor(
         savedStateHandle: SavedStateHandle,
         private val getDeckForDay: GetDeckForDay,
+        private val keepMedia: KeepMedia,
         private val clock: Clock,
     ) : ViewModel() {
         /** Jour cible de la pile. */
@@ -78,6 +86,13 @@ class DeckViewModel
 
         private val state = MutableStateFlow<DeckUiState>(DeckUiState.Loading)
         private val effects = Channel<DeckEffect>(Channel.BUFFERED)
+
+        /** Médias encore à trier, dans l'ordre de la pile ; vide tant que le paquet n'est pas chargé. */
+        private var deck: List<MediaItem> = emptyList()
+
+        /** Décisions de la session en cours, de la plus ancienne à la plus récente. */
+        var session: ReviewSession = ReviewSession()
+            private set
 
         /** État de la pile. */
         val uiState: StateFlow<DeckUiState> = state.asStateFlow()
@@ -94,23 +109,43 @@ class DeckViewModel
             when (event) {
                 DeckEvent.Retry -> load()
                 DeckEvent.Finish -> effects.trySend(DeckEffect.OpenSummary)
+                DeckEvent.Keep -> keepTopCard()
             }
         }
 
         private fun load() {
             state.value = DeckUiState.Loading
             viewModelScope.launch {
-                state.value =
-                    runCatching { getDeckForDay(day) }.fold(
-                        onSuccess = { deck ->
-                            if (deck.isEmpty()) {
-                                DeckUiState.Empty
-                            } else {
-                                DeckUiState.Loaded(deck.map { MediaCardUiState.of(it, day, clock.zone) })
-                            }
-                        },
-                        onFailure = { DeckUiState.Error },
-                    )
+                runCatching { getDeckForDay(day) }.fold(
+                    onSuccess = { show(it) },
+                    onFailure = { state.value = DeckUiState.Error },
+                )
             }
+        }
+
+        /**
+         * Garde la carte du dessus : elle quitte la pile tout de suite, sans attendre l'écriture,
+         * pour que la carte suivante apparaisse sous le doigt. Si l'écriture échoue, la carte revient
+         * sur le dessus de la pile, rien n'est perdu.
+         */
+        private fun keepTopCard() {
+            val media = deck.firstOrNull() ?: return
+            show(deck.drop(1))
+            viewModelScope.launch {
+                runCatching { keepMedia(media, day) }.fold(
+                    onSuccess = { session = session.record(it) },
+                    onFailure = { show(listOf(media) + deck) },
+                )
+            }
+        }
+
+        private fun show(media: List<MediaItem>) {
+            deck = media
+            state.value =
+                if (media.isEmpty()) {
+                    DeckUiState.Empty
+                } else {
+                    DeckUiState.Loaded(media.map { MediaCardUiState.of(it, day, clock.zone) })
+                }
         }
     }
