@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.photoswipe.android.hilt)
     alias(libs.plugins.photoswipe.android.compose)
     alias(libs.plugins.photoswipe.android.robolectric)
+    // Routes de navigation typées (@Serializable).
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -31,6 +33,9 @@ dependencies {
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.core)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)

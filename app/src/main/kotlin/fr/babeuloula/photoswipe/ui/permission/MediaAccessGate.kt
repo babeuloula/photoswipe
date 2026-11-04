@@ -6,7 +6,13 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,7 +27,8 @@ import fr.babeuloula.photoswipe.permission.MEDIA_PERMISSION_REQUEST
 /**
  * Affiche [content] seulement quand l'application peut lire les photos et vidéos ; sinon, le
  * parcours d'accès (explication, demande système, refus). En accès partiel, une bannière surmonte
- * [content]. [modifier] s'applique à l'écran affiché, [content] gère lui-même ses marges. Il exécute les effets de
+ * [content]. [modifier] s'applique aux écrans du parcours d'accès ; [content] gère lui-même les
+ * marges des barres système. Il exécute les effets de
  * [MediaAccessViewModel] : demande système et ouverture des réglages.
  */
 @Composable
@@ -81,12 +88,31 @@ fun MediaAccessGate(
         }
 
         is MediaAccessUiState.Granted -> {
-            Column(modifier = modifier) {
-                if (current.partial) {
-                    LimitedAccessBanner(onManageAccess = { viewModel.onEvent(MediaAccessEvent.ExtendSelection) })
-                }
-                content()
-            }
+            GrantedContent(
+                partial = current.partial,
+                onManageAccess = { viewModel.onEvent(MediaAccessEvent.ExtendSelection) },
+                content = content,
+            )
         }
+    }
+}
+
+/** Contenu de l'application, surmonté de la bannière d'accès limité si l'accès est [partial]. */
+@Composable
+private fun GrantedContent(
+    partial: Boolean,
+    onManageAccess: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        if (partial) {
+            LimitedAccessBanner(
+                onManageAccess = onManageAccess,
+                modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
+            )
+        }
+        // La bannière occupe déjà la barre d'état : le contenu ne la réserve pas une seconde fois.
+        val insets = if (partial) Modifier.consumeWindowInsets(WindowInsets.statusBars) else Modifier
+        Box(Modifier.weight(1f).then(insets)) { content() }
     }
 }
