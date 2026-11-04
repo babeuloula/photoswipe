@@ -59,8 +59,12 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 5. **La CI est maintenue au fil du projet.** Tout nouveau check (ktlint, detekt, Konsist, tests instrumentés, nouveau module, etc.) est ajouté à `.github/workflows/ci.yml` dans la même PR. Une PR n'est prête que si son run CI est vert.
 6. **La documentation est maintenue au fil du projet.** On met à jour `CLAUDE.md`, `docs/architecture.md` et `docs/beginners-guide.md` dès qu'un module, un dossier, un outil ou une commande change.
 7. **Démo sur émulateur** : si le ticket a un effet visible, on lance l'émulateur (`~/Library/Android/sdk/emulator/emulator -avd Medium_Phone_API_37.0`), on installe l'app (`./gradlew installDebug`) et on donne à Jérémy la liste de ce qu'il faut tester et comment. Si le ticket n'a rien de visible, on le dit explicitement.
-8. Après avoir ouvert la PR, on s'arrête et on attend la revue avant le ticket suivant.
-9. Ne rien faire qui dépasse le périmètre du ticket et de l'epic en cours.
+8. **Suivi Notion** : les tickets vivent dans le kanban Notion « Tickets de développement » (page PhotoSwipe). Le `Ticket ID` Notion (PS-N) fait foi pour la numérotation. Le statut avance au fil du travail :
+   - « En cours » quand on commence le ticket ;
+   - « En revue » à l'ouverture de la PR, avec les critères d'acceptation cochés et le lien de la PR ;
+   - « Terminé » une fois la PR mergée.
+9. Après avoir ouvert la PR, on s'arrête et on attend la revue avant le ticket suivant.
+10. Ne rien faire qui dépasse le périmètre du ticket et de l'epic en cours.
 
 ## État d'avancement
 - Epic 1 « Squelette & outillage » : PS-1 mergé (PR #1), PS-2 en revue (catalogue et conventions). Suivent PS-3 (Hilt), PS-4 (thème M3), PS-5 (ktlint, detekt, lint), PS-6 (compléments CI), PS-7 (Konsist), PS-8 (i18n) et PS-9 (`docs/testing.md` ; README et docs déjà livrés avec PS-1).
