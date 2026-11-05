@@ -15,6 +15,7 @@ import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
+import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import java.time.Clock
 
 /**
@@ -66,4 +67,8 @@ object DomainModule {
         reviewRepository: ReviewRepository,
         clock: Clock,
     ): MarkForDeletion = MarkForDeletion(reviewRepository, clock)
+
+    @Provides
+    fun provideUndoLastDecision(reviewRepository: ReviewRepository): UndoLastDecision =
+        UndoLastDecision(reviewRepository)
 }

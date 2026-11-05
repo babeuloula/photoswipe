@@ -18,9 +18,11 @@ import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
+import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -65,6 +67,7 @@ class DeckViewModelTest {
             getDeckForDay = GetDeckForDay(SameDayMatcher(), source, reviews, RecentYearsFirstOrdering(), clock),
             keepMedia = KeepMedia(reviews, clock),
             markForDeletion = MarkForDeletion(reviews, clock),
+            undoLastDecision = UndoLastDecision(reviews),
             clock = clock,
         )
 
@@ -97,7 +100,7 @@ class DeckViewModelTest {
             repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
             val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
 
-            assertEquals(DeckUiState.Empty, viewModel.uiState.value)
+            assertEquals(DeckUiState.Empty(), viewModel.uiState.value)
         }
 
     @Test
@@ -192,7 +195,97 @@ class DeckViewModelTest {
 
             viewModel.onEvent(DeckEvent.Keep)
 
-            assertEquals(DeckUiState.Empty, viewModel.uiState.value)
+            assertEquals(DeckUiState.Empty(canUndo = true), viewModel.uiState.value)
+        }
+
+    @Test
+    fun `cannot undo before any decision`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
+
+            assertFalse((viewModel.uiState.value as DeckUiState.Loaded).canUndo)
+        }
+
+    @Test
+    fun `puts a kept card back on top from the right and forgets its decision`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+            viewModel.onEvent(DeckEvent.Keep)
+
+            viewModel.onEvent(DeckEvent.Undo)
+
+            val state = viewModel.uiState.value as DeckUiState.Loaded
+            assertEquals(listOf(MediaId(2), MediaId(1)), state.cards.map { it.id })
+            assertEquals(1f, state.returningFrom)
+            assertFalse(state.canUndo)
+            assertTrue(repository.entries.isEmpty())
+            assertTrue(viewModel.session.isEmpty)
+        }
+
+    @Test
+    fun `puts a marked card back on top from the left`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+            viewModel.onEvent(DeckEvent.MarkForDeletion)
+
+            viewModel.onEvent(DeckEvent.Undo)
+
+            assertEquals(-1f, (viewModel.uiState.value as DeckUiState.Loaded).returningFrom)
+            assertTrue(repository.entries.isEmpty())
+        }
+
+    @Test
+    fun `undoes decisions one by one, most recent first`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+            viewModel.onEvent(DeckEvent.MarkForDeletion)
+            viewModel.onEvent(DeckEvent.Keep)
+
+            viewModel.onEvent(DeckEvent.Undo)
+            val afterFirst = viewModel.uiState.value as DeckUiState.Loaded
+            assertEquals(listOf(MediaId(1)), afterFirst.cards.map { it.id })
+            assertEquals(1f, afterFirst.returningFrom)
+            assertTrue(afterFirst.canUndo)
+
+            viewModel.onEvent(DeckEvent.Undo)
+            val afterSecond = viewModel.uiState.value as DeckUiState.Loaded
+            assertEquals(listOf(MediaId(2), MediaId(1)), afterSecond.cards.map { it.id })
+            assertEquals(-1f, afterSecond.returningFrom)
+            assertFalse(afterSecond.canUndo)
+        }
+
+    @Test
+    fun `brings the last card back after the deck was emptied`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
+            viewModel.onEvent(DeckEvent.Keep)
+
+            viewModel.onEvent(DeckEvent.Undo)
+
+            assertEquals(listOf(MediaId(1)), viewModel.cardIds())
+        }
+
+    @Test
+    fun `leaves the decisions of other years untouched when undoing`() =
+        runTest {
+            repository.save(aReviewEntry(mediaId = 1, reviewYear = 2025))
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
+            viewModel.onEvent(DeckEvent.Keep)
+
+            viewModel.onEvent(DeckEvent.Undo)
+
+            assertEquals(listOf(2025), repository.entries.map { it.reviewYear })
+        }
+
+    @Test
+    fun `ignores undo when there is nothing to undo`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
+            val before = viewModel.uiState.value
+
+            viewModel.onEvent(DeckEvent.Undo)
+
+            assertEquals(before, viewModel.uiState.value)
         }
 
     @Test
@@ -214,7 +307,7 @@ class DeckViewModelTest {
 
             viewModel.onEvent(DeckEvent.Keep)
 
-            assertEquals(DeckUiState.Empty, viewModel.uiState.value)
+            assertEquals(DeckUiState.Empty(), viewModel.uiState.value)
             assertTrue(repository.entries.isEmpty())
         }
 
