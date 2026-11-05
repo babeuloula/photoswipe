@@ -113,6 +113,7 @@ class DeckScreenTest {
         val calls = mutableListOf<String>()
         override val player: Player = ExoPlayer.Builder(context).build()
         override var playingUri: String? by mutableStateOf(null)
+        override var endedUri: String? by mutableStateOf(null)
         var position: Duration = Duration.ZERO
 
         override fun play(uri: String) {
@@ -237,18 +238,18 @@ class DeckScreenTest {
     }
 
     @Test
-    fun `plays at once from the badge without waiting`() {
+    fun `plays at once from the big play button without waiting`() {
         val videoPlayer = RecordingVideoPlayer(composeRule.activity)
         showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
 
-        composeRule.onNodeWithContentDescription("Play video, 00:32").performClick()
+        composeRule.onNodeWithContentDescription("Play video").performClick()
 
         assertEquals(listOf("play ${video.uri}"), videoPlayer.calls)
         videoPlayer.release()
     }
 
     @Test
-    fun `turns the badge into a pause button with the remaining time while playing`() {
+    fun `pauses the video when it is tapped while playing`() {
         val videoPlayer = RecordingVideoPlayer(composeRule.activity)
         showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
 
@@ -258,13 +259,14 @@ class DeckScreenTest {
         }
         advance(Duration.ofMillis(TOLERANCE_MILLIS))
 
-        composeRule.onNodeWithContentDescription("Pause video, 00:22").performClick()
+        composeRule.onNodeWithContentDescription("Duration: 00:22").assertExists()
+        composeRule.onNodeWithContentDescription("Pause video").performClick()
         assertEquals(listOf("pause ${video.uri}"), videoPlayer.calls)
         videoPlayer.release()
     }
 
     @Test
-    fun `shows the full duration again once the video has ended`() {
+    fun `keeps only the big play button once the video has ended`() {
         val videoPlayer = RecordingVideoPlayer(composeRule.activity)
         showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
         update {
@@ -276,10 +278,12 @@ class DeckScreenTest {
         update {
             videoPlayer.position = Duration.ZERO
             videoPlayer.playingUri = null
+            videoPlayer.endedUri = video.uri
         }
         advance(Duration.ofMillis(TOLERANCE_MILLIS))
 
-        composeRule.onNodeWithContentDescription("Play video, 00:32").assertExists()
+        composeRule.onNodeWithContentDescription("Play video").assertExists()
+        composeRule.onNodeWithContentDescription("Duration", substring = true).assertDoesNotExist()
         videoPlayer.release()
     }
 
@@ -293,7 +297,7 @@ class DeckScreenTest {
         videoPlayer.position = Duration.ofSeconds(5)
         advance(Duration.ofSeconds(1))
 
-        composeRule.onNodeWithContentDescription("Pause video, 00:27").assertExists()
+        composeRule.onNodeWithContentDescription("Duration: 00:27").assertExists()
         videoPlayer.release()
     }
 

@@ -36,6 +36,9 @@ interface CardVideoPlayer {
      */
     val playingUri: String?
 
+    /** Vidéo arrivée à la fin et pas encore relancée, `null` si aucune. Lue par Compose. */
+    val endedUri: String?
+
     /**
      * Lit [uri] en muet, une fois. Une vidéo en pause reprend là où elle était ; une vidéo arrivée
      * à la fin repart du début.
@@ -104,12 +107,15 @@ class ExoCardVideoPlayer(
     /** Vrai après une pause demandée par l'utilisateur, jusqu'à ce qu'il relance la vidéo. */
     private var pausedByUser = false
 
+    override var endedUri: String? by mutableStateOf(null)
+        private set
+
     /** Vrai quand la vidéo chargée est arrivée à la fin, jusqu'à ce qu'elle soit relancée. */
-    private var ended = false
+    private val ended: Boolean get() = endedUri != null && endedUri == currentUri
 
     /** Fin de la vidéo : elle s'arrête, et la carte propose de la relancer. */
     internal fun onEnded() {
-        ended = true
+        endedUri = currentUri
         exoPlayer.playWhenReady = false
         playingUri = null
     }
@@ -125,7 +131,7 @@ class ExoCardVideoPlayer(
         } else if (ended) {
             exoPlayer.seekTo(0)
         }
-        ended = false
+        endedUri = null
         pausedByUser = false
         exoPlayer.playWhenReady = true
         playingUri = uri
@@ -149,7 +155,7 @@ class ExoCardVideoPlayer(
         if (uri != currentUri) return
         currentUri = null
         pausedByUser = false
-        ended = false
+        endedUri = null
         playingUri = null
         exoPlayer.stop()
         exoPlayer.clearMediaItems()

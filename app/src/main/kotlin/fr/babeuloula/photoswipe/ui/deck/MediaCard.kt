@@ -1,16 +1,19 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.annotation.OptIn
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
@@ -31,10 +34,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -113,7 +118,6 @@ fun MediaCard(
                 VideoBadge(
                     remaining = card.duration,
                     playing = false,
-                    onClick = null,
                     modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
                 )
             }
@@ -131,10 +135,13 @@ fun MediaCard(
 
 /**
  * Vidéo de la carte du dessus (SPEC §4.3) : elle démarre seule, en muet, [AUTOPLAY_DELAY] après
- * l'arrivée de la carte, est lue une fois, et s'arrête quand la carte part. À la fin, la pastille
- * repasse sur ▶ avec la durée totale. Sa pastille devient alors un bouton pause
- * avec le temps restant ; un tap met en pause ou relance. La surface reste transparente jusqu'à la
- * première image, pour que la miniature ne laisse pas place à un rectangle noir.
+ * l'arrivée de la carte, est lue une fois, et s'arrête quand la carte part.
+ *
+ * Un gros bouton ▶ au centre attend la lecture ; au démarrage il devient ⏸ puis s'efface en fondu.
+ * Un tap sur la vidéo la met en pause (le ▶ revient et reste) ou la relance. La pastille du haut
+ * donne le temps restant ; à la fin de la vidéo, elle disparaît et seul le ▶ reste. La surface
+ * reste transparente jusqu'à la première image, pour que la miniature ne laisse pas place à un
+ * rectangle noir.
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -148,6 +155,7 @@ private fun BoxScope.ActiveVideo(
     }
     DisposableEffect(card.uri, videoPlayer) { onDispose { videoPlayer.stop(card.uri) } }
     val playing = videoPlayer.playingUri == card.uri
+    val ended = videoPlayer.endedUri == card.uri
     var position by remember(card.uri) { mutableStateOf(Duration.ZERO) }
     // Le temps restant n'avance que pendant la lecture ; en pause ou à la fin, il est lu une fois.
     LaunchedEffect(card.uri, playing) {
@@ -168,16 +176,99 @@ private fun BoxScope.ActiveVideo(
             modifier = Modifier.resizeWithContentScale(ContentScale.Fit, presentation.videoSizeDp),
         )
     }
-    VideoBadge(
-        remaining = card.duration?.let { (it - position).coerceAtLeast(Duration.ZERO) },
+    PlayPauseOverlay(
         playing = playing,
-        onClick = { if (playing) videoPlayer.pauseByUser(card.uri) else videoPlayer.play(card.uri) },
-        modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+        onToggle = { if (playing) videoPlayer.pauseByUser(card.uri) else videoPlayer.play(card.uri) },
+        modifier = Modifier.matchParentSize(),
     )
+    if (!ended) {
+        VideoBadge(
+            remaining = card.duration?.let { (it - position).coerceAtLeast(Duration.ZERO) },
+            playing = playing,
+            modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+        )
+    }
 }
+
+/**
+ * Zone de tap de la vidéo et son gros bouton central : ▶ tant qu'elle ne joue pas ; au démarrage,
+ * ⏸ qui s'efface en fondu. Toute la carte réagit au tap, sans ondulation ; un glissement reste un
+ * geste de tri. TalkBack lit l'action : « Lire la vidéo » ou « Mettre la vidéo en pause ».
+ */
+@Composable
+private fun PlayPauseOverlay(
+    playing: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val buttonAlpha = remember { Animatable(1f) }
+    LaunchedEffect(playing) {
+        if (playing) {
+            delay(PAUSE_ICON_VISIBLE.toMillis())
+            buttonAlpha.animateTo(0f, tween(FADE_OUT_MILLIS))
+        } else {
+            buttonAlpha.snapTo(1f)
+        }
+    }
+    val action = stringResource(if (playing) R.string.deck_video_pause else R.string.deck_video_play)
+    Box(
+        modifier =
+            modifier
+                .clickable(interactionSource = null, indication = null, onClick = onToggle)
+                .semantics {
+                    contentDescription = action
+                    role = Role.Button
+                },
+        contentAlignment = Alignment.Center,
+    ) {
+        Surface(
+            color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = LABEL_ALPHA),
+            contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+            shape = CircleShape,
+            modifier =
+                Modifier
+                    .size(BIG_BUTTON_SIZE)
+                    .graphicsLayer { alpha = buttonAlpha.value }
+                    .testTag(PLAY_PAUSE_BUTTON_TAG),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter =
+                        if (playing) {
+                            painterResource(
+                                R.drawable.ic_pause,
+                            )
+                        } else {
+                            rememberVectorPainter(Icons.Filled.PlayArrow)
+                        },
+                    contentDescription = null,
+                    modifier = Modifier.size(BIG_ICON_SIZE),
+                )
+            }
+        }
+    }
+}
+
+/** Taille du gros bouton central d'une vidéo. */
+private val BIG_BUTTON_SIZE = 72.dp
+
+/** Taille de son icône. */
+private val BIG_ICON_SIZE = 44.dp
+
+/** Temps pendant lequel ⏸ reste visible au démarrage, avant de s'effacer. */
+private val PAUSE_ICON_VISIBLE: Duration = Duration.ofMillis(PAUSE_ICON_VISIBLE_MILLIS)
+
+/** Durée du fondu de ⏸, en millisecondes. */
+private const val FADE_OUT_MILLIS = 400
+
+/** Étiquette de test du gros bouton central d'une vidéo. */
+internal const val PLAY_PAUSE_BUTTON_TAG = "play_pause_button"
 
 /** Attente avant la lecture automatique d'une vidéo, en millisecondes. */
 private const val AUTOPLAY_DELAY_MILLIS = 2_500L
+
+/** Temps pendant lequel ⏸ reste visible au démarrage, en millisecondes. */
+private const val PAUSE_ICON_VISIBLE_MILLIS = 600L
 
 /** Rafraîchissement du temps restant pendant la lecture, en millisecondes. */
 private const val PROGRESS_TICK_MILLIS = 250L
@@ -216,30 +307,22 @@ private fun MemoryLabel(
 
 /**
  * Pastille d'une vidéo (SPEC §4.3) : ▶ et la durée tant qu'elle ne joue pas, ⏸ et le temps restant
- * pendant la lecture. Sur la carte du dessus, c'est un bouton ([onClick]) qui met en pause ou
- * relance la vidéo ; TalkBack lit l'action et le temps (« Lire la vidéo, 00:32 »).
+ * pendant la lecture. Simple information : TalkBack lit « Durée : 00:32 ».
  */
 @Composable
 private fun VideoBadge(
     remaining: Duration?,
     playing: Boolean,
-    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val label = remaining?.let { durationLabel(it) }
-    val action = stringResource(if (playing) R.string.deck_video_pause else R.string.deck_video_play)
-    val description =
-        if (onClick != null) {
-            listOfNotNull(action, label).joinToString(", ")
-        } else {
-            label?.let { stringResource(R.string.deck_video_duration, it) }
-        }
-    val colors =
-        Pair(
-            MaterialTheme.colorScheme.inverseSurface.copy(alpha = LABEL_ALPHA),
-            MaterialTheme.colorScheme.inverseOnSurface,
-        )
-    val content: @Composable () -> Unit = {
+    val description = label?.let { stringResource(R.string.deck_video_duration, it) }
+    Surface(
+        color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = LABEL_ALPHA),
+        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+        shape = MaterialTheme.shapes.small,
+        modifier = modifier.clearAndSetSemantics { description?.let { contentDescription = it } },
+    ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -259,28 +342,6 @@ private fun VideoBadge(
             )
             if (label != null) Text(text = label, style = MaterialTheme.typography.labelLarge)
         }
-    }
-    val semantics = Modifier.clearAndSetSemantics { description?.let { contentDescription = it } }
-    if (onClick == null) {
-        Surface(
-            color = colors.first,
-            contentColor = colors.second,
-            shape = MaterialTheme.shapes.small,
-            modifier = modifier.then(semantics),
-            content = content,
-        )
-    } else {
-        Surface(
-            onClick = onClick,
-            color = colors.first,
-            contentColor = colors.second,
-            shape = MaterialTheme.shapes.small,
-            modifier =
-                modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp).then(semantics).semantics {
-                    role = Role.Button
-                },
-            content = content,
-        )
     }
 }
 
