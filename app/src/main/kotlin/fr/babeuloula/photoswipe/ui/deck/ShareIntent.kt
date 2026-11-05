@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
@@ -26,3 +27,21 @@ fun shareIntent(
     send.clipData = ClipData.newRawUri(null, content)
     return Intent.createChooser(send, chooserTitle)
 }
+
+/**
+ * Lance la feuille de partage [intent] avec [start] ; renvoie `false` si Android la refuse. C'est le
+ * cas d'un média que l'application ne peut pas confier à une autre : fichier disparu, média hors de
+ * la sélection d'un accès partiel, données de démo sans fichier.
+ */
+fun launchShare(
+    intent: Intent,
+    start: (Intent) -> Unit,
+): Boolean =
+    try {
+        start(intent)
+        true
+    } catch (_: SecurityException) {
+        false
+    } catch (_: ActivityNotFoundException) {
+        false
+    }

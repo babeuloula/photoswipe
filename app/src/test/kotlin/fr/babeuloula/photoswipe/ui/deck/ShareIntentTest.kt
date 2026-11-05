@@ -1,9 +1,11 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,5 +48,28 @@ class ShareIntentTest {
 
         assertTrue(send.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
         assertEquals(Uri.parse(photo), send.clipData!!.getItemAt(0).uri)
+    }
+
+    @Test
+    fun `starts the share sheet when Android accepts it`() {
+        val started = mutableListOf<Intent>()
+        val intent = shareIntent(photo, MediaType.IMAGE, "Share")
+
+        assertTrue(launchShare(intent) { started += it })
+        assertEquals(listOf(intent), started)
+    }
+
+    @Test
+    fun `reports a media that Android refuses to hand over`() {
+        val refused = launchShare(shareIntent(photo, MediaType.IMAGE, "Share")) { throw SecurityException("no access") }
+
+        assertFalse(refused)
+    }
+
+    @Test
+    fun `reports a missing share sheet`() {
+        val missing = launchShare(shareIntent(photo, MediaType.IMAGE, "Share")) { throw ActivityNotFoundException() }
+
+        assertFalse(missing)
     }
 }
