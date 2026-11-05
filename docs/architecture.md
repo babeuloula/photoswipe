@@ -162,6 +162,7 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | AndroidX Activity Compose | `:app` | `ComponentActivity` (classe de base exigée par `@AndroidEntryPoint`), `setContent` et `enableEdgeToEdge` |
 | Jetpack Compose (BOM, UI, tooling) | `:app` | UI imposée par la SPEC §7 ; la BOM aligne les versions des bibliothèques Compose |
 | Coil 3 (`coil-compose-core`) | `:app` | Chargement des images imposé par la SPEC §7 : décodage à la taille de la carte, cache mémoire, URI `content://` ; sans chargeur global ni module réseau (ADR [0016](decisions/0016-coil-image-loader.md)) |
+| Coil Video (`coil-video`) | `:app` | Miniatures des vidéos sur leur carte (SPEC §4.3) : `VideoFrameDecoder` tire une image de la vidéo, ajouté au chargeur de l'ADR 0016 |
 | Compose Material 3 | `:app` | Material 3 imposé par la SPEC §8 : thème, couleurs dynamiques, composants standards |
 | Compose UI Test (JUnit 4) | `:app` (tests) | Tests de rendu Compose (`createAndroidComposeRule`) sur Robolectric |
 | Hilt Android Testing | `:app` (tests) | `@HiltAndroidTest` et `HiltAndroidRule` pour vérifier l'injection dans les tests |

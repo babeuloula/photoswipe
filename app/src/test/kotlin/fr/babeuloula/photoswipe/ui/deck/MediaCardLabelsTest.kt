@@ -8,6 +8,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import java.time.Duration
 import java.time.LocalDate
 
 /** Étiquette et poids des cartes, dans les deux langues de l'application. */
@@ -51,5 +52,16 @@ class MediaCardLabelsTest {
     @Config(qualifiers = "en")
     fun `shows the file size in English units`() {
         assertEquals("3.5 MB", fileSizeLabel(context, 3_500_000))
+    }
+
+    @Test
+    fun `formats a short video duration like a player`() {
+        assertEquals("00:32", durationLabel(Duration.ofSeconds(32)))
+    }
+
+    @Test
+    fun `formats durations in minutes and hours`() {
+        assertEquals("25:00", durationLabel(Duration.ofMinutes(25)))
+        assertEquals("1:02:03", durationLabel(Duration.ofHours(1).plusMinutes(2).plusSeconds(3)))
     }
 }

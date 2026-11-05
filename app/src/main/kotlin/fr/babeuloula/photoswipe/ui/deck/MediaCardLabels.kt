@@ -1,8 +1,10 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import android.content.Context
+import android.text.format.DateUtils
 import android.text.format.Formatter
 import fr.babeuloula.photoswipe.R
+import java.time.Duration
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -38,3 +40,9 @@ fun fileSizeLabel(
     context: Context,
     sizeBytes: Long,
 ): String = Formatter.formatShortFileSize(context, sizeBytes)
+
+/**
+ * Durée d'une vidéo au format des lecteurs, avec les chiffres de la langue de l'appareil :
+ * « 00:32 », « 25:00 », « 1:02:03 ».
+ */
+fun durationLabel(duration: Duration): String = DateUtils.formatElapsedTime(duration.seconds)
