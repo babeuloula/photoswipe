@@ -73,6 +73,9 @@ sealed interface DeckEvent {
     /** « Terminer » : passer au résumé. */
     data object Finish : DeckEvent
 
+    /** Flèche de retour : revenir à l'accueil. */
+    data object Back : DeckEvent
+
     /** Carte du dessus glissée à droite : la garder (SPEC §2). */
     data object Keep : DeckEvent
 
@@ -99,6 +102,9 @@ sealed interface DeckEvent {
 sealed interface DeckEffect {
     /** Ouvrir le résumé de la session (SPEC §3.5). */
     data object OpenSummary : DeckEffect
+
+    /** Quitter la pile, vers l'écran précédent. */
+    data object Close : DeckEffect
 
     /**
      * Ouvrir la feuille de partage d'Android pour un média.
@@ -157,6 +163,7 @@ class DeckViewModel
             when (event) {
                 DeckEvent.Retry -> load()
                 DeckEvent.Finish -> effects.trySend(DeckEffect.OpenSummary)
+                DeckEvent.Back -> effects.trySend(DeckEffect.Close)
                 DeckEvent.Keep -> decideTopCard(CardSide.RIGHT, decisions.keepMedia::invoke)
                 DeckEvent.MarkForDeletion -> decideTopCard(CardSide.LEFT, decisions.markForDeletion::invoke)
                 DeckEvent.Favorite -> decideTopCard(CardSide.TOP, decisions.favoriteMedia::invoke)

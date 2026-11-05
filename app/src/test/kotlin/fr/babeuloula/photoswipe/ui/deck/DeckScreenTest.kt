@@ -59,7 +59,6 @@ class DeckScreenTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     private val events = mutableListOf<DeckEvent>()
-    private var backs = 0
 
     /** Affiche [initial] ; l'état renvoyé permet de le faire évoluer sans recomposer tout l'écran. */
     private fun show(initial: DeckUiState): MutableState<DeckUiState> {
@@ -74,7 +73,6 @@ class DeckScreenTest {
                         day = LocalDate.of(2026, 5, 14),
                         state = state.value,
                         onEvent = { events += it },
-                        onBack = { backs++ },
                     )
                 }
             }
@@ -137,8 +135,7 @@ class DeckScreenTest {
         composeRule.onNodeWithText(text(R.string.deck_finish)).performClick()
         composeRule.onNodeWithContentDescription(text(R.string.navigate_back)).performClick()
 
-        assertEquals(listOf<DeckEvent>(DeckEvent.Finish), events)
-        assertEquals(1, backs)
+        assertEquals(listOf(DeckEvent.Finish, DeckEvent.Back), events)
     }
 
     @Test
@@ -452,7 +449,6 @@ class DeckScreenTest {
                         day = LocalDate.of(2026, 5, 14),
                         state = DeckUiState.Loaded(listOf(PREVIEW_CARD)),
                         onEvent = {},
-                        onBack = {},
                         snackbarHostState = host,
                     )
                 }

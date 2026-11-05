@@ -38,6 +38,10 @@ fun DeckRoute(
                     onOpenSummary()
                 }
 
+                DeckEffect.Close -> {
+                    onBack()
+                }
+
                 is DeckEffect.Share -> {
                     val shared = launchShare(shareIntent(effect.uri, effect.type, shareTitle), context::startActivity)
                     if (!shared) scope.launch { snackbarHostState.showSnackbar(shareFailed) }
@@ -49,7 +53,6 @@ fun DeckRoute(
         day = viewModel.day,
         state = state,
         onEvent = viewModel::onEvent,
-        onBack = onBack,
         modifier = modifier,
         snackbarHostState = snackbarHostState,
     )

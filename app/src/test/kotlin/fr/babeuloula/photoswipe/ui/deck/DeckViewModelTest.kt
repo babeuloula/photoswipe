@@ -341,6 +341,16 @@ class DeckViewModelTest {
         }
 
     @Test
+    fun `closes the deck when going back`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource())
+
+            viewModel.onEvent(DeckEvent.Back)
+
+            assertEquals(DeckEffect.Close, viewModel.uiEffects.first())
+        }
+
+    @Test
     fun `ignores undo when there is nothing to undo`() =
         runTest {
             val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))

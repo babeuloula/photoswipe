@@ -62,7 +62,6 @@ fun DeckScreen(
     day: LocalDate,
     state: DeckUiState,
     onEvent: (DeckEvent) -> Unit,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
@@ -73,7 +72,7 @@ fun DeckScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.deck_title, localizedDate(LocalContext.current, day))) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { onEvent(DeckEvent.Back) }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.navigate_back),
@@ -263,7 +262,6 @@ private fun DeckScreenPreview() {
                 day = LocalDate.parse("2026-05-14"),
                 state = DeckUiState.Loaded(listOf(PREVIEW_CARD)),
                 onEvent = {},
-                onBack = {},
             )
         }
     }
