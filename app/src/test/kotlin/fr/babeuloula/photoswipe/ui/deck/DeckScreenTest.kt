@@ -1,10 +1,14 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import android.content.Context
 import androidx.activity.compose.setContent
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -27,6 +31,8 @@ import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -62,12 +68,16 @@ class DeckScreenTest {
     private val events = mutableListOf<DeckEvent>()
 
     /** Affiche [initial] ; l'état renvoyé permet de le faire évoluer sans recomposer tout l'écran. */
-    private fun show(initial: DeckUiState): MutableState<DeckUiState> {
+    private fun show(
+        initial: DeckUiState,
+        videoPlayer: CardVideoPlayer? = null,
+    ): MutableState<DeckUiState> {
         val state = mutableStateOf(initial)
         composeRule.activity.setContent {
             CompositionLocalProvider(
                 LocalImageLoader provides ImageLoader(composeRule.activity),
                 LocalHapticFeedback provides recordingHaptics,
+                LocalCardVideoPlayer provides videoPlayer,
             ) {
                 PhotoSwipeTheme {
                     DeckScreen(
@@ -92,6 +102,204 @@ class DeckScreenTest {
         }
 
     private fun text(id: Int): String = composeRule.activity.getString(id)
+
+    /**
+     * Lecteur qui note les demandes ; la surface vidéo reçoit un vrai ExoPlayer, jamais préparé.
+     * [playingUri] et [position] se règlent à la main : la lecture n'avance pas seule.
+     */
+    private class RecordingVideoPlayer(
+        context: Context,
+    ) : CardVideoPlayer {
+        val calls = mutableListOf<String>()
+        override val player: Player = ExoPlayer.Builder(context).build()
+        override var playingUri: String? by mutableStateOf(null)
+        override var endedUri: String? by mutableStateOf(null)
+        var position: Duration = Duration.ZERO
+
+        override fun play(uri: String) {
+            calls += "play $uri"
+        }
+
+        override fun position(uri: String): Duration = position
+
+        override fun pauseByUser(uri: String) {
+            calls += "pause $uri"
+        }
+
+        override fun stop(uri: String) {
+            calls += "stop $uri"
+        }
+
+        override fun pause() {
+            calls += "pause"
+        }
+
+        override fun resume() {
+            calls += "resume"
+        }
+
+        override fun release() {
+            player.release()
+        }
+    }
+
+    private val video =
+        PREVIEW_CARD.copy(
+            type = MediaType.VIDEO,
+            uri = "content://media/external/video/media/1",
+            duration = Duration.ofSeconds(32),
+        )
+
+    /** Affiche [initial] avec [videoPlayer], puis met l'horloge en mode manuel. */
+    private fun showWithPlayer(
+        initial: DeckUiState,
+        videoPlayer: CardVideoPlayer,
+    ): MutableState<DeckUiState> {
+        composeRule.mainClock.autoAdvance = false
+        val state = show(initial, videoPlayer)
+        repeat(SETTLE_FRAMES) { composeRule.mainClock.advanceTimeByFrame() }
+        return state
+    }
+
+    /** Change un état lu par l'écran alors que l'horloge est manuelle, et le signale à Compose. */
+    private fun update(block: () -> Unit) {
+        composeRule.runOnUiThread {
+            block()
+            Snapshot.sendApplyNotifications()
+        }
+        composeRule.mainClock.advanceTimeByFrame()
+    }
+
+    private fun advance(duration: Duration) {
+        composeRule.mainClock.advanceTimeBy(duration.toMillis())
+    }
+
+    @Test
+    fun `waits a moment before playing the video of the top card`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
+
+        advance(AUTOPLAY_DELAY.minusMillis(TOLERANCE_MILLIS))
+        assertTrue(videoPlayer.calls.isEmpty())
+
+        advance(Duration.ofMillis(2 * TOLERANCE_MILLIS))
+        assertEquals(listOf("play ${video.uri}"), videoPlayer.calls)
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `does not play the next card prepared underneath`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        val nextVideo = video.copy(id = MediaId(2), uri = "content://media/external/video/media/2")
+        showWithPlayer(DeckUiState.Loaded(listOf(PREVIEW_CARD, nextVideo)), videoPlayer)
+
+        advance(AUTOPLAY_DELAY.multipliedBy(2))
+
+        assertTrue(videoPlayer.calls.isEmpty())
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `does not play a video whose card left before the delay`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        val state = showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
+
+        update { state.value = DeckUiState.Empty() }
+        advance(AUTOPLAY_DELAY.multipliedBy(2))
+
+        assertEquals(listOf("stop ${video.uri}"), videoPlayer.calls)
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `stops the video when the deck is emptied`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        val state = showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
+        advance(AUTOPLAY_DELAY.plusMillis(TOLERANCE_MILLIS))
+
+        update { state.value = DeckUiState.Empty() }
+
+        assertEquals(listOf("play ${video.uri}", "stop ${video.uri}"), videoPlayer.calls)
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `stops the video when its card leaves and plays the next one after the delay`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        val nextVideo = video.copy(id = MediaId(2), uri = "content://media/external/video/media/2")
+        val state = showWithPlayer(DeckUiState.Loaded(listOf(video, nextVideo)), videoPlayer)
+        advance(AUTOPLAY_DELAY.plusMillis(TOLERANCE_MILLIS))
+
+        update { state.value = DeckUiState.Loaded(listOf(nextVideo)) }
+        advance(AUTOPLAY_DELAY.plusMillis(TOLERANCE_MILLIS))
+
+        assertEquals(listOf("play ${video.uri}", "stop ${video.uri}", "play ${nextVideo.uri}"), videoPlayer.calls)
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `plays at once from the big play button without waiting`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
+
+        composeRule.onNodeWithContentDescription("Play video").performClick()
+
+        assertEquals(listOf("play ${video.uri}"), videoPlayer.calls)
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `pauses the video when it is tapped while playing`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
+
+        update {
+            videoPlayer.position = Duration.ofSeconds(10)
+            videoPlayer.playingUri = video.uri
+        }
+        advance(Duration.ofMillis(TOLERANCE_MILLIS))
+
+        composeRule.onNodeWithContentDescription("Duration: 00:22").assertExists()
+        composeRule.onNodeWithContentDescription("Pause video").performClick()
+        assertEquals(listOf("pause ${video.uri}"), videoPlayer.calls)
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `keeps only the big play button once the video has ended`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
+        update {
+            videoPlayer.position = Duration.ofSeconds(31)
+            videoPlayer.playingUri = video.uri
+        }
+        advance(Duration.ofMillis(TOLERANCE_MILLIS))
+
+        update {
+            videoPlayer.position = Duration.ZERO
+            videoPlayer.playingUri = null
+            videoPlayer.endedUri = video.uri
+        }
+        advance(Duration.ofMillis(TOLERANCE_MILLIS))
+
+        composeRule.onNodeWithContentDescription("Play video").assertExists()
+        composeRule.onNodeWithContentDescription("Duration", substring = true).assertDoesNotExist()
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `counts the remaining time down while playing`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
+        update { videoPlayer.playingUri = video.uri }
+        advance(Duration.ofMillis(TOLERANCE_MILLIS))
+
+        videoPlayer.position = Duration.ofSeconds(5)
+        advance(Duration.ofSeconds(1))
+
+        composeRule.onNodeWithContentDescription("Duration: 00:27").assertExists()
+        videoPlayer.release()
+    }
 
     @Test
     fun `shows the memory label and the file size of the top card`() {
@@ -551,6 +759,12 @@ class DeckScreenTest {
 
     private companion object {
         const val TIMEOUT_MILLIS = 5_000L
+
+        /** Images pour composer l'écran avant de mesurer le délai de lecture. */
+        const val SETTLE_FRAMES = 2
+
+        /** Marge autour du délai de lecture automatique. */
+        const val TOLERANCE_MILLIS = 100L
 
         /** Cible tactile minimale de Material 3 (SPEC §8). */
         val MIN_TOUCH_TARGET = 48.dp

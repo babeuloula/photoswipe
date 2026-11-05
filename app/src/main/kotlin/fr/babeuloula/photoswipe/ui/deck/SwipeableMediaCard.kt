@@ -150,7 +150,7 @@ fun SwipeableMediaCard(
                         }
                     },
         ) {
-            MediaCard(card = card, modifier = Modifier.matchParentSize())
+            MediaCard(card = card, active = true, modifier = Modifier.matchParentSize())
             SwipeIndicator(indication = swipeIndication(drag.value, size), modifier = Modifier.matchParentSize())
         }
     }
