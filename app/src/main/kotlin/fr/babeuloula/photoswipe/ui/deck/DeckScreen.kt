@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,6 +23,8 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -59,16 +62,17 @@ fun DeckScreen(
     day: LocalDate,
     state: DeckUiState,
     onEvent: (DeckEvent) -> Unit,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.deck_title, localizedDate(LocalContext.current, day))) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { onEvent(DeckEvent.Back) }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.navigate_back),
@@ -193,28 +197,35 @@ private fun LoadedDeck(
                 onEvent(DeckEvent.CloseMenu)
                 requestedExit = CardSide.TOP
             },
+            onShare = { onEvent(DeckEvent.Share) },
             onDismiss = { onEvent(DeckEvent.CloseMenu) },
         )
     }
 }
 
 /**
- * Menu de la carte du dessus (SPEC §2), en feuille du bas Material 3 : « Ajouter aux favoris » ;
- * le fermer sans choisir laisse la carte en place.
+ * Menu de la carte du dessus (SPEC §2), en feuille du bas Material 3 : « Ajouter aux favoris » et
+ * « Partager » ; le fermer sans choisir laisse la carte en place.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CardMenu(
     onFavorite: () -> Unit,
+    onShare: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         ListItem(
             headlineContent = { Text(stringResource(R.string.deck_favorite)) },
             leadingContent = { Icon(Icons.Filled.Favorite, contentDescription = null) },
+            modifier = Modifier.clickable(onClick = onFavorite),
+        )
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.deck_share)) },
+            leadingContent = { Icon(Icons.Filled.Share, contentDescription = null) },
             modifier =
                 Modifier
-                    .clickable(onClick = onFavorite)
+                    .clickable(onClick = onShare)
                     .padding(bottom = 24.dp),
         )
     }
@@ -251,7 +262,6 @@ private fun DeckScreenPreview() {
                 day = LocalDate.parse("2026-05-14"),
                 state = DeckUiState.Loaded(listOf(PREVIEW_CARD)),
                 onEvent = {},
-                onBack = {},
             )
         }
     }

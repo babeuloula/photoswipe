@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.activity.compose.setContent
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +26,7 @@ import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -35,6 +37,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import kotlinx.coroutines.launch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -56,7 +59,6 @@ class DeckScreenTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     private val events = mutableListOf<DeckEvent>()
-    private var backs = 0
 
     /** Affiche [initial] ; l'état renvoyé permet de le faire évoluer sans recomposer tout l'écran. */
     private fun show(initial: DeckUiState): MutableState<DeckUiState> {
@@ -71,7 +73,6 @@ class DeckScreenTest {
                         day = LocalDate.of(2026, 5, 14),
                         state = state.value,
                         onEvent = { events += it },
-                        onBack = { backs++ },
                     )
                 }
             }
@@ -134,8 +135,7 @@ class DeckScreenTest {
         composeRule.onNodeWithText(text(R.string.deck_finish)).performClick()
         composeRule.onNodeWithContentDescription(text(R.string.navigate_back)).performClick()
 
-        assertEquals(listOf<DeckEvent>(DeckEvent.Finish), events)
-        assertEquals(1, backs)
+        assertEquals(listOf(DeckEvent.Finish, DeckEvent.Back), events)
     }
 
     @Test
@@ -427,6 +427,39 @@ class DeckScreenTest {
         composeRule.waitForIdle()
 
         assertEquals(listOf(DeckEvent.CloseMenu, DeckEvent.Favorite), events)
+    }
+
+    @Test
+    fun `shares the card from the menu`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD), menuOpen = true))
+
+        composeRule.onNodeWithText(text(R.string.deck_share)).performClick()
+        composeRule.waitForIdle()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.Share), events)
+    }
+
+    @Test
+    fun `shows a message from the snackbar host`() {
+        val host = SnackbarHostState()
+        composeRule.activity.setContent {
+            CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
+                PhotoSwipeTheme {
+                    DeckScreen(
+                        day = LocalDate.of(2026, 5, 14),
+                        state = DeckUiState.Loaded(listOf(PREVIEW_CARD)),
+                        onEvent = {},
+                        snackbarHostState = host,
+                    )
+                }
+            }
+        }
+
+        composeRule.activity.lifecycleScope.launch { host.showSnackbar(text(R.string.deck_share_failed)) }
+
+        composeRule.waitUntil(TIMEOUT_MILLIS) {
+            composeRule.onAllNodesWithText(text(R.string.deck_share_failed)).fetchSemanticsNodes().isNotEmpty()
+        }
     }
 
     @Test

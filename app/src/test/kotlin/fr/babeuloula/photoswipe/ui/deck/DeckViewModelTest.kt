@@ -324,6 +324,33 @@ class DeckViewModelTest {
         }
 
     @Test
+    fun `shares the top card without changing it and closes the menu`() =
+        runTest {
+            val media = takenOn(1, 2020)
+            val viewModel = deckViewModel(FakeMediaSource(listOf(media)))
+            viewModel.onEvent(DeckEvent.OpenMenu)
+
+            viewModel.onEvent(DeckEvent.Share)
+
+            assertEquals(DeckEffect.Share(media.uri, media.type), viewModel.uiEffects.first())
+            val state = viewModel.uiState.value as DeckUiState.Loaded
+            assertFalse(state.menuOpen)
+            assertEquals(listOf(MediaId(1)), state.cards.map { it.id })
+            assertTrue(repository.entries.isEmpty())
+            assertTrue(viewModel.session.isEmpty)
+        }
+
+    @Test
+    fun `closes the deck when going back`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource())
+
+            viewModel.onEvent(DeckEvent.Back)
+
+            assertEquals(DeckEffect.Close, viewModel.uiEffects.first())
+        }
+
+    @Test
     fun `ignores undo when there is nothing to undo`() =
         runTest {
             val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
