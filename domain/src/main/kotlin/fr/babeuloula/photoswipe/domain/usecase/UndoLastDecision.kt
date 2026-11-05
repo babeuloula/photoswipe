@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.domain.usecase
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
+import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 
 /**
@@ -10,13 +11,15 @@ import fr.babeuloula.photoswipe.domain.port.ReviewRepository
  *
  * Les décisions s'annulent une à une, de la plus récente à la plus ancienne. L'undo remet le
  * couple (média, année de revue) dans l'état d'avant la décision : l'entrée remplacée est
- * restaurée, ou l'entrée est supprimée si le média était à trier.
+ * restaurée, ou l'entrée est supprimée si le média était à trier, et la décision quitte le journal
+ * du jour, d'un seul coup (ADR 0019).
  *
  * Une suppression confirmée (`TRASHED`) ne s'annule pas : le média est déjà dans la corbeille
  * système. Le résultat est alors [Result.AlreadyConfirmed] et la session reste inchangée.
  */
 class UndoLastDecision(
     private val reviewRepository: ReviewRepository,
+    private val journal: DecisionJournal,
 ) {
     /** Annule la dernière décision de [session]. */
     suspend operator fun invoke(session: ReviewSession): Result {
@@ -25,18 +28,8 @@ class UndoLastDecision(
         return if (current?.decision == ReviewDecision.TRASHED) {
             Result.AlreadyConfirmed
         } else {
-            restoreBefore(decision)
+            journal.undo(decision.record)
             Result.Undone(decision, session.withoutLastDecision())
-        }
-    }
-
-    /** Remet le couple (média, année de revue) de [decision] dans son état d'avant la décision. */
-    private suspend fun restoreBefore(decision: SessionDecision) {
-        val previous = decision.previous
-        if (previous == null) {
-            reviewRepository.delete(decision.media.id, decision.reviewYear)
-        } else {
-            reviewRepository.save(previous)
         }
     }
 

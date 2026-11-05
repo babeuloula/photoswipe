@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
@@ -21,9 +22,9 @@ class UndoLastDecisionTest {
     private val today = LocalDate.of(2026, 7, 15)
     private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 0))
     private val repository = FakeReviewRepository()
-    private val keepMedia = KeepMedia(repository, clock)
-    private val markForDeletion = MarkForDeletion(repository, clock)
-    private val undo = UndoLastDecision(repository)
+    private val keepMedia = KeepMedia(repository, FakeDecisionJournal(repository), clock)
+    private val markForDeletion = MarkForDeletion(repository, FakeDecisionJournal(repository), clock)
+    private val undo = UndoLastDecision(repository, FakeDecisionJournal(repository))
 
     @Test
     fun `has nothing to undo in an empty session`() =
@@ -91,9 +92,12 @@ class UndoLastDecisionTest {
         runTest {
             val kept = aReviewEntry(mediaId = 1, reviewYear = 2026, decision = KEPT)
             val repository = FakeReviewRepository(listOf(kept))
-            val session = ReviewSession().record(MarkForDeletion(repository, clock)(aMediaItem(id = 1), today))
+            val session =
+                ReviewSession().record(
+                    MarkForDeletion(repository, FakeDecisionJournal(repository), clock)(aMediaItem(id = 1), today),
+                )
 
-            UndoLastDecision(repository)(session)
+            UndoLastDecision(repository, FakeDecisionJournal(repository))(session)
 
             assertEquals(listOf(kept), repository.entries)
         }
@@ -114,9 +118,12 @@ class UndoLastDecisionTest {
         runTest {
             val lastYear = aReviewEntry(mediaId = 1, reviewYear = 2025, decision = MARKED_FOR_DELETION)
             val repository = FakeReviewRepository(listOf(lastYear))
-            val session = ReviewSession().record(KeepMedia(repository, clock)(aMediaItem(id = 1), today))
+            val session =
+                ReviewSession().record(
+                    KeepMedia(repository, FakeDecisionJournal(repository), clock)(aMediaItem(id = 1), today),
+                )
 
-            UndoLastDecision(repository)(session)
+            UndoLastDecision(repository, FakeDecisionJournal(repository))(session)
 
             assertEquals(listOf(lastYear), repository.entries)
         }

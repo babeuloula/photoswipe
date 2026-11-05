@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.domain.usecase
 
 import fr.babeuloula.photoswipe.domain.model.MediaAccess
 import fr.babeuloula.photoswipe.domain.model.MediaId
+import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 
@@ -11,7 +12,8 @@ import fr.babeuloula.photoswipe.domain.port.ReviewRepository
  *
  * Un média a disparu s'il n'est plus renvoyé par [MediaSource.mediaByIds] : supprimé hors de
  * l'app, ou envoyé à la corbeille système (après une confirmation `TRASHED`, ou depuis la galerie).
- * Toutes ses entrées sont supprimées, quelle que soit l'année de revue.
+ * Toutes ses entrées sont supprimées, quelle que soit l'année de revue, ainsi que ses décisions
+ * du journal (ADR 0019).
  *
  * Cette preuve ne vaut qu'avec un accès complet : en accès partiel, un média absent peut seulement
  * être hors de la sélection, et sans accès la galerie paraît vide. Dans ces deux cas, rien n'est
@@ -21,6 +23,7 @@ import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 class CleanOrphanEntries(
     private val reviewRepository: ReviewRepository,
     private val mediaSource: MediaSource,
+    private val journal: DecisionJournal,
 ) {
     /**
      * Supprime les entrées orphelines si [access] est complet.
@@ -29,7 +32,10 @@ class CleanOrphanEntries(
      */
     suspend operator fun invoke(access: MediaAccess): Int {
         val orphans = if (access == MediaAccess.FULL) orphanIds() else emptySet()
-        if (orphans.isNotEmpty()) reviewRepository.deleteAllFor(orphans)
+        if (orphans.isNotEmpty()) {
+            reviewRepository.deleteAllFor(orphans)
+            journal.forget(orphans)
+        }
         return orphans.size
     }
 

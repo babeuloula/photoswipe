@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory.FakeMediaActionRequest
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory.Kind
@@ -94,6 +95,7 @@ class FavoritesTest {
                 )
             RecordTrashResult(
                 repository,
+                FakeDecisionJournal(repository),
             )(PrepareTrash(repository, gallery, FakeMediaActionRequestFactory())().single(), true)
             gallery.remove(MediaId(1))
 

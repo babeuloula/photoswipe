@@ -19,6 +19,6 @@ La SPEC §3.4 demande un undo en pile : les décisions de la session s'annulent 
 - **Undo qui supprime toujours l'entrée** : faux pour un favori posé sur un média déjà gardé, qui redeviendrait à trier.
 
 ## Conséquences
-- Après la mort du process, les décisions restent en base mais la pile est perdue : l'undo ne porte que sur la session en cours, ce que dit la SPEC.
+- Après la mort du process, les décisions restent en base mais la pile est perdue : l'undo ne porte que sur la session en cours, ce que dit la SPEC. *Remplacé par l'ADR 0019 (PS-57) : la pile est reprise d'un journal en base.*
 - Chaque décision coûte une lecture de plus (`entriesFor` sur un seul média), négligeable avec l'index unique `(mediaId, reviewYear)`.
 - `GetSessionSummary` (PS-22) pourra compter les décisions à partir de la `ReviewSession`.

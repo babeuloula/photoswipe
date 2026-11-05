@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.DeckOrdering
@@ -11,6 +12,7 @@ import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
+import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
@@ -55,22 +57,35 @@ object DomainModule {
     @Provides
     fun provideKeepMedia(
         reviewRepository: ReviewRepository,
+        journal: DecisionJournal,
         clock: Clock,
-    ): KeepMedia = KeepMedia(reviewRepository, clock)
+    ): KeepMedia = KeepMedia(reviewRepository, journal, clock)
 
     @Provides
     fun provideMarkForDeletion(
         reviewRepository: ReviewRepository,
+        journal: DecisionJournal,
         clock: Clock,
-    ): MarkForDeletion = MarkForDeletion(reviewRepository, clock)
+    ): MarkForDeletion = MarkForDeletion(reviewRepository, journal, clock)
 
     @Provides
-    fun provideUndoLastDecision(reviewRepository: ReviewRepository): UndoLastDecision =
-        UndoLastDecision(reviewRepository)
+    fun provideUndoLastDecision(
+        reviewRepository: ReviewRepository,
+        journal: DecisionJournal,
+    ): UndoLastDecision = UndoLastDecision(reviewRepository, journal)
 
     @Provides
     fun provideFavoriteMedia(
         reviewRepository: ReviewRepository,
+        journal: DecisionJournal,
         clock: Clock,
-    ): FavoriteMedia = FavoriteMedia(reviewRepository, clock)
+    ): FavoriteMedia = FavoriteMedia(reviewRepository, journal, clock)
+
+    @Provides
+    fun provideGetDaySession(
+        journal: DecisionJournal,
+        reviewRepository: ReviewRepository,
+        mediaSource: MediaSource,
+        windowProvider: ReviewWindowProvider,
+    ): GetDaySession = GetDaySession(journal, reviewRepository, mediaSource, windowProvider)
 }

@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.domain.usecase
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
+import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import java.time.Clock
 import java.time.LocalDate
@@ -15,12 +16,16 @@ import java.time.LocalDate
  * corbeille qu'en fin de session, après confirmation (SPEC §3.5) ; jusque-là, l'utilisateur peut
  * changer d'avis. La taille du média est mémorisée pour l'espace libéré estimé du résumé.
  *
- * @param clock horloge de l'appareil : l'instant de la décision ordonne l'undo de la session.
+ * @param journal journal du jour, pour l'undo (ADR 0019).
+ * @param clock horloge de l'appareil : l'instant de la décision.
  */
 class MarkForDeletion(
-    private val reviewRepository: ReviewRepository,
-    private val clock: Clock,
+    reviewRepository: ReviewRepository,
+    journal: DecisionJournal,
+    clock: Clock,
 ) {
+    private val recorder = DecisionRecorder(reviewRepository, journal, clock)
+
     /**
      * Marque [media], présenté dans la pile du jour cible [day], pour suppression ; renvoie la
      * décision à empiler pour l'undo.
@@ -28,5 +33,5 @@ class MarkForDeletion(
     suspend operator fun invoke(
         media: MediaItem,
         day: LocalDate,
-    ): SessionDecision = reviewRepository.recordDecision(media, day, ReviewDecision.MARKED_FOR_DELETION, clock)
+    ): SessionDecision = recorder.record(media, day, ReviewDecision.MARKED_FOR_DELETION)
 }

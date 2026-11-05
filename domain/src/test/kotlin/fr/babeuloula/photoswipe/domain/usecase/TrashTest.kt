@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
@@ -66,7 +67,7 @@ class TrashTest {
                 FakeReviewRepository(listOf(marked(1), marked(2), aReviewEntry(mediaId = 3, decision = KEPT)))
             val request = prepareTrash(repository)().single()
 
-            RecordTrashResult(repository)(request, confirmed = true)
+            RecordTrashResult(repository, FakeDecisionJournal(repository))(request, confirmed = true)
 
             assertEquals(listOf(TRASHED, TRASHED, KEPT), repository.entries.map { it.decision })
         }
@@ -77,7 +78,10 @@ class TrashTest {
             val entries = listOf(marked(1), marked(2))
             val repository = FakeReviewRepository(entries)
 
-            RecordTrashResult(repository)(prepareTrash(repository)().single(), confirmed = false)
+            RecordTrashResult(
+                repository,
+                FakeDecisionJournal(repository),
+            )(prepareTrash(repository)().single(), confirmed = false)
 
             assertEquals(entries, repository.entries)
         }
@@ -88,7 +92,13 @@ class TrashTest {
             val repository = FakeReviewRepository((1L..5L).map { marked(it) })
             val requests = prepareTrash(repository, batchSize = 2)()
 
-            requests.forEachIndexed { index, request -> RecordTrashResult(repository)(request, confirmed = index != 1) }
+            requests.forEachIndexed { index, request ->
+                RecordTrashResult(repository, FakeDecisionJournal(repository))(
+                    request,
+                    confirmed =
+                        index != 1,
+                )
+            }
 
             assertEquals(
                 listOf(TRASHED, TRASHED, MARKED_FOR_DELETION, MARKED_FOR_DELETION, TRASHED),

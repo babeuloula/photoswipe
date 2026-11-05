@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
@@ -25,7 +26,7 @@ class CleanOrphanEntriesTest {
             val entries = listOf(aReviewEntry(mediaId = 1), aReviewEntry(mediaId = 2, decision = MARKED_FOR_DELETION))
             val repository = FakeReviewRepository(entries)
 
-            assertEquals(0, CleanOrphanEntries(repository, gallery)(MediaAccess.FULL))
+            assertEquals(0, CleanOrphanEntries(repository, gallery, FakeDecisionJournal(repository))(MediaAccess.FULL))
             assertEquals(entries, repository.entries)
         }
 
@@ -43,7 +44,7 @@ class CleanOrphanEntriesTest {
                 )
             gallery.remove(listOf(MediaId(1), MediaId(3)))
 
-            assertEquals(2, CleanOrphanEntries(repository, gallery)(MediaAccess.FULL))
+            assertEquals(2, CleanOrphanEntries(repository, gallery, FakeDecisionJournal(repository))(MediaAccess.FULL))
             assertEquals(listOf(MediaId(2)), repository.entries.map { it.mediaId })
         }
 
@@ -56,7 +57,7 @@ class CleanOrphanEntriesTest {
                 )
             gallery.remove(MediaId(1))
 
-            CleanOrphanEntries(repository, gallery)(MediaAccess.FULL)
+            CleanOrphanEntries(repository, gallery, FakeDecisionJournal(repository))(MediaAccess.FULL)
 
             assertEquals(listOf(MediaId(2)), repository.entries.map { it.mediaId })
         }
@@ -66,7 +67,7 @@ class CleanOrphanEntriesTest {
         runTest {
             val repository = FakeReviewRepository(listOf(aReviewEntry(mediaId = 1), aReviewEntry(mediaId = 2)))
             gallery.remove(MediaId(1))
-            val clean = CleanOrphanEntries(repository, gallery)
+            val clean = CleanOrphanEntries(repository, gallery, FakeDecisionJournal(repository))
 
             clean(MediaAccess.FULL)
             val remaining = repository.entries
@@ -78,7 +79,10 @@ class CleanOrphanEntriesTest {
     @Test
     fun `does nothing when no entry is stored`() =
         runTest {
-            assertEquals(0, CleanOrphanEntries(FakeReviewRepository(), gallery)(MediaAccess.FULL))
+            assertEquals(
+                0,
+                CleanOrphanEntries(FakeReviewRepository(), gallery, FakeDecisionJournal())(MediaAccess.FULL),
+            )
         }
 
     @ParameterizedTest
@@ -88,7 +92,7 @@ class CleanOrphanEntriesTest {
             val entries = listOf(aReviewEntry(mediaId = 1), aReviewEntry(mediaId = 9))
             val repository = FakeReviewRepository(entries)
 
-            assertEquals(0, CleanOrphanEntries(repository, gallery)(access))
+            assertEquals(0, CleanOrphanEntries(repository, gallery, FakeDecisionJournal(repository))(access))
             assertEquals(entries, repository.entries)
         }
 }

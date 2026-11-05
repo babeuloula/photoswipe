@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
@@ -18,9 +19,9 @@ class GetSessionSummaryTest {
     private val today = LocalDate.of(2026, 7, 15)
     private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 0))
     private val repository = FakeReviewRepository()
-    private val keepMedia = KeepMedia(repository, clock)
-    private val markForDeletion = MarkForDeletion(repository, clock)
-    private val favoriteMedia = FavoriteMedia(repository, clock)
+    private val keepMedia = KeepMedia(repository, FakeDecisionJournal(repository), clock)
+    private val markForDeletion = MarkForDeletion(repository, FakeDecisionJournal(repository), clock)
+    private val favoriteMedia = FavoriteMedia(repository, FakeDecisionJournal(repository), clock)
     private val getSessionSummary = GetSessionSummary(repository)
 
     @Test
@@ -98,7 +99,13 @@ class GetSessionSummaryTest {
                     .record(keepMedia(aMediaItem(id = 1), today))
                     .record(markForDeletion(aMediaItem(id = 1), today))
                     .record(keepMedia(aMediaItem(id = 2), today))
-            session = (UndoLastDecision(repository)(session) as UndoLastDecision.Result.Undone).session
+            session =
+                (
+                    UndoLastDecision(
+                        repository,
+                        FakeDecisionJournal(repository),
+                    )(session) as UndoLastDecision.Result.Undone
+                ).session
 
             assertEquals(SessionSummary(0, 1, 0, aMediaItem().sizeBytes), getSessionSummary(session))
         }

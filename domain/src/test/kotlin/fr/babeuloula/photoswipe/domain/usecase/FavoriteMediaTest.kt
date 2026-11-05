@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
@@ -7,7 +8,6 @@ import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
-import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -18,7 +18,7 @@ class FavoriteMediaTest {
     private val today = LocalDate.of(2026, 7, 15)
     private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 30))
     private val repository = FakeReviewRepository()
-    private val favoriteMedia = FavoriteMedia(repository, clock)
+    private val favoriteMedia = FavoriteMedia(repository, FakeDecisionJournal(repository), clock)
 
     @Test
     fun `keeps the media with a pending favorite request`() =
@@ -40,7 +40,9 @@ class FavoriteMediaTest {
                 ),
                 repository.entries,
             )
-            assertEquals(SessionDecision(media, today), decision)
+            assertEquals(media, decision.media)
+            assertEquals(today, decision.day)
+            assertEquals(null, decision.previous)
         }
 
     @Test
@@ -59,10 +61,12 @@ class FavoriteMediaTest {
             val repository = FakeReviewRepository(listOf(kept))
             val media = aMediaItem(id = 1)
 
-            val decision = FavoriteMedia(repository, clock)(media, today)
+            val decision = FavoriteMedia(repository, FakeDecisionJournal(repository), clock)(media, today)
 
             assertEquals(listOf(true), repository.entries.map { it.favoritePending })
-            assertEquals(SessionDecision(media, today, previous = kept), decision)
+            assertEquals(media, decision.media)
+            assertEquals(today, decision.day)
+            assertEquals(kept, decision.previous)
         }
 
     @Test
@@ -70,7 +74,7 @@ class FavoriteMediaTest {
         runTest {
             val session = ReviewSession().record(favoriteMedia(aMediaItem(id = 1), today))
 
-            UndoLastDecision(repository)(session)
+            UndoLastDecision(repository, FakeDecisionJournal(repository))(session)
 
             assertEquals(emptyList<ReviewEntry>(), repository.entries)
             assertEquals(emptyList<ReviewEntry>(), repository.entriesWithPendingFavorite())
@@ -81,9 +85,12 @@ class FavoriteMediaTest {
         runTest {
             val kept = aReviewEntry(mediaId = 1, reviewYear = 2026, decision = KEPT)
             val repository = FakeReviewRepository(listOf(kept))
-            val session = ReviewSession().record(FavoriteMedia(repository, clock)(aMediaItem(id = 1), today))
+            val session =
+                ReviewSession().record(
+                    FavoriteMedia(repository, FakeDecisionJournal(repository), clock)(aMediaItem(id = 1), today),
+                )
 
-            UndoLastDecision(repository)(session)
+            UndoLastDecision(repository, FakeDecisionJournal(repository))(session)
 
             assertEquals(listOf(kept), repository.entries)
         }

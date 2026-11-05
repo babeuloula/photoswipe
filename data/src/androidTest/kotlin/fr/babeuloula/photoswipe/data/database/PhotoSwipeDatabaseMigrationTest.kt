@@ -12,9 +12,9 @@ import org.junit.runner.RunWith
  * Migrations de [PhotoSwipeDatabase], vérifiées contre les schémas exportés dans `data/schemas/`
  * (ajoutés aux assets des tests instrumentés par le plugin Room).
  *
- * Tant que la base est en version 1, le test vérifie que la base créée depuis le schéma exporté
- * est exactement celle que décrit l'entité, et que ses données restent lisibles. Chaque nouvelle
- * version ajoute ici le passage de la précédente avec sa migration.
+ * Chaque version vérifie que la base créée depuis le schéma exporté est exactement celle que
+ * décrivent les entités, et que les données de la version précédente restent lisibles après sa
+ * migration.
  */
 @RunWith(AndroidJUnit4::class)
 class PhotoSwipeDatabaseMigrationTest {
@@ -37,6 +37,30 @@ class PhotoSwipeDatabaseMigrationTest {
                 assertEquals(42L, cursor.getLong(0))
                 assertEquals("MARKED_FOR_DELETION", cursor.getString(1))
                 assertEquals(3_500_000L, cursor.getLong(2))
+            }
+        }
+    }
+
+    @Test
+    fun `migrates version 1 to 2 with the decision journal and keeps the decisions`() {
+        helper.createDatabase(DATABASE, 1).use { database ->
+            database.execSQL(
+                "INSERT INTO review_entry " +
+                    "(media_id, review_year, decision, favorite_pending, size_bytes, decided_at) " +
+                    "VALUES (42, 2026, 'KEPT', 1, 3500000, 1784138400000)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DATABASE, 2, true).use { database ->
+            database.query("SELECT media_id, decision, favorite_pending FROM review_entry").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(42L, cursor.getLong(0))
+                assertEquals("KEPT", cursor.getString(1))
+                assertEquals(1, cursor.getInt(2))
+            }
+            database.query("SELECT COUNT(*) FROM decision_journal").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(0, cursor.getInt(0))
             }
         }
     }

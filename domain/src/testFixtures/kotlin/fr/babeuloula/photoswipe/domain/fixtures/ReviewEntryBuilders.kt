@@ -1,9 +1,11 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
+import fr.babeuloula.photoswipe.domain.model.DecisionRecord
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import java.time.Instant
+import java.time.LocalDate
 
 /** Année de revue par défaut de [aReviewEntry]. */
 const val DEFAULT_REVIEW_YEAR: Int = 2026
@@ -32,4 +34,23 @@ fun aReviewEntry(
         sizeBytes = sizeBytes,
         decidedAt = decidedAt,
         favoritePending = favoritePending,
+    )
+
+/**
+ * Construit un [DecisionRecord] valide : par défaut, la ligne 1 du journal, qui garde le média
+ * [mediaId] le 15 juillet de l'année de revue [DEFAULT_REVIEW_YEAR], sans entrée remplacée.
+ */
+fun aDecisionRecord(
+    mediaId: Long = 1,
+    day: LocalDate = LocalDate.of(DEFAULT_REVIEW_YEAR, 7, 15),
+    id: Long = 1,
+    decision: ReviewDecision = ReviewDecision.KEPT,
+    favoritePending: Boolean = false,
+    previous: ReviewEntry? = null,
+): DecisionRecord =
+    DecisionRecord(
+        id = id,
+        day = day,
+        made = aReviewEntry(mediaId, day.year, decision, favoritePending = favoritePending),
+        previous = previous,
     )

@@ -7,8 +7,10 @@ import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
+import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import fr.babeuloula.photoswipe.ui.navigation.DeckRoute
@@ -139,8 +141,10 @@ sealed interface DeckEffect {
 
 /**
  * ViewModel de la pile d'un jour : charge une fois le paquet du jour de la route (ADR 0009), puis
- * retire lui-même chaque carte triée et enregistre la décision. Les décisions de la session sont
- * gardées dans une [ReviewSession] : « Annuler » remet la dernière carte triée sur la pile.
+ * retire lui-même chaque carte triée et enregistre la décision. Les décisions du jour sont
+ * gardées dans une [ReviewSession], reprise du journal au chargement (`GetDaySession`, ADR 0019) :
+ * « Annuler » remet la dernière carte triée sur la pile, même après être sorti de la pile ou après
+ * la mort du process.
  */
 @HiltViewModel
 class DeckViewModel
@@ -149,6 +153,7 @@ class DeckViewModel
         savedStateHandle: SavedStateHandle,
         private val getDeckForDay: GetDeckForDay,
         private val decisions: DeckDecisions,
+        private val getDaySession: GetDaySession,
         private val clock: Clock,
     ) : ViewModel() {
         /** Jour cible de la pile. */
@@ -163,12 +168,9 @@ class DeckViewModel
          */
         private val deck = ArrayDeque<MediaItem>()
 
-        /** Décisions de la session en cours, de la plus ancienne à la plus récente. */
+        /** Décisions du jour encore annulables, de la plus ancienne à la plus récente. */
         var session: ReviewSession = ReviewSession()
             private set
-
-        /** Côté de sortie de chaque décision de [session], dans le même ordre : l'undo la fait revenir de là. */
-        private var exitSides: List<CardSide> = emptyList()
 
         /** État de la pile. */
         val uiState: StateFlow<DeckUiState> = state.asStateFlow()
@@ -186,9 +188,9 @@ class DeckViewModel
                 DeckEvent.Retry -> load()
                 DeckEvent.Finish -> effects.trySend(DeckEffect.OpenSummary(keptCount()))
                 DeckEvent.Back -> effects.trySend(DeckEffect.Close)
-                DeckEvent.Keep -> decideTopCard(CardSide.RIGHT, decisions.keepMedia::invoke)
-                DeckEvent.MarkForDeletion -> decideTopCard(CardSide.LEFT, decisions.markForDeletion::invoke)
-                DeckEvent.Favorite -> decideTopCard(CardSide.TOP, decisions.favoriteMedia::invoke)
+                DeckEvent.Keep -> decideTopCard(decisions.keepMedia::invoke)
+                DeckEvent.MarkForDeletion -> decideTopCard(decisions.markForDeletion::invoke)
+                DeckEvent.Favorite -> decideTopCard(decisions.favoriteMedia::invoke)
                 DeckEvent.Undo -> undo()
                 DeckEvent.OpenMenu -> setMenuOpen(true)
                 DeckEvent.CloseMenu -> setMenuOpen(false)
@@ -199,10 +201,11 @@ class DeckViewModel
         private fun load() {
             state.value = DeckUiState.Loading
             viewModelScope.launch {
-                runCatching { getDeckForDay(day) }.fold(
-                    onSuccess = {
+                runCatching { getDeckForDay(day) to getDaySession(day) }.fold(
+                    onSuccess = { (cards, resumed) ->
                         deck.clear()
-                        deck.addAll(it)
+                        deck.addAll(cards)
+                        session = resumed
                         render()
                     },
                     onFailure = { state.value = DeckUiState.Error },
@@ -217,17 +220,13 @@ class DeckViewModel
          * Un marquage n'est qu'une décision en base : rien n'est supprimé avant la confirmation
          * du résumé (SPEC §3.5). La dernière carte triée mène au résumé (SPEC §3.4).
          */
-        private fun decideTopCard(
-            side: CardSide,
-            decide: suspend (MediaItem, LocalDate) -> SessionDecision,
-        ) {
+        private fun decideTopCard(decide: suspend (MediaItem, LocalDate) -> SessionDecision) {
             val media = deck.removeFirstOrNull() ?: return
             render()
             viewModelScope.launch {
                 runCatching { decide(media, day) }.fold(
                     onSuccess = {
                         session = session.record(it)
-                        exitSides = exitSides + side
                         render()
                         if (deck.isEmpty()) effects.trySend(DeckEffect.OpenSummary(keptCount()))
                     },
@@ -249,11 +248,9 @@ class DeckViewModel
             viewModelScope.launch {
                 val result = runCatching { decisions.undoLastDecision(session) }.getOrNull()
                 if (result is UndoLastDecision.Result.Undone) {
-                    val side = exitSides.last()
                     session = result.session
-                    exitSides = exitSides.dropLast(1)
                     deck.addFirst(result.decision.media)
-                    render(returningFrom = side)
+                    render(returningFrom = result.decision.exitSide())
                 }
             }
         }
@@ -262,7 +259,18 @@ class DeckViewModel
          * Médias gardés pendant la session, sans les favoris : les décisions sorties à droite. Une
          * décision annulée a quitté la session, elle n'est donc pas comptée (ADR 0011).
          */
-        private fun keptCount(): Int = exitSides.count { it == CardSide.RIGHT }
+        private fun keptCount(): Int = session.decisions.count { it.exitSide() == CardSide.RIGHT }
+
+        /**
+         * Côté par lequel la carte est sortie, lu sur l'entrée écrite au swipe : marquée à gauche,
+         * favori en haut, gardée à droite. L'undo la fait revenir de là.
+         */
+        private fun SessionDecision.exitSide(): CardSide =
+            when {
+                made.decision == ReviewDecision.MARKED_FOR_DELETION -> CardSide.LEFT
+                made.favoritePending -> CardSide.TOP
+                else -> CardSide.RIGHT
+            }
 
         /** Ferme le menu et demande le partage du média du dessus, qui reste en place. */
         private fun shareTopCard() {

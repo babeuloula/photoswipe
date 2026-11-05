@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
@@ -9,7 +10,6 @@ import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
-import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import kotlinx.coroutines.test.runTest
@@ -22,7 +22,7 @@ import java.time.LocalTime.NOON
 class KeepMediaTest {
     private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 30))
     private val repository = FakeReviewRepository()
-    private val keepMedia = KeepMedia(repository, clock)
+    private val keepMedia = KeepMedia(repository, FakeDecisionJournal(repository), clock)
 
     @Test
     fun `records a kept decision for the media and the year of the target day`() =
@@ -61,7 +61,11 @@ class KeepMediaTest {
                     listOf(aReviewEntry(mediaId = 1, reviewYear = 2026, decision = MARKED_FOR_DELETION)),
                 )
 
-            KeepMedia(repository, clock)(aMediaItem(id = 1), day = LocalDate.of(2026, 7, 15))
+            KeepMedia(
+                repository,
+                FakeDecisionJournal(repository),
+                clock,
+            )(aMediaItem(id = 1), day = LocalDate.of(2026, 7, 15))
 
             assertEquals(KEPT, repository.entries.single().decision)
         }
@@ -92,9 +96,12 @@ class KeepMediaTest {
             val repository = FakeReviewRepository(listOf(replaced))
             val media = aMediaItem(id = 1)
 
-            val decision = KeepMedia(repository, clock)(media, LocalDate.of(2026, 7, 15))
+            val decision =
+                KeepMedia(repository, FakeDecisionJournal(repository), clock)(media, LocalDate.of(2026, 7, 15))
 
-            assertEquals(SessionDecision(media, LocalDate.of(2026, 7, 15), previous = replaced), decision)
+            assertEquals(media, decision.media)
+            assertEquals(LocalDate.of(2026, 7, 15), decision.day)
+            assertEquals(replaced, decision.previous)
         }
 
     @Test
@@ -104,7 +111,9 @@ class KeepMediaTest {
 
             val decision = keepMedia(media, LocalDate.of(2026, 7, 15))
 
-            assertEquals(SessionDecision(media, LocalDate.of(2026, 7, 15)), decision)
+            assertEquals(media, decision.media)
+            assertEquals(LocalDate.of(2026, 7, 15), decision.day)
+            assertEquals(null, decision.previous)
         }
 
     /** Paquet du jour [day], lu avec le même dépôt que [keepMedia]. */

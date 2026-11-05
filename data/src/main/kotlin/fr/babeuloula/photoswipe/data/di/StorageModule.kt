@@ -12,6 +12,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import fr.babeuloula.photoswipe.data.database.DecisionJournalDao
 import fr.babeuloula.photoswipe.data.database.PhotoSwipeDatabase
 import fr.babeuloula.photoswipe.data.database.ReviewEntryDao
 import javax.inject.Singleton
@@ -35,6 +36,9 @@ object StorageModule {
 
     @Provides
     fun provideReviewEntryDao(database: PhotoSwipeDatabase): ReviewEntryDao = database.reviewEntryDao()
+
+    @Provides
+    fun provideDecisionJournalDao(database: PhotoSwipeDatabase): DecisionJournalDao = database.decisionJournalDao()
 
     @Provides
     @Singleton
