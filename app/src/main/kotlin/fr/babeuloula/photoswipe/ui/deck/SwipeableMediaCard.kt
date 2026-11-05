@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,6 +44,9 @@ import kotlin.math.abs
  * déclenche un retour haptique. Relâchée avant le seuil, la carte revient au centre sans aucun voile,
  * même pendant son rebond ; au-delà, elle sort avec le voile du côté choisi.
  *
+ * [requestedDirection] différent de 0 fait sortir la carte comme un geste (1 vers la droite, -1 vers
+ * la gauche) : c'est ainsi que les boutons de la pile l'animent.
+ *
  * L'état du geste vit dans la composition : l'appelant entoure la carte d'un `key` sur le média,
  * pour que chaque nouvelle carte parte du centre.
  */
@@ -52,6 +56,7 @@ fun SwipeableMediaCard(
     onKeep: () -> Unit,
     onMarkForDeletion: () -> Unit,
     modifier: Modifier = Modifier,
+    requestedDirection: Float = 0f,
 ) {
     BoxWithConstraints(modifier = modifier) {
         val width = with(LocalDensity.current) { maxWidth.toPx() }
@@ -61,6 +66,18 @@ fun SwipeableMediaCard(
         val dragX = remember { mutableFloatStateOf(0f) }
         val scope = rememberCoroutineScope()
         val haptics = LocalHapticFeedback.current
+
+        /** Sortie de la carte vers [direction] (1 droite, -1 gauche), voile plein, puis décision. */
+        suspend fun exit(direction: Float) {
+            dragX.floatValue = direction * width
+            offsetX.animateTo(direction * width * EXIT_DISTANCE, exitSpring)
+            if (direction > 0f) onKeep() else onMarkForDeletion()
+        }
+
+        // Bouton « Garder » ou « Supprimer » : même sortie que si la carte avait été glissée.
+        LaunchedEffect(requestedDirection) {
+            if (requestedDirection != 0f) exit(requestedDirection)
+        }
         Box(
             modifier =
                 Modifier
@@ -78,8 +95,7 @@ fun SwipeableMediaCard(
                                         dragX.floatValue = 0f
                                         offsetX.animateTo(0f, returnSpring)
                                     } else {
-                                        offsetX.animateTo(direction * width * EXIT_DISTANCE, exitSpring)
-                                        if (direction > 0f) onKeep() else onMarkForDeletion()
+                                        exit(direction)
                                     }
                                 }
                             },

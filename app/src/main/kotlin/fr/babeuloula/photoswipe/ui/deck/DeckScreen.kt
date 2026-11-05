@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -22,7 +23,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -40,7 +45,8 @@ import java.time.LocalDate
 
 /**
  * Pile de swipe d'un jour (SPEC §4.3) : la carte plein écran du média du dessus, à glisser à droite
- * pour la garder ou à gauche pour la marquer à supprimer, avec retour et
+ * pour la garder ou à gauche pour la marquer à supprimer, ou à trier avec les boutons équivalents
+ * placés dessous, avec retour et
  * « Terminer » dans la barre du haut. Gère le chargement, l'erreur et la pile vide.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -117,15 +123,30 @@ private fun BoxScope.DeckContent(
         }
 
         is DeckUiState.Loaded -> {
-            key(state.current.id) {
-                SwipeableMediaCard(
-                    card = state.current,
-                    onKeep = { onEvent(DeckEvent.Keep) },
-                    onMarkForDeletion = { onEvent(DeckEvent.MarkForDeletion) },
+            // Sens demandé par un bouton pour la carte du dessus ; 0 tant qu'aucun bouton n'est touché.
+            var requestedDirection by remember(state.current.id) { mutableFloatStateOf(0f) }
+            Column(modifier = Modifier.fillMaxSize()) {
+                key(state.current.id) {
+                    SwipeableMediaCard(
+                        card = state.current,
+                        onKeep = { onEvent(DeckEvent.Keep) },
+                        onMarkForDeletion = { onEvent(DeckEvent.MarkForDeletion) },
+                        requestedDirection = requestedDirection,
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                    )
+                }
+                // Un second tap pendant la sortie est ignoré : il ne trie pas la carte suivante.
+                DecisionButtons(
+                    onMarkForDeletion = { if (requestedDirection == 0f) requestedDirection = -1f },
+                    onKeep = { if (requestedDirection == 0f) requestedDirection = 1f },
                     modifier =
                         Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
                 )
             }
         }
