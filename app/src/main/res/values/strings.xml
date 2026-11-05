@@ -48,6 +48,8 @@
     <string name="summary_freed_space">Estimated space freed</string>
     <string name="summary_nothing_deleted_yet">Nothing has been deleted yet: your decisions are saved and wait for your confirmation.</string>
     <string name="summary_later">Later</string>
+    <string name="summary_confirm">Confirm deletion</string>
+    <string name="summary_marked_media_missing">These items are no longer in your gallery, so there is nothing to move to the trash.</string>
     <string name="summary_error">The summary could not be loaded.</string>
     <string name="summary_retry">Try again</string>
     <string name="settings_title">Settings</string>

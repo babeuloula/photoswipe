@@ -1,21 +1,35 @@
 package fr.babeuloula.photoswipe.ui.summary
 
+import android.app.PendingIntent
+import android.content.Intent
+import android.content.IntentSender
 import androidx.lifecycle.SavedStateHandle
 import fr.babeuloula.photoswipe.MainDispatcherRule
+import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
+import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
+import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
+import fr.babeuloula.photoswipe.domain.usecase.PrepareTrash
+import fr.babeuloula.photoswipe.domain.usecase.RecordTrashResult
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import java.io.IOException
 
 /** Robolectric : la route typée se relit depuis le `SavedStateHandle` avec le `Bundle` d'Android. */
@@ -26,6 +40,19 @@ class SummaryViewModelTest {
 
     private val repository = FakeReviewRepository()
 
+    /** Galerie : les médias 1 à 5 existent encore. */
+    private val gallery = FakeMediaSource((1L..5L).map { aMediaItem(id = it) })
+
+    /** Dialogue système factice : un vrai `IntentSender`, qui ne sera jamais lancé ici. */
+    private val intentSender: IntentSender =
+        PendingIntent
+            .getActivity(
+                RuntimeEnvironment.getApplication(),
+                0,
+                Intent(),
+                PendingIntent.FLAG_IMMUTABLE,
+            ).intentSender
+
     private fun summaryViewModel(
         keptCount: Int = 0,
         reviews: ReviewRepository = repository,
@@ -33,7 +60,24 @@ class SummaryViewModelTest {
         SummaryViewModel(
             savedStateHandle = SavedStateHandle(mapOf("keptCount" to keptCount)),
             getSessionSummary = GetSessionSummary(reviews),
+            prepareTrash = PrepareTrash(reviews, gallery, FakeMediaActionRequestFactory(batchSize = 2)),
+            recordTrashResult = RecordTrashResult(reviews),
+            mediaActionIntents = { intentSender },
         )
+
+    private suspend fun mark(vararg ids: Long) {
+        ids.forEach { repository.save(aReviewEntry(mediaId = it, decision = ReviewDecision.MARKED_FOR_DELETION)) }
+    }
+
+    private fun TestScope.collectEffects(viewModel: SummaryViewModel): List<SummaryEffect> {
+        val effects = mutableListOf<SummaryEffect>()
+        backgroundScope.launch(
+            UnconfinedTestDispatcher(testScheduler),
+        ) { viewModel.uiEffects.collect { effects += it } }
+        return effects
+    }
+
+    private fun decisions() = repository.entries.sortedBy { it.mediaId.value }.map { it.decision }
 
     @Test
     fun `shows the media kept during the session and all pending requests`() =
@@ -90,8 +134,111 @@ class SummaryViewModelTest {
 
             viewModel.onEvent(SummaryEvent.Later)
 
-            assertEquals(SummaryEffect.GoHome, viewModel.uiEffects.first())
+            assertEquals(SummaryEffect.GoHome(), viewModel.uiEffects.first())
             assertEquals(ReviewDecision.MARKED_FOR_DELETION, repository.entries.single().decision)
+        }
+
+    @Test
+    fun `presents one system dialog per batch of marked media`() =
+        runTest {
+            mark(1, 2, 3)
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+
+            assertEquals(listOf<SummaryEffect>(SummaryEffect.LaunchSystemRequest(intentSender)), effects)
+            assertTrue((viewModel.uiState.value as SummaryUiState.Loaded).confirming)
+
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
+
+            assertEquals(2, effects.count { it is SummaryEffect.LaunchSystemRequest })
+        }
+
+    @Test
+    fun `moves the confirmed media to the trash and goes home to announce it`() =
+        runTest {
+            mark(1, 2, 3)
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
+
+            assertEquals(List(3) { ReviewDecision.TRASHED }, decisions())
+            assertEquals(SummaryEffect.GoHome(trashedCount = 3), effects.last())
+        }
+
+    @Test
+    fun `keeps the marks of a refused batch`() =
+        runTest {
+            mark(1, 2, 3)
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = false))
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
+
+            assertEquals(
+                listOf(ReviewDecision.MARKED_FOR_DELETION, ReviewDecision.MARKED_FOR_DELETION, ReviewDecision.TRASHED),
+                decisions(),
+            )
+            assertEquals(SummaryEffect.GoHome(trashedCount = 1), effects.last())
+        }
+
+    @Test
+    fun `stays on the updated summary when every batch is refused`() =
+        runTest {
+            mark(1)
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = false))
+
+            assertTrue(effects.none { it is SummaryEffect.GoHome })
+            assertEquals(listOf(ReviewDecision.MARKED_FOR_DELETION), decisions())
+            val state = viewModel.uiState.value as SummaryUiState.Loaded
+            assertEquals(1, state.summary.markedForDeletionCount)
+            assertFalse(state.confirming)
+        }
+
+    @Test
+    fun `says when the marked media are no longer in the gallery`() =
+        runTest {
+            mark(99)
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+
+            assertEquals(listOf<SummaryEffect>(SummaryEffect.MarkedMediaMissing), effects)
+            assertFalse((viewModel.uiState.value as SummaryUiState.Loaded).confirming)
+        }
+
+    @Test
+    fun `cannot confirm when nothing is marked`() =
+        runTest {
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            assertFalse((viewModel.uiState.value as SummaryUiState.Loaded).canConfirm)
+            viewModel.onEvent(SummaryEvent.Confirm)
+
+            assertTrue(effects.isEmpty())
+        }
+
+    @Test
+    fun `ignores an answer when no dialog is shown`() =
+        runTest {
+            mark(1)
+            val viewModel = summaryViewModel()
+
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
+
+            assertEquals(listOf(ReviewDecision.MARKED_FOR_DELETION), decisions())
         }
 
     @Test

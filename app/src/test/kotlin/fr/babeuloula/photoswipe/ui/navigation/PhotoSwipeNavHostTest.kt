@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -115,7 +116,10 @@ class PhotoSwipeNavHostTest {
         clickOn(R.string.deck_finish)
         awaitText(text(R.string.summary_title))
 
-        clickOn(R.string.summary_later)
+        composeRule.waitUntil(TIMEOUT_MILLIS) {
+            composeRule.onAllNodesWithText(text(R.string.summary_later)).fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithText(text(R.string.summary_later)).performScrollTo().performClick()
 
         awaitText(text(R.string.home_today))
     }

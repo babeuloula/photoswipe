@@ -2,10 +2,13 @@ package fr.babeuloula.photoswipe.ui.summary
 
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -81,10 +84,37 @@ class SummaryScreenTest {
     fun `goes home later or back with the arrow`() {
         show(SummaryUiState.Loaded(summary))
 
-        composeRule.onNodeWithText(text(R.string.summary_later)).performClick()
+        composeRule.onNodeWithText(text(R.string.summary_later)).performScrollTo().performClick()
         composeRule.onNodeWithContentDescription(text(R.string.navigate_back)).performClick()
 
         assertEquals(listOf(SummaryEvent.Later, SummaryEvent.Back), events)
+    }
+
+    @Test
+    fun `confirms the deletion from its button`() {
+        show(SummaryUiState.Loaded(summary))
+
+        composeRule
+            .onNodeWithText(text(R.string.summary_confirm))
+            .performScrollTo()
+            .assertIsEnabled()
+            .performClick()
+
+        assertEquals(listOf<SummaryEvent>(SummaryEvent.Confirm), events)
+    }
+
+    @Test
+    fun `cannot confirm when nothing is marked`() {
+        show(SummaryUiState.Loaded(summary.copy(markedForDeletionCount = 0, estimatedFreedBytes = 0)))
+
+        composeRule.onNodeWithText(text(R.string.summary_confirm)).assertIsNotEnabled()
+    }
+
+    @Test
+    fun `cannot confirm twice while the system dialogs are shown`() {
+        show(SummaryUiState.Loaded(summary, confirming = true))
+
+        composeRule.onNodeWithText(text(R.string.summary_confirm)).assertIsNotEnabled()
     }
 
     @Test

@@ -13,7 +13,6 @@ import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
-import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
@@ -40,10 +39,6 @@ object DomainModule {
         reviewRepository: ReviewRepository,
         clock: Clock,
     ): GetReviewDays = GetReviewDays(windowProvider, sameDayMatcher, mediaSource, reviewRepository, clock)
-
-    @Provides
-    fun provideGetSessionSummary(reviewRepository: ReviewRepository): GetSessionSummary =
-        GetSessionSummary(reviewRepository)
 
     @Provides
     fun provideDeckOrdering(): DeckOrdering = RecentYearsFirstOrdering()
