@@ -6,7 +6,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -16,6 +20,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -243,6 +248,55 @@ class DeckScreenTest {
     }
 
     @Test
+    fun `keeps the card with the keep button, like a swipe right`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        composeRule.onNodeWithContentDescription(text(R.string.deck_keep)).performClick()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.Keep), events)
+    }
+
+    @Test
+    fun `marks the card with the delete button, like a swipe left`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        composeRule.onNodeWithContentDescription(text(R.string.deck_mark_for_deletion)).performClick()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.MarkForDeletion), events)
+    }
+
+    @Test
+    fun `gives the decision buttons accessible touch targets`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        listOf(R.string.deck_keep, R.string.deck_mark_for_deletion).forEach { label ->
+            composeRule
+                .onNodeWithContentDescription(text(label))
+                .assertHasClickAction()
+                .assertIsEnabled()
+                .assertWidthIsAtLeast(MIN_TOUCH_TARGET)
+                .assertHeightIsAtLeast(MIN_TOUCH_TARGET)
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `describes the decision buttons in French`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        composeRule.onNodeWithContentDescription("Garder").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Marquer pour suppression").assertIsDisplayed()
+    }
+
+    @Test
+    fun `hides the decision buttons when there is no card`() {
+        show(DeckUiState.Empty)
+
+        composeRule.onNodeWithContentDescription(text(R.string.deck_keep)).assertDoesNotExist()
+        composeRule.onNodeWithContentDescription(text(R.string.deck_mark_for_deletion)).assertDoesNotExist()
+    }
+
+    @Test
     fun `shows no indicator when the card is at rest`() {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
 
@@ -252,6 +306,9 @@ class DeckScreenTest {
 
     private companion object {
         const val TIMEOUT_MILLIS = 5_000L
+
+        /** Cible tactile minimale de Material 3 (SPEC §8). */
+        val MIN_TOUCH_TARGET = 48.dp
 
         /** Images observées pendant le retour au centre, rebond compris (environ une demi-seconde). */
         const val BOUNCE_FRAMES = 40

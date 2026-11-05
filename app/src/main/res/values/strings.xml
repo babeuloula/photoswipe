@@ -29,6 +29,9 @@
     <string name="deck_error">The memories of this day could not be loaded.</string>
     <string name="deck_retry">Try again</string>
     <string name="deck_empty">Nothing left to sort for this day.</string>
+    <!-- Boutons équivalents aux gestes, lus par TalkBack (SPEC §4.3, §8). -->
+    <string name="deck_keep">Keep</string>
+    <string name="deck_mark_for_deletion">Mark for deletion</string>
     <string name="summary_title">Summary</string>
     <string name="summary_done">Done</string>
     <string name="settings_title">Settings</string>

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -40,7 +41,8 @@ import java.time.LocalDate
 
 /**
  * Pile de swipe d'un jour (SPEC §4.3) : la carte plein écran du média du dessus, à glisser à droite
- * pour la garder ou à gauche pour la marquer à supprimer, avec retour et
+ * pour la garder ou à gauche pour la marquer à supprimer, ou à trier avec les boutons équivalents
+ * placés dessous, avec retour et
  * « Terminer » dans la barre du haut. Gère le chargement, l'erreur et la pile vide.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -117,15 +119,26 @@ private fun BoxScope.DeckContent(
         }
 
         is DeckUiState.Loaded -> {
-            key(state.current.id) {
-                SwipeableMediaCard(
-                    card = state.current,
-                    onKeep = { onEvent(DeckEvent.Keep) },
+            Column(modifier = Modifier.fillMaxSize()) {
+                key(state.current.id) {
+                    SwipeableMediaCard(
+                        card = state.current,
+                        onKeep = { onEvent(DeckEvent.Keep) },
+                        onMarkForDeletion = { onEvent(DeckEvent.MarkForDeletion) },
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                    )
+                }
+                DecisionButtons(
                     onMarkForDeletion = { onEvent(DeckEvent.MarkForDeletion) },
+                    onKeep = { onEvent(DeckEvent.Keep) },
                     modifier =
                         Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
                 )
             }
         }
