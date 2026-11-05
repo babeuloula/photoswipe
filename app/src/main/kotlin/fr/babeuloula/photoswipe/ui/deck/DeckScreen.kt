@@ -39,8 +39,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -159,19 +161,16 @@ private fun LoadedDeck(
     // Sortie demandée par un bouton ou le menu pour la carte du dessus ; `null` tant qu'il n'y en a pas.
     var requestedExit by remember(state.current.id) { mutableStateOf<CardSide?>(null) }
     Column(modifier = Modifier.fillMaxSize()) {
-        key(state.current.id) {
-            SwipeableMediaCard(
-                card = state.current,
-                onEvent = onEvent,
-                requestedExit = requestedExit,
-                returningFrom = state.returningFrom,
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(16.dp),
-            )
-        }
+        CardStack(
+            state = state,
+            requestedExit = requestedExit,
+            onEvent = onEvent,
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(16.dp),
+        )
         // Pendant la sortie de la carte, les boutons sont ignorés : un second tap ne trie pas la suivante.
         DecisionButtons(
             canUndo = state.canUndo,
@@ -200,6 +199,42 @@ private fun LoadedDeck(
             onShare = { onEvent(DeckEvent.Share) },
             onDismiss = { onEvent(DeckEvent.CloseMenu) },
         )
+    }
+}
+
+/**
+ * Carte du dessus, à trier, posée sur la suivante. La suivante est composée à la même taille pour
+ * que son image soit chargée pendant le tri de la carte du dessus et serve telle quelle à son
+ * arrivée ; elle est cachée à TalkBack, qui ne lit que la carte à trier.
+ */
+@Composable
+private fun CardStack(
+    state: DeckUiState.Loaded,
+    requestedExit: CardSide?,
+    onEvent: (DeckEvent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        state.next?.let { next ->
+            key(next.id) {
+                MediaCard(
+                    card = next,
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .clearAndSetSemantics { testTag = NEXT_CARD_TAG },
+                )
+            }
+        }
+        key(state.current.id) {
+            SwipeableMediaCard(
+                card = state.current,
+                onEvent = onEvent,
+                requestedExit = requestedExit,
+                returningFrom = state.returningFrom,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 
@@ -266,3 +301,6 @@ private fun DeckScreenPreview() {
         }
     }
 }
+
+/** Étiquette de test de la carte suivante, préparée sous celle du dessus. */
+internal const val NEXT_CARD_TAG = "next_card"

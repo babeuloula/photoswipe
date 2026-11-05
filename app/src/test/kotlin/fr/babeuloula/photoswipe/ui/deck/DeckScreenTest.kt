@@ -463,6 +463,27 @@ class DeckScreenTest {
     }
 
     @Test
+    fun `prepares the next card under the top one, hidden from TalkBack`() {
+        show(
+            DeckUiState.Loaded(
+                listOf(PREVIEW_CARD, PREVIEW_CARD.copy(id = MediaId(2), yearsAgo = 5)),
+                remainingCount = 40,
+            ),
+        )
+
+        composeRule.onNodeWithTag(NEXT_CARD_TAG).assertExists()
+        composeRule.onNodeWithText("3 years ago · May 14, 2023").assertIsDisplayed()
+        composeRule.onNodeWithText("5 years ago · May 14, 2023").assertDoesNotExist()
+    }
+
+    @Test
+    fun `prepares no next card under the last one`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        composeRule.onNodeWithTag(NEXT_CARD_TAG).assertDoesNotExist()
+    }
+
+    @Test
     fun `shows no menu while it is closed`() {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
 

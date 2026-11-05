@@ -21,6 +21,8 @@ import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -351,6 +353,87 @@ class DeckViewModelTest {
         }
 
     @Test
+    fun `prepares only the top card and the next one`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2021), takenOn(3, 2022))))
+
+            val state = viewModel.uiState.value as DeckUiState.Loaded
+
+            assertEquals(listOf(MediaId(3), MediaId(2)), state.cards.map { it.id })
+            assertEquals(MediaId(2), state.next?.id)
+            assertEquals(3, state.remainingCount)
+        }
+
+    @Test
+    fun `keeps preparing two cards through a deck of thousands of media`() =
+        runTest {
+            val gallery = (1L..BIG_DECK).map { aMediaItem(id = it, takenAt = takenOn(it, 2020).takenAt) }
+            val viewModel = deckViewModel(FakeMediaSource(gallery))
+
+            repeat(SWIPES) { viewModel.onEvent(DeckEvent.Keep) }
+
+            val state = viewModel.uiState.value as DeckUiState.Loaded
+            assertEquals(DeckUiState.Loaded.VISIBLE_CARDS, state.cards.size)
+            assertEquals(BIG_DECK.toInt() - SWIPES, state.remainingCount)
+            assertEquals(MediaId(SWIPES + 1L), state.current.id)
+        }
+
+    @Test
+    fun `opens the summary once the last card is sorted`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+            val effects = mutableListOf<DeckEffect>()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                viewModel.uiEffects.collect {
+                    effects +=
+                        it
+                }
+            }
+
+            viewModel.onEvent(DeckEvent.Keep)
+            assertTrue(effects.isEmpty())
+
+            viewModel.onEvent(DeckEvent.MarkForDeletion)
+            assertEquals(listOf<DeckEffect>(DeckEffect.OpenSummary), effects)
+        }
+
+    @Test
+    fun `does not open the summary for a deck that was empty from the start`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource())
+            val effects = mutableListOf<DeckEffect>()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                viewModel.uiEffects.collect {
+                    effects +=
+                        it
+                }
+            }
+
+            viewModel.onEvent(DeckEvent.Keep)
+
+            assertEquals(DeckUiState.Empty(), viewModel.uiState.value)
+            assertTrue(effects.isEmpty())
+        }
+
+    @Test
+    fun `does not open the summary when the last decision cannot be saved`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))), FailingSaveRepository())
+            val effects = mutableListOf<DeckEffect>()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                viewModel.uiEffects.collect {
+                    effects +=
+                        it
+                }
+            }
+
+            viewModel.onEvent(DeckEvent.Keep)
+
+            assertEquals(listOf(MediaId(1)), viewModel.cardIds())
+            assertTrue(effects.isEmpty())
+        }
+
+    @Test
     fun `ignores undo when there is nothing to undo`() =
         runTest {
             val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
@@ -389,6 +472,14 @@ class DeckViewModelTest {
         private val delegate: FakeReviewRepository = FakeReviewRepository(),
     ) : ReviewRepository by delegate {
         override suspend fun save(entry: ReviewEntry): Unit = throw IOException("database unavailable")
+    }
+
+    private companion object {
+        /** Pile de plusieurs milliers de médias (SPEC §14). */
+        const val BIG_DECK = 5_000L
+
+        /** Gestes enchaînés sur la grosse pile. */
+        const val SWIPES = 300
     }
 
     private class FailingOnceMediaSource(
