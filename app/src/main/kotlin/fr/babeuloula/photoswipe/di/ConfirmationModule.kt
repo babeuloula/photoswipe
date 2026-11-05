@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
@@ -32,8 +33,10 @@ object ConfirmationModule {
     ): PrepareTrash = PrepareTrash(reviewRepository, mediaSource, requestFactory)
 
     @Provides
-    fun provideRecordTrashResult(reviewRepository: ReviewRepository): RecordTrashResult =
-        RecordTrashResult(reviewRepository)
+    fun provideRecordTrashResult(
+        reviewRepository: ReviewRepository,
+        journal: DecisionJournal,
+    ): RecordTrashResult = RecordTrashResult(reviewRepository, journal)
 
     @Provides
     fun providePrepareFavorites(

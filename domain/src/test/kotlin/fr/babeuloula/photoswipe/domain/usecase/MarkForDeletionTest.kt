@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
@@ -9,7 +10,6 @@ import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
-import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import kotlinx.coroutines.test.runTest
@@ -23,7 +23,7 @@ class MarkForDeletionTest {
     private val today = LocalDate.of(2026, 7, 15)
     private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 30))
     private val repository = FakeReviewRepository()
-    private val markForDeletion = MarkForDeletion(repository, clock)
+    private val markForDeletion = MarkForDeletion(repository, FakeDecisionJournal(repository), clock)
 
     @Test
     fun `records a marked for deletion decision with the size of the media`() =
@@ -60,7 +60,7 @@ class MarkForDeletionTest {
         runTest {
             val repository = FakeReviewRepository(listOf(aReviewEntry(mediaId = 1, reviewYear = 2026, decision = KEPT)))
 
-            MarkForDeletion(repository, clock)(aMediaItem(id = 1), today)
+            MarkForDeletion(repository, FakeDecisionJournal(repository), clock)(aMediaItem(id = 1), today)
 
             assertEquals(MARKED_FOR_DELETION, repository.entries.single().decision)
         }
@@ -97,7 +97,7 @@ class MarkForDeletionTest {
             val kept = aReviewEntry(mediaId = 2, reviewYear = 2026, decision = KEPT)
             val repository = FakeReviewRepository(listOf(kept))
 
-            MarkForDeletion(repository, clock)(aMediaItem(id = 1), today)
+            MarkForDeletion(repository, FakeDecisionJournal(repository), clock)(aMediaItem(id = 1), today)
 
             assertEquals(listOf(kept), repository.entries.filter { it.mediaId.value == 2L })
         }
@@ -109,9 +109,12 @@ class MarkForDeletionTest {
             val repository = FakeReviewRepository(listOf(replaced))
             val media = aMediaItem(id = 1)
 
-            val decision = MarkForDeletion(repository, clock)(media, LocalDate.of(2026, 7, 15))
+            val decision =
+                MarkForDeletion(repository, FakeDecisionJournal(repository), clock)(media, LocalDate.of(2026, 7, 15))
 
-            assertEquals(SessionDecision(media, LocalDate.of(2026, 7, 15), previous = replaced), decision)
+            assertEquals(media, decision.media)
+            assertEquals(LocalDate.of(2026, 7, 15), decision.day)
+            assertEquals(replaced, decision.previous)
         }
 
     @Test
@@ -121,6 +124,8 @@ class MarkForDeletionTest {
 
             val decision = markForDeletion(media, LocalDate.of(2026, 7, 15))
 
-            assertEquals(SessionDecision(media, LocalDate.of(2026, 7, 15)), decision)
+            assertEquals(media, decision.media)
+            assertEquals(LocalDate.of(2026, 7, 15), decision.day)
+            assertEquals(null, decision.previous)
         }
 }

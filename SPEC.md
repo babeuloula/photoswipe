@@ -85,7 +85,7 @@ Une décision est liée à un **couple (média, année de revue)**, où l'année
 Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtre de 7 jours). Elle se termine quand la pile est vide ou que l'utilisateur quitte.
 
 - Les décisions sont **écrites en base immédiatement** (survie à la mort du process).
-- Un **undo en pile** annule les décisions de la session, de la plus récente à la plus ancienne, tant que rien n'est confirmé.
+- Un **undo en pile** annule les décisions de la pile d'un jour, de la plus récente à la plus ancienne, tant que rien n'est confirmé. Cet historique est **enregistré en base** : il survit à la sortie de la pile et à la fermeture de l'app (journal des décisions, ADR 0019).
 - Les marquages non confirmés restent visibles sur l'accueil (« N médias en attente de suppression »).
 
 ### 3.5 Confirmation en fin de session

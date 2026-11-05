@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.domain.usecase
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
+import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import java.time.Clock
 import java.time.LocalDate
@@ -15,15 +16,19 @@ import java.time.LocalDate
  * suivante, faute d'entrée pour cette nouvelle année. Elle remplace une éventuelle décision de la
  * même année (changement d'avis) et est écrite avant de rendre la main (SPEC §3.4).
  *
- * @param clock horloge de l'appareil : l'instant de la décision ordonne l'undo de la session.
+ * @param journal journal du jour, pour l'undo (ADR 0019).
+ * @param clock horloge de l'appareil : l'instant de la décision.
  */
 class KeepMedia(
-    private val reviewRepository: ReviewRepository,
-    private val clock: Clock,
+    reviewRepository: ReviewRepository,
+    journal: DecisionJournal,
+    clock: Clock,
 ) {
+    private val recorder = DecisionRecorder(reviewRepository, journal, clock)
+
     /** Garde [media], présenté dans la pile du jour cible [day] ; renvoie la décision à empiler pour l'undo. */
     suspend operator fun invoke(
         media: MediaItem,
         day: LocalDate,
-    ): SessionDecision = reviewRepository.recordDecision(media, day, ReviewDecision.KEPT, clock)
+    ): SessionDecision = recorder.record(media, day, ReviewDecision.KEPT)
 }

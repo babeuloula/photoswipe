@@ -5,8 +5,10 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.data.media.MediaStoreActionRequestFactory
+import fr.babeuloula.photoswipe.data.review.RoomDecisionJournal
 import fr.babeuloula.photoswipe.data.review.RoomReviewRepository
 import fr.babeuloula.photoswipe.data.settings.DataStoreSettingsRepository
+import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
@@ -24,6 +26,10 @@ abstract class PortsModule {
     @Binds
     @Singleton
     abstract fun bindReviewRepository(implementation: RoomReviewRepository): ReviewRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDecisionJournal(implementation: RoomDecisionJournal): DecisionJournal
 
     @Binds
     @Singleton

@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.domain.usecase
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
+import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import java.time.Clock
 import java.time.LocalDate
@@ -16,12 +17,16 @@ import java.time.LocalDate
  * (SPEC §3.4). Sur un média déjà gardé cette année, la décision gardée est remplacée et l'undo la
  * restaure.
  *
- * @param clock horloge de l'appareil : l'instant de la décision ordonne l'undo de la session.
+ * @param journal journal du jour, pour l'undo (ADR 0019).
+ * @param clock horloge de l'appareil : l'instant de la décision.
  */
 class FavoriteMedia(
-    private val reviewRepository: ReviewRepository,
-    private val clock: Clock,
+    reviewRepository: ReviewRepository,
+    journal: DecisionJournal,
+    clock: Clock,
 ) {
+    private val recorder = DecisionRecorder(reviewRepository, journal, clock)
+
     /**
      * Garde [media], présenté dans la pile du jour cible [day], et demande sa mise en favori ;
      * renvoie la décision à empiler pour l'undo.
@@ -29,5 +34,5 @@ class FavoriteMedia(
     suspend operator fun invoke(
         media: MediaItem,
         day: LocalDate,
-    ): SessionDecision = reviewRepository.recordDecision(media, day, ReviewDecision.KEPT, clock, favoritePending = true)
+    ): SessionDecision = recorder.record(media, day, ReviewDecision.KEPT, favoritePending = true)
 }

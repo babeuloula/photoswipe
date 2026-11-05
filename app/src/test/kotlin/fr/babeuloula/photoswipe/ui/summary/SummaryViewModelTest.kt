@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.IntentSender
 import androidx.lifecycle.SavedStateHandle
 import fr.babeuloula.photoswipe.MainDispatcherRule
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
@@ -68,7 +69,7 @@ class SummaryViewModelTest {
             confirmation =
                 ConfirmationActions(
                     prepareTrash = PrepareTrash(reviews, gallery, factory),
-                    recordTrashResult = RecordTrashResult(reviews),
+                    recordTrashResult = RecordTrashResult(reviews, FakeDecisionJournal(repository)),
                     prepareFavorites = PrepareFavorites(reviews, gallery, factory),
                     recordFavoriteResult = RecordFavoriteResult(reviews),
                 ),

@@ -2,20 +2,24 @@ package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.lifecycle.SavedStateHandle
 import fr.babeuloula.photoswipe.MainDispatcherRule
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
+import fr.babeuloula.photoswipe.domain.model.DecisionRecord
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
+import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.MediaSource
-import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
+import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
+import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
@@ -47,6 +51,9 @@ class DeckViewModelTest {
     private val clock = FixedClock.at(LocalDate.of(2026, 5, 16).atTime(10, 0))
     private val repository = FakeReviewRepository()
 
+    /** Journal des décisions, partagé par les ViewModels d'un test comme la base de l'appareil. */
+    private val journal = FakeDecisionJournal(repository)
+
     private fun takenOn(
         id: Long,
         year: Int,
@@ -63,18 +70,19 @@ class DeckViewModelTest {
 
     private fun deckViewModel(
         source: MediaSource,
-        reviews: ReviewRepository = repository,
+        journal: DecisionJournal = this.journal,
     ): DeckViewModel =
         DeckViewModel(
             savedStateHandle = SavedStateHandle(mapOf("epochDay" to day.toEpochDay())),
-            getDeckForDay = GetDeckForDay(SameDayMatcher(), source, reviews, RecentYearsFirstOrdering(), clock),
+            getDeckForDay = GetDeckForDay(SameDayMatcher(), source, repository, RecentYearsFirstOrdering(), clock),
             decisions =
                 DeckDecisions(
-                    keepMedia = KeepMedia(reviews, clock),
-                    markForDeletion = MarkForDeletion(reviews, clock),
-                    favoriteMedia = FavoriteMedia(reviews, clock),
-                    undoLastDecision = UndoLastDecision(reviews),
+                    keepMedia = KeepMedia(repository, journal, clock),
+                    markForDeletion = MarkForDeletion(repository, journal, clock),
+                    favoriteMedia = FavoriteMedia(repository, journal, clock),
+                    undoLastDecision = UndoLastDecision(repository, journal),
                 ),
+            getDaySession = GetDaySession(journal, repository, source, ReviewWindowProvider(clock)),
             clock = clock,
         )
 
@@ -195,7 +203,7 @@ class DeckViewModelTest {
     fun `puts a marked card back on top when the decision cannot be saved`() =
         runTest {
             val viewModel =
-                deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))), FailingSaveRepository())
+                deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))), FailingJournal())
 
             viewModel.onEvent(DeckEvent.MarkForDeletion)
 
@@ -436,7 +444,7 @@ class DeckViewModelTest {
     @Test
     fun `does not open the summary when the last decision cannot be saved`() =
         runTest {
-            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))), FailingSaveRepository())
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))), FailingJournal())
             val effects = mutableListOf<DeckEffect>()
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
                 viewModel.uiEffects.collect {
@@ -466,7 +474,7 @@ class DeckViewModelTest {
     fun `puts the card back on top when the decision cannot be saved`() =
         runTest {
             val viewModel =
-                deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))), FailingSaveRepository())
+                deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))), FailingJournal())
 
             viewModel.onEvent(DeckEvent.Keep)
 
@@ -486,10 +494,57 @@ class DeckViewModelTest {
         }
 
     /** Dépôt qui lit normalement mais refuse toute écriture. */
-    private class FailingSaveRepository(
-        private val delegate: FakeReviewRepository = FakeReviewRepository(),
-    ) : ReviewRepository by delegate {
-        override suspend fun save(entry: ReviewEntry): Unit = throw IOException("database unavailable")
+    @Test
+    fun `resumes the undo history of the day after the process died`() =
+        runTest {
+            val source = FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023), takenOn(3, 2025)))
+            val before = deckViewModel(source)
+            before.onEvent(DeckEvent.Keep)
+            before.onEvent(DeckEvent.MarkForDeletion)
+
+            val after = deckViewModel(source)
+
+            assertEquals(listOf(MediaId(1)), after.cardIds())
+            assertEquals(listOf(MediaId(3), MediaId(2)), after.session.decisions.map { it.media.id })
+            assertTrue((after.uiState.value as DeckUiState.Loaded).canUndo)
+
+            after.onEvent(DeckEvent.Undo)
+
+            val state = after.uiState.value as DeckUiState.Loaded
+            assertEquals(listOf(MediaId(2), MediaId(1)), state.cards.map { it.id })
+            assertEquals(CardSide.LEFT, state.returningFrom)
+            assertEquals(listOf(MediaId(3)), repository.entries.map { it.mediaId })
+        }
+
+    @Test
+    fun `undoes a resumed favorite back to the top and counts only resumed kept media`() =
+        runTest {
+            val source = FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023), takenOn(3, 2025)))
+            val before = deckViewModel(source)
+            before.onEvent(DeckEvent.Keep)
+            before.onEvent(DeckEvent.Favorite)
+
+            val after = deckViewModel(source)
+            val effects = mutableListOf<DeckEffect>()
+            backgroundScope.launch(
+                UnconfinedTestDispatcher(testScheduler),
+            ) { after.uiEffects.collect { effects += it } }
+            after.onEvent(DeckEvent.Undo)
+            assertEquals(CardSide.TOP, (after.uiState.value as DeckUiState.Loaded).returningFrom)
+            after.onEvent(DeckEvent.Finish)
+
+            assertEquals(DeckEffect.OpenSummary(keptCount = 1), effects.last())
+        }
+
+    /** Journal dont aucune écriture n'aboutit : base indisponible. */
+    private class FailingJournal(
+        private val delegate: FakeDecisionJournal = FakeDecisionJournal(),
+    ) : DecisionJournal by delegate {
+        override suspend fun record(
+            day: LocalDate,
+            made: ReviewEntry,
+            previous: ReviewEntry?,
+        ): DecisionRecord = throw IOException("database unavailable")
     }
 
     private companion object {

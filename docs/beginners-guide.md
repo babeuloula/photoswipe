@@ -127,8 +127,8 @@ photoswipe/
 ├── data/                      Module « données » : accès aux photos du téléphone, base de données…
 │   ├── build.gradle.kts
 │   ├── schemas/                      Description de la base Room, générée à la compilation et versionnée (sert à tester les migrations)
-│   ├── src/main/kotlin/…/database/   La base Room : la table des décisions (ReviewEntryEntity) et ses requêtes (ReviewEntryDao)
-│   ├── src/main/kotlin/…/review/     RoomReviewRepository : enregistre les décisions du domaine dans la base
+│   ├── src/main/kotlin/…/database/   La base Room : la table des décisions (ReviewEntryEntity) et ses requêtes (ReviewEntryDao), le journal des décisions pour « Annuler » (DecisionRecordEntity, DecisionJournalDao)
+│   ├── src/main/kotlin/…/review/     RoomReviewRepository : enregistre les décisions du domaine dans la base ; RoomDecisionJournal : tient le journal des décisions
 │   ├── src/main/kotlin/…/settings/   DataStoreSettingsRepository : enregistre les réglages (rappel quotidien)
 │   ├── src/main/kotlin/…/media/      MediaStoreMediaSource : lit les photos et vidéos de la galerie du téléphone (MediaStore)
 │   ├── src/main/kotlin/…/di/         Modules Hilt : disent quelle classe de data fournir pour chaque interface du domaine
@@ -139,7 +139,7 @@ photoswipe/
 │   ├── src/main/kotlin/…/model/  Les modèles : MediaItem, ReviewDecision, ReviewDay, ReviewEntry, SessionSummary…
 │   ├── src/main/kotlin/…/port/  Les ports : des interfaces (MediaSource, ReviewRepository…) que le module data implémente
 │   ├── src/main/kotlin/…/service/  Les services purs : SameDayMatcher (médias « du même jour »), ReviewWindowProvider (les 7 jours de rattrapage), DeckOrdering (l'ordre des cartes)…
-│   ├── src/main/kotlin/…/usecase/  Les cas d'usage, un par intention de l'utilisateur : GetReviewDays (combien de médias à trier par jour), GetDeckForDay (les cartes d'un jour, dans l'ordre), KeepMedia (garder un média), MarkForDeletion (le marquer pour suppression), FavoriteMedia (le mettre en favori), UndoLastDecision (annuler la dernière décision), GetSessionSummary (le résumé avant confirmation), PrepareTrash et RecordTrashResult (envoyer à la corbeille après confirmation), PrepareFavorites et RecordFavoriteResult (ajouter les favoris à la galerie), CleanOrphanEntries (oublier les médias disparus)…
+│   ├── src/main/kotlin/…/usecase/  Les cas d'usage, un par intention de l'utilisateur : GetReviewDays (combien de médias à trier par jour), GetDeckForDay (les cartes d'un jour, dans l'ordre), KeepMedia (garder un média), MarkForDeletion (le marquer pour suppression), FavoriteMedia (le mettre en favori), UndoLastDecision (annuler la dernière décision), GetDaySession (retrouver les décisions d'un jour à annuler), GetSessionSummary (le résumé avant confirmation), PrepareTrash et RecordTrashResult (envoyer à la corbeille après confirmation), PrepareFavorites et RecordFavoriteResult (ajouter les favoris à la galerie), CleanOrphanEntries (oublier les médias disparus)…
 │   ├── src/testFixtures/kotlin/…/fixtures/  Outils de test partagés avec data et app : builders aMediaItem(), aReviewEntry(), faux ports (FakeMediaSource, FakeReviewRepository, FakeMediaActionRequestFactory), FixedClock
 │   └── src/test/
 ├── docs/                      Documentation (ce guide, l'architecture, les décisions)
