@@ -45,6 +45,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.time.Duration
 import java.time.LocalDate
 
 /** Pile composée seule dans `MainActivity`, avec des états fixés (langue anglaise de Robolectric). */
@@ -106,6 +107,20 @@ class DeckScreenTest {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(type = MediaType.VIDEO))))
 
         composeRule.onNodeWithContentDescription("Video taken on May 14, 2023").assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows the duration of a video on its card`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(type = MediaType.VIDEO, duration = Duration.ofSeconds(32)))))
+
+        composeRule.onNodeWithContentDescription("Duration: 00:32").assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows no video badge on a photo`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        composeRule.onNodeWithContentDescription("Duration", substring = true).assertDoesNotExist()
     }
 
     @Test

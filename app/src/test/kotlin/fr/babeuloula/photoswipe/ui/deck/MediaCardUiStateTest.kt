@@ -6,6 +6,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -17,7 +18,8 @@ class MediaCardUiStateTest {
 
     @Test
     fun `keeps the media identity, type and size`() {
-        val media = aMediaItem(id = 7, type = MediaType.VIDEO, sizeBytes = 45_000_000)
+        val media =
+            aMediaItem(id = 7, type = MediaType.VIDEO, sizeBytes = 45_000_000, duration = Duration.ofSeconds(32))
 
         val card = MediaCardUiState.of(media, LocalDate.of(2026, 5, 14), paris)
 
@@ -25,6 +27,7 @@ class MediaCardUiStateTest {
         assertEquals(media.uri, card.uri)
         assertEquals(MediaType.VIDEO, card.type)
         assertEquals(45_000_000L, card.sizeBytes)
+        assertEquals(Duration.ofSeconds(32), card.duration)
     }
 
     @Test

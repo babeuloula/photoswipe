@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.ui.deck
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +29,8 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
@@ -37,6 +40,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import java.time.Duration
 import java.time.LocalDate
 
 /**
@@ -55,6 +59,14 @@ fun MediaCard(
     val context = LocalContext.current
     val date = localizedDate(context, card.takenOn)
     var failed by remember(card.uri) { mutableStateOf(false) }
+    val descriptionRes =
+        if (card.type ==
+            MediaType.VIDEO
+        ) {
+            R.string.deck_video_description
+        } else {
+            R.string.deck_photo_description
+        }
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
@@ -62,17 +74,7 @@ fun MediaCard(
         Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
                 model = card.uri,
-                contentDescription =
-                    stringResource(
-                        if (card.type ==
-                            MediaType.VIDEO
-                        ) {
-                            R.string.deck_video_description
-                        } else {
-                            R.string.deck_photo_description
-                        },
-                        date,
-                    ),
+                contentDescription = stringResource(descriptionRes, date),
                 imageLoader = LocalImageLoader.current,
                 placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
                 contentScale = ContentScale.Fit,
@@ -83,27 +85,77 @@ fun MediaCard(
             if (failed) {
                 Unavailable(type = card.type, modifier = Modifier.align(Alignment.Center))
             }
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = LABEL_ALPHA),
-                shape = MaterialTheme.shapes.medium,
+            if (card.type == MediaType.VIDEO) {
+                VideoBadge(
+                    duration = card.duration,
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .padding(12.dp),
+                )
+            }
+            MemoryLabel(
+                card = card,
                 modifier =
                     Modifier
                         .align(Alignment.BottomStart)
                         .fillMaxWidth()
                         .padding(12.dp),
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = memoryLabel(context, card.yearsAgo, card.takenOn),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = fileSizeLabel(context, card.sizeBytes),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
+            )
+        }
+    }
+}
+
+/** Étiquette du bas de la carte : « Il y a 3 ans · 14 mai 2023 » et le poids du fichier. */
+@Composable
+private fun MemoryLabel(
+    card: MediaCardUiState,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = LABEL_ALPHA),
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier,
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = memoryLabel(context, card.yearsAgo, card.takenOn),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = fileSizeLabel(context, card.sizeBytes),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/**
+ * Pastille d'une vidéo (SPEC §4.3) : icône de lecture et durée, pour la reconnaître d'un coup d'œil.
+ * TalkBack lit « Durée : 00:32 ». Sans durée connue, seule l'icône reste.
+ */
+@Composable
+private fun VideoBadge(
+    duration: Duration?,
+    modifier: Modifier = Modifier,
+) {
+    val label = duration?.let { durationLabel(it) }
+    val description = label?.let { stringResource(R.string.deck_video_duration, it) }
+    Surface(
+        color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = LABEL_ALPHA),
+        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+        shape = MaterialTheme.shapes.small,
+        modifier = modifier.clearAndSetSemantics { description?.let { contentDescription = it } },
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+            if (label != null) Text(text = label, style = MaterialTheme.typography.labelLarge)
         }
     }
 }

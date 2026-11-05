@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.coil.compose.core)
+    implementation(libs.coil.video)
 
     // Données de démo des outils développeur (SPEC §10, niveau 2) : jamais dans la variante release.
     debugImplementation(testFixtures(project(":domain")))
