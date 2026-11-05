@@ -42,7 +42,7 @@ class ExoCardVideoPlayerTest {
     fun `stops at the end and offers to play from the start`() {
         videoPlayer.play(first)
 
-        videoPlayer.onEnded()
+        videoPlayer.events.onPlaybackStateChanged(Player.STATE_ENDED)
 
         assertNull(videoPlayer.playingUri)
         assertFalse(player.playWhenReady)
@@ -52,7 +52,7 @@ class ExoCardVideoPlayerTest {
     @Test
     fun `does not restart an ended video back in the foreground`() {
         videoPlayer.play(first)
-        videoPlayer.onEnded()
+        videoPlayer.events.onPlaybackStateChanged(Player.STATE_ENDED)
 
         videoPlayer.resume()
 
@@ -62,7 +62,7 @@ class ExoCardVideoPlayerTest {
     @Test
     fun `replays an ended video from the badge`() {
         videoPlayer.play(first)
-        videoPlayer.onEnded()
+        videoPlayer.events.onPlaybackStateChanged(Player.STATE_ENDED)
 
         videoPlayer.play(first)
 
@@ -195,13 +195,85 @@ class ExoCardVideoPlayerTest {
         assertNull(videoPlayer.position(second))
     }
 
+    @Test
+    fun `starts muted and turns the sound on and off`() {
+        assertTrue(videoPlayer.muted)
+
+        videoPlayer.toggleSound()
+        assertFalse(videoPlayer.muted)
+        assertEquals(1f, player.volume)
+
+        videoPlayer.toggleSound()
+        assertTrue(videoPlayer.muted)
+        assertEquals(0f, player.volume)
+    }
+
+    @Test
+    fun `keeps the sound setting for the next videos`() {
+        videoPlayer.play(first)
+        videoPlayer.toggleSound()
+
+        videoPlayer.play(second)
+
+        assertEquals(1f, player.volume)
+    }
+
+    @Test
+    fun `resumes a recreated screen where it was, with the same sound`() {
+        videoPlayer.play(first)
+        videoPlayer.toggleSound()
+        player.seekTo(SAVED_POSITION)
+        val saved = VideoPlaybackState.fromList(videoPlayer.playbackState.toList())
+
+        val restored = restoredFrom(saved)
+
+        assertTrue(restored.resumesImmediately(first))
+        assertFalse(restored.resumesImmediately(second))
+        restored.play(first)
+        assertEquals(SAVED_POSITION, restored.player.currentPosition)
+        assertFalse(restored.muted)
+        assertEquals(1f, restored.player.volume)
+        assertFalse(restored.resumesImmediately(first))
+        restored.release()
+    }
+
+    @Test
+    fun `waits again for a video that was paused before the screen was recreated`() {
+        videoPlayer.play(first)
+        videoPlayer.pauseByUser(first)
+
+        val restored = restoredFrom(videoPlayer.playbackState)
+
+        assertFalse(restored.resumesImmediately(first))
+        restored.release()
+    }
+
+    @Test
+    fun `restores nothing when no video was loaded`() {
+        val restored = restoredFrom(videoPlayer.playbackState)
+
+        restored.play(first)
+
+        assertEquals(0L, restored.player.currentPosition)
+        assertTrue(restored.muted)
+        restored.release()
+    }
+
     private fun error(code: Int) = PlaybackException("test", null, code)
+
+    private fun restoredFrom(state: VideoPlaybackState) =
+        ExoCardVideoPlayer(ExoPlayer.Builder(RuntimeEnvironment.getApplication()).build(), restoredState = state)
+
+    private companion object {
+        /** Position enregistrée avant la recréation de l'écran. */
+        const val SAVED_POSITION = 5_000L
+    }
 
     @Test
     fun `retries on a software decoder after a decoding failure`() {
         videoPlayer.play(first)
 
-        videoPlayer.onError(error(PlaybackException.ERROR_CODE_DECODING_FAILED))
+        videoPlayer.events.onPlayerError(error(PlaybackException.ERROR_CODE_DECODING_FAILED))
 
         assertTrue(codecSelector.preferSoftware)
         assertEquals(
@@ -217,7 +289,7 @@ class ExoCardVideoPlayerTest {
     fun `retries when the hardware decoder cannot start`() {
         videoPlayer.play(first)
 
-        videoPlayer.onError(error(PlaybackException.ERROR_CODE_DECODER_INIT_FAILED))
+        videoPlayer.events.onPlayerError(error(PlaybackException.ERROR_CODE_DECODER_INIT_FAILED))
 
         assertTrue(codecSelector.preferSoftware)
     }
@@ -226,14 +298,14 @@ class ExoCardVideoPlayerTest {
     fun `does not retry for other errors`() {
         videoPlayer.play(first)
 
-        videoPlayer.onError(error(PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND))
+        videoPlayer.events.onPlayerError(error(PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND))
 
         assertFalse(codecSelector.preferSoftware)
     }
 
     @Test
     fun `does not retry without a video`() {
-        videoPlayer.onError(error(PlaybackException.ERROR_CODE_DECODING_FAILED))
+        videoPlayer.events.onPlayerError(error(PlaybackException.ERROR_CODE_DECODING_FAILED))
 
         assertFalse(codecSelector.preferSoftware)
     }

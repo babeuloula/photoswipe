@@ -19,7 +19,9 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -137,7 +139,8 @@ fun MediaCard(
  * Vidéo de la carte du dessus (SPEC §4.3) : elle démarre seule, en muet, [AUTOPLAY_DELAY] après
  * l'arrivée de la carte, est lue une fois, et s'arrête quand la carte part.
  *
- * Un gros bouton ▶ au centre attend la lecture ; au démarrage il devient ⏸ puis s'efface en fondu.
+ * Le son est coupé au départ ; le bouton en haut à droite l'active ou le coupe. Un gros bouton ▶
+ * au centre attend la lecture ; au démarrage il devient ⏸ puis s'efface en fondu.
  * Un tap sur la vidéo la met en pause (le ▶ revient et reste) ou la relance. La pastille du haut
  * donne le temps restant ; à la fin de la vidéo, elle disparaît et seul le ▶ reste. La surface
  * reste transparente jusqu'à la première image, pour que la miniature ne laisse pas place à un
@@ -150,7 +153,7 @@ private fun BoxScope.ActiveVideo(
     videoPlayer: CardVideoPlayer,
 ) {
     LaunchedEffect(card.uri, videoPlayer) {
-        delay(AUTOPLAY_DELAY.toMillis())
+        if (!videoPlayer.resumesImmediately(card.uri)) delay(AUTOPLAY_DELAY.toMillis())
         videoPlayer.play(card.uri)
     }
     DisposableEffect(card.uri, videoPlayer) { onDispose { videoPlayer.stop(card.uri) } }
@@ -186,6 +189,11 @@ private fun BoxScope.ActiveVideo(
             remaining = card.duration?.let { (it - position).coerceAtLeast(Duration.ZERO) },
             playing = playing,
             modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+        )
+        SoundButton(
+            muted = videoPlayer.muted,
+            onToggle = videoPlayer::toggleSound,
+            modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
         )
     }
 }
@@ -246,6 +254,35 @@ private fun PlayPauseOverlay(
                 )
             }
         }
+    }
+}
+
+/**
+ * Bouton du son de la vidéo (SPEC §4.3) : coupé au départ, un tap l'active ou le coupe. Le réglage
+ * suit l'utilisateur sur les vidéos suivantes de la pile.
+ */
+@Composable
+private fun SoundButton(
+    muted: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FilledTonalIconButton(
+        onClick = onToggle,
+        colors =
+            IconButtonDefaults.filledTonalIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.inverseSurface.copy(alpha = LABEL_ALPHA),
+                contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+            ),
+        modifier = modifier,
+    ) {
+        Icon(
+            painter = painterResource(if (muted) R.drawable.ic_volume_off else R.drawable.ic_volume_up),
+            contentDescription =
+                stringResource(
+                    if (muted) R.string.deck_video_sound_on else R.string.deck_video_sound_off,
+                ),
+        )
     }
 }
 
