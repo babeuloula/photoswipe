@@ -40,7 +40,7 @@ import java.time.LocalDate
 
 /**
  * Pile de swipe d'un jour (SPEC §4.3) : la carte plein écran du média du dessus, à glisser à droite
- * pour la garder, avec retour et
+ * pour la garder ou à gauche pour la marquer à supprimer, avec retour et
  * « Terminer » dans la barre du haut. Gère le chargement, l'erreur et la pile vide.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,6 +121,7 @@ private fun BoxScope.DeckContent(
                 SwipeableMediaCard(
                     card = state.current,
                     onKeep = { onEvent(DeckEvent.Keep) },
+                    onMarkForDeletion = { onEvent(DeckEvent.MarkForDeletion) },
                     modifier =
                         Modifier
                             .fillMaxSize()

@@ -149,13 +149,25 @@ class DeckScreenTest {
     }
 
     @Test
-    fun `does not keep the card when swiped left`() {
+    fun `marks the card for deletion when swiped left past the threshold`() {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
 
         card().performTouchInput { swipeLeft() }
         composeRule.waitForIdle()
 
+        assertEquals(listOf<DeckEvent>(DeckEvent.MarkForDeletion), events)
+    }
+
+    @Test
+    fun `brings the card back to the center after a short swipe to the left`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+        val start = card().fetchSemanticsNode().boundsInRoot
+
+        card().performTouchInput { swipeLeft(startX = centerX, endX = centerX - width * SWIPE_THRESHOLD / 2) }
+        composeRule.waitForIdle()
+
         assertTrue(events.isEmpty())
+        assertEquals(start, card().fetchSemanticsNode().boundsInRoot)
     }
 
     private companion object {

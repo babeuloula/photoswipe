@@ -7,8 +7,10 @@ import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
+import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
+import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import fr.babeuloula.photoswipe.ui.navigation.DeckRoute
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -59,6 +61,9 @@ sealed interface DeckEvent {
 
     /** Carte du dessus glissée à droite : la garder (SPEC §2). */
     data object Keep : DeckEvent
+
+    /** Carte du dessus glissée à gauche : la marquer pour suppression, sans rien supprimer (SPEC §2). */
+    data object MarkForDeletion : DeckEvent
 }
 
 /** Navigation demandée par la pile. */
@@ -79,6 +84,7 @@ class DeckViewModel
         savedStateHandle: SavedStateHandle,
         private val getDeckForDay: GetDeckForDay,
         private val keepMedia: KeepMedia,
+        private val markForDeletion: MarkForDeletion,
         private val clock: Clock,
     ) : ViewModel() {
         /** Jour cible de la pile. */
@@ -109,7 +115,8 @@ class DeckViewModel
             when (event) {
                 DeckEvent.Retry -> load()
                 DeckEvent.Finish -> effects.trySend(DeckEffect.OpenSummary)
-                DeckEvent.Keep -> keepTopCard()
+                DeckEvent.Keep -> decideTopCard(keepMedia::invoke)
+                DeckEvent.MarkForDeletion -> decideTopCard(markForDeletion::invoke)
             }
         }
 
@@ -124,15 +131,17 @@ class DeckViewModel
         }
 
         /**
-         * Garde la carte du dessus : elle quitte la pile tout de suite, sans attendre l'écriture,
-         * pour que la carte suivante apparaisse sous le doigt. Si l'écriture échoue, la carte revient
-         * sur le dessus de la pile, rien n'est perdu.
+         * Applique la décision [decide] (garder, marquer) à la carte du dessus : elle quitte la pile
+         * tout de suite, sans attendre l'écriture, pour que la carte suivante apparaisse sous le
+         * doigt. Si l'écriture échoue, la carte revient sur le dessus de la pile, rien n'est perdu.
+         * Un marquage n'est qu'une décision en base : rien n'est supprimé avant la confirmation
+         * du résumé (SPEC §3.5).
          */
-        private fun keepTopCard() {
+        private fun decideTopCard(decide: suspend (MediaItem, LocalDate) -> SessionDecision) {
             val media = deck.firstOrNull() ?: return
             show(deck.drop(1))
             viewModelScope.launch {
-                runCatching { keepMedia(media, day) }.fold(
+                runCatching { decide(media, day) }.fold(
                     onSuccess = { session = session.record(it) },
                     onFailure = { show(listOf(media) + deck) },
                 )

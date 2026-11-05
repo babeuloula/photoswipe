@@ -14,6 +14,7 @@ import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
+import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import java.time.Clock
 
 /**
@@ -59,4 +60,10 @@ object DomainModule {
         reviewRepository: ReviewRepository,
         clock: Clock,
     ): KeepMedia = KeepMedia(reviewRepository, clock)
+
+    @Provides
+    fun provideMarkForDeletion(
+        reviewRepository: ReviewRepository,
+        clock: Clock,
+    ): MarkForDeletion = MarkForDeletion(reviewRepository, clock)
 }
