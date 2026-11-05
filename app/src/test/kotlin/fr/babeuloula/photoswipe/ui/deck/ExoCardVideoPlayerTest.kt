@@ -1,6 +1,11 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import androidx.annotation.OptIn
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -14,7 +19,9 @@ import org.robolectric.RuntimeEnvironment
 /** Lecteur vidéo unique de la pile, sur un vrai ExoPlayer. */
 @RunWith(RobolectricTestRunner::class)
 class ExoCardVideoPlayerTest {
-    private val videoPlayer = ExoCardVideoPlayer.create(RuntimeEnvironment.getApplication())
+    private val codecSelector = SoftwareFallbackCodecSelector()
+    private val videoPlayer =
+        ExoCardVideoPlayer(ExoPlayer.Builder(RuntimeEnvironment.getApplication()).build(), codecSelector)
     private val player get() = videoPlayer.player
     private val first = "content://media/external/video/media/1"
     private val second = "content://media/external/video/media/2"
@@ -111,4 +118,74 @@ class ExoCardVideoPlayerTest {
 
         assertFalse(player.playWhenReady)
     }
+
+    private fun error(code: Int) = PlaybackException("test", null, code)
+
+    @Test
+    fun `retries on a software decoder after a decoding failure`() {
+        videoPlayer.play(first)
+
+        videoPlayer.onError(error(PlaybackException.ERROR_CODE_DECODING_FAILED))
+
+        assertTrue(codecSelector.preferSoftware)
+        assertEquals(
+            first,
+            player.currentMediaItem
+                ?.localConfiguration
+                ?.uri
+                .toString(),
+        )
+    }
+
+    @Test
+    fun `retries when the hardware decoder cannot start`() {
+        videoPlayer.play(first)
+
+        videoPlayer.onError(error(PlaybackException.ERROR_CODE_DECODER_INIT_FAILED))
+
+        assertTrue(codecSelector.preferSoftware)
+    }
+
+    @Test
+    fun `does not retry for other errors`() {
+        videoPlayer.play(first)
+
+        videoPlayer.onError(error(PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND))
+
+        assertFalse(codecSelector.preferSoftware)
+    }
+
+    @Test
+    fun `does not retry without a video`() {
+        videoPlayer.onError(error(PlaybackException.ERROR_CODE_DECODING_FAILED))
+
+        assertFalse(codecSelector.preferSoftware)
+    }
+
+    @Test
+    fun `puts software decoders first only after a failure`() {
+        val hardware = decoder("c2.vendor.avc.decoder", softwareOnly = false)
+        val software = decoder("c2.android.avc.decoder", softwareOnly = true)
+        val decoders = listOf(hardware, software)
+
+        assertEquals(decoders, SoftwareFallbackCodecSelector.order(decoders, preferSoftware = false))
+        assertEquals(listOf(software, hardware), SoftwareFallbackCodecSelector.order(decoders, preferSoftware = true))
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun decoder(
+        name: String,
+        softwareOnly: Boolean,
+    ): MediaCodecInfo =
+        MediaCodecInfo.newInstance(
+            name,
+            "video/avc",
+            "video/avc",
+            null,
+            !softwareOnly,
+            softwareOnly,
+            !softwareOnly,
+            false,
+            false,
+        )
 }

@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import android.content.Context
+import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -9,8 +10,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 
 /**
  * Lecteur vidéo de la pile (SPEC §4.3, §7) : une seule instance, passée de carte en carte. La
@@ -36,13 +42,34 @@ interface CardVideoPlayer {
     fun release()
 }
 
-/** [CardVideoPlayer] sur Media3 ExoPlayer, muet et en boucle. */
+/**
+ * [CardVideoPlayer] sur Media3 ExoPlayer, muet et en boucle.
+ *
+ * Certains décodeurs matériels échouent sur des vidéos que le décodeur logiciel d'Android lit sans
+ * peine (décodeur de l'émulateur, appareils capricieux). Au premier échec de décodage, le lecteur
+ * bascule [codecSelector] sur les décodeurs logiciels et relance la vidéo, une seule fois.
+ */
 class ExoCardVideoPlayer(
     private val exoPlayer: ExoPlayer,
+    private val codecSelector: SoftwareFallbackCodecSelector = SoftwareFallbackCodecSelector(),
 ) : CardVideoPlayer {
     init {
         exoPlayer.volume = 0f
         exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
+        exoPlayer.addListener(
+            object : Player.Listener {
+                override fun onPlayerError(error: PlaybackException) {
+                    onError(error)
+                }
+            },
+        )
+    }
+
+    /** Relance la vidéo sur un décodeur logiciel après un échec de décodage ; sinon, laisse la miniature. */
+    internal fun onError(error: PlaybackException) {
+        if (error.errorCode !in DECODER_ERRORS || codecSelector.preferSoftware || currentUri == null) return
+        codecSelector.preferSoftware = true
+        exoPlayer.prepare()
     }
 
     override val player: Player get() = exoPlayer
@@ -80,8 +107,53 @@ class ExoCardVideoPlayer(
     }
 
     companion object {
+        /** Erreurs de décodeur qui justifient un nouvel essai sur un décodeur logiciel. */
+        private val DECODER_ERRORS =
+            setOf(PlaybackException.ERROR_CODE_DECODER_INIT_FAILED, PlaybackException.ERROR_CODE_DECODING_FAILED)
+
         /** Lecteur neuf, à libérer avec [release]. */
-        fun create(context: Context): ExoCardVideoPlayer = ExoCardVideoPlayer(ExoPlayer.Builder(context).build())
+        @OptIn(UnstableApi::class)
+        fun create(context: Context): ExoCardVideoPlayer {
+            val codecSelector = SoftwareFallbackCodecSelector()
+            val renderers =
+                DefaultRenderersFactory(context)
+                    .setMediaCodecSelector(codecSelector)
+                    .setEnableDecoderFallback(true)
+            return ExoCardVideoPlayer(ExoPlayer.Builder(context, renderers).build(), codecSelector)
+        }
+    }
+}
+
+/**
+ * Choix des décodeurs de Media3, avec les décodeurs logiciels en tête une fois [preferSoftware]
+ * activé. Par défaut, l'ordre de Media3 est gardé (matériel d'abord, plus économe).
+ */
+@OptIn(UnstableApi::class)
+class SoftwareFallbackCodecSelector : MediaCodecSelector {
+    /** Vrai après un échec de décodage : les décodeurs logiciels passent devant. */
+    @Volatile
+    var preferSoftware: Boolean = false
+
+    override fun getDecoderInfos(
+        mimeType: String,
+        requiresSecureDecoder: Boolean,
+        requiresTunnelingDecoder: Boolean,
+    ): List<MediaCodecInfo> {
+        val decoders =
+            MediaCodecSelector.DEFAULT.getDecoderInfos(
+                mimeType,
+                requiresSecureDecoder,
+                requiresTunnelingDecoder,
+            )
+        return order(decoders, preferSoftware)
+    }
+
+    companion object {
+        /** [decoders] dans l'ordre de Media3, ou décodeurs logiciels d'abord si [preferSoftware]. */
+        fun order(
+            decoders: List<MediaCodecInfo>,
+            preferSoftware: Boolean,
+        ): List<MediaCodecInfo> = if (preferSoftware) decoders.sortedByDescending { it.softwareOnly } else decoders
     }
 }
 
