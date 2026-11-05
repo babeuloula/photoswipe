@@ -5,10 +5,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 
 /**
- * Thème Material 3 de PhotoSwipe (SPEC §8) : couleurs, typographie et formes.
+ * Thème Material 3 de PhotoSwipe (SPEC §8) : couleurs, typographie et formes, plus les couleurs
+ * des indicateurs de geste ([swipeColors]).
  *
  * Les couleurs dynamiques (Material You, tirées du fond d'écran) sont disponibles sur tous les
  * appareils visés, puisque `minSdk` vaut 33 et qu'elles existent depuis l'API 31. La palette de
@@ -31,10 +33,12 @@ fun PhotoSwipeTheme(
             else -> LightColorScheme
         }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = PhotoSwipeTypography,
-        shapes = PhotoSwipeShapes,
-        content = content,
-    )
+    CompositionLocalProvider(LocalSwipeColors provides swipeColors(colorScheme, darkTheme)) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = PhotoSwipeTypography,
+            shapes = PhotoSwipeShapes,
+            content = content,
+        )
+    }
 }
