@@ -35,8 +35,8 @@ import kotlin.math.abs
 
 /**
  * [MediaCard] qu'on glisse horizontalement (SPEC §4.3). La carte suit le doigt en s'inclinant ;
- * relâchée au-delà du seuil, elle sort de l'écran du côté du geste puis [onKeep] (droite) ou
- * [onMarkForDeletion] (gauche) est appelé ; en deçà, elle revient au centre avec un ressort. Les deux
+ * relâchée au-delà du seuil, elle sort de l'écran du côté du geste puis [onDecision] reçoit
+ * [DeckEvent.Keep] (droite) ou [DeckEvent.MarkForDeletion] (gauche) ; en deçà, elle revient au centre avec un ressort. Les deux
  * sens partagent le même seuil et les mêmes animations.
  *
  * Pendant le geste, un voile vert avec une coche (droite) ou rouge avec une corbeille (gauche)
@@ -47,20 +47,24 @@ import kotlin.math.abs
  * [requestedDirection] différent de 0 fait sortir la carte comme un geste (1 vers la droite, -1 vers
  * la gauche) : c'est ainsi que les boutons de la pile l'animent.
  *
+ * [returningFrom] différent de 0 fait entrer la carte depuis ce côté jusqu'au centre : c'est
+ * l'animation inverse de sa sortie, quand sa décision est annulée.
+ *
  * L'état du geste vit dans la composition : l'appelant entoure la carte d'un `key` sur le média,
  * pour que chaque nouvelle carte parte du centre.
  */
 @Composable
 fun SwipeableMediaCard(
     card: MediaCardUiState,
-    onKeep: () -> Unit,
-    onMarkForDeletion: () -> Unit,
+    onDecision: (DeckEvent) -> Unit,
     modifier: Modifier = Modifier,
     requestedDirection: Float = 0f,
+    returningFrom: Float = 0f,
 ) {
     BoxWithConstraints(modifier = modifier) {
         val width = with(LocalDensity.current) { maxWidth.toPx() }
-        val offsetX = remember { Animatable(0f) }
+        // Une carte annulée part de l'endroit où elle était sortie, puis revient au centre.
+        val offsetX = remember { Animatable(returningFrom * width * EXIT_DISTANCE) }
         // Position du doigt, tenue à jour de façon synchrone : l'Animatable la suit dans une coroutine.
         // L'indicateur la lit, et non la position animée : il ne suit pas le rebond du retour au centre.
         val dragX = remember { mutableFloatStateOf(0f) }
@@ -71,7 +75,11 @@ fun SwipeableMediaCard(
         suspend fun exit(direction: Float) {
             dragX.floatValue = direction * width
             offsetX.animateTo(direction * width * EXIT_DISTANCE, exitSpring)
-            if (direction > 0f) onKeep() else onMarkForDeletion()
+            onDecision(if (direction > 0f) DeckEvent.Keep else DeckEvent.MarkForDeletion)
+        }
+
+        LaunchedEffect(Unit) {
+            if (offsetX.value != 0f) offsetX.animateTo(0f, returnSpring)
         }
 
         // Bouton « Garder » ou « Supprimer » : même sortie que si la carte avait été glissée.

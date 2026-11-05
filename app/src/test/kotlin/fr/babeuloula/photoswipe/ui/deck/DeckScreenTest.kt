@@ -2,6 +2,8 @@ package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -10,6 +12,7 @@ import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -27,6 +30,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -53,7 +57,9 @@ class DeckScreenTest {
     private val events = mutableListOf<DeckEvent>()
     private var backs = 0
 
-    private fun show(state: DeckUiState) {
+    /** Affiche [initial] ; l'état renvoyé permet de le faire évoluer sans recomposer tout l'écran. */
+    private fun show(initial: DeckUiState): MutableState<DeckUiState> {
+        val state = mutableStateOf(initial)
         composeRule.activity.setContent {
             CompositionLocalProvider(
                 LocalImageLoader provides ImageLoader(composeRule.activity),
@@ -62,13 +68,14 @@ class DeckScreenTest {
                 PhotoSwipeTheme {
                     DeckScreen(
                         day = LocalDate.of(2026, 5, 14),
-                        state = state,
+                        state = state.value,
                         onEvent = { events += it },
                         onBack = { backs++ },
                     )
                 }
             }
         }
+        return state
     }
 
     /** Retours haptiques demandés pendant le test. */
@@ -132,7 +139,7 @@ class DeckScreenTest {
 
     @Test
     fun `says when nothing is left to sort`() {
-        show(DeckUiState.Empty)
+        show(DeckUiState.Empty())
 
         composeRule.onNodeWithText(text(R.string.deck_empty)).assertIsDisplayed()
     }
@@ -318,10 +325,56 @@ class DeckScreenTest {
     }
 
     @Test
-    fun `gives the decision buttons accessible touch targets`() {
-        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+    fun `undoes from the undo button when a decision can be undone`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD), canUndo = true))
 
-        listOf(R.string.deck_keep, R.string.deck_mark_for_deletion).forEach { label ->
+        composeRule.onNodeWithContentDescription(text(R.string.deck_undo)).assertIsEnabled().performClick()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.Undo), events)
+    }
+
+    @Test
+    fun `disables the undo button when there is nothing to undo`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD), canUndo = false))
+
+        composeRule.onNodeWithContentDescription(text(R.string.deck_undo)).assertIsNotEnabled()
+    }
+
+    @Test
+    fun `offers undo on an emptied deck`() {
+        show(DeckUiState.Empty(canUndo = true))
+
+        composeRule.onNodeWithContentDescription(text(R.string.deck_undo)).performClick()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.Undo), events)
+    }
+
+    @Test
+    fun `brings an undone card back from the side it left`() {
+        val state = show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+        val center = card().fetchSemanticsNode().positionInRoot
+        composeRule.mainClock.autoAdvance = false
+
+        state.value = DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(id = MediaId(2))), returningFrom = 1f)
+        // Les bornes sont coupées au bord de l'écran : on compare la position, qui suit la translation.
+        // On avance image par image jusqu'à ce que la nouvelle carte soit posée, hors du centre.
+        var frames = 0
+        while (card().fetchSemanticsNode().positionInRoot == center && frames < MAX_FRAMES) {
+            composeRule.mainClock.advanceTimeByFrame()
+            frames++
+        }
+        assertTrue(card().fetchSemanticsNode().positionInRoot.x > center.x)
+
+        composeRule.mainClock.autoAdvance = true
+        composeRule.waitForIdle()
+        assertEquals(center, card().fetchSemanticsNode().positionInRoot)
+    }
+
+    @Test
+    fun `gives the decision buttons accessible touch targets`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD), canUndo = true))
+
+        listOf(R.string.deck_keep, R.string.deck_mark_for_deletion, R.string.deck_undo).forEach { label ->
             composeRule
                 .onNodeWithContentDescription(text(label))
                 .assertHasClickAction()
@@ -342,7 +395,7 @@ class DeckScreenTest {
 
     @Test
     fun `hides the decision buttons when there is no card`() {
-        show(DeckUiState.Empty)
+        show(DeckUiState.Empty())
 
         composeRule.onNodeWithContentDescription(text(R.string.deck_keep)).assertDoesNotExist()
         composeRule.onNodeWithContentDescription(text(R.string.deck_mark_for_deletion)).assertDoesNotExist()
@@ -367,5 +420,8 @@ class DeckScreenTest {
 
         /** Quelques images après un tap : la carte a commencé à sortir sans avoir fini. */
         const val EXIT_FRAMES = 3
+
+        /** Nombre maximal d'images attendues pour voir apparaître une carte annulée. */
+        const val MAX_FRAMES = 20
     }
 }

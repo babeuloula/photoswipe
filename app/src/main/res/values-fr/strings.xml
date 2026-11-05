@@ -25,6 +25,7 @@
     <string name="deck_empty">Plus rien à trier pour ce jour.</string>
     <string name="deck_keep">Garder</string>
     <string name="deck_mark_for_deletion">Marquer pour suppression</string>
+    <string name="deck_undo">Annuler</string>
     <string name="summary_title">Résumé</string>
     <string name="summary_done">Terminé</string>
     <string name="settings_title">Réglages</string>

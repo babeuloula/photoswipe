@@ -108,7 +108,7 @@ private fun BoxScope.DeckContent(
             }
         }
 
-        DeckUiState.Empty -> {
+        is DeckUiState.Empty -> {
             DeckMessage(
                 text = stringResource(R.string.deck_empty),
                 modifier = Modifier.align(Alignment.Center),
@@ -120,36 +120,60 @@ private fun BoxScope.DeckContent(
                     modifier = Modifier.size(64.dp),
                 )
             }
-        }
-
-        is DeckUiState.Loaded -> {
-            // Sens demandé par un bouton pour la carte du dessus ; 0 tant qu'aucun bouton n'est touché.
-            var requestedDirection by remember(state.current.id) { mutableFloatStateOf(0f) }
-            Column(modifier = Modifier.fillMaxSize()) {
-                key(state.current.id) {
-                    SwipeableMediaCard(
-                        card = state.current,
-                        onKeep = { onEvent(DeckEvent.Keep) },
-                        onMarkForDeletion = { onEvent(DeckEvent.MarkForDeletion) },
-                        requestedDirection = requestedDirection,
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                    )
-                }
-                // Un second tap pendant la sortie est ignoré : il ne trie pas la carte suivante.
-                DecisionButtons(
-                    onMarkForDeletion = { if (requestedDirection == 0f) requestedDirection = -1f },
-                    onKeep = { if (requestedDirection == 0f) requestedDirection = 1f },
+            if (state.canUndo) {
+                UndoButton(
+                    enabled = true,
+                    onClick = { onEvent(DeckEvent.Undo) },
                     modifier =
                         Modifier
-                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
                             .padding(bottom = 24.dp),
                 )
             }
         }
+
+        is DeckUiState.Loaded -> {
+            LoadedDeck(state = state, onEvent = onEvent)
+        }
+    }
+}
+
+/**
+ * Carte du dessus et boutons de décision. Les boutons font sortir la carte comme un geste avant
+ * d'envoyer la décision ; « Annuler » est actif dès qu'une décision peut être annulée.
+ */
+@Composable
+private fun LoadedDeck(
+    state: DeckUiState.Loaded,
+    onEvent: (DeckEvent) -> Unit,
+) {
+    // Sens demandé par un bouton pour la carte du dessus ; 0 tant qu'aucun bouton n'est touché.
+    var requestedDirection by remember(state.current.id) { mutableFloatStateOf(0f) }
+    Column(modifier = Modifier.fillMaxSize()) {
+        key(state.current.id) {
+            SwipeableMediaCard(
+                card = state.current,
+                onDecision = onEvent,
+                requestedDirection = requestedDirection,
+                returningFrom = state.returningFrom,
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(16.dp),
+            )
+        }
+        // Un second tap pendant la sortie est ignoré : il ne trie pas la carte suivante.
+        DecisionButtons(
+            canUndo = state.canUndo,
+            onMarkForDeletion = { if (requestedDirection == 0f) requestedDirection = -1f },
+            onUndo = { if (requestedDirection == 0f) onEvent(DeckEvent.Undo) },
+            onKeep = { if (requestedDirection == 0f) requestedDirection = 1f },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+        )
     }
 }
 

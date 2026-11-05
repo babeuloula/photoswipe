@@ -11,6 +11,7 @@ import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
+import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import fr.babeuloula.photoswipe.ui.navigation.DeckRoute
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -31,16 +32,27 @@ sealed interface DeckUiState {
     /** La galerie ou la base n'a pas pu être lue. */
     data object Error : DeckUiState
 
-    /** Plus rien à trier pour ce jour. */
-    data object Empty : DeckUiState
+    /**
+     * Plus rien à trier pour ce jour.
+     *
+     * @property canUndo vrai si la dernière décision de la session peut être annulée.
+     */
+    data class Empty(
+        val canUndo: Boolean = false,
+    ) : DeckUiState
 
     /**
      * Paquet chargé.
      *
      * @property cards médias encore à trier, dans l'ordre de la pile ; jamais vide.
+     * @property canUndo vrai si la dernière décision de la session peut être annulée.
+     * @property returningFrom côté d'où revient la carte du dessus après un undo : 1 pour la droite
+     * (elle avait été gardée), -1 pour la gauche (marquée) ; 0 si elle ne revient pas.
      */
     data class Loaded(
         val cards: List<MediaCardUiState>,
+        val canUndo: Boolean = false,
+        val returningFrom: Float = 0f,
     ) : DeckUiState {
         init {
             require(cards.isNotEmpty()) { "a loaded deck has at least one card" }
@@ -64,6 +76,9 @@ sealed interface DeckEvent {
 
     /** Carte du dessus glissée à gauche : la marquer pour suppression, sans rien supprimer (SPEC §2). */
     data object MarkForDeletion : DeckEvent
+
+    /** « Annuler » : remettre sur la pile le dernier média trié (SPEC §3.4). */
+    data object Undo : DeckEvent
 }
 
 /** Navigation demandée par la pile. */
@@ -75,7 +90,7 @@ sealed interface DeckEffect {
 /**
  * ViewModel de la pile d'un jour : charge une fois le paquet du jour de la route (ADR 0009), puis
  * retire lui-même chaque carte triée et enregistre la décision. Les décisions de la session sont
- * gardées dans une [ReviewSession], pour l'undo.
+ * gardées dans une [ReviewSession] : « Annuler » remet la dernière carte triée sur la pile.
  */
 @HiltViewModel
 class DeckViewModel
@@ -85,6 +100,7 @@ class DeckViewModel
         private val getDeckForDay: GetDeckForDay,
         private val keepMedia: KeepMedia,
         private val markForDeletion: MarkForDeletion,
+        private val undoLastDecision: UndoLastDecision,
         private val clock: Clock,
     ) : ViewModel() {
         /** Jour cible de la pile. */
@@ -99,6 +115,9 @@ class DeckViewModel
         /** Décisions de la session en cours, de la plus ancienne à la plus récente. */
         var session: ReviewSession = ReviewSession()
             private set
+
+        /** Côté de sortie de chaque décision de [session], dans le même ordre : l'undo la fait revenir de là. */
+        private var exitSides: List<Float> = emptyList()
 
         /** État de la pile. */
         val uiState: StateFlow<DeckUiState> = state.asStateFlow()
@@ -115,8 +134,9 @@ class DeckViewModel
             when (event) {
                 DeckEvent.Retry -> load()
                 DeckEvent.Finish -> effects.trySend(DeckEffect.OpenSummary)
-                DeckEvent.Keep -> decideTopCard(keepMedia::invoke)
-                DeckEvent.MarkForDeletion -> decideTopCard(markForDeletion::invoke)
+                DeckEvent.Keep -> decideTopCard(KEEP_SIDE, keepMedia::invoke)
+                DeckEvent.MarkForDeletion -> decideTopCard(DELETE_SIDE, markForDeletion::invoke)
+                DeckEvent.Undo -> undo()
             }
         }
 
@@ -137,24 +157,65 @@ class DeckViewModel
          * Un marquage n'est qu'une décision en base : rien n'est supprimé avant la confirmation
          * du résumé (SPEC §3.5).
          */
-        private fun decideTopCard(decide: suspend (MediaItem, LocalDate) -> SessionDecision) {
+        private fun decideTopCard(
+            side: Float,
+            decide: suspend (MediaItem, LocalDate) -> SessionDecision,
+        ) {
             val media = deck.firstOrNull() ?: return
             show(deck.drop(1))
             viewModelScope.launch {
                 runCatching { decide(media, day) }.fold(
-                    onSuccess = { session = session.record(it) },
+                    onSuccess = {
+                        session = session.record(it)
+                        exitSides = exitSides + side
+                        show(deck)
+                    },
                     onFailure = { show(listOf(media) + deck) },
                 )
             }
         }
 
-        private fun show(media: List<MediaItem>) {
+        /**
+         * Annule la dernière décision : l'entrée d'avant est restaurée en base et le média revient sur
+         * le dessus de la pile, du côté par lequel il était parti. Une décision déjà confirmée ou une
+         * écriture impossible laissent la pile telle quelle.
+         */
+        private fun undo() {
+            if (session.isEmpty) return
+            viewModelScope.launch {
+                val result = runCatching { undoLastDecision(session) }.getOrNull()
+                if (result is UndoLastDecision.Result.Undone) {
+                    val side = exitSides.last()
+                    session = result.session
+                    exitSides = exitSides.dropLast(1)
+                    show(listOf(result.decision.media) + deck, returningFrom = side)
+                }
+            }
+        }
+
+        private fun show(
+            media: List<MediaItem>,
+            returningFrom: Float = 0f,
+        ) {
             deck = media
+            val canUndo = !session.isEmpty
             state.value =
                 if (media.isEmpty()) {
-                    DeckUiState.Empty
+                    DeckUiState.Empty(canUndo)
                 } else {
-                    DeckUiState.Loaded(media.map { MediaCardUiState.of(it, day, clock.zone) })
+                    DeckUiState.Loaded(
+                        cards = media.map { MediaCardUiState.of(it, day, clock.zone) },
+                        canUndo = canUndo,
+                        returningFrom = returningFrom,
+                    )
                 }
+        }
+
+        private companion object {
+            /** Côté de sortie d'une carte gardée. */
+            const val KEEP_SIDE = 1f
+
+            /** Côté de sortie d'une carte marquée pour suppression. */
+            const val DELETE_SIDE = -1f
         }
     }
