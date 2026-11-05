@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -49,11 +50,14 @@ fun DeckRoute(
             }
         }
     }
-    DeckScreen(
-        day = viewModel.day,
-        state = state,
-        onEvent = viewModel::onEvent,
-        modifier = modifier,
-        snackbarHostState = snackbarHostState,
-    )
+    // Un seul lecteur vidéo pour toute la pile, libéré en quittant l'écran (SPEC §7).
+    CompositionLocalProvider(LocalCardVideoPlayer provides rememberCardVideoPlayer()) {
+        DeckScreen(
+            day = viewModel.day,
+            state = state,
+            onEvent = viewModel::onEvent,
+            modifier = modifier,
+            snackbarHostState = snackbarHostState,
+        )
+    }
 }

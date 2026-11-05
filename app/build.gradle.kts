@@ -50,6 +50,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.coil.compose.core)
     implementation(libs.coil.video)
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui.compose)
 
     // Données de démo des outils développeur (SPEC §10, niveau 2) : jamais dans la variante release.
     debugImplementation(testFixtures(project(":domain")))

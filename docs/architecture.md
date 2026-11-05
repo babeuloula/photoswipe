@@ -163,6 +163,8 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Jetpack Compose (BOM, UI, tooling) | `:app` | UI imposée par la SPEC §7 ; la BOM aligne les versions des bibliothèques Compose |
 | Coil 3 (`coil-compose-core`) | `:app` | Chargement des images imposé par la SPEC §7 : décodage à la taille de la carte, cache mémoire, URI `content://` ; sans chargeur global ni module réseau (ADR [0016](decisions/0016-coil-image-loader.md)) |
 | Coil Video (`coil-video`) | `:app` | Miniatures des vidéos sur leur carte (SPEC §4.3) : `VideoFrameDecoder` tire une image de la vidéo, ajouté au chargeur de l'ADR 0016 |
+| Media3 ExoPlayer | `:app` | Lecture des vidéos imposée par la SPEC §7 : un seul lecteur pour toute la pile, réutilisé de carte en carte et libéré en quittant l'écran |
+| Media3 UI Compose | `:app` | Surface vidéo et état de présentation (première image rendue, taille de la vidéo) en Compose, sans `PlayerView` |
 | Compose Material 3 | `:app` | Material 3 imposé par la SPEC §8 : thème, couleurs dynamiques, composants standards |
 | Compose UI Test (JUnit 4) | `:app` (tests) | Tests de rendu Compose (`createAndroidComposeRule`) sur Robolectric |
 | Hilt Android Testing | `:app` (tests) | `@HiltAndroidTest` et `HiltAndroidRule` pour vérifier l'injection dans les tests |
@@ -175,7 +177,7 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | detekt | tous (build) | Analyse statique imposée par la SPEC §12 (complexité, code mort, mauvaises pratiques) |
 | `mikepenz/action-junit-report` | CI | Affiche le récapitulatif des tests JUnit dans le résumé du run GitHub Actions, sans fouiller les logs |
 
-Prévues dans la SPEC, ajoutées avec leur ticket : Navigation Compose, Room, DataStore, Media3 ExoPlayer, WorkManager, MockK, Turbine.
+Prévues dans la SPEC, ajoutées avec leur ticket : Navigation Compose, Room, DataStore, WorkManager, MockK, Turbine.
 
 ## 7. CI
 

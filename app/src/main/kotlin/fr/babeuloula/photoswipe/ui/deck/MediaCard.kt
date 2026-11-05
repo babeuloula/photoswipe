@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,12 +20,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -33,6 +36,11 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.compose.PlayerSurface
+import androidx.media3.ui.compose.SURFACE_TYPE_TEXTURE_VIEW
+import androidx.media3.ui.compose.modifiers.resizeWithContentScale
+import androidx.media3.ui.compose.state.rememberPresentationState
 import coil3.ImageLoader
 import coil3.compose.AsyncImage
 import fr.babeuloula.photoswipe.R
@@ -50,11 +58,15 @@ import java.time.LocalDate
  *
  * Si l'image ne s'ouvre pas (fichier disparu, données de démo sans fichier, vidéo dont la
  * miniature n'est pas encore gérée), une icône et un message remplacent l'image.
+ *
+ * [active] marque la carte du dessus : si c'est une vidéo, elle est lue en muet par le lecteur de
+ * la pile ([LocalCardVideoPlayer]) ; la carte suivante, préparée dessous, reste sur sa miniature.
  */
 @Composable
 fun MediaCard(
     card: MediaCardUiState,
     modifier: Modifier = Modifier,
+    active: Boolean = false,
 ) {
     val context = LocalContext.current
     val date = localizedDate(context, card.takenOn)
@@ -85,6 +97,10 @@ fun MediaCard(
             if (failed) {
                 Unavailable(type = card.type, modifier = Modifier.align(Alignment.Center))
             }
+            val videoPlayer = LocalCardVideoPlayer.current
+            if (active && card.type == MediaType.VIDEO && videoPlayer != null) {
+                PlayingVideo(uri = card.uri, videoPlayer = videoPlayer, modifier = Modifier.fillMaxSize())
+            }
             if (card.type == MediaType.VIDEO) {
                 VideoBadge(
                     duration = card.duration,
@@ -103,6 +119,32 @@ fun MediaCard(
                         .padding(12.dp),
             )
         }
+    }
+}
+
+/**
+ * Vidéo lue sur la carte du dessus (SPEC §4.3) : elle démarre quand la carte arrive au premier
+ * plan et s'arrête quand la carte part. La surface reste transparente jusqu'à la première image,
+ * pour que la miniature ne laisse pas place à un rectangle noir.
+ */
+@OptIn(UnstableApi::class)
+@Composable
+private fun PlayingVideo(
+    uri: String,
+    videoPlayer: CardVideoPlayer,
+    modifier: Modifier = Modifier,
+) {
+    DisposableEffect(uri, videoPlayer) {
+        videoPlayer.play(uri)
+        onDispose { videoPlayer.stop(uri) }
+    }
+    val presentation = rememberPresentationState(videoPlayer.player)
+    Box(modifier = modifier.alpha(if (presentation.coverSurface) 0f else 1f), contentAlignment = Alignment.Center) {
+        PlayerSurface(
+            player = videoPlayer.player,
+            surfaceType = SURFACE_TYPE_TEXTURE_VIEW,
+            modifier = Modifier.resizeWithContentScale(ContentScale.Fit, presentation.videoSizeDp),
+        )
     }
 }
 

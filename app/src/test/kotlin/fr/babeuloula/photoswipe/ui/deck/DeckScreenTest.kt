@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import android.content.Context
 import androidx.activity.compose.setContent
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
@@ -27,6 +28,8 @@ import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -62,12 +65,16 @@ class DeckScreenTest {
     private val events = mutableListOf<DeckEvent>()
 
     /** Affiche [initial] ; l'état renvoyé permet de le faire évoluer sans recomposer tout l'écran. */
-    private fun show(initial: DeckUiState): MutableState<DeckUiState> {
+    private fun show(
+        initial: DeckUiState,
+        videoPlayer: CardVideoPlayer? = null,
+    ): MutableState<DeckUiState> {
         val state = mutableStateOf(initial)
         composeRule.activity.setContent {
             CompositionLocalProvider(
                 LocalImageLoader provides ImageLoader(composeRule.activity),
                 LocalHapticFeedback provides recordingHaptics,
+                LocalCardVideoPlayer provides videoPlayer,
             ) {
                 PhotoSwipeTheme {
                     DeckScreen(
@@ -92,6 +99,84 @@ class DeckScreenTest {
         }
 
     private fun text(id: Int): String = composeRule.activity.getString(id)
+
+    /** Lecteur qui note les demandes ; la surface vidéo reçoit un vrai ExoPlayer, jamais préparé. */
+    private class RecordingVideoPlayer(
+        context: Context,
+    ) : CardVideoPlayer {
+        val calls = mutableListOf<String>()
+        override val player: Player = ExoPlayer.Builder(context).build()
+
+        override fun play(uri: String) {
+            calls += "play $uri"
+        }
+
+        override fun stop(uri: String) {
+            calls += "stop $uri"
+        }
+
+        override fun pause() {
+            calls += "pause"
+        }
+
+        override fun resume() {
+            calls += "resume"
+        }
+
+        override fun release() {
+            player.release()
+        }
+    }
+
+    private val video = PREVIEW_CARD.copy(type = MediaType.VIDEO, uri = "content://media/external/video/media/1")
+
+    @Test
+    fun `plays the video of the top card`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        show(DeckUiState.Loaded(listOf(video)), videoPlayer)
+        composeRule.waitForIdle()
+
+        assertEquals(listOf("play ${video.uri}"), videoPlayer.calls)
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `does not play the next card prepared underneath`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        val nextVideo = video.copy(id = MediaId(2), uri = "content://media/external/video/media/2")
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD, nextVideo)), videoPlayer)
+        composeRule.waitForIdle()
+
+        assertTrue(videoPlayer.calls.isEmpty())
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `stops the video when its card leaves and plays the next one`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        val nextVideo = video.copy(id = MediaId(2), uri = "content://media/external/video/media/2")
+        val state = show(DeckUiState.Loaded(listOf(video, nextVideo)), videoPlayer)
+        composeRule.waitForIdle()
+
+        state.value = DeckUiState.Loaded(listOf(nextVideo))
+        composeRule.waitForIdle()
+
+        assertEquals(listOf("play ${video.uri}", "stop ${video.uri}", "play ${nextVideo.uri}"), videoPlayer.calls)
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `stops the video when the deck is left`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        val state = show(DeckUiState.Loaded(listOf(video)), videoPlayer)
+        composeRule.waitForIdle()
+
+        state.value = DeckUiState.Empty()
+        composeRule.waitForIdle()
+
+        assertEquals(listOf("play ${video.uri}", "stop ${video.uri}"), videoPlayer.calls)
+        videoPlayer.release()
+    }
 
     @Test
     fun `shows the memory label and the file size of the top card`() {
