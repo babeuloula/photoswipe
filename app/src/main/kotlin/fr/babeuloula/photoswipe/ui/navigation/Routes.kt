@@ -26,9 +26,16 @@ data class DeckRoute(
     }
 }
 
-/** Résumé avant confirmation (SPEC §4.4). */
+/**
+ * Résumé avant confirmation (SPEC §3.5).
+ *
+ * @property keptCount médias gardés pendant la session qui mène au résumé ; 0 en venant de
+ * l'accueil, sans session (ADR 0017).
+ */
 @Serializable
-data object SummaryRoute
+data class SummaryRoute(
+    val keptCount: Int = 0,
+)
 
 /** Réglages (SPEC §4.5). */
 @Serializable

@@ -44,7 +44,12 @@
     <string name="deck_share">Share</string>
     <string name="deck_share_failed">This media can\'t be shared.</string>
     <string name="summary_title">Summary</string>
-    <string name="summary_done">Done</string>
+    <!-- Résumé avant confirmation (SPEC §3.5). -->
+    <string name="summary_freed_space">Estimated space freed</string>
+    <string name="summary_nothing_deleted_yet">Nothing has been deleted yet: your decisions are saved and wait for your confirmation.</string>
+    <string name="summary_later">Later</string>
+    <string name="summary_error">The summary could not be loaded.</string>
+    <string name="summary_retry">Try again</string>
     <string name="settings_title">Settings</string>
     <!-- Accueil (SPEC §4.2). -->
     <string name="home_today">Today</string>

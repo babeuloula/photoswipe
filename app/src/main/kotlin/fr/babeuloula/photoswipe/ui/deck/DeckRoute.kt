@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun DeckRoute(
     onBack: () -> Unit,
-    onOpenSummary: () -> Unit,
+    onOpenSummary: (keptCount: Int) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DeckViewModel = hiltViewModel(),
 ) {
@@ -35,8 +35,8 @@ fun DeckRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEffects.collect { effect ->
             when (effect) {
-                DeckEffect.OpenSummary -> {
-                    onOpenSummary()
+                is DeckEffect.OpenSummary -> {
+                    onOpenSummary(effect.keptCount)
                 }
 
                 DeckEffect.Close -> {

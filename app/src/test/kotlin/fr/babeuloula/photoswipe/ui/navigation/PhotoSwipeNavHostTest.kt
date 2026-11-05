@@ -115,7 +115,7 @@ class PhotoSwipeNavHostTest {
         clickOn(R.string.deck_finish)
         awaitText(text(R.string.summary_title))
 
-        clickOn(R.string.summary_done)
+        clickOn(R.string.summary_later)
 
         awaitText(text(R.string.home_today))
     }

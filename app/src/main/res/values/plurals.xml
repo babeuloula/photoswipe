@@ -23,4 +23,17 @@
         <item quantity="one">%d year ago</item>
         <item quantity="other">%d years ago</item>
     </plurals>
+    <!-- Détail du résumé (SPEC §3.5). -->
+    <plurals name="summary_kept">
+        <item quantity="one">%d item kept</item>
+        <item quantity="other">%d items kept</item>
+    </plurals>
+    <plurals name="summary_marked">
+        <item quantity="one">%d item marked for deletion</item>
+        <item quantity="other">%d items marked for deletion</item>
+    </plurals>
+    <plurals name="summary_favorites">
+        <item quantity="one">%d favorite</item>
+        <item quantity="other">%d favorites</item>
+    </plurals>
 </resources>

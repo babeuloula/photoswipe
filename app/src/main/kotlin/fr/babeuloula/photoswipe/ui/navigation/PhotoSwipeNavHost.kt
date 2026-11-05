@@ -8,10 +8,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import fr.babeuloula.photoswipe.R
-import fr.babeuloula.photoswipe.ui.common.ShellAction
 import fr.babeuloula.photoswipe.ui.common.ShellScreen
 import fr.babeuloula.photoswipe.ui.deck.DeckRoute as DeckDestination
 import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
+import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
 
 /**
  * Graphe de navigation de l'application (SPEC §5.4), en routes typées : accueil, pile d'un jour,
@@ -31,25 +31,19 @@ fun PhotoSwipeNavHost(
             HomeDestination(
                 onOpenDeck = { day -> navController.navigate(DeckRoute.of(day)) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
-                onOpenSummary = { navController.navigate(SummaryRoute) },
+                onOpenSummary = { navController.navigate(SummaryRoute()) },
             )
         }
         composable<DeckRoute> {
             DeckDestination(
                 onBack = navController::popBackStack,
-                onOpenSummary = { navController.navigate(SummaryRoute) },
+                onOpenSummary = { keptCount -> navController.navigate(SummaryRoute(keptCount)) },
             )
         }
         composable<SummaryRoute> {
-            ShellScreen(
-                title = stringResource(R.string.summary_title),
+            SummaryDestination(
+                onGoHome = { navController.popBackStack(HomeRoute, inclusive = false) },
                 onBack = navController::popBackStack,
-                actions =
-                    listOf(
-                        ShellAction(stringResource(R.string.summary_done)) {
-                            navController.popBackStack(HomeRoute, inclusive = false)
-                        },
-                    ),
             )
         }
         composable<SettingsRoute> {
