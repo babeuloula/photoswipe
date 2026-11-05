@@ -4,7 +4,9 @@ import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,7 +22,8 @@ import kotlinx.coroutines.launch
 /**
  * Résumé relié à son ViewModel : il exécute les navigations, lance les dialogues système de
  * corbeille et renvoie leur réponse au ViewModel. Après une suppression, l'accueil annonce le
- * résultat ; ici ne s'affiche que le message des médias introuvables.
+ * résultat ; ici ne s'affichent que les messages des médias introuvables et de la suppression
+ * refusée ou annulée, avec « Réessayer » (SPEC §3.5).
  */
 @Composable
 fun SummaryRoute(
@@ -55,6 +58,25 @@ fun SummaryRoute(
                 SummaryEffect.MarkedMediaMissing -> {
                     val message = resources.getString(R.string.summary_marked_media_missing)
                     scope.launch { snackbarHostState.showSnackbar(message) }
+                }
+
+                is SummaryEffect.TrashCancelled -> {
+                    val message =
+                        resources.getQuantityString(
+                            R.plurals.summary_trash_cancelled,
+                            effect.stillMarkedCount,
+                            effect.stillMarkedCount,
+                        )
+                    val retry = resources.getString(R.string.summary_retry)
+                    scope.launch {
+                        val result =
+                            snackbarHostState.showSnackbar(
+                                message,
+                                actionLabel = retry,
+                                duration = SnackbarDuration.Long,
+                            )
+                        if (result == SnackbarResult.ActionPerformed) viewModel.onEvent(SummaryEvent.Confirm)
+                    }
                 }
             }
         }
