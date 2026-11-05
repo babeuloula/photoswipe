@@ -4,7 +4,10 @@ import android.content.Context
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -17,17 +20,30 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
+import java.time.Duration
 
 /**
  * Lecteur vidéo de la pile (SPEC §4.3, §7) : une seule instance, passée de carte en carte. La
- * carte du dessus d'une vidéo le démarre ; elle l'arrête en quittant la pile.
+ * carte du dessus d'une vidéo le démarre après un court délai ; elle l'arrête en quittant la pile.
  */
 interface CardVideoPlayer {
     /** Lecteur à afficher dans la surface vidéo de la carte. */
     val player: Player
 
+    /**
+     * Vidéo en lecture, `null` si aucune ou en pause. Lue par Compose : la pastille de la carte se
+     * met à jour quand elle change.
+     */
+    val playingUri: String?
+
     /** Lit [uri] en boucle et en muet ; une vidéo déjà en cours continue sans recommencer. */
     fun play(uri: String)
+
+    /** Position de lecture de [uri], `null` si ce n'est pas la vidéo chargée. */
+    fun position(uri: String): Duration?
+
+    /** Pause demandée par l'utilisateur : la vidéo ne reprend pas seule au retour au premier plan. */
+    fun pauseByUser(uri: String)
 
     /** Arrête la lecture si c'est [uri] qui est en cours : la carte suivante a pu déjà démarrer. */
     fun stop(uri: String)
@@ -77,32 +93,56 @@ class ExoCardVideoPlayer(
     /** URI de la vidéo chargée, `null` si aucune. */
     private var currentUri: String? = null
 
+    /** Vrai après une pause demandée par l'utilisateur, jusqu'à ce qu'il relance la vidéo. */
+    private var pausedByUser = false
+
+    override var playingUri: String? by mutableStateOf(null)
+        private set
+
     override fun play(uri: String) {
         if (uri != currentUri) {
             currentUri = uri
             exoPlayer.setMediaItem(MediaItem.fromUri(uri))
             exoPlayer.prepare()
         }
+        pausedByUser = false
         exoPlayer.playWhenReady = true
+        playingUri = uri
+    }
+
+    override fun position(uri: String): Duration? =
+        if (uri == currentUri) Duration.ofMillis(exoPlayer.currentPosition) else null
+
+    override fun pauseByUser(uri: String) {
+        if (uri != currentUri) return
+        pausedByUser = true
+        exoPlayer.playWhenReady = false
+        playingUri = null
     }
 
     override fun stop(uri: String) {
         if (uri != currentUri) return
         currentUri = null
+        pausedByUser = false
+        playingUri = null
         exoPlayer.stop()
         exoPlayer.clearMediaItems()
     }
 
     override fun pause() {
         exoPlayer.playWhenReady = false
+        playingUri = null
     }
 
     override fun resume() {
-        if (currentUri != null) exoPlayer.playWhenReady = true
+        if (currentUri == null || pausedByUser) return
+        exoPlayer.playWhenReady = true
+        playingUri = currentUri
     }
 
     override fun release() {
         currentUri = null
+        playingUri = null
         exoPlayer.release()
     }
 

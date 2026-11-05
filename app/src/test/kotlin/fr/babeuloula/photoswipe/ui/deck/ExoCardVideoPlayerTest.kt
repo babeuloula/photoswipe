@@ -15,6 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.time.Duration
 
 /** Lecteur vidéo unique de la pile, sur un vrai ExoPlayer. */
 @RunWith(RobolectricTestRunner::class)
@@ -117,6 +118,48 @@ class ExoCardVideoPlayerTest {
         videoPlayer.resume()
 
         assertFalse(player.playWhenReady)
+    }
+
+    @Test
+    fun `tells which video is playing`() {
+        assertNull(videoPlayer.playingUri)
+
+        videoPlayer.play(first)
+        assertEquals(first, videoPlayer.playingUri)
+
+        videoPlayer.stop(first)
+        assertNull(videoPlayer.playingUri)
+    }
+
+    @Test
+    fun `stays paused after a pause from the badge, even back in the foreground`() {
+        videoPlayer.play(first)
+
+        videoPlayer.pauseByUser(first)
+        videoPlayer.pause()
+        videoPlayer.resume()
+
+        assertFalse(player.playWhenReady)
+        assertNull(videoPlayer.playingUri)
+    }
+
+    @Test
+    fun `plays again from the badge after a pause`() {
+        videoPlayer.play(first)
+        videoPlayer.pauseByUser(first)
+
+        videoPlayer.play(first)
+
+        assertTrue(player.playWhenReady)
+        assertEquals(first, videoPlayer.playingUri)
+    }
+
+    @Test
+    fun `gives the position of the loaded video only`() {
+        videoPlayer.play(first)
+
+        assertEquals(Duration.ZERO, videoPlayer.position(first))
+        assertNull(videoPlayer.position(second))
     }
 
     private fun error(code: Int) = PlaybackException("test", null, code)

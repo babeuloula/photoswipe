@@ -26,6 +26,8 @@
     <string name="deck_photo_description">Photo taken on %1$s</string>
     <string name="deck_video_description">Video taken on %1$s</string>
     <string name="deck_video_duration">Duration: %1$s</string>
+    <string name="deck_video_play">Play video</string>
+    <string name="deck_video_pause">Pause video</string>
     <string name="deck_media_unavailable">Preview unavailable</string>
     <string name="deck_error">The memories of this day could not be loaded.</string>
     <string name="deck_retry">Try again</string>

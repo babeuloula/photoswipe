@@ -20,6 +20,8 @@
     <string name="deck_photo_description">Photo prise le %1$s</string>
     <string name="deck_video_description">Vidéo prise le %1$s</string>
     <string name="deck_video_duration">Durée : %1$s</string>
+    <string name="deck_video_play">Lire la vidéo</string>
+    <string name="deck_video_pause">Mettre la vidéo en pause</string>
     <string name="deck_media_unavailable">Aperçu indisponible</string>
     <string name="deck_error">Les souvenirs de ce jour n\'ont pas pu être chargés.</string>
     <string name="deck_retry">Réessayer</string>
