@@ -15,6 +15,7 @@ import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
+import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
@@ -65,9 +66,13 @@ class DeckViewModelTest {
         DeckViewModel(
             savedStateHandle = SavedStateHandle(mapOf("epochDay" to day.toEpochDay())),
             getDeckForDay = GetDeckForDay(SameDayMatcher(), source, reviews, RecentYearsFirstOrdering(), clock),
-            keepMedia = KeepMedia(reviews, clock),
-            markForDeletion = MarkForDeletion(reviews, clock),
-            undoLastDecision = UndoLastDecision(reviews),
+            decisions =
+                DeckDecisions(
+                    keepMedia = KeepMedia(reviews, clock),
+                    markForDeletion = MarkForDeletion(reviews, clock),
+                    favoriteMedia = FavoriteMedia(reviews, clock),
+                    undoLastDecision = UndoLastDecision(reviews),
+                ),
             clock = clock,
         )
 
@@ -216,7 +221,7 @@ class DeckViewModelTest {
 
             val state = viewModel.uiState.value as DeckUiState.Loaded
             assertEquals(listOf(MediaId(2), MediaId(1)), state.cards.map { it.id })
-            assertEquals(1f, state.returningFrom)
+            assertEquals(CardSide.RIGHT, state.returningFrom)
             assertFalse(state.canUndo)
             assertTrue(repository.entries.isEmpty())
             assertTrue(viewModel.session.isEmpty)
@@ -230,7 +235,7 @@ class DeckViewModelTest {
 
             viewModel.onEvent(DeckEvent.Undo)
 
-            assertEquals(-1f, (viewModel.uiState.value as DeckUiState.Loaded).returningFrom)
+            assertEquals(CardSide.LEFT, (viewModel.uiState.value as DeckUiState.Loaded).returningFrom)
             assertTrue(repository.entries.isEmpty())
         }
 
@@ -244,13 +249,13 @@ class DeckViewModelTest {
             viewModel.onEvent(DeckEvent.Undo)
             val afterFirst = viewModel.uiState.value as DeckUiState.Loaded
             assertEquals(listOf(MediaId(1)), afterFirst.cards.map { it.id })
-            assertEquals(1f, afterFirst.returningFrom)
+            assertEquals(CardSide.RIGHT, afterFirst.returningFrom)
             assertTrue(afterFirst.canUndo)
 
             viewModel.onEvent(DeckEvent.Undo)
             val afterSecond = viewModel.uiState.value as DeckUiState.Loaded
             assertEquals(listOf(MediaId(2), MediaId(1)), afterSecond.cards.map { it.id })
-            assertEquals(-1f, afterSecond.returningFrom)
+            assertEquals(CardSide.LEFT, afterSecond.returningFrom)
             assertFalse(afterSecond.canUndo)
         }
 
@@ -275,6 +280,47 @@ class DeckViewModelTest {
             viewModel.onEvent(DeckEvent.Undo)
 
             assertEquals(listOf(2025), repository.entries.map { it.reviewYear })
+        }
+
+    @Test
+    fun `opens and closes the menu without touching the card`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
+
+            viewModel.onEvent(DeckEvent.OpenMenu)
+            assertTrue((viewModel.uiState.value as DeckUiState.Loaded).menuOpen)
+
+            viewModel.onEvent(DeckEvent.CloseMenu)
+            val state = viewModel.uiState.value as DeckUiState.Loaded
+            assertFalse(state.menuOpen)
+            assertEquals(listOf(MediaId(1)), state.cards.map { it.id })
+            assertTrue(repository.entries.isEmpty())
+        }
+
+    @Test
+    fun `favorites the top card, keeps it and shows the next one`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+
+            viewModel.onEvent(DeckEvent.Favorite)
+
+            assertEquals(listOf(MediaId(1)), viewModel.cardIds())
+            val entry = repository.entries.single()
+            assertEquals(MediaId(2), entry.mediaId)
+            assertEquals(ReviewDecision.KEPT, entry.decision)
+            assertTrue(entry.favoritePending)
+        }
+
+    @Test
+    fun `brings a favorited card back from the top on undo`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
+            viewModel.onEvent(DeckEvent.Favorite)
+
+            viewModel.onEvent(DeckEvent.Undo)
+
+            assertEquals(CardSide.TOP, (viewModel.uiState.value as DeckUiState.Loaded).returningFrom)
+            assertTrue(repository.entries.isEmpty())
         }
 
     @Test

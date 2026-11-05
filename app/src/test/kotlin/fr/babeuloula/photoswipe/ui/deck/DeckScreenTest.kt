@@ -23,6 +23,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -355,7 +356,7 @@ class DeckScreenTest {
         val center = card().fetchSemanticsNode().positionInRoot
         composeRule.mainClock.autoAdvance = false
 
-        state.value = DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(id = MediaId(2))), returningFrom = 1f)
+        state.value = DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(id = MediaId(2))), returningFrom = CardSide.RIGHT)
         // Les bornes sont coupées au bord de l'écran : on compare la position, qui suit la translation.
         // On avance image par image jusqu'à ce que la nouvelle carte soit posée, hors du centre.
         var frames = 0
@@ -371,10 +372,61 @@ class DeckScreenTest {
     }
 
     @Test
+    fun `opens the menu when the card is swiped up`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        card().performTouchInput { swipeUp() }
+        composeRule.waitForIdle()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.OpenMenu), events)
+    }
+
+    @Test
+    fun `does not open the menu on a short swipe up`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        card().performTouchInput { swipeUp(startY = centerY, endY = centerY - height * MENU_THRESHOLD / 2) }
+        composeRule.waitForIdle()
+
+        assertTrue(events.isEmpty())
+    }
+
+    @Test
+    fun `opens the menu from the menu button`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        composeRule.onNodeWithContentDescription(text(R.string.deck_menu)).performClick()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.OpenMenu), events)
+    }
+
+    @Test
+    fun `sends the card up and favorites it from the menu`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD), menuOpen = true))
+
+        composeRule.onNodeWithText(text(R.string.deck_favorite)).performClick()
+        composeRule.waitForIdle()
+
+        assertEquals(listOf(DeckEvent.CloseMenu, DeckEvent.Favorite), events)
+    }
+
+    @Test
+    fun `shows no menu while it is closed`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        composeRule.onNodeWithText(text(R.string.deck_favorite)).assertDoesNotExist()
+    }
+
+    @Test
     fun `gives the decision buttons accessible touch targets`() {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD), canUndo = true))
 
-        listOf(R.string.deck_keep, R.string.deck_mark_for_deletion, R.string.deck_undo).forEach { label ->
+        listOf(
+            R.string.deck_keep,
+            R.string.deck_mark_for_deletion,
+            R.string.deck_undo,
+            R.string.deck_menu,
+        ).forEach { label ->
             composeRule
                 .onNodeWithContentDescription(text(label))
                 .assertHasClickAction()

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -24,22 +25,21 @@ import fr.babeuloula.photoswipe.ui.theme.swipeColors
 
 /**
  * Boutons équivalents aux gestes, sous la carte (SPEC §4.3, §8) : « Supprimer » à gauche comme le
- * glissement à gauche, « Garder » à droite comme le glissement à droite, et « Annuler » entre les deux. Ils déclenchent les mêmes
- * événements que les gestes, pour TalkBack, la navigation au clavier ou par préférence ; l'appelant
- * fait sortir la carte comme un geste avant d'enregistrer la décision.
+ * glissement à gauche, « Garder » à droite comme le glissement à droite, et entre les deux
+ * « Annuler » et « Menu » (comme le glissement vers le haut). Ils déclenchent les mêmes actions que
+ * les gestes, pour TalkBack, la navigation au clavier ou par préférence ; l'appelant fait sortir la
+ * carte comme un geste avant d'enregistrer la décision.
  */
 @Composable
 fun DecisionButtons(
     canUndo: Boolean,
-    onMarkForDeletion: () -> Unit,
-    onUndo: () -> Unit,
-    onKeep: () -> Unit,
+    onClick: (DeckButton) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.swipeColors
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         DecisionButton(
@@ -47,15 +47,18 @@ fun DecisionButtons(
             label = stringResource(R.string.deck_mark_for_deletion),
             container = colors.delete,
             content = colors.onDelete,
-            onClick = onMarkForDeletion,
+            onClick = { onClick(DeckButton.MARK_FOR_DELETION) },
         )
-        UndoButton(enabled = canUndo, onClick = onUndo)
+        UndoButton(enabled = canUndo, onClick = { onClick(DeckButton.UNDO) })
+        OutlinedIconButton(onClick = { onClick(DeckButton.MENU) }, modifier = Modifier.size(48.dp)) {
+            Icon(imageVector = Icons.Filled.MoreVert, contentDescription = stringResource(R.string.deck_menu))
+        }
         DecisionButton(
             icon = Icons.Filled.Check,
             label = stringResource(R.string.deck_keep),
             container = colors.keep,
             content = colors.onKeep,
-            onClick = onKeep,
+            onClick = { onClick(DeckButton.KEEP) },
         )
     }
 }
