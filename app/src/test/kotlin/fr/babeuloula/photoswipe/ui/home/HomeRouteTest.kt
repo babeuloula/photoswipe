@@ -1,7 +1,7 @@
 package fr.babeuloula.photoswipe.ui.home
 
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -41,9 +41,10 @@ class HomeRouteTest {
     /** Affiche l'accueil ; l'annonce disparaît une fois faite, comme dans le graphe de navigation. */
     private fun show(
         trashedCount: Int,
+        favoritedCount: Int = 0,
         onAnnounced: () -> Unit,
     ) {
-        val pending = mutableIntStateOf(trashedCount)
+        val pending = mutableStateOf(trashedCount to favoritedCount)
         val viewModel =
             HomeViewModel(
                 GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), FakeMediaSource(), repository, clock),
@@ -53,11 +54,11 @@ class HomeRouteTest {
             PhotoSwipeTheme {
                 HomeRoute(
                     navigation = HomeNavigation(openDeck = {}, openSettings = {}, openSummary = {}),
-                    trashed =
-                        if (pending.intValue > 0) {
-                            TrashedAnnouncement(pending.intValue) {
+                    confirmed =
+                        if (pending.value != 0 to 0) {
+                            ConfirmationAnnouncement(pending.value.first, pending.value.second) {
                                 onAnnounced()
-                                pending.intValue = 0
+                                pending.value = 0 to 0
                             }
                         } else {
                             null
@@ -78,6 +79,22 @@ class HomeRouteTest {
                 .onAllNodesWithText(
                     "3 items moved to the trash",
                     substring = true,
+                ).fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        assertEquals(1, announced)
+    }
+
+    @Test
+    fun `announces the media added to the gallery favorites`() {
+        var announced = 0
+        show(trashedCount = 2, favoritedCount = 1) { announced++ }
+
+        composeRule.waitUntil(TIMEOUT_MILLIS) {
+            composeRule
+                .onAllNodesWithText(
+                    "2 items moved to the trash. You can restore them from your gallery's trash for about 30 days. " +
+                        "1 item added to your gallery favorites.",
                 ).fetchSemanticsNodes()
                 .isNotEmpty()
         }

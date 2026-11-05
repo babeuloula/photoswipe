@@ -41,9 +41,19 @@
         <item quantity="many">%d de médias envoyés à la corbeille. Vous pouvez les restaurer depuis la corbeille de votre galerie pendant environ 30 jours.</item>
         <item quantity="other">%d médias envoyés à la corbeille. Vous pouvez les restaurer depuis la corbeille de votre galerie pendant environ 30 jours.</item>
     </plurals>
-    <plurals name="summary_trash_cancelled">
-        <item quantity="one">Rien n\'a été envoyé à la corbeille : %d média reste marqué pour suppression.</item>
-        <item quantity="many">Rien n\'a été envoyé à la corbeille : %d de médias restent marqués pour suppression.</item>
-        <item quantity="other">Rien n\'a été envoyé à la corbeille : %d médias restent marqués pour suppression.</item>
+    <plurals name="summary_still_marked">
+        <item quantity="one">%d média reste marqué pour suppression.</item>
+        <item quantity="many">%d de médias restent marqués pour suppression.</item>
+        <item quantity="other">%d médias restent marqués pour suppression.</item>
+    </plurals>
+    <plurals name="summary_still_favorite">
+        <item quantity="one">%d favori reste en attente.</item>
+        <item quantity="many">%d de favoris restent en attente.</item>
+        <item quantity="other">%d favoris restent en attente.</item>
+    </plurals>
+    <plurals name="summary_favorited">
+        <item quantity="one">%d média ajouté aux favoris de votre galerie.</item>
+        <item quantity="many">%d de médias ajoutés aux favoris de votre galerie.</item>
+        <item quantity="other">%d médias ajoutés aux favoris de votre galerie.</item>
     </plurals>
 </resources>

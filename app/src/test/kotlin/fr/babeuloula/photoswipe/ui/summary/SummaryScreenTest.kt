@@ -104,10 +104,27 @@ class SummaryScreenTest {
     }
 
     @Test
-    fun `cannot confirm when nothing is marked`() {
+    fun `cannot confirm when nothing is marked or favorite`() {
+        show(
+            SummaryUiState.Loaded(
+                SessionSummary(keptCount = 3, markedForDeletionCount = 0, favoriteCount = 0, estimatedFreedBytes = 0),
+            ),
+        )
+
+        composeRule.onNodeWithText(text(R.string.summary_apply_favorites)).assertIsNotEnabled()
+    }
+
+    @Test
+    fun `applies the favorites alone when nothing is marked`() {
         show(SummaryUiState.Loaded(summary.copy(markedForDeletionCount = 0, estimatedFreedBytes = 0)))
 
-        composeRule.onNodeWithText(text(R.string.summary_confirm)).assertIsNotEnabled()
+        composeRule
+            .onNodeWithText(text(R.string.summary_apply_favorites))
+            .performScrollTo()
+            .assertIsEnabled()
+            .performClick()
+
+        assertEquals(listOf<SummaryEvent>(SummaryEvent.Confirm), events)
     }
 
     @Test

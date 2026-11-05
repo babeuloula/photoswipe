@@ -11,8 +11,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.common.ShellScreen
+import fr.babeuloula.photoswipe.ui.home.ConfirmationAnnouncement
 import fr.babeuloula.photoswipe.ui.home.HomeNavigation
-import fr.babeuloula.photoswipe.ui.home.TrashedAnnouncement
 import fr.babeuloula.photoswipe.ui.deck.DeckRoute as DeckDestination
 import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
 import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
@@ -33,6 +33,7 @@ fun PhotoSwipeNavHost(
     NavHost(navController = navController, startDestination = HomeRoute, modifier = modifier) {
         composable<HomeRoute> { entry ->
             val trashedCount by entry.savedStateHandle.getStateFlow(TRASHED_COUNT_KEY, 0).collectAsState()
+            val favoritedCount by entry.savedStateHandle.getStateFlow(FAVORITED_COUNT_KEY, 0).collectAsState()
             HomeDestination(
                 navigation =
                     HomeNavigation(
@@ -40,9 +41,12 @@ fun PhotoSwipeNavHost(
                         openSettings = { navController.navigate(SettingsRoute) },
                         openSummary = { navController.navigate(SummaryRoute()) },
                     ),
-                trashed =
-                    if (trashedCount > 0) {
-                        TrashedAnnouncement(trashedCount) { entry.savedStateHandle[TRASHED_COUNT_KEY] = 0 }
+                confirmed =
+                    if (trashedCount > 0 || favoritedCount > 0) {
+                        ConfirmationAnnouncement(trashedCount, favoritedCount) {
+                            entry.savedStateHandle[TRASHED_COUNT_KEY] = 0
+                            entry.savedStateHandle[FAVORITED_COUNT_KEY] = 0
+                        }
                     } else {
                         null
                     },
@@ -56,15 +60,12 @@ fun PhotoSwipeNavHost(
         }
         composable<SummaryRoute> {
             SummaryDestination(
-                onGoHome = { trashedCount ->
-                    // L'accueil annonce les médias envoyés à la corbeille (option choisie par Jérémy).
-                    if (trashedCount >
-                        0
-                    ) {
-                        navController
-                            .getBackStackEntry(
-                                HomeRoute,
-                            ).savedStateHandle[TRASHED_COUNT_KEY] = trashedCount
+                onGoHome = { trashedCount, favoritedCount ->
+                    // L'accueil annonce ce que la confirmation a changé (option choisie par Jérémy).
+                    if (trashedCount > 0 || favoritedCount > 0) {
+                        val home = navController.getBackStackEntry(HomeRoute).savedStateHandle
+                        home[TRASHED_COUNT_KEY] = trashedCount
+                        home[FAVORITED_COUNT_KEY] = favoritedCount
                     }
                     navController.popBackStack(HomeRoute, inclusive = false)
                 },
@@ -83,3 +84,6 @@ fun PhotoSwipeNavHost(
 
 /** Clé du nombre de médias envoyés à la corbeille, transmis du résumé à l'accueil. */
 private const val TRASHED_COUNT_KEY = "trashed_count"
+
+/** Clé du nombre de médias ajoutés aux favoris de la galerie, transmis du résumé à l'accueil. */
+private const val FAVORITED_COUNT_KEY = "favorited_count"

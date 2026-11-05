@@ -151,21 +151,38 @@ private fun SummaryContent(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Button(
-            onClick = { onEvent(SummaryEvent.Confirm) },
-            enabled = state.canConfirm,
-            colors =
-                ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError,
-                ),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.summary_confirm))
-        }
+        ConfirmButton(state, onEvent)
         OutlinedButton(onClick = { onEvent(SummaryEvent.Later) }, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.summary_later))
         }
+    }
+}
+
+/** Bouton de confirmation : rouge pour une suppression ; sans marquage, il n'applique que les favoris. */
+@Composable
+private fun ConfirmButton(
+    state: SummaryUiState.Loaded,
+    onEvent: (SummaryEvent) -> Unit,
+) {
+    Button(
+        onClick = { onEvent(SummaryEvent.Confirm) },
+        enabled = state.canConfirm,
+        colors =
+            if (state.confirmsDeletion) {
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                )
+            } else {
+                ButtonDefaults.buttonColors()
+            },
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            stringResource(
+                if (state.confirmsDeletion) R.string.summary_confirm else R.string.summary_apply_favorites,
+            ),
+        )
     }
 }
 

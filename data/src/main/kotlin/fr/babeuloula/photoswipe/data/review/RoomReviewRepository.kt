@@ -58,6 +58,10 @@ class RoomReviewRepository
             mediaIds.inBatches().forEach { dao.markTrashed(it) }
         }
 
+        override suspend fun markFavoritesApplied(mediaIds: Set<MediaId>) {
+            mediaIds.inBatches().forEach { dao.markFavoritesApplied(it) }
+        }
+
         override suspend fun knownMediaIds(): Set<MediaId> = dao.knownMediaIds().mapTo(LinkedHashSet()) { MediaId(it) }
 
         override suspend fun deleteAllFor(mediaIds: Set<MediaId>) {

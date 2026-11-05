@@ -46,6 +46,9 @@ interface ReviewRepository {
     /** Passe à `TRASHED` les entrées marquées pour suppression des médias [mediaIds]. */
     suspend fun markTrashed(mediaIds: Set<MediaId>)
 
+    /** Retire le favori en attente des entrées des médias [mediaIds], toutes années : il est appliqué. */
+    suspend fun markFavoritesApplied(mediaIds: Set<MediaId>)
+
     /** Identifiants de tous les médias qui ont au moins une entrée. */
     suspend fun knownMediaIds(): Set<MediaId>
 
