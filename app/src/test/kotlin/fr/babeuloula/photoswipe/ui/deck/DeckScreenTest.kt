@@ -2,10 +2,15 @@ package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
@@ -45,7 +50,10 @@ class DeckScreenTest {
 
     private fun show(state: DeckUiState) {
         composeRule.activity.setContent {
-            CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
+            CompositionLocalProvider(
+                LocalImageLoader provides ImageLoader(composeRule.activity),
+                LocalHapticFeedback provides recordingHaptics,
+            ) {
                 PhotoSwipeTheme {
                     DeckScreen(
                         day = LocalDate.of(2026, 5, 14),
@@ -57,6 +65,16 @@ class DeckScreenTest {
             }
         }
     }
+
+    /** Retours haptiques demandés pendant le test. */
+    private val haptics = mutableListOf<HapticFeedbackType>()
+
+    private val recordingHaptics =
+        object : HapticFeedback {
+            override fun performHapticFeedback(hapticFeedbackType: HapticFeedbackType) {
+                haptics += hapticFeedbackType
+            }
+        }
 
     private fun text(id: Int): String = composeRule.activity.getString(id)
 
@@ -168,6 +186,50 @@ class DeckScreenTest {
 
         assertTrue(events.isEmpty())
         assertEquals(start, card().fetchSemanticsNode().boundsInRoot)
+    }
+
+    @Test
+    fun `shows a green indicator while dragging right and vibrates once past the threshold`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        card().performTouchInput {
+            down(center)
+            moveBy(Offset(width * 0.2f, 0f))
+        }
+        composeRule.onNodeWithTag(KEEP_INDICATOR_TAG).assertExists()
+        composeRule.onNodeWithTag(DELETE_INDICATOR_TAG).assertDoesNotExist()
+        assertTrue(haptics.isEmpty())
+
+        card().performTouchInput {
+            moveBy(Offset(width * 0.3f, 0f))
+            moveBy(Offset(width * 0.1f, 0f))
+        }
+        assertEquals(listOf(HapticFeedbackType.GestureThresholdActivate), haptics)
+
+        card().performTouchInput { up() }
+    }
+
+    @Test
+    fun `shows a red indicator while dragging left and vibrates past the threshold`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        card().performTouchInput {
+            down(center)
+            moveBy(Offset(-width * 0.6f, 0f))
+        }
+
+        composeRule.onNodeWithTag(DELETE_INDICATOR_TAG).assertExists()
+        composeRule.onNodeWithTag(KEEP_INDICATOR_TAG).assertDoesNotExist()
+        assertEquals(listOf(HapticFeedbackType.GestureThresholdActivate), haptics)
+        card().performTouchInput { up() }
+    }
+
+    @Test
+    fun `shows no indicator when the card is at rest`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        composeRule.onNodeWithTag(KEEP_INDICATOR_TAG).assertDoesNotExist()
+        composeRule.onNodeWithTag(DELETE_INDICATOR_TAG).assertDoesNotExist()
     }
 
     private companion object {
