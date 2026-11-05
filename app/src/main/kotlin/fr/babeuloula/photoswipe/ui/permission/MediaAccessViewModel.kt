@@ -1,15 +1,19 @@
 package fr.babeuloula.photoswipe.ui.permission
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.MediaAccess
 import fr.babeuloula.photoswipe.permission.MediaAccessReader
+import fr.babeuloula.photoswipe.permission.OrphanCleanup
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** Étape du parcours d'accès aux médias (SPEC §4.1). */
@@ -77,13 +81,15 @@ sealed interface MediaAccessEffect {
  *
  * L'état se déduit toujours de l'accès réel lu par [MediaAccessReader] : il est relu à chaque
  * réponse et à chaque retour au premier plan. L'accès partiel (Android 14+) compte comme accordé,
- * avec une bannière qui permet d'étendre la sélection.
+ * avec une bannière qui permet d'étendre la sélection. Dès que l'accès est accordé, le nettoyage
+ * des orphelins du démarrage est lancé, une fois par process (`OrphanCleanup`, SPEC §6).
  */
 @HiltViewModel
 class MediaAccessViewModel
     @Inject
     constructor(
         private val accessReader: MediaAccessReader,
+        private val orphanCleanup: OrphanCleanup,
     ) : ViewModel() {
         private val state = MutableStateFlow(granted() ?: MediaAccessUiState.Rationale)
         private val effects = Channel<MediaAccessEffect>(Channel.BUFFERED)
@@ -93,6 +99,14 @@ class MediaAccessViewModel
 
         /** Effets à exécuter, chacun livré une seule fois. */
         val uiEffects: Flow<MediaAccessEffect> = effects.receiveAsFlow()
+
+        init {
+            // Le nettoyage du démarrage attend l'accès : sans lui, la galerie paraît vide.
+            viewModelScope.launch {
+                state.first { it is MediaAccessUiState.Granted }
+                orphanCleanup.runAtStartup()
+            }
+        }
 
         /** Traite une action de l'utilisateur ou du système. */
         fun onEvent(event: MediaAccessEvent) {
