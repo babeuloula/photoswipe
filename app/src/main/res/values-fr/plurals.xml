@@ -41,4 +41,9 @@
         <item quantity="many">%d de médias envoyés à la corbeille. Vous pouvez les restaurer depuis la corbeille de votre galerie pendant environ 30 jours.</item>
         <item quantity="other">%d médias envoyés à la corbeille. Vous pouvez les restaurer depuis la corbeille de votre galerie pendant environ 30 jours.</item>
     </plurals>
+    <plurals name="summary_trash_cancelled">
+        <item quantity="one">Rien n\'a été envoyé à la corbeille : %d média reste marqué pour suppression.</item>
+        <item quantity="many">Rien n\'a été envoyé à la corbeille : %d de médias restent marqués pour suppression.</item>
+        <item quantity="other">Rien n\'a été envoyé à la corbeille : %d médias restent marqués pour suppression.</item>
+    </plurals>
 </resources>

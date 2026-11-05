@@ -206,6 +206,54 @@ class SummaryViewModelTest {
         }
 
     @Test
+    fun `says the marks are kept when every batch is refused or cancelled`() =
+        runTest {
+            mark(1, 2, 3)
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = false))
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = false))
+
+            assertEquals(List(3) { ReviewDecision.MARKED_FOR_DELETION }, decisions())
+            assertEquals(SummaryEffect.TrashCancelled(stillMarkedCount = 3), effects.last())
+        }
+
+    @Test
+    fun `lets the user try again after refusing`() =
+        runTest {
+            mark(1)
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+            viewModel.onEvent(SummaryEvent.Confirm)
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = false))
+            assertTrue((viewModel.uiState.value as SummaryUiState.Loaded).canConfirm)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
+
+            assertEquals(2, effects.count { it is SummaryEffect.LaunchSystemRequest })
+            assertEquals(listOf(ReviewDecision.TRASHED), decisions())
+            assertEquals(SummaryEffect.GoHome(trashedCount = 1), effects.last())
+        }
+
+    @Test
+    fun `keeps the marks and says so when the system dialogs cannot be prepared`() =
+        runTest {
+            mark(1)
+            val viewModel = summaryViewModel(reviews = FailingOnceRepository(repository, failOnRead = 2))
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+
+            assertTrue(effects.none { it is SummaryEffect.LaunchSystemRequest })
+            assertEquals(listOf(ReviewDecision.MARKED_FOR_DELETION), decisions())
+            assertEquals(SummaryEffect.TrashCancelled(stillMarkedCount = 1), effects.last())
+            assertTrue((viewModel.uiState.value as SummaryUiState.Loaded).canConfirm)
+        }
+
+    @Test
     fun `says when the marked media are no longer in the gallery`() =
         runTest {
             mark(99)
@@ -251,17 +299,16 @@ class SummaryViewModelTest {
             assertEquals(SummaryEffect.Close, viewModel.uiEffects.first())
         }
 
-    /** Dépôt dont la première lecture des marquages échoue. */
+    /** Dépôt dont une seule lecture des marquages échoue : la [failOnRead]-ième (la première par défaut). */
     private class FailingOnceRepository(
         private val delegate: FakeReviewRepository = FakeReviewRepository(),
+        private val failOnRead: Int = 1,
     ) : ReviewRepository by delegate {
-        private var failed = false
+        private var reads = 0
 
         override suspend fun entriesMarkedForDeletion(): List<ReviewEntry> {
-            if (!failed) {
-                failed = true
-                throw IOException("database unavailable")
-            }
+            reads++
+            if (reads == failOnRead) throw IOException("database unavailable")
             return delegate.entriesMarkedForDeletion()
         }
     }

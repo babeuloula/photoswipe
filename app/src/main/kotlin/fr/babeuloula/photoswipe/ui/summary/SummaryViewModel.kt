@@ -97,6 +97,16 @@ sealed interface SummaryEffect {
      * aucun dialogue ne peut les envoyer à la corbeille.
      */
     data object MarkedMediaMissing : SummaryEffect
+
+    /**
+     * Rien n'est parti à la corbeille : dialogues refusés ou annulés, ou demande impossible à
+     * préparer. Les marquages restent en base ; l'écran le dit et propose de réessayer.
+     *
+     * @property stillMarkedCount médias toujours marqués pour suppression.
+     */
+    data class TrashCancelled(
+        val stillMarkedCount: Int,
+    ) : SummaryEffect
 }
 
 /**
@@ -105,7 +115,9 @@ sealed interface SummaryEffect {
  *
  * « Confirmer » prépare un dialogue système de corbeille par lot (`PrepareTrash`) et les présente
  * l'un après l'autre ; chaque réponse est enregistrée par `RecordTrashResult` : les médias
- * acceptés passent à `TRASHED`, les autres restent marqués (SPEC §3.5).
+ * acceptés passent à `TRASHED`, les autres restent marqués (SPEC §3.5). Si rien n'est parti à la
+ * corbeille, le résumé reste affiché, dit que les marquages sont conservés et propose de
+ * réessayer (`TrashCancelled`).
  */
 @HiltViewModel
 class SummaryViewModel
@@ -171,7 +183,7 @@ class SummaryViewModel
                             launchNext()
                         }
                     },
-                    onFailure = { load(showLoading = false) },
+                    onFailure = { reloadAfterCancellation() },
                 )
             }
         }
@@ -189,7 +201,8 @@ class SummaryViewModel
 
         /**
          * Lance le dialogue du lot suivant. Sans lot restant : si des médias sont partis à la
-         * corbeille, retour à l'accueil, qui l'annonce ; sinon (tout refusé), le résumé se met à jour.
+         * corbeille, retour à l'accueil, qui l'annonce ; sinon (tout refusé), le résumé se met à
+         * jour et annonce que les marquages sont conservés.
          */
         private fun launchNext() {
             val request = pendingRequests.removeFirstOrNull()
@@ -197,7 +210,7 @@ class SummaryViewModel
                 if (trashedCount > 0) {
                     effects.trySend(SummaryEffect.GoHome(trashedCount))
                 } else {
-                    load(showLoading = false)
+                    reloadAfterCancellation()
                 }
                 return
             }
@@ -205,15 +218,30 @@ class SummaryViewModel
             effects.trySend(SummaryEffect.LaunchSystemRequest(mediaActionIntents.intentSender(request)))
         }
 
+        /** Met le résumé à jour après une confirmation sans effet, puis dit que les marquages restent. */
+        private fun reloadAfterCancellation() {
+            viewModelScope.launch {
+                val reloaded = refresh()
+                if (reloaded is SummaryUiState.Loaded) {
+                    effects.trySend(SummaryEffect.TrashCancelled(reloaded.summary.markedForDeletionCount))
+                }
+            }
+        }
+
         /** Calcule le résumé ; après une confirmation, l'écran garde l'ancien jusqu'au nouveau. */
         private fun load(showLoading: Boolean = true) {
             if (showLoading) state.value = SummaryUiState.Loading
-            viewModelScope.launch {
-                state.value =
-                    runCatching { getSessionSummary(ReviewSession()) }.fold(
-                        onSuccess = { SummaryUiState.Loaded(it.copy(keptCount = keptCount)) },
-                        onFailure = { SummaryUiState.Error },
-                    )
-            }
+            viewModelScope.launch { refresh() }
+        }
+
+        /** Relit le résumé en base et le publie. */
+        private suspend fun refresh(): SummaryUiState {
+            val loaded =
+                runCatching { getSessionSummary(ReviewSession()) }.fold(
+                    onSuccess = { SummaryUiState.Loaded(it.copy(keptCount = keptCount)) },
+                    onFailure = { SummaryUiState.Error },
+                )
+            state.value = loaded
+            return loaded
         }
     }
