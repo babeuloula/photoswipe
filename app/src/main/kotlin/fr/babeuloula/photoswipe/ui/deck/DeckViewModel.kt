@@ -44,7 +44,11 @@ sealed interface DeckUiState {
     /**
      * Paquet chargé.
      *
-     * @property cards médias encore à trier, dans l'ordre de la pile ; jamais vide.
+     * @property cards cartes visibles, dans l'ordre de la pile : celle du dessus et, s'il y en a une,
+     * la suivante, déjà composée dessous pour que son image soit chargée avant d'arriver (SPEC §14).
+     * Jamais vide, jamais plus de [VISIBLE_CARDS] : une pile de plusieurs milliers de médias ne
+     * prépare que deux cartes.
+     * @property remainingCount médias encore à trier, carte du dessus comprise.
      * @property canUndo vrai si la dernière décision de la session peut être annulée.
      * @property returningFrom côté d'où revient la carte du dessus après un undo, celui par lequel
      * elle était sortie ; `null` si elle ne revient pas.
@@ -52,16 +56,25 @@ sealed interface DeckUiState {
      */
     data class Loaded(
         val cards: List<MediaCardUiState>,
+        val remainingCount: Int = cards.size,
         val canUndo: Boolean = false,
         val returningFrom: CardSide? = null,
         val menuOpen: Boolean = false,
     ) : DeckUiState {
         init {
-            require(cards.isNotEmpty()) { "a loaded deck has at least one card" }
+            require(cards.size in 1..VISIBLE_CARDS) { "a loaded deck shows 1 to $VISIBLE_CARDS cards: ${cards.size}" }
         }
 
         /** Carte du dessus, celle que l'utilisateur trie. */
         val current: MediaCardUiState get() = cards.first()
+
+        /** Carte suivante, préparée sous celle du dessus ; `null` pour la dernière carte. */
+        val next: MediaCardUiState? get() = cards.getOrNull(1)
+
+        companion object {
+            /** Cartes préparées à l'écran : celle du dessus et la suivante, pas plus. */
+            const val VISIBLE_CARDS = 2
+        }
     }
 }
 
@@ -138,8 +151,11 @@ class DeckViewModel
         private val state = MutableStateFlow<DeckUiState>(DeckUiState.Loading)
         private val effects = Channel<DeckEffect>(Channel.BUFFERED)
 
-        /** Médias encore à trier, dans l'ordre de la pile ; vide tant que le paquet n'est pas chargé. */
-        private var deck: List<MediaItem> = emptyList()
+        /**
+         * Médias encore à trier, dans l'ordre de la pile ; vide tant que le paquet n'est pas chargé.
+         * File à double entrée : trier retire le dessus, annuler l'y remet, sans recopier la pile.
+         */
+        private val deck = ArrayDeque<MediaItem>()
 
         /** Décisions de la session en cours, de la plus ancienne à la plus récente. */
         var session: ReviewSession = ReviewSession()
@@ -178,7 +194,11 @@ class DeckViewModel
             state.value = DeckUiState.Loading
             viewModelScope.launch {
                 runCatching { getDeckForDay(day) }.fold(
-                    onSuccess = { show(it) },
+                    onSuccess = {
+                        deck.clear()
+                        deck.addAll(it)
+                        render()
+                    },
                     onFailure = { state.value = DeckUiState.Error },
                 )
             }
@@ -189,22 +209,26 @@ class DeckViewModel
          * tout de suite, sans attendre l'écriture, pour que la carte suivante apparaisse sous le
          * doigt. Si l'écriture échoue, la carte revient sur le dessus de la pile, rien n'est perdu.
          * Un marquage n'est qu'une décision en base : rien n'est supprimé avant la confirmation
-         * du résumé (SPEC §3.5).
+         * du résumé (SPEC §3.5). La dernière carte triée mène au résumé (SPEC §3.4).
          */
         private fun decideTopCard(
             side: CardSide,
             decide: suspend (MediaItem, LocalDate) -> SessionDecision,
         ) {
-            val media = deck.firstOrNull() ?: return
-            show(deck.drop(1))
+            val media = deck.removeFirstOrNull() ?: return
+            render()
             viewModelScope.launch {
                 runCatching { decide(media, day) }.fold(
                     onSuccess = {
                         session = session.record(it)
                         exitSides = exitSides + side
-                        show(deck)
+                        render()
+                        if (deck.isEmpty()) effects.trySend(DeckEffect.OpenSummary)
                     },
-                    onFailure = { show(listOf(media) + deck) },
+                    onFailure = {
+                        deck.addFirst(media)
+                        render()
+                    },
                 )
             }
         }
@@ -222,7 +246,8 @@ class DeckViewModel
                     val side = exitSides.last()
                     session = result.session
                     exitSides = exitSides.dropLast(1)
-                    show(listOf(result.decision.media) + deck, returningFrom = side)
+                    deck.addFirst(result.decision.media)
+                    render(returningFrom = side)
                 }
             }
         }
@@ -239,18 +264,20 @@ class DeckViewModel
             state.update { current -> if (current is DeckUiState.Loaded) current.copy(menuOpen = open) else current }
         }
 
-        private fun show(
-            media: List<MediaItem>,
-            returningFrom: CardSide? = null,
-        ) {
-            deck = media
+        /** Publie l'état de la pile : seules les deux premières cartes sont préparées. */
+        private fun render(returningFrom: CardSide? = null) {
             val canUndo = !session.isEmpty
             state.value =
-                if (media.isEmpty()) {
+                if (deck.isEmpty()) {
                     DeckUiState.Empty(canUndo)
                 } else {
                     DeckUiState.Loaded(
-                        cards = media.map { MediaCardUiState.of(it, day, clock.zone) },
+                        cards =
+                            deck
+                                .take(
+                                    DeckUiState.Loaded.VISIBLE_CARDS,
+                                ).map { MediaCardUiState.of(it, day, clock.zone) },
+                        remainingCount = deck.size,
                         canUndo = canUndo,
                         returningFrom = returningFrom,
                     )
