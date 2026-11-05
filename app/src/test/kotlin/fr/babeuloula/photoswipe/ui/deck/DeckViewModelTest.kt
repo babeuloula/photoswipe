@@ -17,6 +17,7 @@ import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
+import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -63,6 +64,7 @@ class DeckViewModelTest {
             savedStateHandle = SavedStateHandle(mapOf("epochDay" to day.toEpochDay())),
             getDeckForDay = GetDeckForDay(SameDayMatcher(), source, reviews, RecentYearsFirstOrdering(), clock),
             keepMedia = KeepMedia(reviews, clock),
+            markForDeletion = MarkForDeletion(reviews, clock),
             clock = clock,
         )
 
@@ -132,6 +134,44 @@ class DeckViewModelTest {
             assertEquals(MediaId(2), entry.mediaId)
             assertEquals(2026, entry.reviewYear)
             assertEquals(ReviewDecision.KEPT, entry.decision)
+        }
+
+    @Test
+    fun `marks the top card for deletion without deleting it and shows the next one`() =
+        runTest {
+            val gallery = FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023)))
+            val viewModel = deckViewModel(gallery)
+
+            viewModel.onEvent(DeckEvent.MarkForDeletion)
+
+            assertEquals(listOf(MediaId(1)), viewModel.cardIds())
+            val entry = repository.entries.single()
+            assertEquals(MediaId(2), entry.mediaId)
+            assertEquals(2026, entry.reviewYear)
+            assertEquals(ReviewDecision.MARKED_FOR_DELETION, entry.decision)
+            assertEquals(listOf(MediaId(1), MediaId(2)), gallery.media.map { it.id })
+        }
+
+    @Test
+    fun `remembers kept and marked media in the session for undo`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+
+            viewModel.onEvent(DeckEvent.MarkForDeletion)
+            viewModel.onEvent(DeckEvent.Keep)
+
+            assertEquals(listOf(MediaId(2), MediaId(1)), viewModel.session.decisions.map { it.media.id })
+        }
+
+    @Test
+    fun `puts a marked card back on top when the decision cannot be saved`() =
+        runTest {
+            val viewModel =
+                deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))), FailingSaveRepository())
+
+            viewModel.onEvent(DeckEvent.MarkForDeletion)
+
+            assertEquals(listOf(MediaId(2), MediaId(1)), viewModel.cardIds())
         }
 
     @Test

@@ -16,9 +16,9 @@ import kotlinx.coroutines.launch
 
 /**
  * [MediaCard] qu'on glisse horizontalement (SPEC §4.3). La carte suit le doigt en s'inclinant ;
- * relâchée au-delà du seuil vers la droite, elle sort de l'écran puis [onKeep] est appelé ; en deçà,
- * elle revient au centre avec un ressort. Le glissement à gauche arrive avec PS-43 : d'ici là, la
- * carte revient au centre.
+ * relâchée au-delà du seuil, elle sort de l'écran du côté du geste puis [onKeep] (droite) ou
+ * [onMarkForDeletion] (gauche) est appelé ; en deçà, elle revient au centre avec un ressort. Les deux
+ * sens partagent le même seuil et les mêmes animations.
  *
  * L'état du geste vit dans la composition : l'appelant entoure la carte d'un `key` sur le média,
  * pour que chaque nouvelle carte parte du centre.
@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 fun SwipeableMediaCard(
     card: MediaCardUiState,
     onKeep: () -> Unit,
+    onMarkForDeletion: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier = modifier) {
@@ -45,11 +46,12 @@ fun SwipeableMediaCard(
                         detectHorizontalDragGestures(
                             onDragEnd = {
                                 scope.launch {
-                                    if (offsetX.value > width * SWIPE_THRESHOLD) {
-                                        offsetX.animateTo(width * EXIT_DISTANCE, exitSpring)
-                                        onKeep()
-                                    } else {
+                                    val direction = swipeDirection(offsetX.value, width)
+                                    if (direction == 0f) {
                                         offsetX.animateTo(0f, returnSpring)
+                                    } else {
+                                        offsetX.animateTo(direction * width * EXIT_DISTANCE, exitSpring)
+                                        if (direction > 0f) onKeep() else onMarkForDeletion()
                                     }
                                 }
                             },
@@ -62,6 +64,20 @@ fun SwipeableMediaCard(
         )
     }
 }
+
+/**
+ * Sens d'un geste relâché à [offset] sur une carte de largeur [width] : 1 vers la droite, -1 vers la
+ * gauche, 0 si le seuil n'est pas atteint.
+ */
+internal fun swipeDirection(
+    offset: Float,
+    width: Float,
+): Float =
+    when {
+        offset > width * SWIPE_THRESHOLD -> 1f
+        offset < -width * SWIPE_THRESHOLD -> -1f
+        else -> 0f
+    }
 
 /** Part de la largeur de la carte à dépasser pour que le geste compte. */
 internal const val SWIPE_THRESHOLD = 0.35f
