@@ -114,6 +114,15 @@ class DeckScreenTest {
         override val player: Player = ExoPlayer.Builder(context).build()
         override var playingUri: String? by mutableStateOf(null)
         override var endedUri: String? by mutableStateOf(null)
+        override var muted: Boolean by mutableStateOf(true)
+
+        override fun toggleSound() {
+            calls += "sound"
+            muted = !muted
+        }
+
+        override fun resumesImmediately(uri: String): Boolean = false
+
         var position: Duration = Duration.ZERO
 
         override fun play(uri: String) {
@@ -284,6 +293,30 @@ class DeckScreenTest {
 
         composeRule.onNodeWithContentDescription("Play video").assertExists()
         composeRule.onNodeWithContentDescription("Duration", substring = true).assertDoesNotExist()
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `turns the sound on and off from its button`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
+
+        composeRule.onNodeWithContentDescription("Turn sound on").performClick()
+        advance(Duration.ofMillis(TOLERANCE_MILLIS))
+        composeRule.onNodeWithContentDescription("Turn sound off").performClick()
+
+        assertEquals(listOf("sound", "sound"), videoPlayer.calls)
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `hides the sound button once the video has ended`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
+
+        update { videoPlayer.endedUri = video.uri }
+
+        composeRule.onNodeWithContentDescription("Turn sound on").assertDoesNotExist()
         videoPlayer.release()
     }
 

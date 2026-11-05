@@ -7,6 +7,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +40,18 @@ interface CardVideoPlayer {
 
     /** Vidéo arrivée à la fin et pas encore relancée, `null` si aucune. Lue par Compose. */
     val endedUri: String?
+
+    /** Vrai tant que le son est coupé ; il l'est au départ (SPEC §4.3). Lu par Compose. */
+    val muted: Boolean
+
+    /** Active ou coupe le son ; le réglage vaut pour les vidéos suivantes de la pile. */
+    fun toggleSound()
+
+    /**
+     * Vrai si [uri] était en lecture avant que l'écran soit recréé : elle reprend tout de suite,
+     * à sa position, sans attendre le délai de lecture automatique.
+     */
+    fun resumesImmediately(uri: String): Boolean
 
     /**
      * Lit [uri] en muet, une fois. Une vidéo en pause reprend là où elle était ; une vidéo arrivée
@@ -75,28 +89,32 @@ interface CardVideoPlayer {
 class ExoCardVideoPlayer(
     private val exoPlayer: ExoPlayer,
     private val codecSelector: SoftwareFallbackCodecSelector = SoftwareFallbackCodecSelector(),
+    restoredState: VideoPlaybackState? = null,
 ) : CardVideoPlayer {
+    /**
+     * Réactions aux événements du lecteur. Après un échec de décodage, la vidéo est relancée sur un
+     * décodeur logiciel ; à la fin de la vidéo, elle s'arrête et la carte propose de la relancer.
+     */
+    internal val events =
+        object : Player.Listener {
+            override fun onPlayerError(error: PlaybackException) {
+                if (error.errorCode !in DECODER_ERRORS || codecSelector.preferSoftware || currentUri == null) return
+                codecSelector.preferSoftware = true
+                exoPlayer.prepare()
+            }
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState != Player.STATE_ENDED) return
+                endedUri = currentUri
+                exoPlayer.playWhenReady = false
+                playingUri = null
+            }
+        }
+
     init {
         exoPlayer.volume = 0f
         exoPlayer.repeatMode = Player.REPEAT_MODE_OFF
-        exoPlayer.addListener(
-            object : Player.Listener {
-                override fun onPlayerError(error: PlaybackException) {
-                    onError(error)
-                }
-
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    if (playbackState == Player.STATE_ENDED) onEnded()
-                }
-            },
-        )
-    }
-
-    /** Relance la vidéo sur un décodeur logiciel après un échec de décodage ; sinon, laisse la miniature. */
-    internal fun onError(error: PlaybackException) {
-        if (error.errorCode !in DECODER_ERRORS || codecSelector.preferSoftware || currentUri == null) return
-        codecSelector.preferSoftware = true
-        exoPlayer.prepare()
+        exoPlayer.addListener(events)
     }
 
     override val player: Player get() = exoPlayer
@@ -110,15 +128,40 @@ class ExoCardVideoPlayer(
     override var endedUri: String? by mutableStateOf(null)
         private set
 
+    override var muted: Boolean by mutableStateOf(true)
+        private set
+
+    /** Lecture à reprendre après la recréation de l'écran, consommée par le prochain [play] de sa vidéo. */
+    private var pendingResume: VideoPlaybackState? = null
+
+    override fun toggleSound() {
+        muted = !muted
+        exoPlayer.volume = if (muted) 0f else 1f
+    }
+
+    override fun resumesImmediately(uri: String): Boolean = pendingResume?.let { it.uri == uri && it.playing } ?: false
+
+    /** État à garder si l'écran est recréé (changement de thème, de langue…). */
+    val playbackState: VideoPlaybackState
+        get() =
+            VideoPlaybackState(
+                uri = currentUri,
+                positionMillis = if (ended) 0L else exoPlayer.currentPosition,
+                muted = muted,
+                playing = playingUri != null,
+            )
+
+    // Reprise de l'état d'un lecteur précédent : le son tout de suite, la vidéo et sa position au
+    // prochain play de cette vidéo.
+    init {
+        restoredState?.let { state ->
+            if (muted != state.muted) toggleSound()
+            pendingResume = state.takeIf { it.uri != null }
+        }
+    }
+
     /** Vrai quand la vidéo chargée est arrivée à la fin, jusqu'à ce qu'elle soit relancée. */
     private val ended: Boolean get() = endedUri != null && endedUri == currentUri
-
-    /** Fin de la vidéo : elle s'arrête, et la carte propose de la relancer. */
-    internal fun onEnded() {
-        endedUri = currentUri
-        exoPlayer.playWhenReady = false
-        playingUri = null
-    }
 
     override var playingUri: String? by mutableStateOf(null)
         private set
@@ -126,7 +169,9 @@ class ExoCardVideoPlayer(
     override fun play(uri: String) {
         if (uri != currentUri) {
             currentUri = uri
-            exoPlayer.setMediaItem(MediaItem.fromUri(uri))
+            val resumeAt = pendingResume?.takeIf { it.uri == uri }?.positionMillis ?: 0L
+            pendingResume = null
+            exoPlayer.setMediaItem(MediaItem.fromUri(uri), resumeAt)
             exoPlayer.prepare()
         } else if (ended) {
             exoPlayer.seekTo(0)
@@ -183,15 +228,18 @@ class ExoCardVideoPlayer(
         private val DECODER_ERRORS =
             setOf(PlaybackException.ERROR_CODE_DECODER_INIT_FAILED, PlaybackException.ERROR_CODE_DECODING_FAILED)
 
-        /** Lecteur neuf, à libérer avec [release]. */
+        /** Lecteur neuf, à libérer avec [release] ; il reprend [restoredState] s'il est donné. */
         @OptIn(UnstableApi::class)
-        fun create(context: Context): ExoCardVideoPlayer {
+        fun create(
+            context: Context,
+            restoredState: VideoPlaybackState? = null,
+        ): ExoCardVideoPlayer {
             val codecSelector = SoftwareFallbackCodecSelector()
             val renderers =
                 DefaultRenderersFactory(context)
                     .setMediaCodecSelector(codecSelector)
                     .setEnableDecoderFallback(true)
-            return ExoCardVideoPlayer(ExoPlayer.Builder(context, renderers).build(), codecSelector)
+            return ExoCardVideoPlayer(ExoPlayer.Builder(context, renderers).build(), codecSelector, restoredState)
         }
     }
 }
@@ -237,14 +285,52 @@ val LocalCardVideoPlayer = staticCompositionLocalOf<CardVideoPlayer?> { null }
 
 /**
  * Lecteur de la pile, créé une fois pour l'écran : mis en pause en arrière-plan, repris au premier
- * plan, libéré quand l'écran est quitté.
+ * plan, libéré quand l'écran est quitté ou recréé.
  */
 @Composable
 fun rememberCardVideoPlayer(): CardVideoPlayer {
     val context = LocalContext.current
-    val videoPlayer = remember { ExoCardVideoPlayer.create(context) }
+    // Recréé avec l'écran (le lecteur précédent est libéré), mais la vidéo, sa position et le son
+    // sont repris : rien n'est perdu si l'écran est recréé (SPEC §14).
+    val videoPlayer =
+        rememberSaveable(
+            saver =
+                listSaver(
+                    save = { it.playbackState.toList() },
+                    restore = { ExoCardVideoPlayer.create(context, VideoPlaybackState.fromList(it)) },
+                ),
+        ) { ExoCardVideoPlayer.create(context) }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { videoPlayer.pause() }
     LifecycleEventEffect(Lifecycle.Event.ON_START) { videoPlayer.resume() }
     DisposableEffect(videoPlayer) { onDispose { videoPlayer.release() } }
     return videoPlayer
+}
+
+/**
+ * Ce qu'il faut garder du lecteur quand l'écran est recréé.
+ *
+ * @property uri vidéo chargée, `null` si aucune.
+ * @property positionMillis position de lecture.
+ * @property muted son coupé.
+ * @property playing vidéo en lecture (et non en pause ou terminée).
+ */
+data class VideoPlaybackState(
+    val uri: String?,
+    val positionMillis: Long,
+    val muted: Boolean,
+    val playing: Boolean,
+) {
+    /** Forme enregistrable dans l'état sauvegardé de l'écran. */
+    fun toList(): List<Any?> = listOf(uri, positionMillis, muted, playing)
+
+    companion object {
+        /** Relit la forme produite par [toList]. */
+        fun fromList(values: List<Any?>): VideoPlaybackState =
+            VideoPlaybackState(
+                uri = values[0] as String?,
+                positionMillis = values[1] as Long,
+                muted = values[2] as Boolean,
+                playing = values[3] as Boolean,
+            )
+    }
 }
