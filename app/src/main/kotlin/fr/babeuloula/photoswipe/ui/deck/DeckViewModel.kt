@@ -113,8 +113,14 @@ sealed interface DeckEvent {
 
 /** Navigation demandée par la pile. */
 sealed interface DeckEffect {
-    /** Ouvrir le résumé de la session (SPEC §3.5). */
-    data object OpenSummary : DeckEffect
+    /**
+     * Ouvrir le résumé de la session (SPEC §3.5).
+     *
+     * @property keptCount médias gardés pendant la session, sans les favoris (ADR 0011, 0017).
+     */
+    data class OpenSummary(
+        val keptCount: Int,
+    ) : DeckEffect
 
     /** Quitter la pile, vers l'écran précédent. */
     data object Close : DeckEffect
@@ -178,7 +184,7 @@ class DeckViewModel
         fun onEvent(event: DeckEvent) {
             when (event) {
                 DeckEvent.Retry -> load()
-                DeckEvent.Finish -> effects.trySend(DeckEffect.OpenSummary)
+                DeckEvent.Finish -> effects.trySend(DeckEffect.OpenSummary(keptCount()))
                 DeckEvent.Back -> effects.trySend(DeckEffect.Close)
                 DeckEvent.Keep -> decideTopCard(CardSide.RIGHT, decisions.keepMedia::invoke)
                 DeckEvent.MarkForDeletion -> decideTopCard(CardSide.LEFT, decisions.markForDeletion::invoke)
@@ -223,7 +229,7 @@ class DeckViewModel
                         session = session.record(it)
                         exitSides = exitSides + side
                         render()
-                        if (deck.isEmpty()) effects.trySend(DeckEffect.OpenSummary)
+                        if (deck.isEmpty()) effects.trySend(DeckEffect.OpenSummary(keptCount()))
                     },
                     onFailure = {
                         deck.addFirst(media)
@@ -251,6 +257,12 @@ class DeckViewModel
                 }
             }
         }
+
+        /**
+         * Médias gardés pendant la session, sans les favoris : les décisions sorties à droite. Une
+         * décision annulée a quitté la session, elle n'est donc pas comptée (ADR 0011).
+         */
+        private fun keptCount(): Int = exitSides.count { it == CardSide.RIGHT }
 
         /** Ferme le menu et demande le partage du média du dessus, qui reste en place. */
         private fun shareTopCard() {

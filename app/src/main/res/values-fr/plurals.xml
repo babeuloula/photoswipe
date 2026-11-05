@@ -21,4 +21,19 @@
         <item quantity="many">Il y a %d d\'ans</item>
         <item quantity="other">Il y a %d ans</item>
     </plurals>
+    <plurals name="summary_kept">
+        <item quantity="one">%d média gardé</item>
+        <item quantity="many">%d de médias gardés</item>
+        <item quantity="other">%d médias gardés</item>
+    </plurals>
+    <plurals name="summary_marked">
+        <item quantity="one">%d média marqué pour suppression</item>
+        <item quantity="many">%d de médias marqués pour suppression</item>
+        <item quantity="other">%d médias marqués pour suppression</item>
+    </plurals>
+    <plurals name="summary_favorites">
+        <item quantity="one">%d favori</item>
+        <item quantity="many">%d de favoris</item>
+        <item quantity="other">%d favoris</item>
+    </plurals>
 </resources>
