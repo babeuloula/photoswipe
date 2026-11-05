@@ -23,7 +23,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -119,12 +123,15 @@ private fun BoxScope.DeckContent(
         }
 
         is DeckUiState.Loaded -> {
+            // Sens demandé par un bouton pour la carte du dessus ; 0 tant qu'aucun bouton n'est touché.
+            var requestedDirection by remember(state.current.id) { mutableFloatStateOf(0f) }
             Column(modifier = Modifier.fillMaxSize()) {
                 key(state.current.id) {
                     SwipeableMediaCard(
                         card = state.current,
                         onKeep = { onEvent(DeckEvent.Keep) },
                         onMarkForDeletion = { onEvent(DeckEvent.MarkForDeletion) },
+                        requestedDirection = requestedDirection,
                         modifier =
                             Modifier
                                 .weight(1f)
@@ -132,9 +139,10 @@ private fun BoxScope.DeckContent(
                                 .padding(16.dp),
                     )
                 }
+                // Un second tap pendant la sortie est ignoré : il ne trie pas la carte suivante.
                 DecisionButtons(
-                    onMarkForDeletion = { onEvent(DeckEvent.MarkForDeletion) },
-                    onKeep = { onEvent(DeckEvent.Keep) },
+                    onMarkForDeletion = { if (requestedDirection == 0f) requestedDirection = -1f },
+                    onKeep = { if (requestedDirection == 0f) requestedDirection = 1f },
                     modifier =
                         Modifier
                             .fillMaxWidth()

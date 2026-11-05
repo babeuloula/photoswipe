@@ -252,6 +252,7 @@ class DeckScreenTest {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
 
         composeRule.onNodeWithContentDescription(text(R.string.deck_keep)).performClick()
+        composeRule.waitForIdle()
 
         assertEquals(listOf<DeckEvent>(DeckEvent.Keep), events)
     }
@@ -261,8 +262,59 @@ class DeckScreenTest {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
 
         composeRule.onNodeWithContentDescription(text(R.string.deck_mark_for_deletion)).performClick()
+        composeRule.waitForIdle()
 
         assertEquals(listOf<DeckEvent>(DeckEvent.MarkForDeletion), events)
+    }
+
+    @Test
+    fun `animates the card out like a swipe before keeping it from the button`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+        val start = card().fetchSemanticsNode().boundsInRoot
+        composeRule.mainClock.autoAdvance = false
+
+        composeRule.onNodeWithContentDescription(text(R.string.deck_keep)).performClick()
+        repeat(EXIT_FRAMES) { composeRule.mainClock.advanceTimeByFrame() }
+
+        composeRule.onNodeWithTag(KEEP_INDICATOR_TAG).assertExists()
+        assertTrue(card().fetchSemanticsNode().boundsInRoot.left > start.left)
+        assertTrue(events.isEmpty())
+
+        composeRule.mainClock.autoAdvance = true
+        composeRule.waitForIdle()
+        assertEquals(listOf<DeckEvent>(DeckEvent.Keep), events)
+    }
+
+    @Test
+    fun `animates the card out to the left before marking it from the button`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+        val start = card().fetchSemanticsNode().boundsInRoot
+        composeRule.mainClock.autoAdvance = false
+
+        composeRule.onNodeWithContentDescription(text(R.string.deck_mark_for_deletion)).performClick()
+        repeat(EXIT_FRAMES) { composeRule.mainClock.advanceTimeByFrame() }
+
+        composeRule.onNodeWithTag(DELETE_INDICATOR_TAG).assertExists()
+        assertTrue(card().fetchSemanticsNode().boundsInRoot.left < start.left)
+
+        composeRule.mainClock.autoAdvance = true
+        composeRule.waitForIdle()
+        assertEquals(listOf<DeckEvent>(DeckEvent.MarkForDeletion), events)
+    }
+
+    @Test
+    fun `ignores a second tap while the card is leaving`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+        composeRule.waitForIdle()
+        composeRule.mainClock.autoAdvance = false
+
+        composeRule.onNodeWithContentDescription(text(R.string.deck_keep)).performClick()
+        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.onNodeWithContentDescription(text(R.string.deck_mark_for_deletion)).performClick()
+
+        composeRule.mainClock.autoAdvance = true
+        composeRule.waitForIdle()
+        assertEquals(listOf<DeckEvent>(DeckEvent.Keep), events)
     }
 
     @Test
@@ -312,5 +364,8 @@ class DeckScreenTest {
 
         /** Images observées pendant le retour au centre, rebond compris (environ une demi-seconde). */
         const val BOUNCE_FRAMES = 40
+
+        /** Quelques images après un tap : la carte a commencé à sortir sans avoir fini. */
+        const val EXIT_FRAMES = 3
     }
 }

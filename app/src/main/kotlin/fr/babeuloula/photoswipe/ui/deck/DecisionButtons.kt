@@ -23,7 +23,8 @@ import fr.babeuloula.photoswipe.ui.theme.swipeColors
 /**
  * Boutons équivalents aux gestes, sous la carte (SPEC §4.3, §8) : « Supprimer » à gauche comme le
  * glissement à gauche, « Garder » à droite comme le glissement à droite. Ils déclenchent les mêmes
- * événements que les gestes, pour TalkBack, la navigation au clavier ou par préférence.
+ * événements que les gestes, pour TalkBack, la navigation au clavier ou par préférence ; l'appelant
+ * fait sortir la carte comme un geste avant d'enregistrer la décision.
  */
 @Composable
 fun DecisionButtons(
