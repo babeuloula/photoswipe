@@ -9,8 +9,6 @@ import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
-import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
-import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import fr.babeuloula.photoswipe.ui.navigation.DeckRoute
 import kotlinx.coroutines.channels.Channel
@@ -19,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.LocalDate
@@ -46,13 +45,15 @@ sealed interface DeckUiState {
      *
      * @property cards médias encore à trier, dans l'ordre de la pile ; jamais vide.
      * @property canUndo vrai si la dernière décision de la session peut être annulée.
-     * @property returningFrom côté d'où revient la carte du dessus après un undo : 1 pour la droite
-     * (elle avait été gardée), -1 pour la gauche (marquée) ; 0 si elle ne revient pas.
+     * @property returningFrom côté d'où revient la carte du dessus après un undo, celui par lequel
+     * elle était sortie ; `null` si elle ne revient pas.
+     * @property menuOpen vrai quand le menu favori / partage de la carte du dessus est ouvert.
      */
     data class Loaded(
         val cards: List<MediaCardUiState>,
         val canUndo: Boolean = false,
-        val returningFrom: Float = 0f,
+        val returningFrom: CardSide? = null,
+        val menuOpen: Boolean = false,
     ) : DeckUiState {
         init {
             require(cards.isNotEmpty()) { "a loaded deck has at least one card" }
@@ -79,6 +80,15 @@ sealed interface DeckEvent {
 
     /** « Annuler » : remettre sur la pile le dernier média trié (SPEC §3.4). */
     data object Undo : DeckEvent
+
+    /** Carte glissée vers le haut ou bouton « Menu » : ouvrir le menu favori / partage (SPEC §2). */
+    data object OpenMenu : DeckEvent
+
+    /** Menu fermé sans choix : la carte reste en place. */
+    data object CloseMenu : DeckEvent
+
+    /** « Favori » du menu : garder le média et demander sa mise en favori (SPEC §2, §3.5). */
+    data object Favorite : DeckEvent
 }
 
 /** Navigation demandée par la pile. */
@@ -98,9 +108,7 @@ class DeckViewModel
     constructor(
         savedStateHandle: SavedStateHandle,
         private val getDeckForDay: GetDeckForDay,
-        private val keepMedia: KeepMedia,
-        private val markForDeletion: MarkForDeletion,
-        private val undoLastDecision: UndoLastDecision,
+        private val decisions: DeckDecisions,
         private val clock: Clock,
     ) : ViewModel() {
         /** Jour cible de la pile. */
@@ -117,7 +125,7 @@ class DeckViewModel
             private set
 
         /** Côté de sortie de chaque décision de [session], dans le même ordre : l'undo la fait revenir de là. */
-        private var exitSides: List<Float> = emptyList()
+        private var exitSides: List<CardSide> = emptyList()
 
         /** État de la pile. */
         val uiState: StateFlow<DeckUiState> = state.asStateFlow()
@@ -134,9 +142,12 @@ class DeckViewModel
             when (event) {
                 DeckEvent.Retry -> load()
                 DeckEvent.Finish -> effects.trySend(DeckEffect.OpenSummary)
-                DeckEvent.Keep -> decideTopCard(KEEP_SIDE, keepMedia::invoke)
-                DeckEvent.MarkForDeletion -> decideTopCard(DELETE_SIDE, markForDeletion::invoke)
+                DeckEvent.Keep -> decideTopCard(CardSide.RIGHT, decisions.keepMedia::invoke)
+                DeckEvent.MarkForDeletion -> decideTopCard(CardSide.LEFT, decisions.markForDeletion::invoke)
+                DeckEvent.Favorite -> decideTopCard(CardSide.TOP, decisions.favoriteMedia::invoke)
                 DeckEvent.Undo -> undo()
+                DeckEvent.OpenMenu -> setMenuOpen(true)
+                DeckEvent.CloseMenu -> setMenuOpen(false)
             }
         }
 
@@ -158,7 +169,7 @@ class DeckViewModel
          * du résumé (SPEC §3.5).
          */
         private fun decideTopCard(
-            side: Float,
+            side: CardSide,
             decide: suspend (MediaItem, LocalDate) -> SessionDecision,
         ) {
             val media = deck.firstOrNull() ?: return
@@ -183,7 +194,7 @@ class DeckViewModel
         private fun undo() {
             if (session.isEmpty) return
             viewModelScope.launch {
-                val result = runCatching { undoLastDecision(session) }.getOrNull()
+                val result = runCatching { decisions.undoLastDecision(session) }.getOrNull()
                 if (result is UndoLastDecision.Result.Undone) {
                     val side = exitSides.last()
                     session = result.session
@@ -193,9 +204,14 @@ class DeckViewModel
             }
         }
 
+        /** Ouvre ou ferme le menu de la carte du dessus ; sans carte, il n'y a pas de menu. */
+        private fun setMenuOpen(open: Boolean) {
+            state.update { current -> if (current is DeckUiState.Loaded) current.copy(menuOpen = open) else current }
+        }
+
         private fun show(
             media: List<MediaItem>,
-            returningFrom: Float = 0f,
+            returningFrom: CardSide? = null,
         ) {
             deck = media
             val canUndo = !session.isEmpty
@@ -209,13 +225,5 @@ class DeckViewModel
                         returningFrom = returningFrom,
                     )
                 }
-        }
-
-        private companion object {
-            /** Côté de sortie d'une carte gardée. */
-            const val KEEP_SIDE = 1f
-
-            /** Côté de sortie d'une carte marquée pour suppression. */
-            const val DELETE_SIDE = -1f
         }
     }

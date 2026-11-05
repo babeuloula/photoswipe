@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -11,12 +12,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,7 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -139,22 +143,23 @@ private fun BoxScope.DeckContent(
 }
 
 /**
- * Carte du dessus et boutons de décision. Les boutons font sortir la carte comme un geste avant
- * d'envoyer la décision ; « Annuler » est actif dès qu'une décision peut être annulée.
+ * Carte du dessus, boutons de décision et menu favori / partage. Les boutons et le menu font sortir
+ * la carte comme un geste avant d'envoyer la décision ; « Annuler » est actif dès qu'une décision
+ * peut être annulée.
  */
 @Composable
 private fun LoadedDeck(
     state: DeckUiState.Loaded,
     onEvent: (DeckEvent) -> Unit,
 ) {
-    // Sens demandé par un bouton pour la carte du dessus ; 0 tant qu'aucun bouton n'est touché.
-    var requestedDirection by remember(state.current.id) { mutableFloatStateOf(0f) }
+    // Sortie demandée par un bouton ou le menu pour la carte du dessus ; `null` tant qu'il n'y en a pas.
+    var requestedExit by remember(state.current.id) { mutableStateOf<CardSide?>(null) }
     Column(modifier = Modifier.fillMaxSize()) {
         key(state.current.id) {
             SwipeableMediaCard(
                 card = state.current,
-                onDecision = onEvent,
-                requestedDirection = requestedDirection,
+                onEvent = onEvent,
+                requestedExit = requestedExit,
                 returningFrom = state.returningFrom,
                 modifier =
                     Modifier
@@ -163,15 +168,53 @@ private fun LoadedDeck(
                         .padding(16.dp),
             )
         }
-        // Un second tap pendant la sortie est ignoré : il ne trie pas la carte suivante.
+        // Pendant la sortie de la carte, les boutons sont ignorés : un second tap ne trie pas la suivante.
         DecisionButtons(
             canUndo = state.canUndo,
-            onMarkForDeletion = { if (requestedDirection == 0f) requestedDirection = -1f },
-            onUndo = { if (requestedDirection == 0f) onEvent(DeckEvent.Undo) },
-            onKeep = { if (requestedDirection == 0f) requestedDirection = 1f },
+            onClick = { button ->
+                if (requestedExit == null) {
+                    when (button) {
+                        DeckButton.MARK_FOR_DELETION -> requestedExit = CardSide.LEFT
+                        DeckButton.KEEP -> requestedExit = CardSide.RIGHT
+                        DeckButton.UNDO -> onEvent(DeckEvent.Undo)
+                        DeckButton.MENU -> onEvent(DeckEvent.OpenMenu)
+                    }
+                }
+            },
             modifier =
                 Modifier
                     .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+        )
+    }
+    if (state.menuOpen) {
+        CardMenu(
+            onFavorite = {
+                onEvent(DeckEvent.CloseMenu)
+                requestedExit = CardSide.TOP
+            },
+            onDismiss = { onEvent(DeckEvent.CloseMenu) },
+        )
+    }
+}
+
+/**
+ * Menu de la carte du dessus (SPEC §2), en feuille du bas Material 3 : « Ajouter aux favoris » ;
+ * le fermer sans choisir laisse la carte en place.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CardMenu(
+    onFavorite: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.deck_favorite)) },
+            leadingContent = { Icon(Icons.Filled.Favorite, contentDescription = null) },
+            modifier =
+                Modifier
+                    .clickable(onClick = onFavorite)
                     .padding(bottom = 24.dp),
         )
     }

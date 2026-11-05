@@ -1,27 +1,68 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import androidx.compose.ui.geometry.Offset
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
-/** Seuil partagé par les deux sens du geste, et intensité de l'indicateur. */
+/** Cible d'un geste (seuils partagés par la gauche et la droite, menu vers le haut), et intensité de l'indicateur. */
 class SwipeDirectionTest {
     private val width = 1000f
+    private val size = Offset(width, 2000f)
 
     @Test
     fun `goes right past the threshold`() {
-        assertEquals(1f, swipeDirection(width * SWIPE_THRESHOLD + 1, width))
+        assertEquals(SwipeTarget.RIGHT, swipeTarget(Offset(width * SWIPE_THRESHOLD + 1, 0f), size))
     }
 
     @Test
     fun `goes left past the same threshold`() {
-        assertEquals(-1f, swipeDirection(-width * SWIPE_THRESHOLD - 1, width))
+        assertEquals(SwipeTarget.LEFT, swipeTarget(Offset(-width * SWIPE_THRESHOLD - 1, 0f), size))
     }
 
     @Test
     fun `stays put within the threshold on both sides`() {
-        assertEquals(0f, swipeDirection(width * SWIPE_THRESHOLD, width))
-        assertEquals(0f, swipeDirection(-width * SWIPE_THRESHOLD, width))
-        assertEquals(0f, swipeDirection(0f, width))
+        assertNull(swipeTarget(Offset(width * SWIPE_THRESHOLD, 0f), size))
+        assertNull(swipeTarget(Offset(-width * SWIPE_THRESHOLD, 0f), size))
+        assertNull(swipeTarget(Offset.Zero, size))
+    }
+
+    @Test
+    fun `opens the menu when mostly swiped up past its threshold`() {
+        assertEquals(SwipeTarget.MENU, swipeTarget(Offset(100f, -size.y * MENU_THRESHOLD - 1), size))
+    }
+
+    @Test
+    fun `does nothing on a short swipe up or any swipe down`() {
+        assertNull(swipeTarget(Offset(0f, -size.y * MENU_THRESHOLD / 2), size))
+        assertNull(swipeTarget(Offset(0f, size.y), size))
+    }
+
+    @Test
+    fun `shows a blue indicator growing while swiping up`() {
+        assertEquals(
+            SwipeIndication(CardSide.TOP, 0.5f),
+            swipeIndication(Offset(0f, -size.y * MENU_THRESHOLD / 2), size),
+        )
+        assertEquals(1f, swipeIndication(Offset(0f, -size.y), size)?.progress)
+    }
+
+    @Test
+    fun `shows a side indicator while swiping sideways`() {
+        assertEquals(CardSide.RIGHT, swipeIndication(Offset(100f, 10f), size)?.side)
+        assertEquals(CardSide.LEFT, swipeIndication(Offset(-100f, 10f), size)?.side)
+    }
+
+    @Test
+    fun `shows no indicator at rest or while swiping down`() {
+        assertNull(swipeIndication(Offset.Zero, size))
+        assertNull(swipeIndication(Offset(0f, 300f), size))
+    }
+
+    @Test
+    fun `follows the dominant direction of a diagonal swipe`() {
+        assertEquals(SwipeTarget.RIGHT, swipeTarget(Offset(width * 0.6f, -width * 0.5f), size))
+        assertEquals(SwipeTarget.MENU, swipeTarget(Offset(width * 0.4f, -width * 0.5f), size))
     }
 
     @Test

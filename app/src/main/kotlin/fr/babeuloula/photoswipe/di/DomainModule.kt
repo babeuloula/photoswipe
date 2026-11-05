@@ -10,6 +10,7 @@ import fr.babeuloula.photoswipe.domain.service.DeckOrdering
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
+import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
@@ -71,4 +72,10 @@ object DomainModule {
     @Provides
     fun provideUndoLastDecision(reviewRepository: ReviewRepository): UndoLastDecision =
         UndoLastDecision(reviewRepository)
+
+    @Provides
+    fun provideFavoriteMedia(
+        reviewRepository: ReviewRepository,
+        clock: Clock,
+    ): FavoriteMedia = FavoriteMedia(reviewRepository, clock)
 }

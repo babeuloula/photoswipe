@@ -33,6 +33,9 @@
     <string name="deck_keep">Keep</string>
     <string name="deck_mark_for_deletion">Mark for deletion</string>
     <string name="deck_undo">Undo</string>
+    <!-- Menu de la carte, ouvert en glissant vers le haut (SPEC §2). -->
+    <string name="deck_menu">More actions</string>
+    <string name="deck_favorite">Add to favorites</string>
     <string name="summary_title">Summary</string>
     <string name="summary_done">Done</string>
     <string name="settings_title">Settings</string>
