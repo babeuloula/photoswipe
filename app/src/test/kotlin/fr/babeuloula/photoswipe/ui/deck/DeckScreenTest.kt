@@ -382,6 +382,25 @@ class DeckScreenTest {
     }
 
     @Test
+    fun `shows a blue indicator while dragging up and vibrates past the menu threshold`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        card().performTouchInput {
+            down(center)
+            moveBy(Offset(0f, -height * 0.4f))
+        }
+
+        composeRule.onNodeWithTag(FAVORITE_INDICATOR_TAG).assertExists()
+        composeRule.onNodeWithTag(KEEP_INDICATOR_TAG).assertDoesNotExist()
+        composeRule.onNodeWithTag(DELETE_INDICATOR_TAG).assertDoesNotExist()
+        assertEquals(listOf(HapticFeedbackType.GestureThresholdActivate), haptics)
+
+        card().performTouchInput { up() }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(FAVORITE_INDICATOR_TAG).assertDoesNotExist()
+    }
+
+    @Test
     fun `does not open the menu on a short swipe up`() {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
 

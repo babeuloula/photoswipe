@@ -39,6 +39,27 @@ class SwipeDirectionTest {
     }
 
     @Test
+    fun `shows a blue indicator growing while swiping up`() {
+        assertEquals(
+            SwipeIndication(CardSide.TOP, 0.5f),
+            swipeIndication(Offset(0f, -size.y * MENU_THRESHOLD / 2), size),
+        )
+        assertEquals(1f, swipeIndication(Offset(0f, -size.y), size)?.progress)
+    }
+
+    @Test
+    fun `shows a side indicator while swiping sideways`() {
+        assertEquals(CardSide.RIGHT, swipeIndication(Offset(100f, 10f), size)?.side)
+        assertEquals(CardSide.LEFT, swipeIndication(Offset(-100f, 10f), size)?.side)
+    }
+
+    @Test
+    fun `shows no indicator at rest or while swiping down`() {
+        assertNull(swipeIndication(Offset.Zero, size))
+        assertNull(swipeIndication(Offset(0f, 300f), size))
+    }
+
+    @Test
     fun `follows the dominant direction of a diagonal swipe`() {
         assertEquals(SwipeTarget.RIGHT, swipeTarget(Offset(width * 0.6f, -width * 0.5f), size))
         assertEquals(SwipeTarget.MENU, swipeTarget(Offset(width * 0.4f, -width * 0.5f), size))

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -65,9 +66,9 @@ internal enum class SwipeTarget { LEFT, RIGHT, MENU }
  * [DeckEvent.Keep] ou [DeckEvent.MarkForDeletion] ; glissée vers le haut, elle revient au centre et
  * [onEvent] reçoit [DeckEvent.OpenMenu] ; en deçà des seuils, elle revient au centre avec un ressort.
  *
- * Pendant un geste horizontal, un voile vert avec une coche (droite) ou rouge avec une corbeille
- * (gauche) recouvre la carte, d'autant plus marqué que le doigt s'éloigne du centre ; franchir un
- * seuil déclenche un retour haptique. Relâchée avant le seuil, la carte revient sans aucun voile.
+ * Pendant le geste, un voile vert avec une coche (droite), rouge avec une corbeille (gauche) ou bleu
+ * avec un cœur (haut) recouvre la carte, d'autant plus marqué que le doigt s'éloigne du centre ;
+ * franchir un seuil déclenche un retour haptique. Relâchée avant le seuil, la carte revient sans aucun voile.
  *
  * [requestedExit] fait sortir la carte par ce côté comme un geste : c'est ainsi que les boutons et
  * le menu l'animent. [returningFrom] la fait entrer depuis ce côté jusqu'au centre : l'animation
@@ -94,9 +95,9 @@ fun SwipeableMediaCard(
         val scope = rememberCoroutineScope()
         val haptics = LocalHapticFeedback.current
 
-        /** Sortie de la carte par [side], voile plein sur les côtés, puis décision. */
+        /** Sortie de la carte par [side], voile plein de ce côté, puis décision. */
         suspend fun exit(side: CardSide) {
-            drag.value = side.direction * size.x
+            drag.value = side.direction * maxOf(size.x, size.y)
             offset.animateTo(exitOffset(side, size), exitSpring)
             onEvent(side.decision)
         }
@@ -150,49 +151,109 @@ fun SwipeableMediaCard(
                     },
         ) {
             MediaCard(card = card, modifier = Modifier.matchParentSize())
-            SwipeIndicator(offset = indicatorOffset(drag.value), width = size.x, modifier = Modifier.matchParentSize())
+            SwipeIndicator(indication = swipeIndication(drag.value, size), modifier = Modifier.matchParentSize())
         }
     }
 }
 
 /**
  * Voile coloré du geste en cours : vert et coche vers la droite, rouge et corbeille vers la gauche,
- * avec une opacité qui suit [swipeProgress]. Décoratif : les boutons de la pile portent les actions
- * pour TalkBack.
+ * bleu et cœur vers le haut, avec une opacité qui suit l'intensité de [indication]. Décoratif : les
+ * boutons de la pile portent les actions pour TalkBack.
  */
 @Composable
 private fun SwipeIndicator(
-    offset: Float,
-    width: Float,
+    indication: SwipeIndication?,
     modifier: Modifier = Modifier,
 ) {
-    val progress = swipeProgress(offset, width)
-    if (progress == 0f) return
-    val keeping = offset > 0f
+    if (indication == null) return
     val colors = MaterialTheme.swipeColors
-    val color = if (keeping) colors.keep else colors.delete
+    val (color, onColor) =
+        when (indication.side) {
+            CardSide.RIGHT -> colors.keep to colors.onKeep
+            CardSide.LEFT -> colors.delete to colors.onDelete
+            CardSide.TOP -> colors.favorite to colors.onFavorite
+        }
     Box(
         modifier =
             modifier
-                .testTag(if (keeping) KEEP_INDICATOR_TAG else DELETE_INDICATOR_TAG)
-                .graphicsLayer { alpha = progress }
+                .testTag(indicatorTag(indication.side))
+                .graphicsLayer { alpha = indication.progress }
                 .clip(MaterialTheme.shapes.medium)
                 .background(color.copy(alpha = MAX_VEIL_ALPHA)),
     ) {
         Icon(
-            imageVector = if (keeping) Icons.Filled.Check else Icons.Filled.Delete,
+            imageVector =
+                when (indication.side) {
+                    CardSide.RIGHT -> Icons.Filled.Check
+                    CardSide.LEFT -> Icons.Filled.Delete
+                    CardSide.TOP -> Icons.Filled.Favorite
+                },
             contentDescription = null,
-            tint = if (keeping) colors.onKeep else colors.onDelete,
+            tint = onColor,
             modifier =
                 Modifier
-                    .align(if (keeping) Alignment.TopStart else Alignment.TopEnd)
-                    .padding(24.dp)
+                    .align(
+                        when (indication.side) {
+                            CardSide.RIGHT -> Alignment.TopStart
+
+                            CardSide.LEFT -> Alignment.TopEnd
+
+                            // La carte monte : l'icône se place en bas, la partie qui reste visible.
+                            CardSide.TOP -> Alignment.BottomCenter
+                        },
+                    ).padding(24.dp)
                     .background(color, MaterialTheme.shapes.extraLarge)
                     .padding(12.dp)
                     .size(48.dp),
         )
     }
 }
+
+/** Étiquette de test de l'indicateur du côté [side]. */
+internal fun indicatorTag(side: CardSide): String =
+    when (side) {
+        CardSide.RIGHT -> KEEP_INDICATOR_TAG
+        CardSide.LEFT -> DELETE_INDICATOR_TAG
+        CardSide.TOP -> FAVORITE_INDICATOR_TAG
+    }
+
+/**
+ * Indicateur à montrer pour un geste en cours : son côté et son intensité, de 0 à 1.
+ *
+ * @property side côté vers lequel va la carte.
+ * @property progress intensité, proportionnelle à la distance jusqu'au seuil de ce côté.
+ */
+internal data class SwipeIndication(
+    val side: CardSide,
+    val progress: Float,
+)
+
+/**
+ * Indicateur du geste [drag] sur une carte de taille [size] : horizontal (gauche ou droite) si le
+ * geste est surtout horizontal, bleu s'il monte surtout ; `null` au repos ou vers le bas.
+ */
+internal fun swipeIndication(
+    drag: Offset,
+    size: Offset,
+): SwipeIndication? {
+    val vertical = abs(drag.y) > abs(drag.x)
+    val indication =
+        when {
+            vertical && drag.y < 0f -> SwipeIndication(CardSide.TOP, verticalProgress(drag.y, size.y))
+            vertical -> null
+            drag.x > 0f -> SwipeIndication(CardSide.RIGHT, swipeProgress(drag.x, size.x))
+            drag.x < 0f -> SwipeIndication(CardSide.LEFT, swipeProgress(drag.x, size.x))
+            else -> null
+        }
+    return indication?.takeIf { it.progress > 0f }
+}
+
+/** Intensité de l'indicateur vers le haut, pleine au seuil d'ouverture du menu. */
+private fun verticalProgress(
+    offset: Float,
+    height: Float,
+): Float = if (height <= 0f) 0f else (abs(offset) / (height * MENU_THRESHOLD)).coerceIn(0f, 1f)
 
 /** Position de la carte sortie par [side] (centre si `null`), pour une carte de taille [size]. */
 private fun exitOffset(
@@ -204,9 +265,6 @@ private fun exitOffset(
         CardSide.TOP -> Offset(0f, -size.y * EXIT_DISTANCE)
         else -> side.direction * (size.x * EXIT_DISTANCE)
     }
-
-/** Déplacement horizontal montré par l'indicateur : aucun quand le geste est surtout vertical. */
-private fun indicatorOffset(drag: Offset): Float = if (abs(drag.y) > abs(drag.x)) 0f else drag.x
 
 /**
  * Cible d'un geste relâché à [drag] sur une carte de taille [size] : le menu si le doigt est surtout
@@ -244,6 +302,9 @@ internal const val KEEP_INDICATOR_TAG = "keep_indicator"
 
 /** Étiquette de test de l'indicateur « supprimer ». */
 internal const val DELETE_INDICATOR_TAG = "delete_indicator"
+
+/** Étiquette de test de l'indicateur « favori ». */
+internal const val FAVORITE_INDICATOR_TAG = "favorite_indicator"
 
 /** Opacité maximale du voile coloré : la photo reste visible dessous. */
 private const val MAX_VEIL_ALPHA = 0.35f

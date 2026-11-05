@@ -14,6 +14,16 @@ class SwipeColorsTest {
     }
 
     @Test
+    fun `uses a lighter blue in the dark theme for the favorite menu`() {
+        val light = swipeColors(LightColorScheme, darkTheme = false)
+        val dark = swipeColors(DarkColorScheme, darkTheme = true)
+
+        assertNotEquals(light.favorite, dark.favorite)
+        assertNotEquals(light.favorite, light.onFavorite)
+        assertNotEquals(dark.favorite, dark.onFavorite)
+    }
+
+    @Test
     fun `uses a lighter green in the dark theme`() {
         val light = swipeColors(LightColorScheme, darkTheme = false)
         val dark = swipeColors(DarkColorScheme, darkTheme = true)
