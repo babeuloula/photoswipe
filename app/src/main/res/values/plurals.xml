@@ -36,4 +36,8 @@
         <item quantity="one">%d favorite</item>
         <item quantity="other">%d favorites</item>
     </plurals>
+    <plurals name="summary_trashed">
+        <item quantity="one">%d item moved to the trash. You can restore it from your gallery\'s trash for about 30 days.</item>
+        <item quantity="other">%d items moved to the trash. You can restore them from your gallery\'s trash for about 30 days.</item>
+    </plurals>
 </resources>

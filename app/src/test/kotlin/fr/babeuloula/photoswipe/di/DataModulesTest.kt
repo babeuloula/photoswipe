@@ -4,8 +4,10 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.data.di.IoDispatcher
+import fr.babeuloula.photoswipe.data.media.MediaStoreActionRequestFactory
 import fr.babeuloula.photoswipe.data.review.RoomReviewRepository
 import fr.babeuloula.photoswipe.data.settings.DataStoreSettingsRepository
+import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -37,6 +39,8 @@ class DataModulesTest {
 
     @Inject lateinit var settingsRepository: SettingsRepository
 
+    @Inject lateinit var mediaActionRequestFactory: MediaActionRequestFactory
+
     @Inject
     @IoDispatcher
     lateinit var ioDispatcher: CoroutineDispatcher
@@ -50,6 +54,7 @@ class DataModulesTest {
     fun `binds each domain port to its android implementation`() {
         assertTrue(reviewRepository is RoomReviewRepository)
         assertTrue(settingsRepository is DataStoreSettingsRepository)
+        assertTrue(mediaActionRequestFactory is MediaStoreActionRequestFactory)
     }
 
     @Test

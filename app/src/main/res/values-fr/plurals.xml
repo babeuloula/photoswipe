@@ -36,4 +36,9 @@
         <item quantity="many">%d de favoris</item>
         <item quantity="other">%d favoris</item>
     </plurals>
+    <plurals name="summary_trashed">
+        <item quantity="one">%d média envoyé à la corbeille. Vous pouvez le restaurer depuis la corbeille de votre galerie pendant environ 30 jours.</item>
+        <item quantity="many">%d de médias envoyés à la corbeille. Vous pouvez les restaurer depuis la corbeille de votre galerie pendant environ 30 jours.</item>
+        <item quantity="other">%d médias envoyés à la corbeille. Vous pouvez les restaurer depuis la corbeille de votre galerie pendant environ 30 jours.</item>
+    </plurals>
 </resources>

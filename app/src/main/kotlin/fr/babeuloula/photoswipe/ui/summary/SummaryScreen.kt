@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,9 +24,12 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -44,7 +48,8 @@ import fr.babeuloula.photoswipe.ui.theme.swipeColors
 
 /**
  * Résumé avant confirmation (SPEC §3.5) : l'espace libéré estimé en tête, puis les gardés, les
- * marqués pour suppression et les favoris. « Plus tard » ramène à l'accueil sans rien changer.
+ * marqués pour suppression et les favoris. « Confirmer la suppression » présente les dialogues
+ * système de corbeille ; « Plus tard » ramène à l'accueil sans rien changer.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,9 +57,11 @@ fun SummaryScreen(
     state: SummaryUiState,
     onEvent: (SummaryEvent) -> Unit,
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.summary_title)) },
@@ -94,7 +101,7 @@ fun SummaryScreen(
                 }
 
                 is SummaryUiState.Loaded -> {
-                    SummaryContent(summary = state.summary, onEvent = onEvent)
+                    SummaryContent(state = state, onEvent = onEvent)
                 }
             }
         }
@@ -104,9 +111,10 @@ fun SummaryScreen(
 /** Espace libéré, détail des décisions et boutons. */
 @Composable
 private fun SummaryContent(
-    summary: SessionSummary,
+    state: SummaryUiState.Loaded,
     onEvent: (SummaryEvent) -> Unit,
 ) {
+    val summary = state.summary
     Column(
         modifier =
             Modifier
@@ -143,6 +151,18 @@ private fun SummaryContent(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Button(
+            onClick = { onEvent(SummaryEvent.Confirm) },
+            enabled = state.canConfirm,
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                ),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.summary_confirm))
+        }
         OutlinedButton(onClick = { onEvent(SummaryEvent.Later) }, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.summary_later))
         }
