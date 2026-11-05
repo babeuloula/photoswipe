@@ -225,6 +225,24 @@ class DeckScreenTest {
     }
 
     @Test
+    fun `shows no indicator while the card springs back to the center`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+        card().performTouchInput {
+            down(center)
+            moveBy(Offset(width * 0.25f, 0f))
+        }
+        composeRule.onNodeWithTag(KEEP_INDICATOR_TAG).assertExists()
+
+        composeRule.mainClock.autoAdvance = false
+        card().performTouchInput { up() }
+        repeat(BOUNCE_FRAMES) {
+            composeRule.mainClock.advanceTimeByFrame()
+            composeRule.onNodeWithTag(KEEP_INDICATOR_TAG).assertDoesNotExist()
+            composeRule.onNodeWithTag(DELETE_INDICATOR_TAG).assertDoesNotExist()
+        }
+    }
+
+    @Test
     fun `shows no indicator when the card is at rest`() {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
 
@@ -234,5 +252,8 @@ class DeckScreenTest {
 
     private companion object {
         const val TIMEOUT_MILLIS = 5_000L
+
+        /** Images observées pendant le retour au centre, rebond compris (environ une demi-seconde). */
+        const val BOUNCE_FRAMES = 40
     }
 }

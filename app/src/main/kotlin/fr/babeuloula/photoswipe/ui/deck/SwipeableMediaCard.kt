@@ -39,8 +39,9 @@ import kotlin.math.abs
  * sens partagent le même seuil et les mêmes animations.
  *
  * Pendant le geste, un voile vert avec une coche (droite) ou rouge avec une corbeille (gauche)
- * recouvre la carte, d'autant plus marqué que la carte s'éloigne du centre ; franchir le seuil
- * déclenche un retour haptique.
+ * recouvre la carte, d'autant plus marqué que le doigt s'éloigne du centre ; franchir le seuil
+ * déclenche un retour haptique. Relâchée avant le seuil, la carte revient au centre sans aucun voile,
+ * même pendant son rebond ; au-delà, elle sort avec le voile du côté choisi.
  *
  * L'état du geste vit dans la composition : l'appelant entoure la carte d'un `key` sur le média,
  * pour que chaque nouvelle carte parte du centre.
@@ -56,6 +57,7 @@ fun SwipeableMediaCard(
         val width = with(LocalDensity.current) { maxWidth.toPx() }
         val offsetX = remember { Animatable(0f) }
         // Position du doigt, tenue à jour de façon synchrone : l'Animatable la suit dans une coroutine.
+        // L'indicateur la lit, et non la position animée : il ne suit pas le rebond du retour au centre.
         val dragX = remember { mutableFloatStateOf(0f) }
         val scope = rememberCoroutineScope()
         val haptics = LocalHapticFeedback.current
@@ -73,6 +75,7 @@ fun SwipeableMediaCard(
                                 scope.launch {
                                     val direction = swipeDirection(dragX.floatValue, width)
                                     if (direction == 0f) {
+                                        dragX.floatValue = 0f
                                         offsetX.animateTo(0f, returnSpring)
                                     } else {
                                         offsetX.animateTo(direction * width * EXIT_DISTANCE, exitSpring)
@@ -80,7 +83,10 @@ fun SwipeableMediaCard(
                                     }
                                 }
                             },
-                            onDragCancel = { scope.launch { offsetX.animateTo(0f, returnSpring) } },
+                            onDragCancel = {
+                                dragX.floatValue = 0f
+                                scope.launch { offsetX.animateTo(0f, returnSpring) }
+                            },
                         ) { change, dragAmount ->
                             change.consume()
                             val before = swipeDirection(dragX.floatValue, width)
@@ -94,7 +100,7 @@ fun SwipeableMediaCard(
                     },
         ) {
             MediaCard(card = card, modifier = Modifier.matchParentSize())
-            SwipeIndicator(offset = offsetX.value, width = width, modifier = Modifier.matchParentSize())
+            SwipeIndicator(offset = dragX.floatValue, width = width, modifier = Modifier.matchParentSize())
         }
     }
 }
