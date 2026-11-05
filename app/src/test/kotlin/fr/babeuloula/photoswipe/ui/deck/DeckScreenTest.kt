@@ -264,6 +264,26 @@ class DeckScreenTest {
     }
 
     @Test
+    fun `shows the full duration again once the video has ended`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
+        update {
+            videoPlayer.position = Duration.ofSeconds(31)
+            videoPlayer.playingUri = video.uri
+        }
+        advance(Duration.ofMillis(TOLERANCE_MILLIS))
+
+        update {
+            videoPlayer.position = Duration.ZERO
+            videoPlayer.playingUri = null
+        }
+        advance(Duration.ofMillis(TOLERANCE_MILLIS))
+
+        composeRule.onNodeWithContentDescription("Play video, 00:32").assertExists()
+        videoPlayer.release()
+    }
+
+    @Test
     fun `counts the remaining time down while playing`() {
         val videoPlayer = RecordingVideoPlayer(composeRule.activity)
         showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)

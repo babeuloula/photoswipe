@@ -36,7 +36,10 @@ interface CardVideoPlayer {
      */
     val playingUri: String?
 
-    /** Lit [uri] en boucle et en muet ; une vidéo déjà en cours continue sans recommencer. */
+    /**
+     * Lit [uri] en muet, une fois. Une vidéo en pause reprend là où elle était ; une vidéo arrivée
+     * à la fin repart du début.
+     */
     fun play(uri: String)
 
     /** Position de lecture de [uri], `null` si ce n'est pas la vidéo chargée. */
@@ -59,7 +62,8 @@ interface CardVideoPlayer {
 }
 
 /**
- * [CardVideoPlayer] sur Media3 ExoPlayer, muet et en boucle.
+ * [CardVideoPlayer] sur Media3 ExoPlayer, muet et lu une seule fois : à la fin, la vidéo s'arrête
+ * et ne repart que si l'utilisateur la relance.
  *
  * Certains décodeurs matériels échouent sur des vidéos que le décodeur logiciel d'Android lit sans
  * peine (décodeur de l'émulateur, appareils capricieux). Au premier échec de décodage, le lecteur
@@ -71,11 +75,15 @@ class ExoCardVideoPlayer(
 ) : CardVideoPlayer {
     init {
         exoPlayer.volume = 0f
-        exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
+        exoPlayer.repeatMode = Player.REPEAT_MODE_OFF
         exoPlayer.addListener(
             object : Player.Listener {
                 override fun onPlayerError(error: PlaybackException) {
                     onError(error)
+                }
+
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_ENDED) onEnded()
                 }
             },
         )
@@ -96,6 +104,16 @@ class ExoCardVideoPlayer(
     /** Vrai après une pause demandée par l'utilisateur, jusqu'à ce qu'il relance la vidéo. */
     private var pausedByUser = false
 
+    /** Vrai quand la vidéo chargée est arrivée à la fin, jusqu'à ce qu'elle soit relancée. */
+    private var ended = false
+
+    /** Fin de la vidéo : elle s'arrête, et la carte propose de la relancer. */
+    internal fun onEnded() {
+        ended = true
+        exoPlayer.playWhenReady = false
+        playingUri = null
+    }
+
     override var playingUri: String? by mutableStateOf(null)
         private set
 
@@ -104,14 +122,21 @@ class ExoCardVideoPlayer(
             currentUri = uri
             exoPlayer.setMediaItem(MediaItem.fromUri(uri))
             exoPlayer.prepare()
+        } else if (ended) {
+            exoPlayer.seekTo(0)
         }
+        ended = false
         pausedByUser = false
         exoPlayer.playWhenReady = true
         playingUri = uri
     }
 
     override fun position(uri: String): Duration? =
-        if (uri == currentUri) Duration.ofMillis(exoPlayer.currentPosition) else null
+        when {
+            uri != currentUri -> null
+            ended -> Duration.ZERO
+            else -> Duration.ofMillis(exoPlayer.currentPosition)
+        }
 
     override fun pauseByUser(uri: String) {
         if (uri != currentUri) return
@@ -124,6 +149,7 @@ class ExoCardVideoPlayer(
         if (uri != currentUri) return
         currentUri = null
         pausedByUser = false
+        ended = false
         playingUri = null
         exoPlayer.stop()
         exoPlayer.clearMediaItems()
@@ -135,7 +161,7 @@ class ExoCardVideoPlayer(
     }
 
     override fun resume() {
-        if (currentUri == null || pausedByUser) return
+        if (currentUri == null || pausedByUser || ended) return
         exoPlayer.playWhenReady = true
         playingUri = currentUri
     }

@@ -33,9 +33,42 @@ class ExoCardVideoPlayerTest {
     }
 
     @Test
-    fun `plays muted and in a loop`() {
+    fun `plays muted and only once`() {
         assertEquals(0f, player.volume)
-        assertEquals(Player.REPEAT_MODE_ONE, player.repeatMode)
+        assertEquals(Player.REPEAT_MODE_OFF, player.repeatMode)
+    }
+
+    @Test
+    fun `stops at the end and offers to play from the start`() {
+        videoPlayer.play(first)
+
+        videoPlayer.onEnded()
+
+        assertNull(videoPlayer.playingUri)
+        assertFalse(player.playWhenReady)
+        assertEquals(Duration.ZERO, videoPlayer.position(first))
+    }
+
+    @Test
+    fun `does not restart an ended video back in the foreground`() {
+        videoPlayer.play(first)
+        videoPlayer.onEnded()
+
+        videoPlayer.resume()
+
+        assertFalse(player.playWhenReady)
+    }
+
+    @Test
+    fun `replays an ended video from the badge`() {
+        videoPlayer.play(first)
+        videoPlayer.onEnded()
+
+        videoPlayer.play(first)
+
+        assertTrue(player.playWhenReady)
+        assertEquals(first, videoPlayer.playingUri)
+        assertEquals(0L, player.currentPosition)
     }
 
     @Test

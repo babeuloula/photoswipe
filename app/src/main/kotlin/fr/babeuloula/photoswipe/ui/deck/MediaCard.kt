@@ -131,7 +131,8 @@ fun MediaCard(
 
 /**
  * Vidéo de la carte du dessus (SPEC §4.3) : elle démarre seule, en muet, [AUTOPLAY_DELAY] après
- * l'arrivée de la carte, et s'arrête quand la carte part. Sa pastille devient alors un bouton pause
+ * l'arrivée de la carte, est lue une fois, et s'arrête quand la carte part. À la fin, la pastille
+ * repasse sur ▶ avec la durée totale. Sa pastille devient alors un bouton pause
  * avec le temps restant ; un tap met en pause ou relance. La surface reste transparente jusqu'à la
  * première image, pour que la miniature ne laisse pas place à un rectangle noir.
  */
@@ -148,11 +149,12 @@ private fun BoxScope.ActiveVideo(
     DisposableEffect(card.uri, videoPlayer) { onDispose { videoPlayer.stop(card.uri) } }
     val playing = videoPlayer.playingUri == card.uri
     var position by remember(card.uri) { mutableStateOf(Duration.ZERO) }
-    // Le temps restant n'avance que pendant la lecture : aucune boucle tant que la vidéo attend.
+    // Le temps restant n'avance que pendant la lecture ; en pause ou à la fin, il est lu une fois.
     LaunchedEffect(card.uri, playing) {
+        position = videoPlayer.position(card.uri) ?: Duration.ZERO
         while (playing) {
-            position = videoPlayer.position(card.uri) ?: Duration.ZERO
             delay(PROGRESS_TICK.toMillis())
+            position = videoPlayer.position(card.uri) ?: Duration.ZERO
         }
     }
     val presentation = rememberPresentationState(videoPlayer.player)
