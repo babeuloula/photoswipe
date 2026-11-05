@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.MediaItem
+import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
@@ -89,12 +90,26 @@ sealed interface DeckEvent {
 
     /** « Favori » du menu : garder le média et demander sa mise en favori (SPEC §2, §3.5). */
     data object Favorite : DeckEvent
+
+    /** « Partager » du menu : envoyer le média du dessus ailleurs, sans changer son état (SPEC §2). */
+    data object Share : DeckEvent
 }
 
 /** Navigation demandée par la pile. */
 sealed interface DeckEffect {
     /** Ouvrir le résumé de la session (SPEC §3.5). */
     data object OpenSummary : DeckEffect
+
+    /**
+     * Ouvrir la feuille de partage d'Android pour un média.
+     *
+     * @property uri URI de contenu du média.
+     * @property type photo ou vidéo, pour le type MIME annoncé aux autres applications.
+     */
+    data class Share(
+        val uri: String,
+        val type: MediaType,
+    ) : DeckEffect
 }
 
 /**
@@ -148,6 +163,7 @@ class DeckViewModel
                 DeckEvent.Undo -> undo()
                 DeckEvent.OpenMenu -> setMenuOpen(true)
                 DeckEvent.CloseMenu -> setMenuOpen(false)
+                DeckEvent.Share -> shareTopCard()
             }
         }
 
@@ -202,6 +218,13 @@ class DeckViewModel
                     show(listOf(result.decision.media) + deck, returningFrom = side)
                 }
             }
+        }
+
+        /** Ferme le menu et demande le partage du média du dessus, qui reste en place. */
+        private fun shareTopCard() {
+            val media = deck.firstOrNull() ?: return
+            setMenuOpen(false)
+            effects.trySend(DeckEffect.Share(media.uri, media.type))
         }
 
         /** Ouvre ou ferme le menu de la carte du dessus ; sans carte, il n'y a pas de menu. */

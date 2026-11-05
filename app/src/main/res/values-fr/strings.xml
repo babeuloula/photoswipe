@@ -28,6 +28,7 @@
     <string name="deck_undo">Annuler</string>
     <string name="deck_menu">Plus d\'actions</string>
     <string name="deck_favorite">Ajouter aux favoris</string>
+    <string name="deck_share">Partager</string>
     <string name="summary_title">Résumé</string>
     <string name="summary_done">Terminé</string>
     <string name="settings_title">Réglages</string>

@@ -430,6 +430,16 @@ class DeckScreenTest {
     }
 
     @Test
+    fun `shares the card from the menu`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD), menuOpen = true))
+
+        composeRule.onNodeWithText(text(R.string.deck_share)).performClick()
+        composeRule.waitForIdle()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.Share), events)
+    }
+
+    @Test
     fun `shows no menu while it is closed`() {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
 

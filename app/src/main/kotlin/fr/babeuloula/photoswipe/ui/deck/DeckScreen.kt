@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -193,28 +194,35 @@ private fun LoadedDeck(
                 onEvent(DeckEvent.CloseMenu)
                 requestedExit = CardSide.TOP
             },
+            onShare = { onEvent(DeckEvent.Share) },
             onDismiss = { onEvent(DeckEvent.CloseMenu) },
         )
     }
 }
 
 /**
- * Menu de la carte du dessus (SPEC §2), en feuille du bas Material 3 : « Ajouter aux favoris » ;
- * le fermer sans choisir laisse la carte en place.
+ * Menu de la carte du dessus (SPEC §2), en feuille du bas Material 3 : « Ajouter aux favoris » et
+ * « Partager » ; le fermer sans choisir laisse la carte en place.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CardMenu(
     onFavorite: () -> Unit,
+    onShare: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         ListItem(
             headlineContent = { Text(stringResource(R.string.deck_favorite)) },
             leadingContent = { Icon(Icons.Filled.Favorite, contentDescription = null) },
+            modifier = Modifier.clickable(onClick = onFavorite),
+        )
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.deck_share)) },
+            leadingContent = { Icon(Icons.Filled.Share, contentDescription = null) },
             modifier =
                 Modifier
-                    .clickable(onClick = onFavorite)
+                    .clickable(onClick = onShare)
                     .padding(bottom = 24.dp),
         )
     }
