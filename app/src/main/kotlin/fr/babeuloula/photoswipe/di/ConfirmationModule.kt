@@ -8,7 +8,9 @@ import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
+import fr.babeuloula.photoswipe.domain.usecase.PrepareFavorites
 import fr.babeuloula.photoswipe.domain.usecase.PrepareTrash
+import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
 import fr.babeuloula.photoswipe.domain.usecase.RecordTrashResult
 
 /**
@@ -32,4 +34,15 @@ object ConfirmationModule {
     @Provides
     fun provideRecordTrashResult(reviewRepository: ReviewRepository): RecordTrashResult =
         RecordTrashResult(reviewRepository)
+
+    @Provides
+    fun providePrepareFavorites(
+        reviewRepository: ReviewRepository,
+        mediaSource: MediaSource,
+        requestFactory: MediaActionRequestFactory,
+    ): PrepareFavorites = PrepareFavorites(reviewRepository, mediaSource, requestFactory)
+
+    @Provides
+    fun provideRecordFavoriteResult(reviewRepository: ReviewRepository): RecordFavoriteResult =
+        RecordFavoriteResult(reviewRepository)
 }

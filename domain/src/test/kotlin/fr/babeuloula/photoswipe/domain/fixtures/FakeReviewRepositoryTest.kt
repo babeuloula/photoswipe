@@ -93,6 +93,24 @@ class FakeReviewRepositoryTest {
         }
 
     @Test
+    fun `clears the pending favorite of the given media, in every year`() =
+        runTest {
+            val repository =
+                FakeReviewRepository(
+                    listOf(
+                        aReviewEntry(mediaId = 1, reviewYear = 2025, favoritePending = true),
+                        aReviewEntry(mediaId = 1, reviewYear = 2026, favoritePending = true),
+                        aReviewEntry(mediaId = 2, reviewYear = 2026, favoritePending = true),
+                    ),
+                )
+
+            repository.markFavoritesApplied(setOf(MediaId(1)))
+
+            assertEquals(listOf(2L), repository.entriesWithPendingFavorite().map { it.mediaId.value })
+            assertEquals(3, repository.entries.size)
+        }
+
+    @Test
     fun `knows every media with at least one entry`() =
         runTest {
             val repository =

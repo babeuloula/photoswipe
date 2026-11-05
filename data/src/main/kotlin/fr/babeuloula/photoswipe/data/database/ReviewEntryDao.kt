@@ -49,6 +49,10 @@ interface ReviewEntryDao {
     )
     suspend fun markTrashed(mediaIds: List<Long>)
 
+    /** Retire le favori en attente des entrées des médias [mediaIds], toutes années confondues. */
+    @Query("UPDATE review_entry SET favorite_pending = 0 WHERE media_id IN (:mediaIds)")
+    suspend fun markFavoritesApplied(mediaIds: List<Long>)
+
     /** Identifiants de tous les médias qui ont au moins une entrée. */
     @Query("SELECT DISTINCT media_id FROM review_entry")
     suspend fun knownMediaIds(): List<Long>

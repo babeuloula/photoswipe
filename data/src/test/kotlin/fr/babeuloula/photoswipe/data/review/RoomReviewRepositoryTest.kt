@@ -119,6 +119,17 @@ class RoomReviewRepositoryTest {
         }
 
     @Test
+    fun `applies the pending favorites of many media`() =
+        runTest {
+            manyIds.forEach { repository.save(aReviewEntry(mediaId = it, favoritePending = true)) }
+            repository.save(aReviewEntry(mediaId = 9_999, favoritePending = true))
+
+            repository.markFavoritesApplied(manyIds.mapTo(HashSet()) { MediaId(it) })
+
+            assertEquals(listOf(9_999L), repository.entriesWithPendingFavorite().map { it.mediaId.value })
+        }
+
+    @Test
     fun `lists known media and deletes every entry of many media`() =
         runTest {
             manyIds.forEach { repository.save(aReviewEntry(mediaId = it, reviewYear = 2025)) }

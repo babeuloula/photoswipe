@@ -21,13 +21,13 @@ import kotlinx.coroutines.launch
 
 /**
  * Résumé relié à son ViewModel : il exécute les navigations, lance les dialogues système de
- * corbeille et renvoie leur réponse au ViewModel. Après une suppression, l'accueil annonce le
- * résultat ; ici ne s'affichent que les messages des médias introuvables et de la suppression
- * refusée ou annulée, avec « Réessayer » (SPEC §3.5).
+ * corbeille et de favoris et renvoie leur réponse au ViewModel. Quand la galerie a changé,
+ * l'accueil annonce le résultat ; ici ne s'affichent que les messages des médias introuvables et
+ * de la confirmation refusée ou annulée, avec « Réessayer » (SPEC §3.5).
  */
 @Composable
 fun SummaryRoute(
-    onGoHome: (trashedCount: Int) -> Unit,
+    onGoHome: (trashedCount: Int, favoritedCount: Int) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SummaryViewModel = hiltViewModel(),
@@ -44,7 +44,7 @@ fun SummaryRoute(
         viewModel.uiEffects.collect { effect ->
             when (effect) {
                 is SummaryEffect.GoHome -> {
-                    onGoHome(effect.trashedCount)
+                    onGoHome(effect.trashedCount, effect.favoritedCount)
                 }
 
                 SummaryEffect.Close -> {
@@ -60,13 +60,17 @@ fun SummaryRoute(
                     scope.launch { snackbarHostState.showSnackbar(message) }
                 }
 
-                is SummaryEffect.TrashCancelled -> {
+                is SummaryEffect.NothingApplied -> {
                     val message =
-                        resources.getQuantityString(
-                            R.plurals.summary_trash_cancelled,
-                            effect.stillMarkedCount,
-                            effect.stillMarkedCount,
-                        )
+                        listOfNotNull(
+                            resources.getString(R.string.summary_nothing_applied),
+                            effect.stillMarkedCount.takeIf { it > 0 }?.let {
+                                resources.getQuantityString(R.plurals.summary_still_marked, it, it)
+                            },
+                            effect.pendingFavoriteCount.takeIf { it > 0 }?.let {
+                                resources.getQuantityString(R.plurals.summary_still_favorite, it, it)
+                            },
+                        ).joinToString(" ")
                     val retry = resources.getString(R.string.summary_retry)
                     scope.launch {
                         val result =

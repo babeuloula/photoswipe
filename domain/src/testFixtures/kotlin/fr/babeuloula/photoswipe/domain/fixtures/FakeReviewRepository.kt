@@ -63,6 +63,14 @@ class FakeReviewRepository(
         }
     }
 
+    override suspend fun markFavoritesApplied(mediaIds: Set<MediaId>) {
+        stored.update { current ->
+            current.mapValues { (_, entry) ->
+                if (entry.mediaId in mediaIds) entry.copy(favoritePending = false) else entry
+            }
+        }
+    }
+
     override suspend fun knownMediaIds(): Set<MediaId> = entries.mapTo(LinkedHashSet()) { it.mediaId }
 
     override suspend fun deleteAllFor(mediaIds: Set<MediaId>) {

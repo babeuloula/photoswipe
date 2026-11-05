@@ -17,26 +17,26 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 /**
- * Accueil relié à son ViewModel : il exécute les navigations demandées, et annonce les médias
- * envoyés à la corbeille depuis le résumé ([trashed]).
+ * Accueil relié à son ViewModel : il exécute les navigations demandées, et annonce ce que la
+ * confirmation du résumé vient de changer dans la galerie ([confirmed]).
  */
 @Composable
 fun HomeRoute(
     navigation: HomeNavigation,
     modifier: Modifier = Modifier,
-    trashed: TrashedAnnouncement? = null,
+    confirmed: ConfirmationAnnouncement? = null,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val trashedMessage = trashed?.let { pluralStringResource(R.plurals.summary_trashed, it.count, it.count) }
+    val confirmedMessage = confirmed?.let { confirmationMessage(it) }
     // Résultat de la confirmation du résumé : annoncé une fois, puis oublié. Le message part dans sa
-    // propre coroutine : l'oubli fait disparaître [trashed], ce qui relance cet effet sans l'annuler.
-    LaunchedEffect(trashedMessage) {
-        if (trashed != null && trashedMessage != null) {
-            scope.launch { snackbarHostState.showSnackbar(trashedMessage, duration = SnackbarDuration.Long) }
-            trashed.markAnnounced()
+    // propre coroutine : l'oubli fait disparaître [confirmed], ce qui relance cet effet sans l'annuler.
+    LaunchedEffect(confirmedMessage) {
+        if (confirmed != null && confirmedMessage != null) {
+            scope.launch { snackbarHostState.showSnackbar(confirmedMessage, duration = SnackbarDuration.Long) }
+            confirmed.markAnnounced()
         }
     }
     LifecycleResumeEffect(viewModel) {
@@ -55,14 +55,30 @@ fun HomeRoute(
     HomeScreen(state = state, onEvent = viewModel::onEvent, modifier = modifier, snackbarHostState = snackbarHostState)
 }
 
+/** Message de l'annonce : la corbeille, puis les favoris, chacun s'il a eu lieu. */
+@Composable
+private fun confirmationMessage(announcement: ConfirmationAnnouncement): String =
+    listOfNotNull(
+        announcement.trashedCount.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.summary_trashed, it, it) },
+        announcement.favoritedCount.takeIf { it > 0 }?.let {
+            pluralStringResource(
+                R.plurals.summary_favorited,
+                it,
+                it,
+            )
+        },
+    ).joinToString(" ")
+
 /**
- * Médias envoyés à la corbeille depuis le résumé, que l'accueil annonce une fois.
+ * Ce que la confirmation du résumé vient de changer dans la galerie, que l'accueil annonce une fois.
  *
- * @property count nombre de médias, toujours positif.
+ * @property trashedCount médias envoyés à la corbeille.
+ * @property favoritedCount médias ajoutés aux favoris de la galerie ; l'un des deux au moins est positif.
  * @property markAnnounced appelé quand l'annonce part, pour ne pas la répéter.
  */
-class TrashedAnnouncement(
-    val count: Int,
+class ConfirmationAnnouncement(
+    val trashedCount: Int,
+    val favoritedCount: Int,
     val markAnnounced: () -> Unit,
 )
 

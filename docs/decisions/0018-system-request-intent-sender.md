@@ -17,5 +17,5 @@ La confirmation (SPEC §3.5) passe par des dialogues système : `MediaStore.crea
 - **Lancer le dialogue depuis `:data`** : il faut une activité et un résultat, propres à l'écran.
 
 ## Conséquences
-- Les favoris système (PS-56) suivront le même chemin, avec `favoriteRequests`.
+- Les favoris système (PS-56) suivent le même chemin, avec `favoriteRequests` : leurs dialogues sont présentés après ceux de la corbeille, et préparés seulement à ce moment, pour ne pas demander en favori un média qui vient d'y partir.
 - Si le process meurt pendant un dialogue, la demande en cours est perdue : les marquages restent en base et une nouvelle confirmation les reprend (SPEC §3.5).

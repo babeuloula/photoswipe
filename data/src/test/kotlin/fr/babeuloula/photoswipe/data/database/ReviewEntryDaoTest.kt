@@ -122,6 +122,18 @@ class ReviewEntryDaoTest {
         }
 
     @Test
+    fun `clears the pending favorite of the given media in every review year`() =
+        runTest {
+            dao.upsert(anEntity(mediaId = 1, reviewYear = 2025, favoritePending = true))
+            dao.upsert(anEntity(mediaId = 1, reviewYear = 2026, favoritePending = true))
+            dao.upsert(anEntity(mediaId = 2, favoritePending = true))
+
+            dao.markFavoritesApplied(listOf(1))
+
+            assertEquals(listOf(2L), dao.entriesWithPendingFavorite().map { it.mediaId })
+        }
+
+    @Test
     fun `deletes every review year of the given media`() =
         runTest {
             dao.upsert(anEntity(mediaId = 1, reviewYear = 2025))
