@@ -1,6 +1,8 @@
 package fr.babeuloula.photoswipe.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
@@ -9,6 +11,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.common.ShellScreen
+import fr.babeuloula.photoswipe.ui.home.HomeNavigation
+import fr.babeuloula.photoswipe.ui.home.TrashedAnnouncement
 import fr.babeuloula.photoswipe.ui.deck.DeckRoute as DeckDestination
 import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
 import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
@@ -27,11 +31,21 @@ fun PhotoSwipeNavHost(
     navController: NavHostController = rememberNavController(),
 ) {
     NavHost(navController = navController, startDestination = HomeRoute, modifier = modifier) {
-        composable<HomeRoute> {
+        composable<HomeRoute> { entry ->
+            val trashedCount by entry.savedStateHandle.getStateFlow(TRASHED_COUNT_KEY, 0).collectAsState()
             HomeDestination(
-                onOpenDeck = { day -> navController.navigate(DeckRoute.of(day)) },
-                onOpenSettings = { navController.navigate(SettingsRoute) },
-                onOpenSummary = { navController.navigate(SummaryRoute()) },
+                navigation =
+                    HomeNavigation(
+                        openDeck = { day -> navController.navigate(DeckRoute.of(day)) },
+                        openSettings = { navController.navigate(SettingsRoute) },
+                        openSummary = { navController.navigate(SummaryRoute()) },
+                    ),
+                trashed =
+                    if (trashedCount > 0) {
+                        TrashedAnnouncement(trashedCount) { entry.savedStateHandle[TRASHED_COUNT_KEY] = 0 }
+                    } else {
+                        null
+                    },
             )
         }
         composable<DeckRoute> {
@@ -42,7 +56,18 @@ fun PhotoSwipeNavHost(
         }
         composable<SummaryRoute> {
             SummaryDestination(
-                onGoHome = { navController.popBackStack(HomeRoute, inclusive = false) },
+                onGoHome = { trashedCount ->
+                    // L'accueil annonce les médias envoyés à la corbeille (option choisie par Jérémy).
+                    if (trashedCount >
+                        0
+                    ) {
+                        navController
+                            .getBackStackEntry(
+                                HomeRoute,
+                            ).savedStateHandle[TRASHED_COUNT_KEY] = trashedCount
+                    }
+                    navController.popBackStack(HomeRoute, inclusive = false)
+                },
                 onBack = navController::popBackStack,
             )
         }
@@ -55,3 +80,6 @@ fun PhotoSwipeNavHost(
         }
     }
 }
+
+/** Clé du nombre de médias envoyés à la corbeille, transmis du résumé à l'accueil. */
+private const val TRASHED_COUNT_KEY = "trashed_count"

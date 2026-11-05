@@ -74,8 +74,15 @@ sealed interface SummaryEvent {
 
 /** Navigation demandée par le résumé. */
 sealed interface SummaryEffect {
-    /** Revenir à l'accueil. */
-    data object GoHome : SummaryEffect
+    /**
+     * Revenir à l'accueil.
+     *
+     * @property trashedCount médias envoyés à la corbeille juste avant, annoncés par l'accueil ;
+     * 0 pour « Plus tard ».
+     */
+    data class GoHome(
+        val trashedCount: Int = 0,
+    ) : SummaryEffect
 
     /** Revenir à l'écran précédent. */
     data object Close : SummaryEffect
@@ -86,12 +93,10 @@ sealed interface SummaryEffect {
     ) : SummaryEffect
 
     /**
-     * Les dialogues sont terminés : [trashedCount] médias sont partis dans la corbeille système,
-     * restaurables environ 30 jours.
+     * Les médias marqués n'existent plus dans la galerie (supprimés ailleurs, données de démo) :
+     * aucun dialogue ne peut les envoyer à la corbeille.
      */
-    data class Trashed(
-        val trashedCount: Int,
-    ) : SummaryEffect
+    data object MarkedMediaMissing : SummaryEffect
 }
 
 /**
@@ -143,7 +148,7 @@ class SummaryViewModel
                 SummaryEvent.Retry -> load()
                 SummaryEvent.Confirm -> confirm()
                 is SummaryEvent.SystemRequestAnswered -> recordAnswer(event.confirmed)
-                SummaryEvent.Later -> effects.trySend(SummaryEffect.GoHome)
+                SummaryEvent.Later -> effects.trySend(SummaryEffect.GoHome())
                 SummaryEvent.Back -> effects.trySend(SummaryEffect.Close)
             }
         }
@@ -156,10 +161,15 @@ class SummaryViewModel
             trashedCount = 0
             viewModelScope.launch {
                 runCatching { prepareTrash() }.fold(
-                    onSuccess = {
-                        pendingRequests.clear()
-                        pendingRequests.addAll(it)
-                        launchNext()
+                    onSuccess = { requests ->
+                        if (requests.isEmpty()) {
+                            effects.trySend(SummaryEffect.MarkedMediaMissing)
+                            load(showLoading = false)
+                        } else {
+                            pendingRequests.clear()
+                            pendingRequests.addAll(requests)
+                            launchNext()
+                        }
                     },
                     onFailure = { load(showLoading = false) },
                 )
@@ -177,12 +187,18 @@ class SummaryViewModel
             }
         }
 
-        /** Lance le dialogue du lot suivant ; sans lot restant, met le résumé à jour. */
+        /**
+         * Lance le dialogue du lot suivant. Sans lot restant : si des médias sont partis à la
+         * corbeille, retour à l'accueil, qui l'annonce ; sinon (tout refusé), le résumé se met à jour.
+         */
         private fun launchNext() {
             val request = pendingRequests.removeFirstOrNull()
             if (request == null) {
-                if (trashedCount > 0) effects.trySend(SummaryEffect.Trashed(trashedCount))
-                load(showLoading = false)
+                if (trashedCount > 0) {
+                    effects.trySend(SummaryEffect.GoHome(trashedCount))
+                } else {
+                    load(showLoading = false)
+                }
                 return
             }
             currentRequest = request

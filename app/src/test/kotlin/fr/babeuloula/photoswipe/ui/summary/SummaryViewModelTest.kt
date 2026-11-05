@@ -134,7 +134,7 @@ class SummaryViewModelTest {
 
             viewModel.onEvent(SummaryEvent.Later)
 
-            assertEquals(SummaryEffect.GoHome, viewModel.uiEffects.first())
+            assertEquals(SummaryEffect.GoHome(), viewModel.uiEffects.first())
             assertEquals(ReviewDecision.MARKED_FOR_DELETION, repository.entries.single().decision)
         }
 
@@ -156,7 +156,7 @@ class SummaryViewModelTest {
         }
 
     @Test
-    fun `moves the confirmed media to the trash and updates the summary`() =
+    fun `moves the confirmed media to the trash and goes home to announce it`() =
         runTest {
             mark(1, 2, 3)
             val viewModel = summaryViewModel()
@@ -167,10 +167,7 @@ class SummaryViewModelTest {
             viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
 
             assertEquals(List(3) { ReviewDecision.TRASHED }, decisions())
-            assertEquals(SummaryEffect.Trashed(trashedCount = 3), effects.last())
-            val state = viewModel.uiState.value as SummaryUiState.Loaded
-            assertEquals(0, state.summary.markedForDeletionCount)
-            assertFalse(state.confirming)
+            assertEquals(SummaryEffect.GoHome(trashedCount = 3), effects.last())
         }
 
     @Test
@@ -188,12 +185,11 @@ class SummaryViewModelTest {
                 listOf(ReviewDecision.MARKED_FOR_DELETION, ReviewDecision.MARKED_FOR_DELETION, ReviewDecision.TRASHED),
                 decisions(),
             )
-            assertEquals(SummaryEffect.Trashed(trashedCount = 1), effects.last())
-            assertEquals(2, (viewModel.uiState.value as SummaryUiState.Loaded).summary.markedForDeletionCount)
+            assertEquals(SummaryEffect.GoHome(trashedCount = 1), effects.last())
         }
 
     @Test
-    fun `announces nothing when every batch is refused`() =
+    fun `stays on the updated summary when every batch is refused`() =
         runTest {
             mark(1)
             val viewModel = summaryViewModel()
@@ -202,8 +198,24 @@ class SummaryViewModelTest {
             viewModel.onEvent(SummaryEvent.Confirm)
             viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = false))
 
-            assertTrue(effects.none { it is SummaryEffect.Trashed })
+            assertTrue(effects.none { it is SummaryEffect.GoHome })
             assertEquals(listOf(ReviewDecision.MARKED_FOR_DELETION), decisions())
+            val state = viewModel.uiState.value as SummaryUiState.Loaded
+            assertEquals(1, state.summary.markedForDeletionCount)
+            assertFalse(state.confirming)
+        }
+
+    @Test
+    fun `says when the marked media are no longer in the gallery`() =
+        runTest {
+            mark(99)
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+
+            assertEquals(listOf<SummaryEffect>(SummaryEffect.MarkedMediaMissing), effects)
+            assertFalse((viewModel.uiState.value as SummaryUiState.Loaded).confirming)
         }
 
     @Test

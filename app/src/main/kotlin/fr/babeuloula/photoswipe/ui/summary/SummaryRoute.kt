@@ -19,11 +19,12 @@ import kotlinx.coroutines.launch
 
 /**
  * Résumé relié à son ViewModel : il exécute les navigations, lance les dialogues système de
- * corbeille et renvoie leur réponse au ViewModel, puis annonce le résultat.
+ * corbeille et renvoie leur réponse au ViewModel. Après une suppression, l'accueil annonce le
+ * résultat ; ici ne s'affiche que le message des médias introuvables.
  */
 @Composable
 fun SummaryRoute(
-    onGoHome: () -> Unit,
+    onGoHome: (trashedCount: Int) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SummaryViewModel = hiltViewModel(),
@@ -39,8 +40,8 @@ fun SummaryRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEffects.collect { effect ->
             when (effect) {
-                SummaryEffect.GoHome -> {
-                    onGoHome()
+                is SummaryEffect.GoHome -> {
+                    onGoHome(effect.trashedCount)
                 }
 
                 SummaryEffect.Close -> {
@@ -51,13 +52,8 @@ fun SummaryRoute(
                     systemDialog.launch(IntentSenderRequest.Builder(effect.intentSender).build())
                 }
 
-                is SummaryEffect.Trashed -> {
-                    val message =
-                        resources.getQuantityString(
-                            R.plurals.summary_trashed,
-                            effect.trashedCount,
-                            effect.trashedCount,
-                        )
+                SummaryEffect.MarkedMediaMissing -> {
+                    val message = resources.getString(R.string.summary_marked_media_missing)
                     scope.launch { snackbarHostState.showSnackbar(message) }
                 }
             }
