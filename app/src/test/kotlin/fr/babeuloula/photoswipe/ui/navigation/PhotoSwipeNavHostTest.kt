@@ -70,9 +70,12 @@ class PhotoSwipeNavHostTest {
     @JvmField
     val shouldShowTutorial = ShouldShowTutorial(FakeSettingsRepository(tutorialVersionSeen = Tutorial.CURRENT_VERSION))
 
+    /** Réglages où le tutoriel revu depuis les réglages ne doit rien écrire. */
+    private val tutorialSettings = FakeSettingsRepository()
+
     @BindValue
     @JvmField
-    val markTutorialSeen = MarkTutorialSeen(FakeSettingsRepository())
+    val markTutorialSeen = MarkTutorialSeen(tutorialSettings)
 
     /** Un souvenir pris aujourd'hui il y a un an, à midi. */
     @BindValue
@@ -197,6 +200,20 @@ class PhotoSwipeNavHostTest {
         goBack()
 
         awaitText(text(R.string.settings_title))
+    }
+
+    @Test
+    fun `replays the tutorial from the settings and comes back to them, without marking it seen`() {
+        awaitText(text(R.string.home_today))
+        composeRule.onNodeWithContentDescription(text(R.string.home_open_settings)).performClick()
+        awaitText(text(R.string.settings_title))
+        composeRule.onNodeWithText(text(R.string.settings_about_tutorial)).performScrollTo().performClick()
+        awaitText(text(R.string.tutorial_same_day_title))
+
+        composeRule.onNodeWithText(text(R.string.tutorial_skip)).performClick()
+
+        awaitText(text(R.string.settings_title))
+        assertEquals(Tutorial.NEVER_SEEN, tutorialSettings.tutorialVersionSeen)
     }
 
     private companion object {

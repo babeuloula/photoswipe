@@ -92,6 +92,9 @@ sealed interface SettingsEvent {
     /** « Outils développeur », en debug seulement. */
     data object OpenDeveloperTools : SettingsEvent
 
+    /** « Revoir le tutoriel » de la section « À propos ». */
+    data object OpenTutorial : SettingsEvent
+
     /** « Licences » de la section « À propos ». */
     data object OpenLicenses : SettingsEvent
 
@@ -109,6 +112,9 @@ sealed interface SettingsEffect {
 
     /** Ouvrir les outils développeur (variante debug). */
     data object OpenDeveloperTools : SettingsEffect
+
+    /** Revoir le tutoriel, sans changer l'état « tutoriel vu ». */
+    data object OpenTutorial : SettingsEffect
 
     /** Ouvrir les licences de l'application et de ses bibliothèques. */
     data object OpenLicenses : SettingsEffect
@@ -215,6 +221,10 @@ class SettingsViewModel
 
                 SettingsEvent.OpenDeveloperTools -> {
                     effects.trySend(SettingsEffect.OpenDeveloperTools)
+                }
+
+                SettingsEvent.OpenTutorial -> {
+                    effects.trySend(SettingsEffect.OpenTutorial)
                 }
 
                 SettingsEvent.OpenLicenses -> {

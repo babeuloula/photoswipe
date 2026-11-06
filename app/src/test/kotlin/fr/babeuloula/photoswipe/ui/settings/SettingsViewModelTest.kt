@@ -220,6 +220,16 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `opens the tutorial again from the settings`() =
+        runTest {
+            val viewModel = settingsViewModel()
+
+            viewModel.onEvent(SettingsEvent.OpenTutorial)
+
+            assertEquals(SettingsEffect.OpenTutorial, viewModel.uiEffects.first())
+        }
+
+    @Test
     fun `goes back with the back arrow`() =
         runTest {
             val viewModel = settingsViewModel()

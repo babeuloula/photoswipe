@@ -38,6 +38,7 @@ fun SettingsRoute(
     onBack: () -> Unit,
     onOpenLicenses: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenTutorial: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -67,6 +68,10 @@ fun SettingsRoute(
 
                 SettingsEffect.OpenLicenses -> {
                     onOpenLicenses()
+                }
+
+                SettingsEffect.OpenTutorial -> {
+                    onOpenTutorial()
                 }
 
                 SettingsEffect.RequestNotificationPermission -> {

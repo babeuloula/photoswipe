@@ -162,4 +162,6 @@
     <string name="tutorial_practice_undone">Undone: the card is back.</string>
     <string name="tutorial_practice_done">Well done, you know how to sort!</string>
     <string name="tutorial_practice_restart">Start again</string>
+    <string name="settings_about_tutorial">Watch the tutorial again</string>
+    <string name="settings_about_tutorial_summary">How sorting works, and a try on sample cards</string>
 </resources>

@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.navigation
 
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -13,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import fr.babeuloula.photoswipe.ui.home.ConfirmationAnnouncement
 import fr.babeuloula.photoswipe.ui.home.HomeNavigation
 import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
+import fr.babeuloula.photoswipe.ui.tutorial.TutorialScreen
 import java.time.LocalDate
 import fr.babeuloula.photoswipe.ui.deck.DeckRoute as DeckDestination
 import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
@@ -21,7 +23,7 @@ import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
 
 /**
  * Graphe de navigation de l'application (SPEC §5.4), en routes typées : accueil, pile d'un jour,
- * résumé, réglages, licences. Le rappel quotidien peut demander d'ouvrir directement une pile
+ * résumé, réglages, licences, tutoriel revu depuis les réglages. Le rappel quotidien peut demander d'ouvrir directement une pile
  * ([deckToOpen]), qui s'empile au-dessus de l'accueil. Les écrans s'enchaînent en axe partagé
  * horizontal ([SharedAxisTransitions]).
  *
@@ -71,7 +73,12 @@ fun PhotoSwipeNavHost(
             SettingsDestination(
                 onBack = navController::popBackStack,
                 onOpenLicenses = { navController.navigate(LicensesRoute) },
+                onOpenTutorial = { navController.navigate(TutorialRoute) },
             )
+        }
+        composable<TutorialRoute> {
+            // Revu depuis les réglages : terminé ou passé, on y revient, sans toucher à l'état « vu ».
+            TutorialScreen(onDone = navController::popBackStack, modifier = Modifier.safeDrawingPadding())
         }
         composable<LicensesRoute> {
             LicensesScreen(onBack = navController::popBackStack)
