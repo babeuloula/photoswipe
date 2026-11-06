@@ -1,0 +1,27 @@
+# Couverture du tutoriel
+
+Le tutoriel (SPEC §4, epic 11) est fait en dernier pour couvrir les fonctionnalités réellement livrées. Cette liste les compare à son contenu ; elle se relit à chaque nouvelle fonctionnalité visible. Si le contenu du tutoriel change fortement, `Tutorial.CURRENT_VERSION` (`domain/model/Tutorial.kt`) est incrémenté pour le proposer de nouveau.
+
+Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été incrémentée : le tutoriel n'a encore été livré à personne, la version 1 est ce contenu.
+
+| Fonctionnalité livrée | Tickets | Où dans le tutoriel |
+|---|---|---|
+| Souvenirs du même jour des années précédentes, photos et vidéos | epics 3 à 6 | Page 1 « Les souvenirs du même jour » (animation des années) |
+| Glisser à droite : garder, le média revient l'année suivante | PS-42 | Page 2 « Garder ou supprimer » (texte seul, animation : PS-76 au Backlog) ; mode entraînement |
+| Glisser à gauche : marquer, rien n'est supprimé sans confirmation | PS-43 | Page 2 ; mode entraînement |
+| Boutons équivalents aux gestes, « Annuler » | PS-45, PS-46 | Page 2 (« Annuler ») ; mode entraînement (mêmes boutons) |
+| Glisser vers le haut : favori (gardé et ajouté aux favoris) ou partage | PS-47, PS-48, PS-85 | Page 3 « Favori ou partage » (animation) ; mode entraînement |
+| 7 derniers jours à rattraper depuis l'accueil | PS-38 | Page 4 « Rattrapez les jours manqués » (animation du calendrier) |
+| Retrier un jour déjà trié | PS-108, PS-111 | Page 4 (texte) |
+| Rappel quotidien, seulement s'il reste des souvenirs, à activer dans les réglages | epic 8 | Page 4 (texte et notification d'exemple) ; le tutoriel ne l'active pas |
+| Résumé de fin de tri, espace libéré estimé | PS-53, PS-88 | Page 5 « Rien n'est définitif » (animation) |
+| Confirmation groupée, corbeille du système restaurable environ 30 jours | PS-54, PS-55 | Page 5 (animation du dialogue et texte) ; aucune promesse sur Google Photos (SPEC §16.7) |
+| Revoir les médias marqués en grand depuis le résumé | PS-112 | Page 5 (texte) |
+| Essai sans risque des gestes | PS-80 | Page 6 « Essayez » (cartes d'exemple) |
+| Accès aux photos, accès partiel d'Android 14+ | epic 4 | Hors tutoriel : écrans d'accès, juste après lui |
+| Lecture des vidéos (muette au départ, son au ▶) | epic 6, PS-105 | Non détaillé : découvert sur la carte même, sans risque |
+| Accès « Gestion des médias » | PS-84 | Hors tutoriel : conseil de l'accueil, proposé au bon moment |
+| Langue, thème, licences, revoir le tutoriel | epic 9, PS-81, PS-87 | Hors tutoriel : réglages |
+
+## Écart connu
+- **Animation de la page « Garder ou supprimer »** : ticket PS-76, resté au Backlog. La page existe avec son texte et une icône ; le mode entraînement fait pratiquer les deux gestes.

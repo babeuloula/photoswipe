@@ -146,13 +146,13 @@
     <string name="tutorial_same_day_title">Memories of the same day</string>
     <string name="tutorial_same_day_body">Every day, PhotoSwipe shows you the photos and videos taken on this same day in previous years: a moment to relive your memories and tidy them up.</string>
     <string name="tutorial_swipes_title">Keep or delete</string>
-    <string name="tutorial_swipes_body">Swipe right to keep a memory: it will come back next year. Swipe left to mark it for deletion: nothing is deleted without your confirmation.</string>
+    <string name="tutorial_swipes_body">Swipe right to keep a memory: it will come back next year. Swipe left to mark it for deletion: nothing is deleted without your confirmation. Changed your mind? Undo brings the card back.</string>
     <string name="tutorial_swipe_up_title">Favorite or share</string>
     <string name="tutorial_swipe_up_body">Swipe up to open the menu: add the memory to your favorites, which also keeps it, or share it.</string>
     <string name="tutorial_catch_up_title">Catch up on missed days</string>
-    <string name="tutorial_catch_up_body">Missed a day? The last 7 days stay on the home screen. A daily reminder, which you can turn on in the settings, lets you know only when memories are left to sort.</string>
+    <string name="tutorial_catch_up_body">Missed a day? The last 7 days stay on the home screen, and a day already sorted can be sorted again. A daily reminder, which you can turn on in the settings, lets you know only when memories are left to sort.</string>
     <string name="tutorial_confirmation_title">Nothing is final</string>
-    <string name="tutorial_confirmation_body">Marked media are deleted together, once you confirm at the end of sorting. They go to the system trash, where you can restore them for about 30 days.</string>
+    <string name="tutorial_confirmation_body">Marked media are deleted together, once you confirm at the end of sorting; tap them in the summary to review them full size first. They go to the system trash, where you can restore them for about 30 days.</string>
     <string name="tutorial_practice_title">Give it a try</string>
     <string name="tutorial_practice_body">These sample cards are not your photos: swipe them or use the buttons, nothing is saved.</string>
     <string name="tutorial_practice_kept">Kept: it would come back next year.</string>

@@ -135,13 +135,13 @@
     <string name="tutorial_same_day_title">Les souvenirs du même jour</string>
     <string name="tutorial_same_day_body">Chaque jour, PhotoSwipe vous montre les photos et vidéos prises ce même jour les années précédentes : un moment pour revivre vos souvenirs et faire le tri.</string>
     <string name="tutorial_swipes_title">Garder ou supprimer</string>
-    <string name="tutorial_swipes_body">Glissez à droite pour garder un souvenir : il reviendra l\'année prochaine. Glissez à gauche pour le marquer pour suppression : rien n\'est supprimé sans votre confirmation.</string>
+    <string name="tutorial_swipes_body">Glissez à droite pour garder un souvenir : il reviendra l\'année prochaine. Glissez à gauche pour le marquer pour suppression : rien n\'est supprimé sans votre confirmation. Changé d\'avis ? « Annuler » ramène la carte.</string>
     <string name="tutorial_swipe_up_title">Favori ou partage</string>
     <string name="tutorial_swipe_up_body">Glissez vers le haut pour ouvrir le menu : ajoutez le souvenir à vos favoris, ce qui le garde aussi, ou partagez-le.</string>
     <string name="tutorial_catch_up_title">Rattrapez les jours manqués</string>
-    <string name="tutorial_catch_up_body">Un jour de manqué ? Les 7 derniers jours restent sur l\'accueil. Un rappel quotidien, à activer dans les réglages, vous prévient seulement s\'il reste des souvenirs à trier.</string>
+    <string name="tutorial_catch_up_body">Un jour de manqué ? Les 7 derniers jours restent sur l\'accueil, et un jour déjà trié peut être retrié. Un rappel quotidien, à activer dans les réglages, vous prévient seulement s\'il reste des souvenirs à trier.</string>
     <string name="tutorial_confirmation_title">Rien n\'est définitif</string>
-    <string name="tutorial_confirmation_body">Les médias marqués sont supprimés ensemble, quand vous confirmez à la fin du tri. Ils partent dans la corbeille du système, d\'où vous pouvez les restaurer pendant environ 30 jours.</string>
+    <string name="tutorial_confirmation_body">Les médias marqués sont supprimés ensemble, quand vous confirmez à la fin du tri ; touchez-les dans le résumé pour les revoir en grand avant. Ils partent dans la corbeille du système, d\'où vous pouvez les restaurer pendant environ 30 jours.</string>
     <string name="tutorial_practice_title">Essayez</string>
     <string name="tutorial_practice_body">Ces cartes d\'exemple ne sont pas vos photos : glissez-les ou utilisez les boutons, rien n\'est enregistré.</string>
     <string name="tutorial_practice_kept">Gardée : elle reviendrait l\'année prochaine.</string>
