@@ -183,7 +183,7 @@ fun SwipeableMediaCard(
  * TalkBack.
  */
 @Composable
-private fun SwipeIndicator(
+internal fun SwipeIndicator(
     indication: SwipeIndication?,
     modifier: Modifier = Modifier,
 ) {

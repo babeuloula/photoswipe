@@ -29,7 +29,12 @@ enum class TutorialPage(
     ),
 
     /** Glisser à droite pour garder, à gauche pour marquer. */
-    KEEP_OR_DELETE(R.string.tutorial_swipes_title, R.string.tutorial_swipes_body, R.drawable.ic_check),
+    KEEP_OR_DELETE(
+        R.string.tutorial_swipes_title,
+        R.string.tutorial_swipes_body,
+        R.drawable.ic_check,
+        R.string.tutorial_swipes_illustration,
+    ),
 
     /** Glisser vers le haut : favori ou partage. */
     SWIPE_UP(

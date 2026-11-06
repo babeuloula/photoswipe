@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -32,6 +33,10 @@ internal fun TutorialIllustration(
     when (page) {
         TutorialPage.SAME_DAY -> {
             SameDayIllustration(animate = animate, modifier = modifier)
+        }
+
+        TutorialPage.KEEP_OR_DELETE -> {
+            KeepOrDeleteIllustration(animate = animate, modifier = modifier)
         }
 
         TutorialPage.SWIPE_UP -> {
@@ -61,7 +66,7 @@ internal fun TutorialIllustration(
 
 /**
  * Tirage d'exemple : carte arrondie et bordée, de la couleur [color], avec l'icône d'une image
- * ([showIcon] faux pour un tirage de derrière).
+ * ([showIcon] faux pour un tirage de derrière), de forme [shape].
  * Il remplace les photos dans les illustrations du tutoriel.
  */
 @Composable
@@ -72,14 +77,15 @@ internal fun SamplePrint(
     height: Dp = PRINT_HEIGHT,
     iconTint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     showIcon: Boolean = true,
+    shape: Shape = MaterialTheme.shapes.large,
 ) {
     Box(
         modifier =
             modifier
                 .size(width = width, height = height)
-                .clip(MaterialTheme.shapes.large)
+                .clip(shape)
                 .background(color)
-                .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), MaterialTheme.shapes.large),
+                .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shape),
         contentAlignment = Alignment.Center,
     ) {
         if (showIcon) {

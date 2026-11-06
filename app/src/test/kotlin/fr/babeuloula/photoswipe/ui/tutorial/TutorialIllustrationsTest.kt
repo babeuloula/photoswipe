@@ -5,12 +5,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.deck.DELETE_INDICATOR_TAG
+import fr.babeuloula.photoswipe.ui.deck.KEEP_INDICATOR_TAG
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -129,6 +132,29 @@ class TutorialIllustrationsTest {
         show(TutorialPage.CONFIRMATION, animate = false)
 
         composeRule.onNodeWithText(trashQuestion()).assertIsDisplayed()
+    }
+
+    @Test
+    fun `the keep or delete page swipes the photo right with the keep veil, then left with the delete veil`() {
+        show(TutorialPage.KEEP_OR_DELETE, animate = true)
+        composeRule.onNodeWithTag(KEEP_INDICATOR_TAG).assertDoesNotExist()
+
+        composeRule.mainClock.advanceTimeBy(KEEP_OR_DELETE_PAUSE_MILLIS + KEEP_OR_DELETE_SWIPE_MILLIS)
+        composeRule.onNodeWithTag(KEEP_INDICATOR_TAG).assertExists()
+        composeRule.onNodeWithTag(DELETE_INDICATOR_TAG).assertDoesNotExist()
+
+        composeRule.mainClock.advanceTimeBy(
+            KEEP_OR_DELETE_HOLD_MILLIS + SETTLE_MILLIS + KEEP_OR_DELETE_PAUSE_MILLIS + KEEP_OR_DELETE_SWIPE_MILLIS,
+        )
+        composeRule.onNodeWithTag(DELETE_INDICATOR_TAG).assertExists()
+        composeRule.onNodeWithTag(KEEP_INDICATOR_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun `the static keep or delete page shows the keep veil`() {
+        show(TutorialPage.KEEP_OR_DELETE, animate = false)
+
+        composeRule.onNodeWithTag(KEEP_INDICATOR_TAG).assertExists()
     }
 
     private companion object {
