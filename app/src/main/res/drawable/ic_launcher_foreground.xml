@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Premier plan de l'icône adaptative (ADR 0025) : la pile de tirages, un tirage à coin coupé posé
+    sur un autre, et dans sa fenêtre une photo (soleil, colline). Dessiné sur la grille 64 des
+    maquettes, ramené à 58 dp au centre des 108 dp : il tient entier dans la zone sûre de 66 dp.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.9"
+        android:scaleY="0.9"
+        android:translateX="21.6"
+        android:translateY="23.4">
+        <!-- Tirage arrière, incliné de 10 degrés. -->
+        <group
+            android:pivotX="27"
+            android:pivotY="34"
+            android:rotation="-10">
+            <path
+                android:fillColor="#FFBD9948"
+                android:pathData="M16,11H38A6,6 0,0 1,44 17V51A6,6 0,0 1,38 57H16A6,6 0,0 1,10 51V17A6,6 0,0 1,16 11Z" />
+        </group>
+        <!-- Tirage avant, coin haut droit coupé. -->
+        <path
+            android:fillColor="#FFFFDF9F"
+            android:pathData="M26,8H46L54,16V48A6,6 0,0 1,48 54H26A6,6 0,0 1,20 48V14A6,6 0,0 1,26 8Z" />
+        <!-- Fenêtre de la photo. -->
+        <path
+            android:fillColor="#FF261A00"
+            android:pathData="M26,12H44.3L50,17.7V39A2,2 0,0 1,48 41H26A2,2 0,0 1,24 39V14A2,2 0,0 1,26 12Z" />
+        <!-- Colline. -->
+        <path
+            android:fillColor="#FF5C4300"
+            android:pathData="M24,33L31,27L37,32L41,29L50,35V39A2,2 0,0 1,48 41H26A2,2 0,0 1,24 39Z" />
+        <!-- Soleil. -->
+        <path
+            android:fillColor="#FFEAC16C"
+            android:pathData="M27.5,19.5A3.5,3.5 0,1 0,34.5 19.5A3.5,3.5 0,1 0,27.5 19.5Z" />
+    </group>
+</vector>

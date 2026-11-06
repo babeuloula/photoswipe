@@ -8,5 +8,12 @@
     <style name="Theme.PhotoSwipe" parent="@android:style/Theme.DeviceDefault.DayNight">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
+        <!--
+            Écran de démarrage d'Android 12+ (ADR 0025) : fond de la surface du thème, l'icône sur un
+            rond ambre, sans animation ; Android le retire en fondu vers l'accueil.
+        -->
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/launcher_background</item>
     </style>
 </resources>

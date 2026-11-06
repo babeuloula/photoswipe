@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Couche monochrome de l'icône à thème d'Android 13+ (ADR 0025) : le tirage avant évidé, la pile
+    réduite à une équerre décalée. Android la teinte selon le fond d'écran.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.9"
+        android:scaleY="0.9"
+        android:translateX="21.6"
+        android:translateY="23.4">
+        <!-- Équerre décalée : la pile, réduite à deux traits. -->
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M14.75,16A1.75,1.75 0,0 1,16.5 17.75V56.25A1.75,1.75 0,0 1,13 56.25V17.75A1.75,1.75 0,0 1,14.75 16Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M14.75,56.5H48.25A1.75,1.75 0,0 1,48.25 60H14.75A1.75,1.75 0,0 1,14.75 56.5Z" />
+        <!-- Tirage avant évidé : le contour et sa fenêtre. -->
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:fillType="evenOdd"
+            android:pathData="M26,8H46L54,16V48A6,6 0,0 1,48 54H26A6,6 0,0 1,20 48V14A6,6 0,0 1,26 8ZM26,12H44.3L50,17.7V39A2,2 0,0 1,48 41H26A2,2 0,0 1,24 39V14A2,2 0,0 1,26 12Z" />
+        <!-- Colline et soleil. -->
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M24,33L31,27L37,32L41,29L50,35V39A2,2 0,0 1,48 41H26A2,2 0,0 1,24 39Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M27.5,19.5A3.5,3.5 0,1 0,34.5 19.5A3.5,3.5 0,1 0,27.5 19.5Z" />
+    </group>
+</vector>
