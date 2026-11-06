@@ -47,12 +47,14 @@ import kotlinx.coroutines.launch
  * avec les boutons ; la page affichée survit à une recréation de l'activité.
  *
  * @param onDone appelé par « Passer » ou par « C'est parti ».
+ * @param animate faux pour des illustrations statiques.
  */
 @Composable
 fun TutorialScreen(
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
     pages: List<TutorialPage> = TutorialPage.entries,
+    animate: Boolean = true,
 ) {
     val pagerState = rememberPagerState { pages.size }
     val scope = rememberCoroutineScope()
@@ -60,7 +62,7 @@ fun TutorialScreen(
     CenteredContent(modifier) {
         Column(Modifier.fillMaxSize().padding(vertical = 24.dp)) {
             HorizontalPager(state = pagerState, modifier = Modifier.weight(1f).fillMaxWidth()) { index ->
-                TutorialPageContent(pages[index])
+                TutorialPageContent(pages[index], animate = animate)
             }
             PageIndicator(
                 current = pagerState.currentPage,
@@ -98,30 +100,27 @@ fun TutorialScreen(
     }
 }
 
-/** Contenu d'une page : illustration, titre et texte, défilables pour une grande police. */
+/** Contenu d'une page : illustration ([TutorialIllustration]), titre et texte, défilables pour une grande police. */
 @Composable
-private fun TutorialPageContent(page: TutorialPage) {
+private fun TutorialPageContent(
+    page: TutorialPage,
+    animate: Boolean,
+) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Box(
+        TutorialIllustration(
+            page = page,
+            animate = animate,
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .aspectRatio(ILLUSTRATION_RATIO)
                     .clip(MaterialTheme.shapes.extraLarge)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
                     .clearAndSetSemantics {},
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(page.icon),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(72.dp),
-            )
-        }
+        )
         Text(
             text = stringResource(page.title),
             style = MaterialTheme.typography.headlineLarge,
