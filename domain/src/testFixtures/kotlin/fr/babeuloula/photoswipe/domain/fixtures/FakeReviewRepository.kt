@@ -47,14 +47,16 @@ class FakeReviewRepository(
     }
 
     override suspend fun entriesMarkedForDeletion(): List<ReviewEntry> =
-        entries.filter { it.decision == ReviewDecision.MARKED_FOR_DELETION }
+        entries.filter { it.decision == ReviewDecision.MARKED_FOR_DELETION && !it.reopened }
 
     override suspend fun entriesWithPendingFavorite(): List<ReviewEntry> = entries.filter { it.favoritePending }
 
     override suspend fun markTrashed(mediaIds: Set<MediaId>) {
         stored.update { current ->
             current.mapValues { (_, entry) ->
-                if (entry.mediaId in mediaIds && entry.decision == ReviewDecision.MARKED_FOR_DELETION) {
+                if (entry.mediaId in mediaIds && entry.decision == ReviewDecision.MARKED_FOR_DELETION &&
+                    !entry.reopened
+                ) {
                     entry.copy(decision = ReviewDecision.TRASHED)
                 } else {
                     entry

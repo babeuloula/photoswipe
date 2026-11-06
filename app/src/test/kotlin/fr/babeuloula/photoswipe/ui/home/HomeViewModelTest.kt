@@ -12,12 +12,14 @@ import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
+import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
+import fr.babeuloula.photoswipe.domain.usecase.ReopenDay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -99,6 +101,20 @@ class HomeViewModelTest {
             viewModel.onEvent(HomeEvent.OpenDay(today.minusDays(3)))
 
             assertEquals(HomeEffect.OpenDeck(today.minusDays(3)), viewModel.uiEffects.first())
+        }
+
+    @Test
+    fun `reopens a sorted day, brings its count back and opens its deck`() =
+        runTest {
+            repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026, decision = ReviewDecision.KEPT))
+            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+            assertEquals(0, (loaded(viewModel) as HomeUiState.Loaded).today.remainingCount)
+
+            viewModel.onEvent(HomeEvent.ResortDay(today))
+
+            assertEquals(HomeEffect.OpenDeck(today), viewModel.uiEffects.first())
+            assertEquals(1, (viewModel.uiState.value as HomeUiState.Loaded).today.remainingCount)
         }
 
     @Test
@@ -222,6 +238,7 @@ class HomeViewModelTest {
             GetSessionSummary(repository, FakeDecisionJournal(repository), ReviewWindowProvider(clock), clock),
             settings,
             mediaManagement = { mediaManagementGranted },
+            reopenDay = ReopenDay(SameDayMatcher(), source, repository, FakeDecisionJournal(repository), clock),
         )
 
     private suspend fun loaded(viewModel: HomeViewModel): HomeUiState =

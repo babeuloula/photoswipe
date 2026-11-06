@@ -109,6 +109,7 @@
     <string name="home_empty_title">No memories this week</string>
     <string name="home_empty_body">No photo or video taken from %1$s to %2$s in previous years. Come back tomorrow.</string>
     <string name="home_start_sorting">Start sorting</string>
+    <string name="home_resort">Sort again</string>
     <string name="home_view_summary">See the summary</string>
     <string name="home_years_range">From %1$d to %2$d</string>
     <string name="home_year_single">In %1$d</string>
@@ -125,6 +126,8 @@
     <string name="home_manage_media_tip_dismiss">Close the tip</string>
     <string name="summary_trash_confirm_text">You can restore them from your gallery trash for 30 days.</string>
     <string name="summary_trash_confirm_action">Move to trash</string>
+    <string name="deck_previously_kept">Kept last time</string>
+    <string name="deck_previously_marked">Marked for deletion last time</string>
     <string name="deck_already_favorite">In your favorites</string>
     <string name="summary_sorted_today">Sorted today</string>
     <string name="summary_to_confirm">Waiting for your confirmation</string>

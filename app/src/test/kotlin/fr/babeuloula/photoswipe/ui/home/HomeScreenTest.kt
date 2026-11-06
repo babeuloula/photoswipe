@@ -184,6 +184,49 @@ class HomeScreenTest {
     }
 
     @Test
+    fun `sorts today again once everything is sorted`() {
+        show(
+            loaded(
+                todayCount = 0,
+            ).copy(today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 0, memoryCount = 4)),
+        )
+
+        composeRule.onNodeWithText(text(R.string.home_resort)).performClick()
+
+        assertEquals(listOf<HomeEvent>(HomeEvent.ResortDay(LocalDate.of(2026, 7, 15))), events)
+    }
+
+    @Test
+    fun `sorts again a previous day that is all sorted`() {
+        val state = loaded(todayCount = 1)
+        show(
+            state.copy(
+                previousDays =
+                    state.previousDays.map {
+                        if (it.date == LocalDate.of(2026, 7, 13)) it.copy(memoryCount = 2) else it
+                    },
+            ),
+        )
+
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Monday, July 13"))
+        composeRule.onNodeWithText("Monday, July 13").performClick()
+
+        assertEquals(listOf<HomeEvent>(HomeEvent.ResortDay(LocalDate.of(2026, 7, 13))), events)
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `offers to sort today again in French`() {
+        show(
+            loaded(
+                todayCount = 0,
+            ).copy(today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 0, memoryCount = 4)),
+        )
+
+        composeRule.onNodeWithText("Retrier").assertIsDisplayed()
+    }
+
+    @Test
     fun `opens the deck of a previous day`() {
         show(loaded(todayCount = 1))
 

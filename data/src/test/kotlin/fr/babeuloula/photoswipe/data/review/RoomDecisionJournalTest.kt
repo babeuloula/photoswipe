@@ -66,6 +66,24 @@ class RoomDecisionJournalTest {
         }
 
     @Test
+    fun `undo restores a reopened entry as reopened, and a missing one as missing`() =
+        runTest {
+            val database = inMemory()
+            val journal = RoomDecisionJournal(database.decisionJournalDao())
+            val reviews = RoomReviewRepository(database.reviewEntryDao())
+            val reopened = aReviewEntry(mediaId = 1, decision = MARKED_FOR_DELETION, reopened = true)
+            reviews.save(reopened)
+            val replacing = journal.record(day, aReviewEntry(mediaId = 1, decision = KEPT), reopened)
+            val fresh = journal.record(day, aReviewEntry(mediaId = 2), previous = null)
+
+            assertEquals(listOf(replacing, fresh), journal.recordsFor(day))
+            journal.undo(fresh)
+            journal.undo(replacing)
+
+            assertEquals(listOf(reopened), reviews.entriesFor(2026, setOf(MediaId(1), MediaId(2))))
+        }
+
+    @Test
     fun `undo restores the replaced entry or deletes it, and leaves the journal`() =
         runTest {
             val database = inMemory()

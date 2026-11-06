@@ -88,9 +88,14 @@ import java.time.format.FormatStyle
 internal fun LazyListScope.previousDays(
     days: List<ReviewDay>,
     onOpenDay: (LocalDate) -> Unit,
+    onResortDay: (LocalDate) -> Unit,
 ) {
     itemsIndexed(days, key = { _, day -> day.date.toEpochDay() }) { index, day ->
-        PreviousDay(day, shape = segmentShape(index, days.size), onClick = { onOpenDay(day.date) })
+        PreviousDay(
+            day,
+            shape = segmentShape(index, days.size),
+            onClick = { if (day.remainingCount > 0) onOpenDay(day.date) else onResortDay(day.date) },
+        )
     }
 }
 
@@ -106,7 +111,8 @@ internal fun PreviousDaysTitle() {
 
 /**
  * Un jour à rattraper : vignette, date et état (« 8 médias à trier », « Tout est trié »,
- * « Aucun souvenir »), chevron s'il reste à trier ; grisé et inactif s'il n'y a rien à trier.
+ * « Aucun souvenir »), chevron s'il reste à trier. Un jour tout trié s'ouvre pour être retrié
+ * (ADR 0026) ; un jour sans souvenir est grisé et inactif.
  */
 @Composable
 private fun PreviousDay(
@@ -123,8 +129,11 @@ private fun PreviousDay(
                 .heightIn(min = 64.dp)
                 .clip(shape)
                 .background(MaterialTheme.colorScheme.surfaceContainer)
-                .clickable(enabled = hasMedia, onClick = onClick)
-                .padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                .clickable(
+                    enabled = hasMemories,
+                    onClickLabel = if (hasMedia) null else stringResource(R.string.home_resort),
+                    onClick = onClick,
+                ).padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {

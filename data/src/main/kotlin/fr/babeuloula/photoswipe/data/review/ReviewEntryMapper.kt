@@ -19,6 +19,7 @@ internal fun ReviewEntryEntity.toDomain(): ReviewEntry =
         sizeBytes = sizeBytes,
         decidedAt = Instant.ofEpochMilli(decidedAt),
         favoritePending = favoritePending,
+        reopened = reopened,
     )
 
 /** Ligne `review_entry` qui enregistre [ReviewEntry]. */
@@ -30,4 +31,5 @@ internal fun ReviewEntry.toEntity(): ReviewEntryEntity =
         favoritePending = favoritePending,
         sizeBytes = sizeBytes,
         decidedAt = decidedAt.toEpochMilli(),
+        reopened = reopened,
     )

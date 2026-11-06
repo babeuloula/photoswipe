@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,7 +31,7 @@ import java.time.ZoneId
 
 /**
  * Volet de détail du jour, à droite de l'accueil sur grand écran ou en paysage (ADR 0025) : la date,
- * le nombre à trier et les années, « Commencer le tri » (ou « Voir le résumé » si tout est trié),
+ * le nombre à trier et les années, « Commencer le tri » (ou « Voir le résumé » et « Retrier » si tout est trié),
  * puis la planche-contact du jour : une grande vignette par année, sous son repère « Il y a N ans ».
  */
 @Composable
@@ -38,6 +39,7 @@ internal fun TodayDetailPane(
     today: ReviewDay,
     onOpenDay: () -> Unit,
     onSummary: () -> Unit,
+    onResort: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -66,7 +68,10 @@ internal fun TodayDetailPane(
             if (today.remainingCount > 0) {
                 Button(onClick = onOpenDay) { Text(stringResource(R.string.home_start_sorting)) }
             } else {
-                FilledTonalButton(onClick = onSummary) { Text(stringResource(R.string.home_view_summary)) }
+                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilledTonalButton(onClick = onSummary) { Text(stringResource(R.string.home_view_summary)) }
+                    OutlinedButton(onClick = onResort) { Text(stringResource(R.string.home_resort)) }
+                }
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

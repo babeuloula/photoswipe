@@ -17,6 +17,7 @@ import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
+import fr.babeuloula.photoswipe.domain.usecase.ReopenDay
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -52,6 +53,8 @@ class HomeRouteTest {
                 GetSessionSummary(repository, FakeDecisionJournal(repository), ReviewWindowProvider(clock), clock),
                 FakeSettingsRepository(),
                 mediaManagement = { false },
+                reopenDay =
+                    ReopenDay(SameDayMatcher(), FakeMediaSource(), repository, FakeDecisionJournal(repository), clock),
             )
         composeRule.activity.setContent {
             PhotoSwipeTheme {

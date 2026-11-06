@@ -14,6 +14,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.data.database.DecisionJournalDao
+import fr.babeuloula.photoswipe.data.database.MIGRATION_2_3
 import fr.babeuloula.photoswipe.data.database.PhotoSwipeDatabase
 import fr.babeuloula.photoswipe.data.database.ReviewEntryDao
 import javax.inject.Singleton
@@ -33,7 +34,10 @@ object StorageModule {
     fun provideDatabase(
         @ApplicationContext context: Context,
     ): PhotoSwipeDatabase =
-        Room.databaseBuilder(context, PhotoSwipeDatabase::class.java, PhotoSwipeDatabase.NAME).build()
+        Room
+            .databaseBuilder(context, PhotoSwipeDatabase::class.java, PhotoSwipeDatabase.NAME)
+            .addMigrations(MIGRATION_2_3)
+            .build()
 
     @Provides
     fun provideReviewEntryDao(database: PhotoSwipeDatabase): ReviewEntryDao = database.reviewEntryDao()

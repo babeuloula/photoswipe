@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.domain.usecase
 
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
+import fr.babeuloula.photoswipe.domain.model.isSorted
 import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
@@ -30,7 +31,7 @@ class GetDaySession(
         if (records.isEmpty()) return ReviewSession()
 
         val ids = records.mapTo(LinkedHashSet()) { it.mediaId }
-        val decided = reviewRepository.entriesFor(day.year, ids).mapTo(HashSet()) { it.mediaId }
+        val decided = reviewRepository.entriesFor(day.year, ids).filter { it.isSorted }.mapTo(HashSet()) { it.mediaId }
         val media = mediaSource.mediaByIds(ids).associateBy { it.id }
         val decisions =
             records.mapNotNull { record ->

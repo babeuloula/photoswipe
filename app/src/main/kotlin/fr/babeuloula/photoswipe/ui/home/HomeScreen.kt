@@ -183,13 +183,14 @@ private fun HomeDays(
                     item { Box(Modifier.padding(bottom = 10.dp)) { HomeBanners(state, onEvent) } }
                 }
                 item { PreviousDaysTitle() }
-                previousDays(state.previousDays, onOpenDay)
+                previousDays(state.previousDays, onOpenDay, onResortDay = { onEvent(HomeEvent.ResortDay(it)) })
             }
             if (withDetail) {
                 TodayDetailPane(
                     today = state.today,
                     onOpenDay = { onOpenDay(state.today.date) },
                     onSummary = { onEvent(HomeEvent.OpenPendingDeletions) },
+                    onResort = { onEvent(HomeEvent.ResortDay(state.today.date)) },
                     modifier = Modifier.weight(DETAIL_PANE_WEIGHT).fillMaxHeight(),
                 )
             }
@@ -207,7 +208,7 @@ private fun HomeDays(
                 item { Box(Modifier.padding(bottom = 10.dp)) { HomeBanners(state, onEvent) } }
             }
             item { PreviousDaysTitle() }
-            previousDays(state.previousDays, onOpenDay)
+            previousDays(state.previousDays, onOpenDay, onResortDay = { onEvent(HomeEvent.ResortDay(it)) })
         }
     }
 }

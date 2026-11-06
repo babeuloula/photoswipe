@@ -80,6 +80,7 @@ Une décision est liée à un **couple (média, année de revue)**, où l'année
 - `MARKED_FOR_DELETION` : persiste tant que la suppression n'est pas confirmée ou annulée.
 - `TRASHED` : confirmé et envoyé à la corbeille. Le média disparaît de MediaStore, la ligne est purgée par le nettoyage des orphelins.
 - Absence de ligne = **à trier**.
+- **Retrier un jour** (ADR 0026) : « Retrier » rouvre un jour tout trié. Ses décisions non confirmées (gardés, favoris, marqués) sont marquées `reopened` : le média redevient à trier, un marquage rouvert n'est plus en attente de suppression, et la pile montre la décision d'avant sur la carte jusqu'à ce qu'une nouvelle décision la remplace. `TRASHED` n'est jamais rouvert ; un favori appliqué à la galerie le reste ; le journal du jour est oublié.
 
 ### 3.4 Session
 Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtre de 7 jours). Elle se termine quand la pile est vide ou que l'utilisateur quitte.
@@ -111,6 +112,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
 1. **Permissions / onboarding** : explication courte, demande `READ_MEDIA_IMAGES` + `READ_MEDIA_VIDEO`. Gérer l'accès partiel d'Android 14+ (`READ_MEDIA_VISUAL_USER_SELECTED`) avec une bannière « accès limité, vos souvenirs peuvent être incomplets » et un raccourci pour étendre la sélection. Gérer le refus avec un lien vers les réglages.
 2. **Accueil** :
    - carte « Aujourd'hui » (nombre à trier), avec une vignette par année et les années des souvenirs (« De 2016 à 2025 ») ;
+   - jour tout trié : « Retrier » sur la carte « Aujourd'hui », et un appui sur un jour précédent tout trié le rouvre (§3.3, ADR 0026) ;
    - liste des 6 jours précédents avec leur nombre en attente et une vignette ;
    - bannière « N médias en attente de suppression » ;
    - accès aux réglages.
@@ -118,6 +120,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
    - carte plein écran (image ou vidéo) avec le repère de bord de film « Il y a 3 ans · 14 mai 2023 » et le poids du fichier, et la progression du jour (« 4 sur 23 ») ;
    - glisser à gauche : indicateur rouge + icône corbeille ; à droite : indicateur vert + coche ; en haut : menu favori / partage (feuille avec un aperçu du média) ;
    - **boutons équivalents sous la carte** (supprimer / annuler / plus d'actions / garder), libellés, pour l'accessibilité et TalkBack ; celui du côté glissé se remplit pendant le geste ;
+   - jour retrié : pastille de la décision d'avant en haut de la carte (coche « Gardé la dernière fois », corbeille « Marqué pour suppression la dernière fois », le cœur pour un favori) ;
    - pile vidée : « Voir le résumé » et « Retour à l'accueil » ;
    - retour haptique, animations à ressort, seuil de déclenchement et retour au centre si geste incomplet ;
    - vidéos : lecture automatique muette, écran gardé allumé pendant la lecture ; un appui sur le bouton ▶ lance la vidéo avec le son, que le bouton du son peut couper ; le choix du son vaut pour les vidéos suivantes.

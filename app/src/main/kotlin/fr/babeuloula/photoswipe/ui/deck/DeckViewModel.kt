@@ -6,13 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
-import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
-import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import fr.babeuloula.photoswipe.ui.navigation.DeckRoute
 import kotlinx.coroutines.channels.Channel
@@ -173,9 +172,8 @@ class DeckViewModel
     @Inject
     constructor(
         savedStateHandle: SavedStateHandle,
-        private val getDeckForDay: GetDeckForDay,
+        private val loading: DeckLoading,
         private val decisions: DeckDecisions,
-        private val getDaySession: GetDaySession,
         private val clock: Clock,
         private val galleryFavorite: GalleryFavorite,
     ) : ViewModel() {
@@ -190,6 +188,12 @@ class DeckViewModel
          * File à double entrée : trier retire le dessus, annuler l'y remet, sans recopier la pile.
          */
         private val deck = ArrayDeque<MediaItem>()
+
+        /**
+         * Décisions précédentes des médias d'un jour rouvert pour être retrié (ADR 0026), montrées
+         * sur leur carte ; vide pour un jour trié pour la première fois.
+         */
+        private var previousDecisions: Map<MediaId, ReviewDecision> = emptyMap()
 
         /** Décisions du jour encore annulables, de la plus ancienne à la plus récente. */
         var session: ReviewSession = ReviewSession()
@@ -262,7 +266,12 @@ class DeckViewModel
             viewModelScope.launch {
                 runCatching {
                     galleryFavorite.loadPending()
-                    getDeckForDay(day) to getDaySession(day)
+                    val cards = loading.getDeckForDay(day)
+                    previousDecisions =
+                        loading
+                            .getPreviousDecisions(day, cards.mapTo(HashSet()) { it.id })
+                            .mapValues { it.value.decision }
+                    cards to loading.getDaySession(day)
                 }.fold(
                     onSuccess = { (cards, resumed) ->
                         deck.clear()
@@ -369,7 +378,15 @@ class DeckViewModel
                             deck
                                 .take(
                                     DeckUiState.Loaded.VISIBLE_CARDS,
-                                ).map { MediaCardUiState.of(it, day, clock.zone, galleryFavorite.isFavorite(it)) },
+                                ).map {
+                                    MediaCardUiState.of(
+                                        media = it,
+                                        day = day,
+                                        zone = clock.zone,
+                                        favorite = galleryFavorite.isFavorite(it),
+                                        previousDecision = previousDecisions[it.id],
+                                    )
+                                },
                         remainingCount = deck.size,
                         sortedCount = session.decisions.size,
                         canUndo = canUndo,

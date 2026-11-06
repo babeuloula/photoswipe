@@ -107,6 +107,21 @@ class RoomReviewRepositoryTest {
         }
 
     @Test
+    fun `leaves a reopened deletion out of the pending ones and out of the trash`() =
+        runTest {
+            repository.save(aReviewEntry(mediaId = 1, decision = MARKED_FOR_DELETION, reopened = true))
+            repository.save(aReviewEntry(mediaId = 2, decision = MARKED_FOR_DELETION))
+
+            assertEquals(listOf(2L), repository.entriesMarkedForDeletion().map { it.mediaId.value })
+
+            repository.markTrashed(setOf(MediaId(1), MediaId(2)))
+
+            val reopened = repository.entriesFor(2026, setOf(MediaId(1))).single()
+            assertEquals(MARKED_FOR_DELETION, reopened.decision)
+            assertEquals(true, reopened.reopened)
+        }
+
+    @Test
     fun `moves the marked entries of many media to the trash`() =
         runTest {
             manyIds.forEach { repository.save(aReviewEntry(mediaId = it, decision = MARKED_FOR_DELETION)) }

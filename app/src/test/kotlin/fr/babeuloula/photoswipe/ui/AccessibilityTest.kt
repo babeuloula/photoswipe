@@ -20,6 +20,7 @@ import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
+import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.deck.DeckScreen
@@ -123,7 +124,12 @@ class AccessibilityTest {
         check {
             DeckScreen(
                 day = today,
-                state = DeckUiState.Loaded(listOf(PREVIEW_CARD), canUndo = true),
+                // Carte d'un jour retrié (ADR 0026) : pastille de la décision précédente et cœur.
+                state =
+                    DeckUiState.Loaded(
+                        listOf(PREVIEW_CARD.copy(previousDecision = ReviewDecision.KEPT, favorite = true)),
+                        canUndo = true,
+                    ),
                 onEvent = {},
             )
         }
