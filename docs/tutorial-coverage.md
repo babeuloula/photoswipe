@@ -7,7 +7,7 @@ Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été inc
 | Fonctionnalité livrée | Tickets | Où dans le tutoriel |
 |---|---|---|
 | Souvenirs du même jour des années précédentes, photos et vidéos | epics 3 à 6 | Page 1 « Les souvenirs du même jour » (animation des années) |
-| Glisser à droite : garder, le média revient l'année suivante | PS-42 | Page 2 « Garder ou supprimer » (texte seul, animation : PS-76 au Backlog) ; mode entraînement |
+| Glisser à droite : garder, le média revient l'année suivante | PS-42 | Page 2 « Garder ou supprimer » (animation : à droite avec le voile vert « Garder », puis à gauche avec le voile rouge « Supprimer », PS-76) ; mode entraînement |
 | Glisser à gauche : marquer, rien n'est supprimé sans confirmation | PS-43 | Page 2 ; mode entraînement |
 | Boutons équivalents aux gestes, « Annuler » | PS-45, PS-46 | Page 2 (« Annuler ») ; mode entraînement (mêmes boutons) |
 | Glisser vers le haut : favori (gardé et ajouté aux favoris) ou partage | PS-47, PS-48, PS-85 | Page 3 « Favori ou partage » (animation) ; mode entraînement |
@@ -24,4 +24,4 @@ Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été inc
 | Langue, thème, licences, revoir le tutoriel | epic 9, PS-81, PS-87 | Hors tutoriel : réglages |
 
 ## Écart connu
-- **Animation de la page « Garder ou supprimer »** : ticket PS-76, resté au Backlog. La page existe avec son texte et une icône ; le mode entraînement fait pratiquer les deux gestes.
+Aucun : l'animation de la page « Garder ou supprimer » (PS-76) est livrée.
