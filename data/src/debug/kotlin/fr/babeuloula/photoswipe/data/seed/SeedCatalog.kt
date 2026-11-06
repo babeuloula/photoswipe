@@ -14,10 +14,12 @@ data class SeedMedia(
 ) {
     /** Nom du fichier, daté pour être reconnaissable dans la galerie. */
     val displayName: String
-        get() = "photoswipe-seed-${FILE_DATE.format(takenAt)}.${if (type == MediaType.VIDEO) "mp4" else "jpg"}"
+        get() = "$FILE_PREFIX${FILE_DATE.format(takenAt)}.${if (type == MediaType.VIDEO) "mp4" else "jpg"}"
 
-    private companion object {
-        val FILE_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm")
+    companion object {
+        /** Début du nom de chaque fichier du seeder, qui permet de les retrouver. */
+        const val FILE_PREFIX: String = "photoswipe-seed-"
+        private val FILE_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm")
     }
 }
 
