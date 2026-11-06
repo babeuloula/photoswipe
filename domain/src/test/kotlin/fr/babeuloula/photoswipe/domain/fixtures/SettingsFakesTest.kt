@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.domain.fixtures
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
+import fr.babeuloula.photoswipe.domain.model.Tutorial
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -48,6 +49,17 @@ class SettingsFakesTest {
             repository.saveManageMediaTip(ManageMediaTip.OFFERED)
 
             assertEquals(ManageMediaTip.OFFERED, repository.observeManageMediaTip().first())
+        }
+
+    @Test
+    fun `gives the tutorial as never seen until a version is saved`() =
+        runTest {
+            val repository = FakeSettingsRepository()
+            assertEquals(Tutorial.NEVER_SEEN, repository.tutorialVersionSeen())
+
+            repository.saveTutorialVersionSeen(2)
+
+            assertEquals(2, repository.tutorialVersionSeen())
         }
 
     @Test

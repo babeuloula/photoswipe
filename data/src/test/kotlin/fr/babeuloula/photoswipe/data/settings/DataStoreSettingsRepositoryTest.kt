@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
+import fr.babeuloula.photoswipe.domain.model.Tutorial
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -133,6 +134,26 @@ class DataStoreSettingsRepositoryTest {
             repository.saveManageMediaTip(ManageMediaTip.DISMISSED)
 
             assertEquals(ManageMediaTip.DISMISSED, repository.observeManageMediaTip().first())
+        }
+
+    @Test
+    fun `stores the seen tutorial version, never seen by default, for a new repository too`() =
+        runTest {
+            val file = File(folder.root, "tutorial.preferences_pb")
+            val firstStore = Job()
+            val repository =
+                DataStoreSettingsRepository(
+                    dataStore(
+                        file,
+                        CoroutineScope(backgroundScope.coroutineContext + firstStore),
+                    ),
+                )
+            assertEquals(Tutorial.NEVER_SEEN, repository.tutorialVersionSeen())
+
+            repository.saveTutorialVersionSeen(Tutorial.CURRENT_VERSION)
+            firstStore.cancelAndJoin()
+
+            assertEquals(Tutorial.CURRENT_VERSION, DataStoreSettingsRepository(dataStore(file)).tutorialVersionSeen())
         }
 
     private fun TestScope.dataStore(
