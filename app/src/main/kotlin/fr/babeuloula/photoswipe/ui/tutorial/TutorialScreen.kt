@@ -28,18 +28,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
+import fr.babeuloula.photoswipe.ui.common.rememberReducedMotion
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import kotlinx.coroutines.launch
+import kotlin.math.max
 
 /**
  * Tutoriel en carrousel (SPEC §4) : une page par [pages], un indicateur de page, « Passer » et
@@ -47,14 +52,15 @@ import kotlinx.coroutines.launch
  * avec les boutons ; la page affichée survit à une recréation de l'activité.
  *
  * @param onDone appelé par « Passer » ou par « C'est parti ».
- * @param animate faux pour des illustrations statiques.
+ * @param animate faux pour des illustrations statiques et un changement de page sans animation ;
+ * par défaut, selon le réglage système « Supprimer les animations ».
  */
 @Composable
 fun TutorialScreen(
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
     pages: List<TutorialPage> = TutorialPage.entries,
-    animate: Boolean = true,
+    animate: Boolean = !rememberReducedMotion(),
 ) {
     val pagerState = rememberPagerState { pages.size }
     val scope = rememberCoroutineScope()
@@ -96,7 +102,8 @@ fun TutorialScreen(
                             onDone()
                         } else {
                             scope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                                val next = pagerState.currentPage + 1
+                                if (animate) pagerState.animateScrollToPage(next) else pagerState.scrollToPage(next)
                             }
                         }
                     },
@@ -124,11 +131,10 @@ private fun TutorialPageContent(
             animate = animate,
             modifier =
                 Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(ILLUSTRATION_RATIO)
+                    .illustrationFrame()
                     .clip(MaterialTheme.shapes.extraLarge)
                     .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .clearAndSetSemantics {},
+                    .then(illustrationSemantics(page)),
         )
         Text(
             text = stringResource(page.title),
@@ -140,6 +146,28 @@ private fun TutorialPageContent(
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+/**
+ * Cadre d'une illustration : toute la largeur, au format 4:3, plus haut quand la police est
+ * agrandie pour que ses textes (repères, compteurs, feuille) tiennent sans être coupés (SPEC §8).
+ */
+@Composable
+internal fun Modifier.illustrationFrame(): Modifier {
+    val fontScale = LocalDensity.current.fontScale
+    return fillMaxWidth().aspectRatio(ILLUSTRATION_RATIO / max(1f, fontScale))
+}
+
+/** TalkBack lit la description de l'animation de [page] comme une image ; sans animation, rien. */
+@Composable
+private fun illustrationSemantics(page: TutorialPage): Modifier {
+    val description = page.illustration?.let { stringResource(it) }
+    return Modifier.clearAndSetSemantics {
+        if (description != null) {
+            contentDescription = description
+            role = Role.Image
+        }
     }
 }
 

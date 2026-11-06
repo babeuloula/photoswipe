@@ -10,27 +10,50 @@ import fr.babeuloula.photoswipe.R
  *
  * @property title titre de la page.
  * @property body explication de la page.
- * @property icon icône de l'illustration, en attendant son animation.
+ * @property icon icône de l'illustration, pour une page sans animation.
+ * @property illustration description de l'animation lue par TalkBack, `null` pour une page sans
+ * animation (son illustration est décorative).
  */
 enum class TutorialPage(
     @param:StringRes val title: Int,
     @param:StringRes val body: Int,
     @param:DrawableRes val icon: Int,
+    @param:StringRes val illustration: Int? = null,
 ) {
     /** Le principe : les souvenirs du même jour, les années précédentes. */
-    SAME_DAY(R.string.tutorial_same_day_title, R.string.tutorial_same_day_body, R.drawable.ic_photo_library),
+    SAME_DAY(
+        R.string.tutorial_same_day_title,
+        R.string.tutorial_same_day_body,
+        R.drawable.ic_photo_library,
+        R.string.tutorial_same_day_illustration,
+    ),
 
     /** Glisser à droite pour garder, à gauche pour marquer. */
     KEEP_OR_DELETE(R.string.tutorial_swipes_title, R.string.tutorial_swipes_body, R.drawable.ic_check),
 
     /** Glisser vers le haut : favori ou partage. */
-    SWIPE_UP(R.string.tutorial_swipe_up_title, R.string.tutorial_swipe_up_body, R.drawable.ic_favorite),
+    SWIPE_UP(
+        R.string.tutorial_swipe_up_title,
+        R.string.tutorial_swipe_up_body,
+        R.drawable.ic_favorite,
+        R.string.tutorial_swipe_up_illustration,
+    ),
 
     /** Les 7 derniers jours à rattraper et le rappel quotidien. */
-    CATCH_UP(R.string.tutorial_catch_up_title, R.string.tutorial_catch_up_body, R.drawable.ic_calendar_today),
+    CATCH_UP(
+        R.string.tutorial_catch_up_title,
+        R.string.tutorial_catch_up_body,
+        R.drawable.ic_calendar_today,
+        R.string.tutorial_catch_up_illustration,
+    ),
 
     /** La confirmation groupée et la corbeille restaurable. */
-    CONFIRMATION(R.string.tutorial_confirmation_title, R.string.tutorial_confirmation_body, R.drawable.ic_delete),
+    CONFIRMATION(
+        R.string.tutorial_confirmation_title,
+        R.string.tutorial_confirmation_body,
+        R.drawable.ic_delete,
+        R.string.tutorial_confirmation_illustration,
+    ),
 
     /** Mode entraînement : trier des cartes d'exemple, jamais les vraies photos. */
     PRACTICE(R.string.tutorial_practice_title, R.string.tutorial_practice_body, R.drawable.ic_photo_library),

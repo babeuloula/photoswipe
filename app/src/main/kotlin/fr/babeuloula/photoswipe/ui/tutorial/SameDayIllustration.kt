@@ -22,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.deck.memoryLabel
 import fr.babeuloula.photoswipe.ui.theme.motion
@@ -32,7 +34,8 @@ import java.time.LocalDate
 /**
  * Page « souvenirs du même jour » : des tirages de plusieurs années défilent l'un après l'autre,
  * chacun avec son repère « Il y a 1 an · … », « Il y a 3 ans · … », à la date d'aujourd'hui.
- * Statique ([animate] faux) : le tirage d'il y a 3 ans, devant les autres.
+ * Statique ([animate] faux) : le tirage d'il y a 3 ans, devant les autres. Avec une très grande
+ * police, le repère ne garde que l'ancienneté, pour tenir sans être coupé.
  */
 @Composable
 internal fun SameDayIllustration(
@@ -53,6 +56,8 @@ internal fun SameDayIllustration(
     val scheme = MaterialTheme.colorScheme
     val colors = listOf(scheme.primaryContainer, scheme.secondaryContainer, scheme.tertiaryContainer)
     val motion = MaterialTheme.motion
+    // Avec une très grande police, le repère complet ne tiendrait pas : l'ancienneté seule.
+    val withDate = LocalDensity.current.fontScale < LARGE_FONT_SCALE
     Box(modifier, contentAlignment = Alignment.Center) {
         // Les tirages des autres années, inclinés derrière celui de l'année affichée.
         SamplePrint(
@@ -81,7 +86,13 @@ internal fun SameDayIllustration(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 SamplePrint(colors[shown % colors.size], iconTint = scheme.onPrimaryContainer)
-                FilmEdgeLabel(memoryLabel(context, yearsAgo, today.minusYears(yearsAgo.toLong())))
+                val label =
+                    if (withDate) {
+                        memoryLabel(context, yearsAgo, today.minusYears(yearsAgo.toLong()))
+                    } else {
+                        context.resources.getQuantityString(R.plurals.deck_years_ago, yearsAgo, yearsAgo)
+                    }
+                FilmEdgeLabel(label)
             }
         }
     }
@@ -96,6 +107,9 @@ internal const val STATIC_INDEX = 1
 
 /** Durée d'affichage d'un tirage avant le suivant. */
 internal const val SAME_DAY_STEP_MILLIS = 1_800L
+
+/** Échelle de police à partir de laquelle le repère perd sa date. */
+private const val LARGE_FONT_SCALE = 1.5f
 
 /** Inclinaison des tirages de derrière, en degrés. */
 private const val BACK_TILT = 8f

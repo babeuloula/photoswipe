@@ -164,4 +164,8 @@
     <string name="tutorial_practice_restart">Start again</string>
     <string name="settings_about_tutorial">Watch the tutorial again</string>
     <string name="settings_about_tutorial_summary">How sorting works, and a try on sample cards</string>
+    <string name="tutorial_same_day_illustration">Animation: photos from several years go by, one year ago, three years ago, five years ago, on this same date.</string>
+    <string name="tutorial_swipe_up_illustration">Animation: a photo slides up under a blue veil with a heart, then the menu opens with Add to favorites and Share.</string>
+    <string name="tutorial_catch_up_illustration">Animation: the last 7 days, each with its number of memories to sort, get sorted one after another, and the reminder counts what is left.</string>
+    <string name="tutorial_confirmation_illustration">Animation: the summary shows the estimated space freed, then a dialog asks to move the marked items to the trash.</string>
 </resources>
