@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.domain.port.ReminderScheduler
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
+import fr.babeuloula.photoswipe.domain.usecase.RescheduleReminder
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
 
 /** Fournit les use cases des réglages (SPEC §3.6), à part de ceux du tri (`DomainModule`). */
@@ -17,4 +18,10 @@ object SettingsModule {
         settingsRepository: SettingsRepository,
         reminderScheduler: ReminderScheduler,
     ): UpdateReminderSettings = UpdateReminderSettings(settingsRepository, reminderScheduler)
+
+    @Provides
+    fun provideRescheduleReminder(
+        settingsRepository: SettingsRepository,
+        reminderScheduler: ReminderScheduler,
+    ): RescheduleReminder = RescheduleReminder(settingsRepository, reminderScheduler)
 }
