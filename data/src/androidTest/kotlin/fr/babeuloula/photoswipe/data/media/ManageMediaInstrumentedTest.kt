@@ -32,14 +32,28 @@ class ManageMediaInstrumentedTest {
     private val resolver = context.contentResolver
     private val images = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
     private var photoId = 0L
+
+    /** Nom propre à chaque test : un scan en retard du test précédent ne peut pas le confondre. */
+    private val photoName = "ps84-manage-media-${System.nanoTime()}.png"
+    private val photoPath = "/sdcard/Pictures/$photoName"
     private val scenarios = mutableListOf<ActivityScenario<Activity>>()
 
     @Before
     fun pushPhotoOwnedByTheShell() {
         shell("pm grant ${context.packageName} android.permission.READ_MEDIA_IMAGES")
-        shell("screencap -p $PHOTO_PATH")
-        shell("content call --uri content://media --method scan_volume --arg external_primary")
-        photoId = waitFor { photoIdOrNull() }!!
+        shell("screencap -p $photoPath")
+        // Le scan est relancé pendant l'attente : sur un émulateur chargé, le premier peut passer avant l'écriture.
+        photoId =
+            checkNotNull(
+                waitFor {
+                    photoIdOrNull()
+                        ?: null.also {
+                            shell(
+                                "content call --uri content://media --method scan_volume --arg external_primary",
+                            )
+                        }
+                },
+            ) { "$photoName never reached MediaStore" }
     }
 
     @After
@@ -47,7 +61,7 @@ class ManageMediaInstrumentedTest {
         scenarios.forEach { it.close() }
         shell("appops set ${context.packageName} MANAGE_MEDIA default")
         shell("input keyevent KEYCODE_BACK")
-        shell("rm -f $PHOTO_PATH /sdcard/Pictures/.trashed-*$PHOTO_NAME")
+        shell("rm -f $photoPath /sdcard/Pictures/.trashed-*$photoName")
         shell("content call --uri content://media --method scan_volume --arg external_primary")
     }
 
@@ -103,7 +117,7 @@ class ManageMediaInstrumentedTest {
                 images,
                 arrayOf(MediaStore.MediaColumns._ID),
                 "${MediaStore.MediaColumns.DISPLAY_NAME} = ?",
-                arrayOf(PHOTO_NAME),
+                arrayOf(photoName),
                 null,
             )?.use { if (it.moveToFirst()) it.getLong(0) else null }
 
@@ -138,8 +152,6 @@ class ManageMediaInstrumentedTest {
     }
 
     private companion object {
-        const val PHOTO_NAME = "ps84-manage-media.png"
-        const val PHOTO_PATH = "/sdcard/Pictures/$PHOTO_NAME"
         const val POLL_ATTEMPTS = 50
         const val POLL_MILLIS = 200L
         const val DIALOG_WAIT_MILLIS = 3_000L
