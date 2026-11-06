@@ -238,7 +238,10 @@ class DeckViewModel
                 }
 
                 DeckEvent.MarkForDeletion -> {
-                    decideTopCard(decisions.markForDeletion::invoke, decisions.reviewMarkedMedia::markForDeletion)
+                    decideTopCard(
+                        { media, day -> listOf(decisions.markForDeletion(media, day)) },
+                        decisions.reviewMarkedMedia::markForDeletion,
+                    )
                 }
 
                 DeckEvent.Favorite -> {
@@ -299,14 +302,14 @@ class DeckViewModel
          * du résumé (SPEC §3.5). La dernière carte triée mène au résumé (SPEC §3.4).
          */
         private fun decideTopCard(
-            forDay: suspend (MediaItem, LocalDate) -> SessionDecision,
+            forDay: suspend (MediaItem, LocalDate) -> List<SessionDecision>,
             forMarked: suspend (MarkedMedia) -> List<SessionDecision>,
             afterDecision: (MediaItem) -> Unit = {},
         ) {
             val media = deck.removeFirstOrNull() ?: return
             render()
             viewModelScope.launch {
-                runCatching { day?.let { listOf(forDay(media, it)) } ?: forMarked(marked.getValue(media.id)) }.fold(
+                runCatching { day?.let { forDay(media, it) } ?: forMarked(marked.getValue(media.id)) }.fold(
                     onSuccess = { made ->
                         session = made.fold(session) { current, decision -> current.record(decision) }
                         render()
@@ -353,8 +356,9 @@ class DeckViewModel
         }
 
         /**
-         * Annule toutes les décisions de la dernière carte : une seule dans la pile d'un jour, une
-         * par année de marquage dans celle des marqués. Renvoie celle de la première annulée.
+         * Annule toutes les décisions de la dernière carte : celle de son année, et celles qui ont
+         * levé ses marquages des autres années (PS-113), dans la pile d'un jour comme dans celle
+         * des marqués. Renvoie celle de la première annulée.
          */
         private suspend fun undoLastCard(): UndoLastDecision.Result {
             val first = decisions.undoLastDecision(session)

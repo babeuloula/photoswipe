@@ -16,6 +16,9 @@ import java.time.LocalDate
  * suivante, faute d'entrée pour cette nouvelle année. Elle remplace une éventuelle décision de la
  * même année (changement d'avis) et est écrite avant de rendre la main (SPEC §3.4).
  *
+ * Un média encore marqué pour suppression une autre année est aussi gardé pour ces années-là
+ * (PS-113) : sinon la confirmation l'enverrait à la corbeille alors qu'il vient d'être gardé.
+ *
  * @param journal journal du jour, pour l'undo (ADR 0019).
  * @param clock horloge de l'appareil : l'instant de la décision.
  */
@@ -26,9 +29,12 @@ class KeepMedia(
 ) {
     private val recorder = DecisionRecorder(reviewRepository, journal, clock)
 
-    /** Garde [media], présenté dans la pile du jour cible [day] ; renvoie la décision à empiler pour l'undo. */
+    /**
+     * Garde [media], présenté dans la pile du jour cible [day] ; renvoie les décisions à empiler pour
+     * l'undo, celle du jour en dernier (les marquages levés des autres années avant elle).
+     */
     suspend operator fun invoke(
         media: MediaItem,
         day: LocalDate,
-    ): SessionDecision = recorder.record(media, day, ReviewDecision.KEPT)
+    ): List<SessionDecision> = recorder.keepOtherMarkings(media, day) + recorder.record(media, day, ReviewDecision.KEPT)
 }

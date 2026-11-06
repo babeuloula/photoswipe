@@ -153,7 +153,7 @@ class ReopenDayTest {
             assertEquals(KEPT, reviews.entries.single { it.mediaId == MediaId(3) }.decision)
             assertFalse(MediaId(3) in GetPreviousDecisions(reviews)(today, setOf(MediaId(3))))
 
-            UndoLastDecision(reviews, journal)(ReviewSession(listOf(decision)))
+            UndoLastDecision(reviews, journal)(ReviewSession(decision))
 
             val restored = reviews.entries.single { it.mediaId == MediaId(3) }
             assertEquals(MARKED_FOR_DELETION, restored.decision)

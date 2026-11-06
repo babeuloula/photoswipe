@@ -97,7 +97,7 @@ class KeepMediaTest {
             val media = aMediaItem(id = 1)
 
             val decision =
-                KeepMedia(repository, FakeDecisionJournal(repository), clock)(media, LocalDate.of(2026, 7, 15))
+                KeepMedia(repository, FakeDecisionJournal(repository), clock)(media, LocalDate.of(2026, 7, 15)).single()
 
             assertEquals(media, decision.media)
             assertEquals(LocalDate.of(2026, 7, 15), decision.day)
@@ -109,7 +109,7 @@ class KeepMediaTest {
         runTest {
             val media = aMediaItem(id = 1)
 
-            val decision = keepMedia(media, LocalDate.of(2026, 7, 15))
+            val decision = keepMedia(media, LocalDate.of(2026, 7, 15)).single()
 
             assertEquals(media, decision.media)
             assertEquals(LocalDate.of(2026, 7, 15), decision.day)

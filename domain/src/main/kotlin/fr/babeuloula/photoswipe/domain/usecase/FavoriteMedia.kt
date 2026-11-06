@@ -15,7 +15,7 @@ import java.time.LocalDate
  * (`favorite_pending`). La pile demande aussitôt le favori à la galerie (`RequestFavorite`), et
  * `RecordFavoriteResult` l'applique si l'utilisateur accepte (SPEC §2, §3.5) ; ici, seule la
  * décision est écrite, avant de rendre la main (SPEC §3.4). Sur un média déjà gardé cette année, la décision gardée est remplacée et l'undo la
- * restaure.
+ * restaure. Comme pour un média gardé, ses marquages en attente des autres années sont levés (PS-113).
  *
  * @param journal journal du jour, pour l'undo (ADR 0019).
  * @param clock horloge de l'appareil : l'instant de la décision.
@@ -29,10 +29,12 @@ class FavoriteMedia(
 
     /**
      * Garde [media], présenté dans la pile du jour cible [day], et demande sa mise en favori ;
-     * renvoie la décision à empiler pour l'undo.
+     * renvoie les décisions à empiler pour l'undo, celle du jour en dernier.
      */
     suspend operator fun invoke(
         media: MediaItem,
         day: LocalDate,
-    ): SessionDecision = recorder.record(media, day, ReviewDecision.KEPT, favoritePending = true)
+    ): List<SessionDecision> =
+        recorder.keepOtherMarkings(media, day) +
+            recorder.record(media, day, ReviewDecision.KEPT, favoritePending = true)
 }

@@ -21,6 +21,9 @@ data class ReviewSession(
     /** Session qui ajoute [decision] au sommet de la pile. */
     fun record(decision: SessionDecision): ReviewSession = ReviewSession(decisions + decision)
 
+    /** Session qui ajoute [made] au sommet de la pile, dans l'ordre : une carte peut en écrire plusieurs. */
+    fun record(made: List<SessionDecision>): ReviewSession = ReviewSession(decisions + made)
+
     /** Session sans sa décision la plus récente ; une session vide reste vide. */
     fun withoutLastDecision(): ReviewSession = ReviewSession(decisions.dropLast(1))
 }

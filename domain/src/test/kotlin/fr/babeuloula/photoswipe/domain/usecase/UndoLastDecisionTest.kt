@@ -116,11 +116,12 @@ class UndoLastDecisionTest {
     @Test
     fun `does not touch the decision of the same media for another review year`() =
         runTest {
-            val lastYear = aReviewEntry(mediaId = 1, reviewYear = 2025, decision = MARKED_FOR_DELETION)
+            // Un marquage ne lève rien des autres années, contrairement à « garder » (PS-113).
+            val lastYear = aReviewEntry(mediaId = 1, reviewYear = 2025, decision = KEPT)
             val repository = FakeReviewRepository(listOf(lastYear))
             val session =
                 ReviewSession().record(
-                    KeepMedia(repository, FakeDecisionJournal(repository), clock)(aMediaItem(id = 1), today),
+                    MarkForDeletion(repository, FakeDecisionJournal(repository), clock)(aMediaItem(id = 1), today),
                 )
 
             UndoLastDecision(repository, FakeDecisionJournal(repository))(session)
