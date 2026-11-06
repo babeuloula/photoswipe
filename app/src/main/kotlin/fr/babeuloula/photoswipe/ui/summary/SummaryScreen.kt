@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -48,6 +50,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.GetMarkedPreviews
@@ -248,7 +251,16 @@ private fun FreedSpace(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.semantics { heading() },
         )
-        Text(text = fileSizeLabel(LocalContext.current, bytes), style = MaterialTheme.typography.displayLarge)
+        // Une seule ligne : la taille du texte descend du displayLarge jusqu'à une taille lisible.
+        val style = MaterialTheme.typography.displayLarge
+        Text(
+            text = fileSizeLabel(LocalContext.current, bytes),
+            style = style,
+            maxLines = 1,
+            softWrap = false,
+            autoSize = TextAutoSize.StepBased(minFontSize = FREED_SPACE_MIN_FONT_SIZE, maxFontSize = style.fontSize),
+            modifier = Modifier.testTag(FREED_SPACE_TAG),
+        )
         if (markedCount > 0) {
             Text(
                 text = pluralStringResource(R.plurals.summary_if_confirmed, markedCount, markedCount),
@@ -365,3 +377,9 @@ private fun SummaryScreenPreview() {
         )
     }
 }
+
+/** Taille la plus petite de l'espace libéré, encore lisible, quand le displayLarge ne tient pas. */
+private val FREED_SPACE_MIN_FONT_SIZE = 24.sp
+
+/** Repère de test de l'espace libéré. */
+internal const val FREED_SPACE_TAG = "summary_freed_space"

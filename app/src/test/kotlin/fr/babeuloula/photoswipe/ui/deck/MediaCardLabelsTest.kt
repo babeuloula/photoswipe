@@ -54,6 +54,28 @@ class MediaCardLabelsTest {
 
     @Test
     @Config(qualifiers = "fr")
+    fun `counts the bytes of a file under a kilobyte in French`() {
+        assertEquals("0 octet", fileSizeLabel(context, 0))
+        assertEquals("1 octet", fileSizeLabel(context, 1))
+        assertEquals("512 octets", fileSizeLabel(context, 512))
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `counts the bytes of a file under a kilobyte in English`() {
+        assertEquals("0 bytes", fileSizeLabel(context, 0))
+        assertEquals("1 byte", fileSizeLabel(context, 1))
+        assertEquals("512 bytes", fileSizeLabel(context, 512))
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `switches to kilobytes from a thousand bytes`() {
+        assertEquals("1.0 kB", fileSizeLabel(context, 1_000))
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
     fun `shows the file size in French units`() {
         val size = fileSizeLabel(context, 3_500_000)
 
