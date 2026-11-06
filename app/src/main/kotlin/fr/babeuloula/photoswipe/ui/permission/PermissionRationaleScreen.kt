@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
@@ -30,29 +32,40 @@ fun PermissionRationaleScreen(
     onContinue: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.permission_rationale_title),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.semantics { heading() },
-        )
-        listOf(
-            R.string.permission_rationale_what,
-            R.string.permission_rationale_why,
-            R.string.permission_rationale_private,
-        ).forEach { text -> Text(text = stringResource(text), style = MaterialTheme.typography.bodyLarge) }
-        Spacer(Modifier.weight(1f))
-        Button(onClick = onContinue, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.permission_rationale_continue))
-        }
-    }
+    AccessLayout(
+        title = stringResource(R.string.permission_rationale_title),
+        blankPrints = false,
+        modifier = modifier,
+        content = {
+            Text(
+                text = stringResource(R.string.permission_rationale_what),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            AccessPoint(
+                icon = R.drawable.ic_photo_library,
+                title = stringResource(R.string.permission_rationale_why_title),
+                body = stringResource(R.string.permission_rationale_why),
+            )
+            AccessPoint(
+                icon = R.drawable.ic_lock,
+                title = stringResource(R.string.permission_rationale_private_title),
+                body = stringResource(R.string.permission_rationale_private),
+            )
+        },
+        actions = {
+            Text(
+                text = stringResource(R.string.permission_rationale_next),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Button(onClick = onContinue, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
+                Text(stringResource(R.string.permission_rationale_continue))
+            }
+        },
+    )
 }
 
 @PreviewLightDark

@@ -4,8 +4,11 @@
     <!-- Écran d'explication avant la demande d'accès aux médias (SPEC §4.1). -->
     <string name="permission_rationale_title">Relive your memories</string>
     <string name="permission_rationale_what">Every day, PhotoSwipe shows you the photos and videos you took on the same day in previous years, so you can keep the ones you love and clear out the rest.</string>
-    <string name="permission_rationale_why">To find them, the app needs access to your photos and videos.</string>
-    <string name="permission_rationale_private">Nothing leaves your phone: the app has no internet access, and nothing is deleted without your confirmation.</string>
+    <string name="permission_rationale_why_title">Why access to your photos</string>
+    <string name="permission_rationale_why">To find what you took on this date and estimate the space you can free.</string>
+    <string name="permission_rationale_private_title">Nothing leaves your phone</string>
+    <string name="permission_rationale_private">No internet connection, no account: everything stays on the device, and nothing is deleted without your confirmation.</string>
+    <string name="permission_rationale_next">Android will then ask for permission</string>
     <string name="permission_rationale_continue">Continue</string>
     <!-- Accès aux médias refusé (SPEC §4.1). -->
     <string name="media_access_denied_title">Access to your photos is needed</string>
@@ -13,7 +16,7 @@
     <string name="media_access_open_settings">Open settings</string>
     <string name="media_access_try_again">Try again</string>
     <!-- Bannière d'accès partiel, Android 14+ (SPEC §4.1). -->
-    <string name="limited_access_message">Limited access: your memories may be incomplete.</string>
+    <string name="limited_access_message">Limited access: your memories may be incomplete</string>
     <string name="limited_access_manage">Manage access</string>
     <!-- Coquilles des écrans, remplacées par les écrans réels (epics 4, 5, 7 et 9). -->
     <string name="navigate_back">Back</string>

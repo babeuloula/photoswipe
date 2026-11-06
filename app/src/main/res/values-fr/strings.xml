@@ -2,14 +2,17 @@
 <resources>
     <string name="permission_rationale_title">Revivez vos souvenirs</string>
     <string name="permission_rationale_what">Chaque jour, PhotoSwipe vous montre les photos et vidéos prises le même jour les années précédentes, pour garder celles que vous aimez et faire le tri dans les autres.</string>
-    <string name="permission_rationale_why">Pour les retrouver, l\'application a besoin d\'accéder à vos photos et vidéos.</string>
-    <string name="permission_rationale_private">Rien ne quitte votre téléphone : l\'application n\'a pas accès à internet, et rien n\'est supprimé sans votre confirmation.</string>
+    <string name="permission_rationale_why_title">Pourquoi l\'accès à vos photos</string>
+    <string name="permission_rationale_why">Pour retrouver ce que vous avez pris à cette date et estimer la place libérée.</string>
+    <string name="permission_rationale_private_title">Rien ne quitte votre téléphone</string>
+    <string name="permission_rationale_private">Aucune connexion internet, aucun compte : tout reste sur l\'appareil, et rien n\'est supprimé sans votre confirmation.</string>
+    <string name="permission_rationale_next">Android vous demandera ensuite l\'autorisation</string>
     <string name="permission_rationale_continue">Continuer</string>
     <string name="media_access_denied_title">L\'accès à vos photos est nécessaire</string>
     <string name="media_access_denied_body">PhotoSwipe ne peut pas vous montrer vos souvenirs sans accès à vos photos et vidéos. Vous pouvez l\'autoriser à tout moment dans les réglages de l\'application.</string>
     <string name="media_access_open_settings">Ouvrir les réglages</string>
     <string name="media_access_try_again">Réessayer</string>
-    <string name="limited_access_message">Accès limité : vos souvenirs peuvent être incomplets.</string>
+    <string name="limited_access_message">Accès limité : vos souvenirs peuvent être incomplets</string>
     <string name="limited_access_manage">Gérer l\'accès</string>
     <string name="navigate_back">Retour</string>
     <string name="home_open_settings">Réglages</string>
