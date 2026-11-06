@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.domain.port
 
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -22,4 +23,14 @@ interface SettingsRepository {
 
     /** Enregistre les réglages du rappel quotidien. */
     suspend fun saveReminderSettings(settings: ReminderSettings)
+
+    /**
+     * Thème de l'application, observé par l'activité et les réglages : le flux émet la valeur
+     * actuelle dès la collecte ([ThemeMode.DEFAULT] si rien n'est enregistré), puis chaque
+     * nouvelle valeur enregistrée.
+     */
+    fun observeThemeMode(): Flow<ThemeMode>
+
+    /** Enregistre le thème de l'application. */
+    suspend fun saveThemeMode(mode: ThemeMode)
 }

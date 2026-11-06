@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -23,6 +24,18 @@ class SettingsFakesTest {
 
             assertEquals(saved, repository.reminderSettings())
             assertEquals(saved, repository.observeReminderSettings().first())
+        }
+
+    @Test
+    fun `gives the phone theme until another theme is saved, then the saved one`() =
+        runTest {
+            val repository = FakeSettingsRepository()
+            assertEquals(ThemeMode.SYSTEM, repository.observeThemeMode().first())
+
+            repository.saveThemeMode(ThemeMode.DARK)
+
+            assertEquals(ThemeMode.DARK, repository.observeThemeMode().first())
+            assertEquals(ThemeMode.DARK, repository.themeMode)
         }
 
     @Test

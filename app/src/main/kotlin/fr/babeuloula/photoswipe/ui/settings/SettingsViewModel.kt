@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
 import fr.babeuloula.photoswipe.permission.NotificationPermissionReader
@@ -24,10 +25,14 @@ import javax.inject.Inject
  *
  * @property reminder réglages du rappel quotidien, `null` tant qu'ils ne sont pas lus.
  * @property timePickerOpen vrai pendant le choix de l'heure du rappel.
+ * @property themeMode thème de l'application, `null` tant qu'il n'est pas lu.
+ * @property themeDialogOpen vrai pendant le choix du thème.
  */
 data class SettingsUiState(
     val reminder: ReminderSettings? = null,
     val timePickerOpen: Boolean = false,
+    val themeMode: ThemeMode? = null,
+    val themeDialogOpen: Boolean = false,
 )
 
 /** Action de l'utilisateur sur les réglages. */
@@ -62,6 +67,20 @@ sealed interface SettingsEvent {
 
     /** « Réglages » du message de refus : ouvrir les réglages de notification de l'application. */
     data object OpenNotificationSettings : SettingsEvent
+
+    /** Action sur le thème de l'application. */
+    sealed interface ThemeEvent : SettingsEvent
+
+    /** Appui sur « Thème » : ouvrir le choix du thème. */
+    data object PickTheme : ThemeEvent
+
+    /** Thème choisi. */
+    data class ThemePicked(
+        val mode: ThemeMode,
+    ) : ThemeEvent
+
+    /** Choix du thème fermé sans rien choisir. */
+    data object ThemeDialogDismissed : ThemeEvent
 
     /** « Langue » : ouvrir le réglage de langue par application d'Android. */
     data object OpenLanguageSettings : SettingsEvent
@@ -108,7 +127,9 @@ sealed interface SettingsEffect {
 
 /**
  * ViewModel des réglages : il observe les réglages du rappel enregistrés et enregistre chaque
- * changement par `UpdateReminderSettings`, qui reprogramme la tâche du rappel (SPEC §3.6).
+ * changement par `UpdateReminderSettings`, qui reprogramme la tâche du rappel (SPEC §3.6). Il
+ * observe aussi le thème de l'application et enregistre celui choisi ; `MainActivity`, qui
+ * l'observe de son côté, l'applique aussitôt.
  * L'heure se choisit aussi rappel désactivé : elle servira à l'activation.
  *
  * Activer le rappel demande d'abord la permission de notification, seulement à ce moment-là
@@ -118,7 +139,7 @@ sealed interface SettingsEffect {
 class SettingsViewModel
     @Inject
     constructor(
-        settingsRepository: SettingsRepository,
+        private val settingsRepository: SettingsRepository,
         private val updateReminderSettings: UpdateReminderSettings,
         private val notificationPermission: NotificationPermissionReader,
         /** Entrée des outils développeur : présente en debug seulement (SPEC §10). */
@@ -139,6 +160,12 @@ class SettingsViewModel
                     .observeReminderSettings()
                     .catch { emit(ReminderSettings.DEFAULT) }
                     .collect { reminder -> state.update { it.copy(reminder = reminder) } }
+            }
+            viewModelScope.launch {
+                settingsRepository
+                    .observeThemeMode()
+                    .catch { emit(ThemeMode.DEFAULT) }
+                    .collect { mode -> state.update { it.copy(themeMode = mode) } }
             }
         }
 
@@ -174,6 +201,10 @@ class SettingsViewModel
                     state.update { it.copy(timePickerOpen = false) }
                 }
 
+                is SettingsEvent.ThemeEvent -> {
+                    onThemeEvent(event)
+                }
+
                 SettingsEvent.OpenLanguageSettings -> {
                     effects.trySend(SettingsEffect.OpenLanguageSettings)
                 }
@@ -188,6 +219,24 @@ class SettingsViewModel
 
                 SettingsEvent.Back -> {
                     effects.trySend(SettingsEffect.Close)
+                }
+            }
+        }
+
+        /** Ouvre le choix du thème, enregistre le thème choisi ou ferme le choix. */
+        private fun onThemeEvent(event: SettingsEvent.ThemeEvent) {
+            when (event) {
+                SettingsEvent.PickTheme -> {
+                    state.update { it.copy(themeDialogOpen = it.themeMode != null) }
+                }
+
+                is SettingsEvent.ThemePicked -> {
+                    state.update { it.copy(themeDialogOpen = false) }
+                    viewModelScope.launch { runCatching { settingsRepository.saveThemeMode(event.mode) } }
+                }
+
+                SettingsEvent.ThemeDialogDismissed -> {
+                    state.update { it.copy(themeDialogOpen = false) }
                 }
             }
         }

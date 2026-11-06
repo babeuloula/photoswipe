@@ -119,7 +119,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
    - retour haptique, animations à ressort, seuil de déclenchement et retour au centre si geste incomplet ;
    - vidéos : lecture automatique muette, tap pour activer le son.
 4. **Résumé / confirmation** : voir §3.5.
-5. **Réglages** : notification (on/off + heure), langue (réglage de langue par application d'Android 13+), à propos. En debug : outils développeur (§10).
+5. **Réglages** : notification (on/off + heure), langue (réglage de langue par application d'Android 13+), thème (celui du téléphone, clair ou sombre), à propos. En debug : outils développeur (§10).
 
 États vides soignés : rien à trier aujourd'hui, permissions refusées, aucun média trouvé.
 
@@ -240,7 +240,7 @@ Objectif : une UI qui suit au maximum les recommandations de Google et évolue a
 
 - **Material 3** partout, composants standards en priorité (pas de composants maison si un équivalent M3 existe). Adopter les évolutions *Material 3 Expressive* quand leurs APIs sont stables.
 - **Couleurs dynamiques** (Material You) avec palette de repli pour les appareils sans support.
-- **Thème clair / sombre** suivant le système.
+- **Thème clair / sombre** suivant le système par défaut, ou imposé dans les réglages (« Celui du téléphone », « Clair », « Sombre »), y compris pour les icônes des barres système.
 - **Edge-to-edge**, gestion des insets, **retour prédictif** activé (`enableOnBackInvokedCallback`).
 - **Mises en page adaptatives** (`WindowSizeClass`) : téléphone, pliable, tablette.
 - Typographie, formes et mouvements : uniquement via le thème (`MaterialTheme`), aucune valeur en dur dispersée.

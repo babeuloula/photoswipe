@@ -5,10 +5,13 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -85,6 +88,39 @@ class DataStoreSettingsRepositoryTest {
             dataStore.edit { it[intPreferencesKey("reminder_minute_of_day")] = 24 * 60 }
 
             assertEquals(ReminderSettings.DEFAULT_TIME, DataStoreSettingsRepository(dataStore).reminderSettings().time)
+        }
+
+    @Test
+    fun `follows the phone theme when no theme is stored`() =
+        runTest {
+            assertEquals(ThemeMode.SYSTEM, DataStoreSettingsRepository(dataStore()).observeThemeMode().first())
+        }
+
+    @Test
+    fun `emits the current theme then each saved theme, apart from the reminder`() =
+        runTest {
+            val repository = DataStoreSettingsRepository(dataStore())
+            val emissions = mutableListOf<ThemeMode>()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                repository.observeThemeMode().toList(emissions)
+            }
+
+            repository.saveThemeMode(ThemeMode.DARK)
+            repository.saveReminderSettings(ReminderSettings.DEFAULT.copy(enabled = true))
+            repository.saveThemeMode(ThemeMode.LIGHT)
+            testScheduler.advanceUntilIdle()
+
+            assertEquals(listOf(ThemeMode.SYSTEM, ThemeMode.DARK, ThemeMode.LIGHT), emissions)
+            assertEquals(ReminderSettings.DEFAULT.copy(enabled = true), repository.reminderSettings())
+        }
+
+    @Test
+    fun `falls back to the phone theme when the stored theme is unknown`() =
+        runTest {
+            val dataStore = dataStore()
+            dataStore.edit { it[stringPreferencesKey("theme_mode")] = "SEPIA" }
+
+            assertEquals(ThemeMode.SYSTEM, DataStoreSettingsRepository(dataStore).observeThemeMode().first())
         }
 
     private fun TestScope.dataStore(
