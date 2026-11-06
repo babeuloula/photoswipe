@@ -42,9 +42,9 @@
         <item quantity="other">%d médias restent marqués pour suppression.</item>
     </plurals>
     <plurals name="reminder_title">
-        <item quantity="one">%d souvenir à trier</item>
-        <item quantity="many">%d de souvenirs à trier</item>
-        <item quantity="other">%d souvenirs à trier</item>
+        <item quantity="one">%d souvenir à trier aujourd\'hui</item>
+        <item quantity="many">%d de souvenirs à trier aujourd\'hui</item>
+        <item quantity="other">%d souvenirs à trier aujourd\'hui</item>
     </plurals>
     <plurals name="summary_trash_confirm_title">
         <item quantity="one">Mettre %d média à la corbeille ?</item>

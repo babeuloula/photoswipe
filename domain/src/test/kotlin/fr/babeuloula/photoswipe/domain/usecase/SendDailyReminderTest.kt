@@ -6,6 +6,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
@@ -75,7 +76,12 @@ class SendDailyReminderTest {
             val sent = sendDailyReminder(media)()
 
             assertEquals(3, sent)
-            assertEquals(listOf(FakeReminderNotifier.Sent(3, today)), notifier.sent)
+            val notification = notifier.sent.single()
+            assertEquals(3, notification.toSortCount)
+            assertEquals(today, notification.dayToSort)
+            // Le texte cite les années des souvenirs du jour, et la vignette est le plus récent.
+            assertEquals(2020..2025, notification.years)
+            assertEquals(MediaId(1), notification.preview?.id)
         }
 
     @Test
@@ -85,6 +91,6 @@ class SendDailyReminderTest {
 
             sendDailyReminder(media)()
 
-            assertEquals(listOf(FakeReminderNotifier.Sent(2, LocalDate.of(2026, 7, 12))), notifier.sent)
+            assertEquals(listOf(2 to LocalDate.of(2026, 7, 12)), notifier.sent.map { it.toSortCount to it.dayToSort })
         }
 }

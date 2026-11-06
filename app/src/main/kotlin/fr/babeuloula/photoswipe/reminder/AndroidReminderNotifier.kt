@@ -5,12 +5,18 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
+import android.text.format.DateFormat
+import android.util.Size
 import dagger.hilt.android.qualifiers.ApplicationContext
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.port.ReminderNotifier
 import fr.babeuloula.photoswipe.permission.NotificationPermissionReader
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 /**
@@ -30,6 +36,8 @@ class AndroidReminderNotifier
         override fun notify(
             toSortCount: Int,
             dayToSort: LocalDate,
+            years: IntRange?,
+            preview: MediaItem?,
         ) {
             if (!permission.isGranted()) return
             createChannel()
@@ -40,18 +48,46 @@ class AndroidReminderNotifier
                     MainActivity.openDeckIntent(context, dayToSort),
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
                 )
-            val notification =
+            val builder =
                 Notification
                     .Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_notification)
+                    .setColor(context.getColor(R.color.notification_accent))
                     .setContentTitle(
                         context.resources.getQuantityString(R.plurals.reminder_title, toSortCount, toSortCount),
-                    ).setContentText(context.getString(R.string.reminder_text))
+                    ).setContentText(text(dayToSort, years))
                     .setContentIntent(openHome)
                     .setAutoCancel(true)
-                    .build()
-            notificationManager.notify(NOTIFICATION_ID, notification)
+            preview?.let { thumbnail(it) }?.let { builder.setLargeIcon(it) }
+            notificationManager.notify(NOTIFICATION_ID, builder.build())
         }
+
+        /**
+         * Texte du rappel : « Des photos et vidéos prises un 6 novembre, de 2016 à 2025 », ou le
+         * texte général si les années ne sont pas connues.
+         */
+        private fun text(
+            day: LocalDate,
+            years: IntRange?,
+        ): String {
+            if (years == null) return context.getString(R.string.reminder_text)
+            val locale = context.resources.configuration.locales[0]
+            val date =
+                day.format(
+                    DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "dMMMM"), locale),
+                )
+            return if (years.first == years.last) {
+                context.getString(R.string.reminder_text_year, date, years.first)
+            } else {
+                context.getString(R.string.reminder_text_years, date, years.first, years.last)
+            }
+        }
+
+        /** Vignette d'un souvenir pour la grande icône, ou `null` si Android ne peut pas la produire. */
+        private fun thumbnail(media: MediaItem): Bitmap? =
+            runCatching {
+                context.contentResolver.loadThumbnail(Uri.parse(media.uri), Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null)
+            }.getOrNull()
 
         /** Crée le canal du rappel, ou met à jour son nom traduit ; sans effet sur les choix de l'utilisateur. */
         private fun createChannel() {
@@ -70,5 +106,8 @@ class AndroidReminderNotifier
 
             /** Une seule notification de rappel à la fois : la suivante remplace la précédente. */
             const val NOTIFICATION_ID: Int = 1
+
+            /** Taille de la vignette de la grande icône, en pixels. */
+            private const val THUMBNAIL_SIZE = 256
         }
     }

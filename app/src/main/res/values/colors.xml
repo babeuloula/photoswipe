@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Ambre de la notification du rappel (setColor) : le primary de la palette de repli
+        « planche-contact » (ui/theme/Color.kt, ADR 0025), qu'Android ne peut pas lire dans Compose.
+    -->
+    <color name="notification_accent">#FF785A0B</color>
+</resources>

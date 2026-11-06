@@ -41,8 +41,8 @@
         <item quantity="other">%d items stay marked for deletion.</item>
     </plurals>
     <plurals name="reminder_title">
-        <item quantity="one">%d memory to sort</item>
-        <item quantity="other">%d memories to sort</item>
+        <item quantity="one">%d memory to sort today</item>
+        <item quantity="other">%d memories to sort today</item>
     </plurals>
     <plurals name="summary_trash_confirm_title">
         <item quantity="one">Move %d item to the trash?</item>
