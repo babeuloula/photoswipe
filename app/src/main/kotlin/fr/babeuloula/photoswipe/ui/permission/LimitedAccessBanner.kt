@@ -59,7 +59,7 @@ fun LimitedAccessBanner(
 @PreviewLightDark
 @Composable
 private fun LimitedAccessBannerPreview() {
-    PhotoSwipeTheme(dynamicColor = false) {
+    PhotoSwipeTheme {
         LimitedAccessBanner(onManageAccess = {})
     }
 }

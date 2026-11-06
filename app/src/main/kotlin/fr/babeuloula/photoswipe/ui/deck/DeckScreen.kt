@@ -403,7 +403,7 @@ private fun DeckMessage(
 @Composable
 private fun DeckScreenPreview() {
     CompositionLocalProvider(LocalImageLoader provides ImageLoader(LocalContext.current)) {
-        PhotoSwipeTheme(dynamicColor = false) {
+        PhotoSwipeTheme {
             DeckScreen(
                 day = LocalDate.parse("2026-05-14"),
                 state = DeckUiState.Loaded(listOf(PREVIEW_CARD)),

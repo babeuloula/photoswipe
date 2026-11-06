@@ -243,7 +243,7 @@ Clé primaire / index unique : `(media_id, review_year)`.
 Objectif : une UI qui suit au maximum les recommandations de Google et évolue avec elles.
 
 - **Material 3** partout, composants standards en priorité (pas de composants maison si un équivalent M3 existe). Adopter les évolutions *Material 3 Expressive* quand leurs APIs sont stables.
-- **Couleurs dynamiques** (Material You) avec palette de repli pour les appareils sans support.
+- **Palette ambre « planche-contact »**, la direction artistique de l'app, toujours appliquée : pas de couleurs dynamiques (Material You), décision de Jérémy du 2026-11-06 (ADR 0025, PS-102).
 - **Thème clair / sombre** suivant le système par défaut, ou imposé dans les réglages (« Celui du téléphone », « Clair », « Sombre »), y compris pour les icônes des barres système.
 - **Edge-to-edge**, gestion des insets, **retour prédictif** activé (`enableOnBackInvokedCallback`).
 - **Mises en page adaptatives** (`WindowSizeClass`) : téléphone, pliable, tablette.

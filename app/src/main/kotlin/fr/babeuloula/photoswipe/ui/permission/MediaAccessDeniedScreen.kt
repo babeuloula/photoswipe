@@ -68,7 +68,7 @@ fun MediaAccessDeniedScreen(
 @PreviewLightDark
 @Composable
 private fun MediaAccessDeniedScreenPreview() {
-    PhotoSwipeTheme(dynamicColor = false) {
+    PhotoSwipeTheme {
         MediaAccessDeniedScreen(canAskAgain = true, onOpenSettings = {}, onTryAgain = {})
     }
 }

@@ -249,7 +249,7 @@ private val PREVIEW_DAYS =
 @PreviewLightDark
 @Composable
 private fun HomeScreenPreview() {
-    PhotoSwipeTheme(dynamicColor = false) {
+    PhotoSwipeTheme {
         HomeScreen(state = PREVIEW_DAYS, onEvent = {})
     }
 }

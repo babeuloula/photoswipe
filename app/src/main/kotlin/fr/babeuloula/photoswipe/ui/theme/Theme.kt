@@ -2,36 +2,25 @@ package fr.babeuloula.photoswipe.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalContext
 
 /**
  * Thème Material 3 de PhotoSwipe (SPEC §8) : couleurs, typographie et formes, plus les couleurs
- * des indicateurs de geste ([swipeColors]).
+ * des indicateurs de geste ([swipeColors]) et le mouvement.
  *
- * Les couleurs dynamiques (Material You, tirées du fond d'écran) sont disponibles sur tous les
- * appareils visés, puisque `minSdk` vaut 33 et qu'elles existent depuis l'API 31. La palette de
- * repli sert quand elles sont désactivées : aperçus, tests, et futur réglage éventuel.
+ * Toujours la palette « planche-contact » ambre (ADR 0025), en clair ou en sombre : c'est la
+ * direction artistique de l'application. Les couleurs du fond d'écran (Material You) ne sont pas
+ * utilisées, à la demande de Jérémy (PS-102).
  *
  * @param darkTheme `true` pour le thème sombre ; suit le réglage du système par défaut.
- * @param dynamicColor `true` pour les couleurs du fond d'écran, `false` pour la palette de repli.
  */
 @Composable
 fun PhotoSwipeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme =
-        when {
-            dynamicColor && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
-            dynamicColor -> dynamicLightColorScheme(LocalContext.current)
-            darkTheme -> DarkColorScheme
-            else -> LightColorScheme
-        }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     CompositionLocalProvider(
         LocalSwipeColors provides swipeColors(colorScheme, darkTheme),

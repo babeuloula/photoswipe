@@ -350,7 +350,7 @@ private fun SummaryLine(
 @PreviewLightDark
 @Composable
 private fun SummaryScreenPreview() {
-    PhotoSwipeTheme(dynamicColor = false) {
+    PhotoSwipeTheme {
         SummaryScreen(
             state =
                 SummaryUiState.Loaded(

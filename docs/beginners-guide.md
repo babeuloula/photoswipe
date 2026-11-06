@@ -69,7 +69,7 @@ La bibliothèque de Google pour décrire l'interface en Kotlin plutôt qu'en XML
 
 ### Material 3 et thème
 **Material 3** est le système de design de Google : composants (boutons, barres, cartes), couleurs, typographie et formes. Le **thème** (`PhotoSwipeTheme`, dans `ui/theme/`) rassemble ces choix à un seul endroit ; les écrans les lisent via `MaterialTheme` au lieu d'écrire des couleurs ou des tailles en dur.
-- **Couleurs dynamiques (Material You)** : Android calcule une palette à partir du fond d'écran du téléphone, et l'application l'adopte. Une palette « de repli » fixe existe aussi (`Color.kt`).
+- **Palette de l'application** (`Color.kt`) : PhotoSwipe garde toujours ses couleurs ambre, en clair et en sombre, au lieu d'adopter celles qu'Android tire du fond d'écran (Material You) : c'est sa direction artistique.
 - **Clair / sombre** : le thème suit le réglage du téléphone.
 - **Edge-to-edge** : l'application se dessine sur tout l'écran, y compris sous la barre d'état et la barre de navigation. Les **insets** sont les marges qu'il faut laisser pour que le contenu ne passe pas sous ces barres ; le `Scaffold` de Material 3 les calcule pour nous.
 

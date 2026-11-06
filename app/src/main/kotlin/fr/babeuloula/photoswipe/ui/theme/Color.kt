@@ -5,8 +5,8 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 /*
- * Palette de repli « planche-contact » (ADR 0025), utilisée quand les couleurs dynamiques
- * (Material You) sont désactivées. Générée avec material-color-utilities (schéma Tonal spot) à
+ * Palette « planche-contact » (ADR 0025), toujours appliquée : l'application n'utilise pas les
+ * couleurs dynamiques (Material You, PS-102). Générée avec material-color-utilities (schéma Tonal spot) à
  * partir de la graine #8A6A1E, l'ambre de la lampe inactinique du labo ; les neutres sont un gris
  * papier photo (teinte 85, chroma 3, et chroma 5 pour les variantes), plus calme que celui du schéma.
  * Chaque rôle Material 3 est défini, rôles fixes compris, pour le clair comme pour le sombre.
