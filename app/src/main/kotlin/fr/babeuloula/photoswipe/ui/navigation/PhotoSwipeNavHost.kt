@@ -64,6 +64,7 @@ fun PhotoSwipeNavHost(
                     navController.popBackStack(HomeRoute, inclusive = false)
                 },
                 onBack = navController::popBackStack,
+                onOpenMarkedDeck = { first -> navController.navigate(DeckRoute.marked(first)) },
             )
         }
         composable<SettingsRoute> {

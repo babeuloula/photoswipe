@@ -27,6 +27,7 @@ import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
 import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
+import fr.babeuloula.photoswipe.domain.usecase.GetMarkedDeck
 import fr.babeuloula.photoswipe.domain.usecase.GetPendingFavorites
 import fr.babeuloula.photoswipe.domain.usecase.GetPreviousDecisions
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
@@ -34,6 +35,7 @@ import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
 import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
 import fr.babeuloula.photoswipe.domain.usecase.RequestFavorite
+import fr.babeuloula.photoswipe.domain.usecase.ReviewMarkedMedia
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -83,9 +85,10 @@ class DeckViewModelTest {
     private fun deckViewModel(
         source: MediaSource,
         journal: DecisionJournal = this.journal,
+        route: Map<String, Any?> = mapOf("epochDay" to day.toEpochDay()),
     ): DeckViewModel =
         DeckViewModel(
-            savedStateHandle = SavedStateHandle(mapOf("epochDay" to day.toEpochDay())),
+            savedStateHandle = SavedStateHandle(route),
             loading =
                 DeckLoading(
                     getDeckForDay =
@@ -98,6 +101,7 @@ class DeckViewModelTest {
                         ),
                     getDaySession = GetDaySession(journal, repository, source, ReviewWindowProvider(clock)),
                     getPreviousDecisions = GetPreviousDecisions(repository),
+                    getMarkedDeck = GetMarkedDeck(repository, source, SameDayMatcher(), clock),
                 ),
             decisions =
                 DeckDecisions(
@@ -105,6 +109,12 @@ class DeckViewModelTest {
                     markForDeletion = MarkForDeletion(repository, journal, clock),
                     favoriteMedia = FavoriteMedia(repository, journal, clock),
                     undoLastDecision = UndoLastDecision(repository, journal),
+                    reviewMarkedMedia =
+                        ReviewMarkedMedia(
+                            KeepMedia(repository, journal, clock),
+                            MarkForDeletion(repository, journal, clock),
+                            FavoriteMedia(repository, journal, clock),
+                        ),
                 ),
             clock = clock,
             galleryFavorite =
@@ -717,6 +727,44 @@ class DeckViewModelTest {
             val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
 
             assertEquals(null, (viewModel.uiState.value as DeckUiState.Loaded).current.previousDecision)
+        }
+
+    /** Marque [media] pour suppression dans la pile du jour, comme avant d'ouvrir le résumé. */
+    private suspend fun markInDayDeck(vararg media: MediaItem) {
+        media.forEach { MarkForDeletion(repository, journal, clock)(it, day) }
+    }
+
+    @Test
+    fun `opens the marked deck from the media tapped in the summary, each card showing its mark`() =
+        runTest {
+            val first = takenOn(1, 2020)
+            val tapped = takenOn(2, 2023)
+            markInDayDeck(first, tapped)
+            val viewModel =
+                deckViewModel(FakeMediaSource(listOf(first, tapped)), route = mapOf("firstMarkedMediaId" to 2L))
+
+            val state = viewModel.uiState.value as DeckUiState.Loaded
+
+            assertEquals(null, viewModel.day)
+            assertEquals(listOf(MediaId(2), MediaId(1)), state.cards.map { it.id })
+            assertTrue(state.cards.all { it.previousDecision == ReviewDecision.MARKED_FOR_DELETION })
+            assertEquals(2, state.total)
+        }
+
+    @Test
+    fun `keeps a marked media from the marked deck, undoes it, and goes back to the summary when done`() =
+        runTest {
+            val media = takenOn(1, 2020)
+            markInDayDeck(media)
+            val viewModel = deckViewModel(FakeMediaSource(listOf(media)), route = emptyMap())
+
+            viewModel.onEvent(DeckEvent.Keep)
+            assertEquals(emptyList<Any>(), repository.entriesMarkedForDeletion())
+            assertEquals(DeckEffect.Close, viewModel.uiEffects.first())
+
+            viewModel.onEvent(DeckEvent.Undo)
+            assertEquals(listOf(MediaId(1)), repository.entriesMarkedForDeletion().map { it.mediaId })
+            assertEquals(MediaId(1), (viewModel.uiState.value as DeckUiState.Loaded).current.id)
         }
 
     @Test

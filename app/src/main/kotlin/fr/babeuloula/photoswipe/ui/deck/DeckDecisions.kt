@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.ui.deck
 import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
+import fr.babeuloula.photoswipe.domain.usecase.ReviewMarkedMedia
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import javax.inject.Inject
 
@@ -14,6 +15,7 @@ import javax.inject.Inject
  * @property markForDeletion marque la carte pour suppression.
  * @property favoriteMedia garde la carte en favori.
  * @property undoLastDecision annule la dernière décision de la session.
+ * @property reviewMarkedMedia mêmes décisions dans la pile des marqués, pour chaque année de marquage.
  */
 class DeckDecisions
     @Inject
@@ -22,4 +24,5 @@ class DeckDecisions
         val markForDeletion: MarkForDeletion,
         val favoriteMedia: FavoriteMedia,
         val undoLastDecision: UndoLastDecision,
+        val reviewMarkedMedia: ReviewMarkedMedia,
     )

@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.navigation
 
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
 
@@ -8,21 +9,31 @@ import java.time.LocalDate
 data object HomeRoute
 
 /**
- * Pile de swipe d'un jour cible (SPEC §4.3).
+ * Pile de swipe (SPEC §4.3) : celle d'un jour cible, ou celle des médias marqués pour suppression,
+ * ouverte depuis le résumé (PS-112).
  *
- * @property epochDay jour cible en jours depuis le 1er janvier 1970 : les routes typées ne
- * transportent que des types simples.
+ * @property epochDay jour cible en jours depuis le 1er janvier 1970 (les routes typées ne
+ * transportent que des types simples) ; `null` pour la pile des marqués.
+ * @property firstMarkedMediaId pile des marqués : média touché dans le résumé, montré en premier ;
+ * `null` pour commencer par le plus récemment marqué.
  */
 @Serializable
 data class DeckRoute(
-    val epochDay: Long,
+    val epochDay: Long? = null,
+    val firstMarkedMediaId: Long? = null,
 ) {
-    /** Jour cible. */
-    val day: LocalDate get() = LocalDate.ofEpochDay(epochDay)
+    /** Jour cible, `null` pour la pile des marqués. */
+    val day: LocalDate? get() = epochDay?.let(LocalDate::ofEpochDay)
+
+    /** Vrai pour la pile des médias marqués pour suppression. */
+    val isMarked: Boolean get() = epochDay == null
 
     companion object {
         /** Route de la pile du jour [day]. */
         fun of(day: LocalDate): DeckRoute = DeckRoute(day.toEpochDay())
+
+        /** Route de la pile des médias marqués, en commençant par [first] s'il est donné. */
+        fun marked(first: MediaId? = null): DeckRoute = DeckRoute(firstMarkedMediaId = first?.value)
     }
 }
 

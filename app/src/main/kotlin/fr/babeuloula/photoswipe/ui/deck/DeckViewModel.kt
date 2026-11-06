@@ -12,6 +12,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
+import fr.babeuloula.photoswipe.domain.usecase.MarkedMedia
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import fr.babeuloula.photoswipe.ui.navigation.DeckRoute
 import kotlinx.coroutines.channels.Channel
@@ -177,8 +178,16 @@ class DeckViewModel
         private val clock: Clock,
         private val galleryFavorite: GalleryFavorite,
     ) : ViewModel() {
-        /** Jour cible de la pile. */
-        val day: LocalDate = savedStateHandle.toRoute<DeckRoute>().day
+        private val route: DeckRoute = savedStateHandle.toRoute<DeckRoute>()
+
+        /** Jour cible de la pile ; `null` pour la pile des médias marqués (PS-112). */
+        val day: LocalDate? = route.day
+
+        /** Fin de la pile : le résumé, ou le retour au résumé d'où la pile des marqués a été ouverte. */
+        private val doneEffect: DeckEffect = if (route.isMarked) DeckEffect.Close else DeckEffect.OpenSummary
+
+        /** Médias de la pile des marqués, avec les jours de revue de leurs marquages ; vide sinon. */
+        private var marked: Map<MediaId, MarkedMedia> = emptyMap()
 
         private val state = MutableStateFlow<DeckUiState>(DeckUiState.Loading)
         private val effects = Channel<DeckEffect>(Channel.BUFFERED)
@@ -217,7 +226,7 @@ class DeckViewModel
                 }
 
                 DeckEvent.Finish -> {
-                    effects.trySend(DeckEffect.OpenSummary)
+                    effects.trySend(doneEffect)
                 }
 
                 DeckEvent.Back -> {
@@ -225,15 +234,15 @@ class DeckViewModel
                 }
 
                 DeckEvent.Keep -> {
-                    decideTopCard(decisions.keepMedia::invoke)
+                    decideTopCard(decisions.keepMedia::invoke, decisions.reviewMarkedMedia::keep)
                 }
 
                 DeckEvent.MarkForDeletion -> {
-                    decideTopCard(decisions.markForDeletion::invoke)
+                    decideTopCard(decisions.markForDeletion::invoke, decisions.reviewMarkedMedia::markForDeletion)
                 }
 
                 DeckEvent.Favorite -> {
-                    decideTopCard(decisions.favoriteMedia::invoke) { media ->
+                    decideTopCard(decisions.favoriteMedia::invoke, decisions.reviewMarkedMedia::favorite) { media ->
                         // Le favori est demandé aussitôt à la galerie (SPEC §2) ; sinon, il reste en attente.
                         galleryFavorite.request(media)?.let { effects.trySend(DeckEffect.LaunchFavoriteRequest(it)) }
                     }
@@ -266,17 +275,14 @@ class DeckViewModel
             viewModelScope.launch {
                 runCatching {
                     galleryFavorite.loadPending()
-                    val cards = loading.getDeckForDay(day)
-                    previousDecisions =
-                        loading
-                            .getPreviousDecisions(day, cards.mapTo(HashSet()) { it.id })
-                            .mapValues { it.value.decision }
-                    cards to loading.getDaySession(day)
+                    loading.load(route)
                 }.fold(
-                    onSuccess = { (cards, resumed) ->
+                    onSuccess = { loaded ->
                         deck.clear()
-                        deck.addAll(cards)
-                        session = resumed
+                        deck.addAll(loaded.cards)
+                        session = loaded.session
+                        previousDecisions = loaded.previousDecisions
+                        marked = loaded.marked
                         render()
                     },
                     onFailure = { state.value = DeckUiState.Error },
@@ -285,22 +291,24 @@ class DeckViewModel
         }
 
         /**
-         * Applique la décision [decide] (garder, marquer) à la carte du dessus : elle quitte la pile
+         * Applique une décision (garder, marquer, favori) à la carte du dessus : [forDay] dans la pile
+         * d'un jour, [forMarked] dans celle des marqués, qui décide pour chaque année de marquage. : elle quitte la pile
          * tout de suite, sans attendre l'écriture, pour que la carte suivante apparaisse sous le
          * doigt. Si l'écriture échoue, la carte revient sur le dessus de la pile, rien n'est perdu.
          * Un marquage n'est qu'une décision en base : rien n'est supprimé avant la confirmation
          * du résumé (SPEC §3.5). La dernière carte triée mène au résumé (SPEC §3.4).
          */
         private fun decideTopCard(
-            decide: suspend (MediaItem, LocalDate) -> SessionDecision,
+            forDay: suspend (MediaItem, LocalDate) -> SessionDecision,
+            forMarked: suspend (MarkedMedia) -> List<SessionDecision>,
             afterDecision: (MediaItem) -> Unit = {},
         ) {
             val media = deck.removeFirstOrNull() ?: return
             render()
             viewModelScope.launch {
-                runCatching { decide(media, day) }.fold(
-                    onSuccess = {
-                        session = session.record(it)
+                runCatching { day?.let { listOf(forDay(media, it)) } ?: forMarked(marked.getValue(media.id)) }.fold(
+                    onSuccess = { made ->
+                        session = made.fold(session) { current, decision -> current.record(decision) }
                         render()
                         afterDecision(media)
                         openSummaryWhenDone()
@@ -318,7 +326,9 @@ class DeckViewModel
          * quitter la pile avant perdrait sa réponse.
          */
         private fun openSummaryWhenDone() {
-            if (deck.isEmpty() && !galleryFavorite.isPending) effects.trySend(DeckEffect.OpenSummary)
+            if (deck.isEmpty() && !galleryFavorite.isPending) {
+                effects.trySend(doneEffect)
+            }
         }
 
         /**
@@ -329,9 +339,8 @@ class DeckViewModel
         private fun undo() {
             if (session.isEmpty) return
             viewModelScope.launch {
-                val result = runCatching { decisions.undoLastDecision(session) }.getOrNull()
+                val result = runCatching { undoLastCard() }.getOrNull()
                 if (result is UndoLastDecision.Result.Undone) {
-                    session = result.session
                     if (result.decision.exitSide() ==
                         CardSide.TOP
                     ) {
@@ -341,6 +350,22 @@ class DeckViewModel
                     render(returningFrom = result.decision.exitSide())
                 }
             }
+        }
+
+        /**
+         * Annule toutes les décisions de la dernière carte : une seule dans la pile d'un jour, une
+         * par année de marquage dans celle des marqués. Renvoie celle de la première annulée.
+         */
+        private suspend fun undoLastCard(): UndoLastDecision.Result {
+            val first = decisions.undoLastDecision(session)
+            if (first !is UndoLastDecision.Result.Undone) return first
+            session = first.session
+            val mediaId = first.decision.media.id
+            while (session.lastDecision?.media?.id == mediaId) {
+                val next = decisions.undoLastDecision(session) as? UndoLastDecision.Result.Undone ?: break
+                session = next.session
+            }
+            return first
         }
 
         /**
@@ -381,14 +406,14 @@ class DeckViewModel
                                 ).map {
                                     MediaCardUiState.of(
                                         media = it,
-                                        day = day,
+                                        day = day ?: marked.getValue(it.id).reviewDays.first(),
                                         zone = clock.zone,
                                         favorite = galleryFavorite.isFavorite(it),
                                         previousDecision = previousDecisions[it.id],
                                     )
                                 },
                         remainingCount = deck.size,
-                        sortedCount = session.decisions.size,
+                        sortedCount = session.decisions.distinctBy { it.media.id }.size,
                         canUndo = canUndo,
                         returningFrom = returningFrom,
                     )

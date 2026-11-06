@@ -179,6 +179,30 @@ class SummaryViewModelTest {
         }
 
     @Test
+    fun `opens the marked deck from the tapped media`() =
+        runTest {
+            mark(1, 2)
+            val viewModel = summaryViewModel()
+
+            viewModel.onEvent(SummaryEvent.OpenMarked(MediaId(2)))
+
+            assertEquals(SummaryEffect.OpenMarkedDeck(MediaId(2)), viewModel.uiEffects.first())
+        }
+
+    @Test
+    fun `reads the marks again when coming back from the marked deck`() =
+        runTest {
+            mark(1, 2)
+            val viewModel = summaryViewModel()
+            assertEquals(2, (viewModel.uiState.value as SummaryUiState.Loaded).summary.markedForDeletionCount)
+
+            repository.delete(MediaId(2), repository.entries.first { it.mediaId == MediaId(2) }.reviewYear)
+            viewModel.onEvent(SummaryEvent.Resumed)
+
+            assertEquals(1, (viewModel.uiState.value as SummaryUiState.Loaded).summary.markedForDeletionCount)
+        }
+
+    @Test
     fun `presents one system dialog per batch of marked media`() =
         runTest {
             mark(1, 2, 3)
