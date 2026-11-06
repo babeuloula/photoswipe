@@ -153,4 +153,8 @@
     <string name="tutorial_practice_restart">Recommencer</string>
     <string name="settings_about_tutorial">Revoir le tutoriel</string>
     <string name="settings_about_tutorial_summary">Le fonctionnement du tri, et un essai sur des cartes d\'exemple</string>
+    <string name="tutorial_same_day_illustration">Animation : des photos de plusieurs années défilent, il y a 1 an, il y a 3 ans, il y a 5 ans, à cette même date.</string>
+    <string name="tutorial_swipe_up_illustration">Animation : une photo glisse vers le haut sous un voile bleu avec un cœur, puis le menu s\'ouvre avec Ajouter aux favoris et Partager.</string>
+    <string name="tutorial_catch_up_illustration">Animation : les 7 derniers jours, chacun avec son nombre de souvenirs à trier, sont triés l\'un après l\'autre, et le rappel compte ce qui reste.</string>
+    <string name="tutorial_confirmation_illustration">Animation : le résumé montre l\'espace libéré estimé, puis un dialogue propose de mettre les médias marqués à la corbeille.</string>
 </resources>

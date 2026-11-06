@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,7 +31,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
@@ -115,7 +115,7 @@ private fun DayTile(
     ) {
         Text(weekday, style = MaterialTheme.typography.labelMedium, maxLines = 1)
         Crossfade(targetState = sorted || count == 0, label = "dayCounter") { done ->
-            Box(Modifier.size(28.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.defaultMinSize(COUNTER_SIZE, COUNTER_SIZE), contentAlignment = Alignment.Center) {
                 when {
                     count == 0 -> {
                         Text("–", color = scheme.outline, style = MaterialTheme.typography.labelLarge)
@@ -132,7 +132,11 @@ private fun DayTile(
 
                     else -> {
                         Box(
-                            Modifier.size(28.dp).clip(CircleShape).background(scheme.primary),
+                            Modifier
+                                .defaultMinSize(COUNTER_SIZE, COUNTER_SIZE)
+                                .clip(CircleShape)
+                                .background(scheme.primary)
+                                .padding(horizontal = 4.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text("$count", color = scheme.onPrimary, style = MaterialTheme.typography.labelLarge)
@@ -165,8 +169,6 @@ private fun ReminderBubble(remaining: Int) {
         Text(
             pluralStringResource(R.plurals.reminder_title, remaining, remaining),
             style = MaterialTheme.typography.bodyMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -177,6 +179,9 @@ internal val SAMPLE_COUNTS = listOf(2, 0, 5, 1, 0, 3, 4)
 
 /** Jours triés dans la version statique : aujourd'hui et la veille. */
 private const val STATIC_SORTED_DAYS = 2
+
+/** Taille minimale d'un compteur : elle grandit avec la police. */
+private val COUNTER_SIZE = 28.dp
 
 /** Durée entre deux jours triés. */
 internal const val CATCH_UP_STEP_MILLIS = 900L
