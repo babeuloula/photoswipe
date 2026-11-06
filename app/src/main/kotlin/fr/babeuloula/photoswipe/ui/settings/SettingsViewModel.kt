@@ -26,13 +26,11 @@ import javax.inject.Inject
  * @property reminder réglages du rappel quotidien, `null` tant qu'ils ne sont pas lus.
  * @property timePickerOpen vrai pendant le choix de l'heure du rappel.
  * @property themeMode thème de l'application, `null` tant qu'il n'est pas lu.
- * @property themeDialogOpen vrai pendant le choix du thème.
  */
 data class SettingsUiState(
     val reminder: ReminderSettings? = null,
     val timePickerOpen: Boolean = false,
     val themeMode: ThemeMode? = null,
-    val themeDialogOpen: Boolean = false,
 )
 
 /** Action de l'utilisateur sur les réglages. */
@@ -79,9 +77,6 @@ sealed interface SettingsEvent {
     /** Action sur le thème de l'application. */
     sealed interface ThemeEvent : SettingsEvent
 
-    /** Appui sur « Thème » : ouvrir le choix du thème. */
-    data object PickTheme : ThemeEvent
-
     /**
      * Thème choisi.
      *
@@ -90,9 +85,6 @@ sealed interface SettingsEvent {
     data class ThemePicked(
         val mode: ThemeMode,
     ) : ThemeEvent
-
-    /** Choix du thème fermé sans rien choisir. */
-    data object ThemeDialogDismissed : ThemeEvent
 
     /** « Langue » : ouvrir le réglage de langue par application d'Android. */
     data object OpenLanguageSettings : SettingsEvent
@@ -235,20 +227,11 @@ class SettingsViewModel
             }
         }
 
-        /** Ouvre le choix du thème, enregistre le thème choisi ou ferme le choix. */
+        /** Enregistre le thème choisi dans la liste des réglages. */
         private fun onThemeEvent(event: SettingsEvent.ThemeEvent) {
             when (event) {
-                SettingsEvent.PickTheme -> {
-                    state.update { it.copy(themeDialogOpen = it.themeMode != null) }
-                }
-
                 is SettingsEvent.ThemePicked -> {
-                    state.update { it.copy(themeDialogOpen = false) }
                     viewModelScope.launch { runCatching { settingsRepository.saveThemeMode(event.mode) } }
-                }
-
-                SettingsEvent.ThemeDialogDismissed -> {
-                    state.update { it.copy(themeDialogOpen = false) }
                 }
             }
         }

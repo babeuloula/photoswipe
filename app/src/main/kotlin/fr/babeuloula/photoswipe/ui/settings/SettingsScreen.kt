@@ -1,7 +1,9 @@
 package fr.babeuloula.photoswipe.ui.settings
 
 import android.text.format.DateFormat
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +43,7 @@ import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
+import fr.babeuloula.photoswipe.ui.common.segmentShape
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import java.time.LocalDate
 import java.time.LocalTime
@@ -90,7 +93,10 @@ fun SettingsScreen(
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             } else {
                 CenteredContent {
-                    Column(Modifier.verticalScroll(rememberScrollState())) {
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
                         ReminderSection(reminder, onEvent)
                         LanguageSection(environment.languageLabel, onEvent)
                         state.themeMode?.let { AppearanceSection(it, onEvent) }
@@ -98,8 +104,6 @@ fun SettingsScreen(
                     }
                 }
                 if (state.timePickerOpen) ReminderTimeDialog(reminder.time, onEvent)
-                val themeMode = state.themeMode
-                if (state.themeDialogOpen && themeMode != null) ThemeDialog(themeMode, onEvent)
             }
         }
     }
@@ -111,27 +115,28 @@ private fun ReminderSection(
     reminder: ReminderSettings,
     onEvent: (SettingsEvent) -> Unit,
 ) {
-    Column {
-        SectionTitle(stringResource(R.string.settings_reminder_section))
-        // Toute la ligne bascule l'interrupteur, et TalkBack l'annonce comme un interrupteur.
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_reminder_enabled)) },
-            supportingContent = { Text(stringResource(R.string.settings_reminder_enabled_summary)) },
-            trailingContent = { Switch(checked = reminder.enabled, onCheckedChange = null) },
-            modifier =
-                Modifier.toggleable(
-                    value = reminder.enabled,
-                    role = Role.Switch,
-                    onValueChange = { onEvent(SettingsEvent.ReminderToggled(it)) },
-                ),
-        )
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_reminder_time)) },
-            supportingContent = {
-                Text(stringResource(R.string.settings_reminder_time_summary, timeLabel(reminder.time)))
-            },
-            modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.PickReminderTime) },
-        )
+    PreferenceSection(stringResource(R.string.settings_reminder_section)) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            // Toute la ligne bascule l'interrupteur, et TalkBack l'annonce comme un interrupteur.
+            PreferenceRow(
+                shape = segmentShape(0, 2),
+                title = stringResource(R.string.settings_reminder_enabled),
+                summary = stringResource(R.string.settings_reminder_enabled_summary),
+                trailing = { Switch(checked = reminder.enabled, onCheckedChange = null) },
+                modifier =
+                    Modifier.toggleable(
+                        value = reminder.enabled,
+                        role = Role.Switch,
+                        onValueChange = { onEvent(SettingsEvent.ReminderToggled(it)) },
+                    ),
+            )
+            PreferenceRow(
+                shape = segmentShape(1, 2),
+                title = stringResource(R.string.settings_reminder_time),
+                summary = stringResource(R.string.settings_reminder_time_summary, timeLabel(reminder.time)),
+                modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.PickReminderTime) },
+            )
+        }
     }
 }
 
@@ -152,11 +157,13 @@ private fun LanguageSection(
     languageLabel: String,
     onEvent: (SettingsEvent) -> Unit,
 ) {
-    Column {
-        SectionTitle(stringResource(R.string.settings_language_section))
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_language)) },
-            supportingContent = { Text(languageLabel) },
+    PreferenceSection(stringResource(R.string.settings_language_section)) {
+        PreferenceRow(
+            shape = segmentShape(0, 1),
+            title = stringResource(R.string.settings_language),
+            summary = languageLabel,
+            // S'ouvre dans les réglages d'Android, hors de l'application.
+            trailing = { TrailingIcon(R.drawable.ic_open_in_new) },
             modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenLanguageSettings) },
         )
     }
@@ -168,26 +175,37 @@ private fun AboutSection(
     onEvent: (SettingsEvent) -> Unit,
     showDeveloperTools: Boolean,
 ) {
-    Column {
-        SectionTitle(stringResource(R.string.settings_about_section))
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_about_version)) },
-            supportingContent = { Text(appVersion()) },
-        )
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.settings_about_licenses)) },
-            supportingContent = { Text(stringResource(R.string.settings_about_licenses_summary)) },
-            modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenLicenses) },
-        )
-        // Variante debug seulement (SPEC §10).
-        if (showDeveloperTools) {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.settings_developer_tools)) },
-                modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenDeveloperTools) },
+    // Version, licences et, en debug, les outils développeur.
+    val count = if (showDeveloperTools) ABOUT_ROWS + 1 else ABOUT_ROWS
+    PreferenceSection(stringResource(R.string.settings_about_section)) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            PreferenceRow(
+                shape = segmentShape(0, count),
+                title = stringResource(R.string.settings_about_version),
+                summary = appVersion(),
             )
+            PreferenceRow(
+                shape = segmentShape(1, count),
+                title = stringResource(R.string.settings_about_licenses),
+                summary = stringResource(R.string.settings_about_licenses_summary),
+                trailing = { TrailingIcon(R.drawable.ic_chevron_right) },
+                modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenLicenses) },
+            )
+            // Variante debug seulement (SPEC §10).
+            if (showDeveloperTools) {
+                PreferenceRow(
+                    shape = segmentShape(2, count),
+                    title = stringResource(R.string.settings_developer_tools),
+                    trailing = { TrailingIcon(R.drawable.ic_chevron_right) },
+                    modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenDeveloperTools) },
+                )
+            }
         }
     }
 }
+
+/** Lignes de « À propos » dans toutes les variantes : version et licences. */
+private const val ABOUT_ROWS = 2
 
 /** Version de l'application installée (`versionName`). */
 @Composable
@@ -210,9 +228,17 @@ internal fun SectionTitle(text: String) {
         color = MaterialTheme.colorScheme.primary,
         modifier =
             Modifier
-                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp)
+                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
                 .semantics { heading() },
     )
+}
+
+/** Icône de fin de ligne, décorative : chevron ou « ouvrir ailleurs ». */
+@Composable
+private fun TrailingIcon(
+    @DrawableRes icon: Int,
+) {
+    Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /** Sélecteur d'heure Material 3, au format 12 ou 24 heures du téléphone. */
