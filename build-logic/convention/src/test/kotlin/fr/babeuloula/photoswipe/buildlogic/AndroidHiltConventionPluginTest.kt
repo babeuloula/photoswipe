@@ -40,4 +40,13 @@ class AndroidHiltConventionPluginTest {
         assertFalse(isKspTask("compileReleaseKotlin"))
         assertFalse(isKspTask("hiltJavaCompileRelease"))
     }
+
+    @Test
+    fun `ksp tasks share a service that runs them one at a time`() {
+        val project = androidProjectWithHilt()
+
+        val service = project.gradle.sharedServices.registrations.getByName(KSP_SERVICE)
+
+        assertEquals(1, service.maxParallelUsages.get())
+    }
 }
