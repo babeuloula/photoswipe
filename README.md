@@ -49,6 +49,7 @@ Détails : [docs/testing.md](docs/testing.md#4-fixtures).
 - [Guide pour les néophytes](docs/beginners-guide.md) : Kotlin, Gradle, Android et le rôle de chaque dossier
 - [Architecture](docs/architecture.md) : modules, dépendances, versions et bibliothèques
 - [Tests](docs/testing.md) : stratégie, outils et commandes
+- [Couverture du tutoriel](docs/tutorial-coverage.md) : fonctionnalités livrées et pages du tutoriel
 - [Décisions (ADR)](docs/decisions/) : décisions structurantes et leur justification, à partir du [modèle](docs/decisions/0000-template.md)
 - [CLAUDE.md](CLAUDE.md) : règles, commandes et processus de contribution
 
