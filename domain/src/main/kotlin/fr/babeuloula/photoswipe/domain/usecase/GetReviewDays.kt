@@ -73,22 +73,39 @@ class GetReviewDays(
                 date = day,
                 remainingCount = remaining.size,
                 memoryCount = media.size,
-                previews = previews(remaining.ifEmpty { media }, zone),
+                previews = previews(remaining, media, zone),
                 years = if (years.isEmpty()) null else years.min()..years.max(),
             )
         }
     }
 
-    /** Une vignette par année, de la plus récente à la plus ancienne, la première photo de chaque année. */
+    /**
+     * Vignettes du jour (PS-109) : à trier d'abord, puis triés, chaque groupe une année après l'autre
+     * de la plus récente à la plus ancienne ; toutes si elles tiennent dans la bande, sinon une de
+     * moins pour laisser sa case au nombre des autres.
+     */
     private fun previews(
+        remaining: List<MediaItem>,
         media: List<MediaItem>,
         zone: ZoneId,
-    ): List<MediaItem> =
-        media
-            .sortedBy { it.takenAt }
-            .groupBy { it.takenAt.atZone(zone).year }
-            .toSortedMap(compareByDescending { it })
-            .values
-            .map { it.first() }
-            .take(ReviewDay.PREVIEW_COUNT)
+    ): List<MediaItem> {
+        val remainingIds = remaining.mapTo(HashSet()) { it.id }
+        val ordered = byYearRounds(remaining, zone) + byYearRounds(media.filterNot { it.id in remainingIds }, zone)
+        return if (media.size <= ReviewDay.PREVIEW_SLOTS) ordered else ordered.take(ReviewDay.PREVIEW_SLOTS - 1)
+    }
+
+    /** [media] en tours : la première photo de chaque année (la plus récente d'abord), puis la deuxième, etc. */
+    private fun byYearRounds(
+        media: List<MediaItem>,
+        zone: ZoneId,
+    ): List<MediaItem> {
+        val years =
+            media
+                .sortedBy { it.takenAt }
+                .groupBy { it.takenAt.atZone(zone).year }
+                .toSortedMap(compareByDescending { it })
+                .values
+        val rounds = years.maxOfOrNull { it.size } ?: 0
+        return (0 until rounds).flatMap { round -> years.mapNotNull { it.getOrNull(round) } }
+    }
 }

@@ -88,6 +88,52 @@ class GetReviewDaysTest {
         }
 
     @Test
+    fun `previews every memory of the day when they fit in the strip, even from the same year`() =
+        runTest {
+            val media =
+                listOf(
+                    takenOn(id = 1, LocalDate.of(2025, 7, 15)),
+                    takenOn(id = 2, LocalDate.of(2025, 7, 15)),
+                    takenOn(id = 3, LocalDate.of(2020, 7, 15)),
+                    takenOn(id = 4, LocalDate.of(2025, 7, 15)),
+                )
+
+            val today = getReviewDays(today = LocalDate.of(2026, 7, 15), media)().first()[0]
+
+            assertEquals(4, today.previews.size)
+            assertEquals(listOf(1L, 3L), today.previews.take(2).map { it.id.value })
+            assertEquals(0, today.hiddenCount)
+        }
+
+    @Test
+    fun `previews three memories and counts the others from five memories`() =
+        runTest {
+            val media = (1L..5L).map { takenOn(id = it, LocalDate.of(2020 + it.toInt(), 7, 15)) }
+
+            val today = getReviewDays(today = LocalDate.of(2026, 7, 15), media)().first()[0]
+
+            assertEquals(listOf(5L, 4L, 3L), today.previews.map { it.id.value })
+            assertEquals(2, today.hiddenCount)
+        }
+
+    @Test
+    fun `previews the memories to sort first, then the sorted ones, when they all fit`() =
+        runTest {
+            val media =
+                listOf(
+                    takenOn(id = 1, LocalDate.of(2025, 7, 15)),
+                    takenOn(id = 2, LocalDate.of(2023, 7, 15)),
+                    takenOn(id = 3, LocalDate.of(2021, 7, 15)),
+                )
+            val entries = listOf(aReviewEntry(mediaId = 1, reviewYear = 2026, decision = KEPT))
+
+            val today = getReviewDays(today = LocalDate.of(2026, 7, 15), media, entries)().first()[0]
+
+            assertEquals(listOf(2L, 3L, 1L), today.previews.map { it.id.value })
+            assertEquals(0, today.hiddenCount)
+        }
+
+    @Test
     fun `previews the sorted memories once the whole day is sorted`() =
         runTest {
             val media = listOf(takenOn(id = 1, LocalDate.of(2025, 7, 15)))
