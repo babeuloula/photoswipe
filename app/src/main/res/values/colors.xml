@@ -5,4 +5,8 @@
         « planche-contact » (ui/theme/Color.kt, ADR 0025), qu'Android ne peut pas lire dans Compose.
     -->
     <color name="notification_accent">#FF785A0B</color>
+    <!-- Fond de l'icône adaptative et de l'icône de l'écran de démarrage : le primary de repli. -->
+    <color name="launcher_background">#FF785A0B</color>
+    <!-- Fond de l'écran de démarrage : la surface du thème clair de repli. -->
+    <color name="splash_background">#FFFFF8F2</color>
 </resources>
