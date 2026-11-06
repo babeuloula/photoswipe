@@ -58,7 +58,11 @@ class AdaptiveLayoutTest {
         )
 
     private fun showHome() {
-        composeRule.activity.setContent { PhotoSwipeTheme { HomeScreen(state = home, onEvent = {}) } }
+        composeRule.activity.setContent {
+            CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
+                PhotoSwipeTheme { HomeScreen(state = home, onEvent = {}) }
+            }
+        }
     }
 
     private fun showDeck() {
@@ -100,7 +104,9 @@ class AdaptiveLayoutTest {
         showHome()
         val today = composeRule.onNodeWithText(text(R.string.home_today)).getBoundsInRoot()
         val previousDays = composeRule.onNodeWithText(text(R.string.home_previous_days)).getBoundsInRoot()
-        assertTrue("previous days on the right of today", previousDays.left > today.right)
+        val start = composeRule.onNodeWithText(text(R.string.home_start_sorting)).getBoundsInRoot()
+        assertTrue("previous days listed under today", previousDays.top > today.bottom)
+        assertTrue("detail of the day on the right of the list", start.left > previousDays.right)
 
         showDeck()
         val keep = composeRule.onNodeWithContentDescription(text(R.string.deck_keep)).getBoundsInRoot()

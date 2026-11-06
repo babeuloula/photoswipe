@@ -120,4 +120,5 @@
     <string name="summary_more_marked_description">et %1$d autres</string>
     <string name="reminder_text_years">Des photos et vidéos prises un %1$s, de %2$d à %3$d</string>
     <string name="reminder_text_year">Des photos et vidéos prises un %1$s, en %2$d</string>
+    <string name="home_detail_subtitle">%1$s · %2$s</string>
 </resources>

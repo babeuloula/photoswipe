@@ -94,6 +94,7 @@ internal fun TodayCard(
     state: HomeUiState.Loaded,
     onOpenDay: () -> Unit,
     onEvent: (HomeEvent) -> Unit,
+    compact: Boolean = false,
 ) {
     val today = state.today
     when {
@@ -110,7 +111,12 @@ internal fun TodayCard(
         }
 
         else -> {
-            MemoriesCard(today, onOpenDay = onOpenDay, onSummary = { onEvent(HomeEvent.OpenPendingDeletions) })
+            MemoriesCard(
+                today,
+                onOpenDay = onOpenDay,
+                onSummary = { onEvent(HomeEvent.OpenPendingDeletions) },
+                compact = compact,
+            )
         }
     }
 }
@@ -152,12 +158,16 @@ private fun TextCard(
     }
 }
 
-/** Carte du jour avec ses souvenirs : à trier sur `primaryContainer`, tout trié en surface. */
+/**
+ * Carte du jour avec ses souvenirs : à trier sur `primaryContainer`, tout trié en surface. En
+ * deux volets ([compact]), la bande de vignettes et les boutons passent dans le volet de détail.
+ */
 @Composable
 private fun MemoriesCard(
     today: ReviewDay,
     onOpenDay: () -> Unit,
     onSummary: () -> Unit,
+    compact: Boolean,
 ) {
     val toSort = today.remainingCount > 0
     val scheme = MaterialTheme.colorScheme
@@ -186,18 +196,20 @@ private fun MemoriesCard(
                     )
                     Text(dayLabel(today.date), style = MaterialTheme.typography.headlineSmall)
                 }
-                today.years?.let { FilmEdgeLabel(yearsLabel(it)) }
+                if (!compact) today.years?.let { FilmEdgeLabel(yearsLabel(it)) }
             }
-            PreviewStrip(
-                today = today,
-                tileColor = content,
-                onTileColor = container,
-                modifier = Modifier.alpha(if (toSort) 1f else SORTED_ALPHA),
-            )
-            if (toSort) {
-                TodayCount(today.remainingCount, onStart = onOpenDay)
-            } else {
-                AllSorted(onSummary)
+            if (!compact) {
+                PreviewStrip(
+                    today = today,
+                    tileColor = content,
+                    onTileColor = container,
+                    modifier = Modifier.alpha(if (toSort) 1f else SORTED_ALPHA),
+                )
+            }
+            when {
+                toSort -> TodayCount(today.remainingCount, onStart = onOpenDay.takeUnless { compact })
+                compact -> Text(stringResource(R.string.home_today_done), style = MaterialTheme.typography.bodyLarge)
+                else -> AllSorted(onSummary)
             }
         }
     }
@@ -256,7 +268,7 @@ private fun PreviewStrip(
 @Composable
 private fun TodayCount(
     count: Int,
-    onStart: () -> Unit,
+    onStart: (() -> Unit)?,
 ) {
     val text = pluralStringResource(R.plurals.home_remaining, count, count)
     val number = count.toString()
@@ -279,7 +291,7 @@ private fun TodayCount(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Text(annotated, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        Button(onClick = onStart) { Text(stringResource(R.string.home_start_sorting)) }
+        if (onStart != null) Button(onClick = onStart) { Text(stringResource(R.string.home_start_sorting)) }
     }
 }
 
@@ -310,7 +322,7 @@ private fun AllSorted(onSummary: () -> Unit) {
 
 /** Années des souvenirs du jour : « De 2016 à 2025 », ou « En 2025 » pour une seule. */
 @Composable
-private fun yearsLabel(years: IntRange): String =
+internal fun yearsLabel(years: IntRange): String =
     if (years.first == years.last) {
         stringResource(R.string.home_year_single, years.first)
     } else {

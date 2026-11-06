@@ -23,10 +23,11 @@ Le thème Material 3 de base (graine bleue #769CDF, typographie et formes par d�
 - **Accès aux photos** (PS-98) : pile de tirages dessinée avec les conteneurs du thème et une icône (aucune photo), repère d'exemple daté d'il y a trois ans ; tirages vides au refus.
 - **Notification** (PS-99) : titre « … à trier aujourd'hui », texte avec le jour et les années, vignette d'un souvenir en grande icône, couleur ambre fixe (`notification_accent`, le primary de repli : Android colore la notification hors de Compose).
 - **Icône et démarrage** (PS-100) : icône adaptative en vecteurs (tracé de la grille 64 des maquettes, tenu dans la zone sûre), couche monochrome, même tracé pour la notification ; écran de démarrage de la plateforme (`windowSplashScreen*`, API 31+), sans bibliothèque `core-splashscreen` puisque `minSdk` vaut 33.
+- **Tablette** (PS-101) : accueil en liste et détail (planche-contact du jour à droite, une vignette par année faute de lire tous les souvenirs du jour) ; la colonne « À suivre » de la pile n'est pas reprise (la pile ne prépare que deux cartes, SPEC §14).
 - **Formes** : l'échelle Material 3 par défaut, que les maquettes reprennent.
 - **Le seuil du geste reste celui de la SPEC** (35 % de la largeur) ; les maquettes parlaient de 120 dp.
 - **Les photos des maquettes n'entrent pas dans l'APK** : les illustrations sont faites de formes du thème.
-- La suite de la refonte (typographie, icônes, repère, écrans, icône de l'app) est découpée en tickets PS-90 à PS-101.
+- La refonte est découpée en tickets PS-89 à PS-101, une PR chacun.
 
 ## Alternatives envisagées
 - **Désactiver les couleurs dynamiques** pour imposer l'ambre : contraire à la SPEC §8 ; à trancher plus tard par un réglage si Jérémy le veut.
