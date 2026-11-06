@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -49,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import java.time.LocalDate
 
@@ -149,6 +152,49 @@ private fun BoxScope.DeckContent(
 }
 
 /**
+ * Place la pile et ses boutons : en dessous sur téléphone ; à côté, en colonne, sur grand écran ou
+ * en paysage ([twoPane]), pour que la carte garde toute la hauteur (SPEC §8).
+ */
+@Composable
+private fun DeckLayout(
+    twoPane: Boolean,
+    cards: @Composable (Modifier) -> Unit,
+    buttons: @Composable (vertical: Boolean, Modifier) -> Unit,
+) {
+    if (twoPane) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            cards(
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(16.dp),
+            )
+            buttons(
+                true,
+                Modifier
+                    .fillMaxHeight()
+                    .padding(end = 24.dp),
+            )
+        }
+    } else {
+        Column(modifier = Modifier.fillMaxSize()) {
+            cards(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            )
+            buttons(
+                false,
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+            )
+        }
+    }
+}
+
+/**
  * Carte du dessus, boutons de décision et menu favori / partage. Les boutons et le menu font sortir
  * la carte comme un geste avant d'envoyer la décision ; « Annuler » est actif dès qu'une décision
  * peut être annulée.
@@ -160,36 +206,31 @@ private fun LoadedDeck(
 ) {
     // Sortie demandée par un bouton ou le menu pour la carte du dessus ; `null` tant qu'il n'y en a pas.
     var requestedExit by remember(state.current.id) { mutableStateOf<CardSide?>(null) }
-    Column(modifier = Modifier.fillMaxSize()) {
-        CardStack(
-            state = state,
-            requestedExit = requestedExit,
-            onEvent = onEvent,
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(16.dp),
-        )
-        // Pendant la sortie de la carte, les boutons sont ignorés : un second tap ne trie pas la suivante.
-        DecisionButtons(
-            canUndo = state.canUndo,
-            onClick = { button ->
-                if (requestedExit == null) {
-                    when (button) {
-                        DeckButton.MARK_FOR_DELETION -> requestedExit = CardSide.LEFT
-                        DeckButton.KEEP -> requestedExit = CardSide.RIGHT
-                        DeckButton.UNDO -> onEvent(DeckEvent.Undo)
-                        DeckButton.MENU -> onEvent(DeckEvent.OpenMenu)
-                    }
-                }
-            },
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-        )
+    // Pendant la sortie de la carte, les boutons sont ignorés : un second tap ne trie pas la suivante.
+    val onButton: (DeckButton) -> Unit = { button ->
+        if (requestedExit == null) {
+            when (button) {
+                DeckButton.MARK_FOR_DELETION -> requestedExit = CardSide.LEFT
+                DeckButton.KEEP -> requestedExit = CardSide.RIGHT
+                DeckButton.UNDO -> onEvent(DeckEvent.Undo)
+                DeckButton.MENU -> onEvent(DeckEvent.OpenMenu)
+            }
+        }
     }
+    DeckLayout(
+        twoPane = currentWindowLayout().isTwoPane,
+        cards = { cardModifier ->
+            CardStack(state = state, requestedExit = requestedExit, onEvent = onEvent, modifier = cardModifier)
+        },
+        buttons = { vertical, buttonsModifier ->
+            DecisionButtons(
+                canUndo = state.canUndo,
+                onClick = onButton,
+                vertical = vertical,
+                modifier = buttonsModifier,
+            )
+        },
+    )
     if (state.menuOpen) {
         CardMenu(
             onFavorite = {

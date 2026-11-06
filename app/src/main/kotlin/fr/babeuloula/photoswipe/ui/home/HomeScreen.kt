@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
@@ -47,6 +49,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
+import fr.babeuloula.photoswipe.ui.common.CenteredContent
+import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -114,7 +118,8 @@ fun HomeScreen(
  *
  * Un jour sans média à trier reste dans la liste, grisé et sans action : la semaine garde ses
  * 7 jours, et l'utilisateur voit qu'il n'a rien manqué (choix de PS-38). Sans aucun souvenir sur
- * les 7 jours, un état vide dédié remplace la carte et la liste (PS-40).
+ * les 7 jours, un état vide dédié remplace la carte et la liste (PS-40). Sur grand écran ou en
+ * paysage, la carte et la liste sont côte à côte ; en largeur moyenne, la liste est centrée.
  */
 @Composable
 private fun HomeDays(
@@ -122,33 +127,69 @@ private fun HomeDays(
     onOpenDay: (LocalDate) -> Unit,
     onOpenPendingDeletions: () -> Unit,
 ) {
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        if (state.pendingDeletionCount > 0) {
-            item { PendingDeletionsBanner(state.pendingDeletionCount, onClick = onOpenPendingDeletions) }
-        }
-        if (!state.hasMemories) {
-            item { NoMemories() }
-        } else {
-            item { TodayCard(state.today, onClick = { onOpenDay(state.today.date) }) }
-            item {
-                Text(
-                    text = stringResource(R.string.home_previous_days),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier =
-                        Modifier
-                            .padding(top = 16.dp, start = 8.dp)
-                            .semantics { heading() },
-                )
+    if (currentWindowLayout().isTwoPane && state.hasMemories) {
+        // Grand écran ou paysage : « Aujourd'hui » à gauche, les jours à rattraper à droite.
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Column(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (state.pendingDeletionCount > 0) {
+                    PendingDeletionsBanner(state.pendingDeletionCount, onClick = onOpenPendingDeletions)
+                }
+                TodayCard(state.today, onClick = { onOpenDay(state.today.date) })
             }
-            items(state.previousDays, key = { it.date.toEpochDay() }) { day ->
-                PreviousDay(day, onClick = { onOpenDay(day.date) })
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                item { PreviousDaysTitle(Modifier.padding(start = 8.dp)) }
+                items(state.previousDays, key = { it.date.toEpochDay() }) { day ->
+                    PreviousDay(day, onClick = { onOpenDay(day.date) })
+                }
+            }
+        }
+        return
+    }
+    CenteredContent {
+        LazyColumn(
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            if (state.pendingDeletionCount > 0) {
+                item { PendingDeletionsBanner(state.pendingDeletionCount, onClick = onOpenPendingDeletions) }
+            }
+            if (!state.hasMemories) {
+                item { NoMemories() }
+            } else {
+                item { TodayCard(state.today, onClick = { onOpenDay(state.today.date) }) }
+                item { PreviousDaysTitle(Modifier.padding(top = 16.dp, start = 8.dp)) }
+                items(state.previousDays, key = { it.date.toEpochDay() }) { day ->
+                    PreviousDay(day, onClick = { onOpenDay(day.date) })
+                }
             }
         }
     }
+}
+
+/** Titre « À rattraper », annoncé comme tel par TalkBack. */
+@Composable
+private fun PreviousDaysTitle(modifier: Modifier = Modifier) {
+    Text(
+        text = stringResource(R.string.home_previous_days),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = modifier.semantics { heading() },
+    )
 }
 
 /** Un jour à rattraper : sa date et son nombre de médias à trier ; grisé et inactif s'il n'y en a aucun. */

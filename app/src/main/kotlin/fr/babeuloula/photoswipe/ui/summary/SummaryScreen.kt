@@ -42,6 +42,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
+import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.deck.fileSizeLabel
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
@@ -101,7 +102,7 @@ fun SummaryScreen(
                 }
 
                 is SummaryUiState.Loaded -> {
-                    SummaryContent(state = state, onEvent = onEvent)
+                    CenteredContent { SummaryContent(state = state, onEvent = onEvent) }
                 }
             }
         }

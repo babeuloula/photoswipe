@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import java.time.LocalDate
 import java.time.LocalTime
@@ -88,10 +89,12 @@ fun SettingsScreen(
             if (reminder == null) {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             } else {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    ReminderSection(reminder, onEvent)
-                    LanguageSection(languageLabel, onEvent)
-                    AboutSection(onEvent)
+                CenteredContent {
+                    Column(Modifier.verticalScroll(rememberScrollState())) {
+                        ReminderSection(reminder, onEvent)
+                        LanguageSection(languageLabel, onEvent)
+                        AboutSection(onEvent)
+                    }
                 }
                 if (state.timePickerOpen) ReminderTimeDialog(reminder.time, onEvent)
             }
