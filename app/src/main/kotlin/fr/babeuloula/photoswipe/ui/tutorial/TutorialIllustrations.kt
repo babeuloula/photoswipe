@@ -38,6 +38,10 @@ internal fun TutorialIllustration(
             SwipeUpIllustration(animate = animate, modifier = modifier)
         }
 
+        TutorialPage.CATCH_UP -> {
+            CatchUpIllustration(animate = animate, modifier = modifier)
+        }
+
         else -> {
             Box(modifier, contentAlignment = Alignment.Center) {
                 Icon(

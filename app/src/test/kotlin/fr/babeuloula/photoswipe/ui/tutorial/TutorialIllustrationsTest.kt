@@ -85,6 +85,27 @@ class TutorialIllustrationsTest {
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.deck_share)).assertIsDisplayed()
     }
 
+    private fun reminder(count: Int): String =
+        composeRule.activity.resources.getQuantityString(R.plurals.reminder_title, count, count)
+
+    @Test
+    fun `the catch up page sorts the last 7 days one after another and counts what is left`() {
+        show(TutorialPage.CATCH_UP, animate = true)
+        composeRule.onNodeWithText(reminder(SAMPLE_COUNTS.sum())).assertIsDisplayed()
+
+        composeRule.mainClock.advanceTimeBy(CATCH_UP_STEP_MILLIS + CATCH_UP_STEP_MILLIS / 2)
+
+        composeRule.onNodeWithText(reminder(SAMPLE_COUNTS.sum() - SAMPLE_COUNTS.last())).assertIsDisplayed()
+    }
+
+    @Test
+    fun `the static catch up page shows today and yesterday sorted`() {
+        show(TutorialPage.CATCH_UP, animate = false)
+
+        val left = SAMPLE_COUNTS.dropLast(2).sum()
+        composeRule.onNodeWithText(reminder(left)).assertIsDisplayed()
+    }
+
     private companion object {
         /** Assez pour que le tirage monte et que la feuille s'ouvre. */
         const val SWIPE_UP_CYCLE_MILLIS = 2_200L
