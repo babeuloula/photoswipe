@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -155,7 +156,8 @@ private fun HomeDays(
     val onOpenDay = { day: LocalDate -> onEvent(HomeEvent.OpenDay(day)) }
     val today = @Composable { TodayCard(state, onOpenDay = { onOpenDay(state.today.date) }, onEvent = onEvent) }
     if (currentWindowLayout().isTwoPane) {
-        // Grand écran ou paysage : « Aujourd'hui » à gauche, les jours à rattraper à droite.
+        // Grand écran ou paysage : la liste à gauche (jour, bannières, jours à rattraper), le détail du jour à droite.
+        val withDetail = state.today.memoryCount > 0
         Row(
             modifier =
                 Modifier
@@ -163,22 +165,33 @@ private fun HomeDays(
                     .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            Column(
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                today()
-                HomeBanners(state, onEvent)
-            }
             LazyColumn(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(LIST_PANE_WEIGHT),
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
+                item {
+                    Box(Modifier.padding(bottom = 10.dp)) {
+                        TodayCard(
+                            state,
+                            onOpenDay = { onOpenDay(state.today.date) },
+                            onEvent = onEvent,
+                            compact = withDetail,
+                        )
+                    }
+                }
+                if (state.showManageMediaTip || state.pendingDeletionCount > 0) {
+                    item { Box(Modifier.padding(bottom = 10.dp)) { HomeBanners(state, onEvent) } }
+                }
                 item { PreviousDaysTitle() }
                 previousDays(state.previousDays, onOpenDay)
+            }
+            if (withDetail) {
+                TodayDetailPane(
+                    today = state.today,
+                    onOpenDay = { onOpenDay(state.today.date) },
+                    onSummary = { onEvent(HomeEvent.OpenPendingDeletions) },
+                    modifier = Modifier.weight(DETAIL_PANE_WEIGHT).fillMaxHeight(),
+                )
             }
         }
         return
@@ -198,6 +211,12 @@ private fun HomeDays(
         }
     }
 }
+
+/** Part de la largeur du volet de liste, en deux volets. */
+private const val LIST_PANE_WEIGHT = 1f
+
+/** Part de la largeur du volet de détail, en deux volets : la planche-contact a besoin de place. */
+private const val DETAIL_PANE_WEIGHT = 2f
 
 /** Erreur de chargement, avec un bouton pour réessayer. */
 @Composable
