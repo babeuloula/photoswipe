@@ -2,7 +2,6 @@ package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -63,6 +62,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import fr.babeuloula.photoswipe.ui.theme.motion
 import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.LocalDate
@@ -210,10 +210,12 @@ private fun PlayPauseOverlay(
     modifier: Modifier = Modifier,
 ) {
     val buttonAlpha = remember { Animatable(1f) }
+    // Fondu du thème (SPEC §8) : effet lent, sans rebond.
+    val fadeOut = MaterialTheme.motion.slowEffects<Float>()
     LaunchedEffect(playing) {
         if (playing) {
             delay(PAUSE_ICON_VISIBLE.toMillis())
-            buttonAlpha.animateTo(0f, tween(FADE_OUT_MILLIS))
+            buttonAlpha.animateTo(0f, fadeOut)
         } else {
             buttonAlpha.snapTo(1f)
         }
@@ -294,9 +296,6 @@ private val BIG_ICON_SIZE = 44.dp
 
 /** Temps pendant lequel ⏸ reste visible au démarrage, avant de s'effacer. */
 private val PAUSE_ICON_VISIBLE: Duration = Duration.ofMillis(PAUSE_ICON_VISIBLE_MILLIS)
-
-/** Durée du fondu de ⏸, en millisecondes. */
-private const val FADE_OUT_MILLIS = 400
 
 /** Étiquette de test du gros bouton central d'une vidéo. */
 internal const val PLAY_PAUSE_BUTTON_TAG = "play_pause_button"
