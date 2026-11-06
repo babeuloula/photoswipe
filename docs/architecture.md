@@ -74,7 +74,7 @@ La configuration commune est portée par des plugins de convention, dans le buil
 
 - `MainActivity` appelle `enableEdgeToEdge()` puis affiche `PhotoSwipeTheme { PhotoSwipeApp() }`. L'application est dessinée sous les barres système, rendues transparentes. `PhotoSwipeApp` entoure le graphe de navigation (`PhotoSwipeNavHost`) de `MediaAccessGate`, qui ne l'affiche qu'avec l'accès aux médias.
 - `ui/theme/PhotoSwipeTheme` fournit à `MaterialTheme` les couleurs, la typographie (`Type.kt`) et les formes (`Shape.kt`) : aucune valeur de style n'est écrite en dur dans les écrans (SPEC §8).
-- Couleurs : dynamiques (Material You) par défaut. Avec `minSdk` 33, elles existent sur tous les appareils visés (API 31+). La palette de repli « planche-contact » (`Color.kt`, graine ambre #8A6A1E, neutres gris papier, rôles fixes compris, générée avec material-color-utilities, ADR [0025](decisions/0025-contact-sheet-redesign.md)) sert quand on les désactive : aperçus et tests. Vert « garder » et bleu « favori » harmonisés vers la graine, avec leurs conteneurs, dans `SwipeColors`.
+- Couleurs : toujours la palette « planche-contact » (`Color.kt`, graine ambre #8A6A1E, neutres gris papier, rôles fixes compris, générée avec material-color-utilities, ADR [0025](decisions/0025-contact-sheet-redesign.md)), en clair et en sombre ; les couleurs dynamiques (Material You) ne sont pas utilisées (PS-102). Vert « garder » et bleu « favori » harmonisés vers la graine, avec leurs conteneurs, dans `SwipeColors`.
 - Clair ou sombre : choisi dans les réglages (`ThemeMode` : celui du téléphone par défaut, clair ou sombre, ADR [0022](decisions/0022-app-theme-choice.md)). `MainActivity` observe le choix, le lit une première fois avant d'afficher l'interface, et accorde les icônes des barres système au thème choisi (`SystemBarStyle.auto`). Le thème XML de la fenêtre (`Theme.PhotoSwipe`, parent `DayNight` de la plateforme) ne sert qu'avant le premier affichage de Compose.
 - Insets : le `Scaffold` transmet les marges des barres système (`innerPadding`), que chaque écran applique.
 
@@ -187,7 +187,7 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Coil Video (`coil-video`) | `:app` | Miniatures des vidéos sur leur carte (SPEC §4.3) : `VideoFrameDecoder` tire une image de la vidéo, ajouté au chargeur de l'ADR 0016 |
 | Media3 ExoPlayer | `:app` | Lecture des vidéos imposée par la SPEC §7 : un seul lecteur pour toute la pile, réutilisé de carte en carte et libéré en quittant l'écran |
 | Media3 UI Compose | `:app` | Surface vidéo et état de présentation (première image rendue, taille de la vidéo) en Compose, sans `PlayerView` |
-| Compose Material 3 | `:app` | Material 3 imposé par la SPEC §8 : thème, couleurs dynamiques, composants standards |
+| Compose Material 3 | `:app` | Material 3 imposé par la SPEC §8 : thème, composants standards |
 | Material Symbols Rounded (vecteurs de `res/drawable`) | `:app` | Une seule famille d'icônes, arrondie, 24 dp (ADR 0025) : fichiers XML tirés du dépôt `google/material-design-icons`, sans bibliothèque d'icônes Compose |
 | Atkinson Hyperlegible Next, IBM Plex Mono (polices, SIL OFL 1.1) | `:app` (`res/font`) | Typographie de la refonte (ADR 0025) : police d'interface conçue pour la lisibilité, et chasse fixe pour les grands nombres et le repère « Il y a 3 ans » ; embarquées, car l'app n'a pas accès à internet |
 | Compose UI Test (JUnit 4) | `:app` (tests) | Tests de rendu Compose (`createAndroidComposeRule`) sur Robolectric |

@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
  * bleu (le rôle `primary` suit le fond d'écran et ne serait pas toujours bleu). Ce sont les
  * couleurs #1E8A4A et #2F6FD0 harmonisées vers la graine #8A6A1E (`Blend.harmonize` de
  * material-color-utilities), aux tons 40 / 100 / 90 / 10 en clair et 80 / 20 / 30 / 90 en sombre
- * (ADR 0025). Le rouge reprend les rôles `error` du schéma, couleurs dynamiques comprises.
+ * (ADR 0025). Le rouge reprend les rôles `error` du schéma.
  *
  * @property keep voile du geste « Garder », bouton pressé.
  * @property onKeep contenu (icône, texte) posé sur [keep].

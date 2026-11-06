@@ -7,9 +7,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Contrastes des couleurs de repli du thème (SPEC §8) : chaque couple texte / fond atteint le
- * rapport WCAG AA de 4,5:1, en clair et en sombre, couleurs des gestes comprises. Les couleurs
- * dynamiques (Material You) sont calculées par Android, qui garantit déjà ces contrastes.
+ * Contrastes de la palette du thème (SPEC §8) : chaque couple texte / fond atteint le rapport WCAG
+ * AA de 4,5:1, en clair et en sombre, couleurs des gestes comprises.
  */
 class ContrastTest {
     /** Rapport de contraste WCAG 2.x entre deux couleurs opaques. */

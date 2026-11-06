@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,15 +29,15 @@ import org.robolectric.shadows.ShadowLooper
 @RunWith(RobolectricTestRunner::class)
 class PhotoSwipeThemeTest {
     @Test
-    fun `uses the light fallback palette when dynamic color is off`() {
-        val colors = colorSchemeOf { PhotoSwipeTheme(darkTheme = false, dynamicColor = false, content = it) }
+    fun `uses the light amber palette`() {
+        val colors = colorSchemeOf { PhotoSwipeTheme(darkTheme = false, content = it) }
 
         assertEquals(LightColorScheme, colors)
     }
 
     @Test
-    fun `uses the dark fallback palette when dynamic color is off`() {
-        val colors = colorSchemeOf { PhotoSwipeTheme(darkTheme = true, dynamicColor = false, content = it) }
+    fun `uses the dark amber palette`() {
+        val colors = colorSchemeOf { PhotoSwipeTheme(darkTheme = true, content = it) }
 
         assertEquals(DarkColorScheme, colors)
     }
@@ -54,22 +55,22 @@ class PhotoSwipeThemeTest {
     }
 
     @Test
-    fun `uses wallpaper based colors when dynamic color is on`() {
-        lateinit var expected: ColorScheme
+    fun `ignores the wallpaper colors, even where Android offers them`() {
+        lateinit var wallpaper: ColorScheme
         val colors =
             colorSchemeOf { content ->
-                expected = dynamicDarkColorScheme(LocalContext.current)
-                PhotoSwipeTheme(darkTheme = true, dynamicColor = true, content = content)
+                wallpaper = dynamicDarkColorScheme(LocalContext.current)
+                PhotoSwipeTheme(darkTheme = true, content = content)
             }
 
-        assertEquals(expected.primary, colors.primary)
-        assertEquals(expected.surface, colors.surface)
+        assertEquals(DarkColorScheme, colors)
+        assertNotEquals(wallpaper.primary, colors.primary)
     }
 
     @Test
     @Config(qualifiers = "night")
     fun `follows the system dark mode by default`() {
-        val colors = colorSchemeOf { PhotoSwipeTheme(dynamicColor = false, content = it) }
+        val colors = colorSchemeOf { PhotoSwipeTheme(content = it) }
 
         assertEquals(DarkColorScheme, colors)
     }
@@ -77,7 +78,7 @@ class PhotoSwipeThemeTest {
     @Test
     @Config(qualifiers = "notnight")
     fun `follows the system light mode by default`() {
-        val colors = colorSchemeOf { PhotoSwipeTheme(dynamicColor = false, content = it) }
+        val colors = colorSchemeOf { PhotoSwipeTheme(content = it) }
 
         assertEquals(LightColorScheme, colors)
     }

@@ -475,7 +475,7 @@ internal val PREVIEW_CARD =
 @Composable
 private fun MediaCardPreview() {
     CompositionLocalProvider(LocalImageLoader provides ImageLoader(LocalContext.current)) {
-        PhotoSwipeTheme(dynamicColor = false) {
+        PhotoSwipeTheme {
             MediaCard(card = PREVIEW_CARD, modifier = Modifier.fillMaxSize())
         }
     }

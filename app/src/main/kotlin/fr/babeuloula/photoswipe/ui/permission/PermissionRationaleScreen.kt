@@ -71,7 +71,7 @@ fun PermissionRationaleScreen(
 @PreviewLightDark
 @Composable
 private fun PermissionRationaleScreenPreview() {
-    PhotoSwipeTheme(dynamicColor = false) {
+    PhotoSwipeTheme {
         PermissionRationaleScreen(onContinue = {})
     }
 }
