@@ -6,9 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequest
+import fr.babeuloula.photoswipe.domain.usecase.GetMarkedPreviews
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.permission.MediaManagementReader
 import fr.babeuloula.photoswipe.ui.common.MediaActionIntents
@@ -39,12 +41,18 @@ sealed interface SummaryUiState {
      * de confirmation est désactivé, pour ne pas les lancer deux fois.
      * @property askingTrashConfirmation vrai pendant la confirmation de PhotoSwipe, qui remplace le
      * dialogue de corbeille d'Android quand l'accès « Gestion des médias » est donné.
+     * @property markedPreviews vignettes des derniers médias marqués, encore dans la galerie (ADR 0025).
      */
     data class Loaded(
         val summary: SessionSummary,
         val confirming: Boolean = false,
         val askingTrashConfirmation: Boolean = false,
+        val markedPreviews: List<MediaItem> = emptyList(),
     ) : SummaryUiState {
+        /** Médias marqués qui ne sont pas en vignette (« +7 »). */
+        val hiddenMarkedCount: Int
+            get() = (summary.markedForDeletionCount - markedPreviews.size).coerceAtLeast(0)
+
         /** Vrai s'il y a des médias à envoyer à la corbeille ; les favoris sont appliqués dans la pile. */
         val canConfirm: Boolean
             get() = summary.markedForDeletionCount > 0 && !confirming
@@ -141,6 +149,7 @@ class SummaryViewModel
     @Inject
     constructor(
         private val getSessionSummary: GetSessionSummary,
+        private val getMarkedPreviews: GetMarkedPreviews,
         private val confirmation: ConfirmationActions,
         private val mediaActionIntents: MediaActionIntents,
         private val mediaManagement: MediaManagementReader,
@@ -280,7 +289,13 @@ class SummaryViewModel
         private suspend fun refresh(): SummaryUiState {
             val loaded =
                 runCatching { getSessionSummary() }.fold(
-                    onSuccess = { SummaryUiState.Loaded(it) },
+                    // Les vignettes ne sont qu'un aperçu : sans elles, le résumé reste lisible.
+                    onSuccess = {
+                        SummaryUiState.Loaded(
+                            it,
+                            markedPreviews = runCatching { getMarkedPreviews() }.getOrDefault(emptyList()),
+                        )
+                    },
                     onFailure = { SummaryUiState.Error },
                 )
             state.value = loaded

@@ -1,10 +1,16 @@
 package fr.babeuloula.photoswipe.ui.summary
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -22,25 +28,35 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
+import fr.babeuloula.photoswipe.domain.usecase.GetMarkedPreviews
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
+import fr.babeuloula.photoswipe.ui.common.Thumbnail
+import fr.babeuloula.photoswipe.ui.common.segmentShape
 import fr.babeuloula.photoswipe.ui.deck.fileSizeLabel
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import fr.babeuloula.photoswipe.ui.theme.monoLabel
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
 
 /**
@@ -109,77 +125,96 @@ fun SummaryScreen(
     }
 }
 
-/** Espace libéré, détail des décisions et boutons. */
+/** Espace libéré, détail des décisions et boutons de confirmation en bas. */
 @Composable
 private fun SummaryContent(
     state: SummaryUiState.Loaded,
     onEvent: (SummaryEvent) -> Unit,
 ) {
     val summary = state.summary
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        FreedSpaceCard(summary.estimatedFreedBytes)
-        val colors = MaterialTheme.swipeColors
-        Column {
-            SummaryHeading(stringResource(R.string.summary_sorted_today))
-            SummaryLine(
-                painterResource(R.drawable.ic_check),
-                colors.keep,
-                pluralStringResource(R.plurals.summary_kept, summary.keptCount, summary.keptCount),
-            )
-            SummaryLine(
-                painterResource(R.drawable.ic_favorite_filled),
-                colors.favorite,
-                pluralStringResource(R.plurals.summary_favorites, summary.favoriteCount, summary.favoriteCount),
-            )
+    val colors = MaterialTheme.swipeColors
+    Column(Modifier.fillMaxSize()) {
+        Column(
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            FreedSpace(summary.estimatedFreedBytes, summary.markedForDeletionCount)
+            Column {
+                SummaryHeading(stringResource(R.string.summary_sorted_today))
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    SummaryLine(
+                        icon = R.drawable.ic_check,
+                        tint = colors.keep,
+                        text = pluralStringResource(R.plurals.summary_kept, summary.keptCount, summary.keptCount),
+                        shape = segmentShape(0, 2),
+                    )
+                    SummaryLine(
+                        icon = R.drawable.ic_favorite_filled,
+                        tint = colors.favorite,
+                        text =
+                            pluralStringResource(
+                                R.plurals.summary_favorites,
+                                summary.favoriteCount,
+                                summary.favoriteCount,
+                            ),
+                        shape = segmentShape(1, 2),
+                    )
+                }
+            }
+            Column {
+                SummaryHeading(stringResource(R.string.summary_to_confirm))
+                MarkedGroup(state)
+            }
+            NothingDeletedYet()
         }
-        Column {
-            SummaryHeading(stringResource(R.string.summary_to_confirm))
-            SummaryLine(
-                painterResource(R.drawable.ic_delete),
-                colors.delete,
-                pluralStringResource(
-                    R.plurals.summary_marked,
-                    summary.markedForDeletionCount,
-                    summary.markedForDeletionCount,
-                ),
-            )
-        }
+        SummaryActions(canConfirm = state.canConfirm, onEvent = onEvent)
+    }
+}
+
+/** « Rien n'est encore supprimé… », avec une icône d'information. */
+@Composable
+private fun NothingDeletedYet() {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(horizontal = 8.dp)) {
+        Icon(
+            painterResource(R.drawable.ic_info),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Text(
             text = stringResource(R.string.summary_nothing_deleted_yet),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        ConfirmButton(state, onEvent)
-        OutlinedButton(onClick = { onEvent(SummaryEvent.Later) }, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.summary_later))
-        }
     }
 }
 
-/** Bouton de confirmation, rouge : il envoie les médias marqués à la corbeille ; sans marquage, il est inactif. */
+/** « Confirmer la suppression », inactif sans marquage ou pendant les dialogues, et « Plus tard ». */
 @Composable
-private fun ConfirmButton(
-    state: SummaryUiState.Loaded,
+private fun SummaryActions(
+    canConfirm: Boolean,
     onEvent: (SummaryEvent) -> Unit,
 ) {
-    Button(
-        onClick = { onEvent(SummaryEvent.Confirm) },
-        enabled = state.canConfirm,
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError,
-            ),
-        modifier = Modifier.fillMaxWidth(),
+    Column(
+        modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(stringResource(R.string.summary_confirm))
+        Button(
+            onClick = { onEvent(SummaryEvent.Confirm) },
+            enabled = canConfirm,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+        ) {
+            Text(stringResource(R.string.summary_confirm))
+        }
+        TextButton(
+            onClick = { onEvent(SummaryEvent.Later) },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+        ) {
+            Text(stringResource(R.string.summary_later))
+        }
     }
 }
 
@@ -189,41 +224,127 @@ private fun SummaryHeading(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).semantics { heading() },
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp).semantics { heading() },
     )
 }
 
-/** Espace libéré estimé, mis en avant : c'est ce que la confirmation rendra au téléphone. */
+/**
+ * Espace libéré estimé, mis en avant sans carte (ADR 0025) : le nombre en grand, en chasse fixe, et
+ * ce dont il dépend (« Si vous confirmez les 12 médias marqués »).
+ */
 @Composable
-private fun FreedSpaceCard(bytes: Long) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+private fun FreedSpace(
+    bytes: Long,
+    markedCount: Int,
+) {
+    Column(
+        modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.summary_freed_space),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.semantics { heading() },
+        )
+        Text(text = fileSizeLabel(LocalContext.current, bytes), style = MaterialTheme.typography.displayLarge)
+        if (markedCount > 0) {
             Text(
-                text = stringResource(R.string.summary_freed_space),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.semantics { heading() },
-            )
-            Text(
-                text = fileSizeLabel(LocalContext.current, bytes),
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.primary,
+                text = pluralStringResource(R.plurals.summary_if_confirmed, markedCount, markedCount),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+}
+
+/** Médias marqués pour suppression : leur nombre, puis les vignettes des derniers marqués et « +7 ». */
+@Composable
+private fun MarkedGroup(state: SummaryUiState.Loaded) {
+    val count = state.summary.markedForDeletionCount
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.large)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(bottom = if (state.markedPreviews.isEmpty()) 0.dp else 12.dp),
+    ) {
+        SummaryLine(
+            icon = R.drawable.ic_delete,
+            tint = MaterialTheme.swipeColors.delete,
+            text = pluralStringResource(R.plurals.summary_marked, count, count),
+            shape = MaterialTheme.shapes.large,
+        )
+        if (state.markedPreviews.isNotEmpty()) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                state.markedPreviews.forEach {
+                    Thumbnail(
+                        it,
+                        Modifier.weight(1f).height(48.dp).clip(MaterialTheme.shapes.small),
+                    )
+                }
+                repeat(GetMarkedPreviews.DEFAULT_LIMIT - state.markedPreviews.size) { Spacer(Modifier.weight(1f)) }
+                MoreMarked(state.hiddenMarkedCount, Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+/** Case « +7 » des médias marqués sans vignette ; vide s'il n'y en a pas. */
+@Composable
+private fun MoreMarked(
+    count: Int,
+    modifier: Modifier = Modifier,
+) {
+    if (count == 0) {
+        Spacer(modifier)
+        return
+    }
+    val description = stringResource(R.string.summary_more_marked_description, count)
+    Box(
+        modifier =
+            modifier
+                .height(48.dp)
+                .clip(MaterialTheme.shapes.small)
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                .clearAndSetSemantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.summary_more_marked, count),
+            style = MaterialTheme.typography.monoLabel,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
 /** Une ligne du détail : icône de la décision et nombre de médias. */
 @Composable
 private fun SummaryLine(
-    icon: Painter,
-    tint: androidx.compose.ui.graphics.Color,
+    @DrawableRes icon: Int,
+    tint: Color,
     text: String,
+    shape: Shape,
 ) {
-    ListItem(
-        headlineContent = { Text(text) },
-        leadingContent = { Icon(icon, contentDescription = null, tint = tint) },
-    )
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Icon(painterResource(icon), contentDescription = null, tint = tint)
+        Text(text, style = MaterialTheme.typography.bodyLarge)
+    }
 }
 
 @PreviewLightDark

@@ -72,7 +72,9 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.Thumbnail
 import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
+import fr.babeuloula.photoswipe.ui.common.segmentShape
 import fr.babeuloula.photoswipe.ui.theme.IbmPlexMono
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.monoLabel
@@ -91,27 +93,6 @@ internal fun LazyListScope.previousDays(
         PreviousDay(day, shape = segmentShape(index, days.size), onClick = { onOpenDay(day.date) })
     }
 }
-
-/** Forme d'un élément de liste segmentée (ADR 0025) : 16 dp aux extrémités de la liste, 4 dp ailleurs. */
-internal fun segmentShape(
-    index: Int,
-    count: Int,
-): Shape {
-    val first = index == 0
-    val last = index == count - 1
-    return RoundedCornerShape(
-        topStart = if (first) SEGMENT_OUTER else SEGMENT_INNER,
-        topEnd = if (first) SEGMENT_OUTER else SEGMENT_INNER,
-        bottomStart = if (last) SEGMENT_OUTER else SEGMENT_INNER,
-        bottomEnd = if (last) SEGMENT_OUTER else SEGMENT_INNER,
-    )
-}
-
-/** Rayon des coins aux extrémités d'une liste segmentée. */
-private val SEGMENT_OUTER = 16.dp
-
-/** Rayon des coins entre deux éléments d'une liste segmentée. */
-private val SEGMENT_INNER = 4.dp
 
 /** Titre « À rattraper », annoncé comme tel par TalkBack. */
 @Composable
@@ -206,23 +187,6 @@ private fun DayThumbnail(
     } else {
         Thumbnail(media, thumbnailModifier)
     }
-}
-
-/** Vignette d'un média, recadrée, chargée par Coil à sa taille ; décorative. */
-@Composable
-internal fun Thumbnail(
-    media: MediaItem,
-    modifier: Modifier = Modifier,
-) {
-    AsyncImage(
-        model = media.uri,
-        contentDescription = null,
-        imageLoader = LocalImageLoader.current,
-        placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
-        error = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
-        contentScale = ContentScale.Crop,
-        modifier = modifier,
-    )
 }
 
 /** Opacité d'un jour sans média, celle des contenus désactivés de Material 3. */
