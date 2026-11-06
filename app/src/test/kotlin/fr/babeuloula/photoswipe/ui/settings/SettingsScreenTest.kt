@@ -132,7 +132,7 @@ class SettingsScreenTest {
                 SettingsScreen(
                     state = SettingsUiState(reminder = ReminderSettings.DEFAULT),
                     onEvent = { events += it },
-                    languageLabel = "Français",
+                    environment = SettingsEnvironment(languageLabel = "Français"),
                 )
             }
         }
@@ -141,5 +141,24 @@ class SettingsScreenTest {
         composeRule.onNodeWithText(text(R.string.settings_language)).performScrollTo().performClick()
 
         assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenLanguageSettings), events)
+    }
+
+    @Test
+    fun `shows the developer tools entry only when the variant has them`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
+        composeRule.onNodeWithText(text(R.string.settings_developer_tools)).assertDoesNotExist()
+
+        composeRule.activity.setContent {
+            PhotoSwipeTheme {
+                SettingsScreen(
+                    state = SettingsUiState(reminder = ReminderSettings.DEFAULT),
+                    onEvent = { events += it },
+                    environment = SettingsEnvironment(showDeveloperTools = true),
+                )
+            }
+        }
+        composeRule.onNodeWithText(text(R.string.settings_developer_tools)).performScrollTo().performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenDeveloperTools), events)
     }
 }

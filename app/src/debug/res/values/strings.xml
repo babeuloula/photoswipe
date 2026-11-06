@@ -4,4 +4,11 @@
     <string name="developer_tools_title">PhotoSwipe dev tools</string>
     <string name="developer_tools_demo_data">Demo data</string>
     <string name="developer_tools_demo_data_hint">Replaces the gallery with generated memories for the last 7 days. Reopen PhotoSwipe to apply.</string>
+    <string name="developer_tools_reset">Reset the decisions</string>
+    <string name="developer_tools_reset_hint">Forgets every decision: kept, marked, pending favorites and undo history. Your photos and videos are not touched.</string>
+    <string name="developer_tools_reset_action">Reset</string>
+    <string name="developer_tools_reset_confirm_title">Reset every decision?</string>
+    <string name="developer_tools_reset_confirm_text">Every memory becomes to sort again. This cannot be undone.</string>
+    <string name="developer_tools_reset_cancel">Cancel</string>
+    <string name="developer_tools_reset_done">Decisions reset. Reopen PhotoSwipe to see it.</string>
 </resources>

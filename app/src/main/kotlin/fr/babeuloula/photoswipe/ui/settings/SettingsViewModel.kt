@@ -66,6 +66,9 @@ sealed interface SettingsEvent {
     /** « Langue » : ouvrir le réglage de langue par application d'Android. */
     data object OpenLanguageSettings : SettingsEvent
 
+    /** « Outils développeur », en debug seulement. */
+    data object OpenDeveloperTools : SettingsEvent
+
     /** « Licences » de la section « À propos ». */
     data object OpenLicenses : SettingsEvent
 
@@ -80,6 +83,9 @@ sealed interface SettingsEffect {
 
     /** Ouvrir le réglage de langue par application d'Android 13+ (SPEC §9). */
     data object OpenLanguageSettings : SettingsEffect
+
+    /** Ouvrir les outils développeur (variante debug). */
+    data object OpenDeveloperTools : SettingsEffect
 
     /** Ouvrir les licences de l'application et de ses bibliothèques. */
     data object OpenLicenses : SettingsEffect
@@ -115,6 +121,8 @@ class SettingsViewModel
         settingsRepository: SettingsRepository,
         private val updateReminderSettings: UpdateReminderSettings,
         private val notificationPermission: NotificationPermissionReader,
+        /** Entrée des outils développeur : présente en debug seulement (SPEC §10). */
+        val developerTools: DeveloperToolsEntry,
     ) : ViewModel() {
         private val state = MutableStateFlow(SettingsUiState())
         private val effects = Channel<SettingsEffect>(Channel.BUFFERED)
@@ -168,6 +176,10 @@ class SettingsViewModel
 
                 SettingsEvent.OpenLanguageSettings -> {
                     effects.trySend(SettingsEffect.OpenLanguageSettings)
+                }
+
+                SettingsEvent.OpenDeveloperTools -> {
+                    effects.trySend(SettingsEffect.OpenDeveloperTools)
                 }
 
                 SettingsEvent.OpenLicenses -> {

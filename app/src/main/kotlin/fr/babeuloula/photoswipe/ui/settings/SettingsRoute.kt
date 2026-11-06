@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.settings
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -57,8 +58,11 @@ fun SettingsRoute(
                     onBack()
                 }
 
-                SettingsEffect.OpenLanguageSettings -> {
-                    context.startActivity(appLanguageSettingsIntent(context))
+                SettingsEffect.OpenLanguageSettings,
+                SettingsEffect.OpenDeveloperTools,
+                SettingsEffect.OpenNotificationSettings,
+                -> {
+                    otherScreenIntent(context, effect, viewModel.developerTools)?.let(context::startActivity)
                 }
 
                 SettingsEffect.OpenLicenses -> {
@@ -78,28 +82,18 @@ fun SettingsRoute(
                         }
                     }
                 }
-
-                SettingsEffect.OpenNotificationSettings -> {
-                    context.startActivity(
-                        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                            .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
-                    )
-                }
             }
         }
     }
-    // Une langue choisie dans les réglages d'Android recrée l'activité : la configuration change.
-    val configuration = LocalConfiguration.current
-    val languageLabel =
-        remember(configuration) {
-            appLanguage(context)?.nativeName()
-                ?: resources.getString(R.string.settings_language_system, configuration.locales[0].nativeName())
-        }
     SettingsScreen(
         state = state,
         onEvent = viewModel::onEvent,
         modifier = modifier,
-        languageLabel = languageLabel,
+        environment =
+            SettingsEnvironment(
+                languageLabel = rememberLanguageLabel(),
+                showDeveloperTools = remember(viewModel) { viewModel.developerTools.intent(context) != null },
+            ),
         snackbarHostState = snackbarHostState,
     )
 }
@@ -110,3 +104,42 @@ private suspend fun SnackbarHostState.showDenied(
     action: String?,
 ): Boolean =
     showSnackbar(message, actionLabel = action, duration = SnackbarDuration.Long) == SnackbarResult.ActionPerformed
+
+/** Écran hors de l'application à ouvrir pour [effect] : réglage d'Android ou outils développeur. */
+private fun otherScreenIntent(
+    context: Context,
+    effect: SettingsEffect,
+    developerTools: DeveloperToolsEntry,
+): Intent? =
+    when (effect) {
+        SettingsEffect.OpenLanguageSettings -> {
+            appLanguageSettingsIntent(context)
+        }
+
+        SettingsEffect.OpenDeveloperTools -> {
+            developerTools.intent(context)
+        }
+
+        SettingsEffect.OpenNotificationSettings -> {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+        }
+
+        else -> {
+            null
+        }
+    }
+
+/**
+ * Langue de l'application, ou celle du téléphone (SPEC §9). Une langue choisie dans les réglages
+ * d'Android recrée l'activité : la configuration change et le libellé est relu.
+ */
+@Composable
+private fun rememberLanguageLabel(): String {
+    val context = LocalContext.current
+    val resources = LocalResources.current
+    val configuration = LocalConfiguration.current
+    return remember(configuration) {
+        appLanguage(context)?.nativeName()
+            ?: resources.getString(R.string.settings_language_system, configuration.locales[0].nativeName())
+    }
+}

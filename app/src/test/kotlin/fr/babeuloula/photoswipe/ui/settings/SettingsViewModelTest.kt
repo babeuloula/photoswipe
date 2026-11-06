@@ -29,7 +29,12 @@ class SettingsViewModelTest {
     private var notificationsAllowed = true
 
     private fun settingsViewModel() =
-        SettingsViewModel(repository, UpdateReminderSettings(repository, scheduler)) { notificationsAllowed }
+        SettingsViewModel(
+            settingsRepository = repository,
+            updateReminderSettings = UpdateReminderSettings(repository, scheduler),
+            notificationPermission = { notificationsAllowed },
+            developerTools = { null },
+        )
 
     private fun TestScope.collectEffects(viewModel: SettingsViewModel): List<SettingsEffect> {
         val effects = mutableListOf<SettingsEffect>()
@@ -191,6 +196,16 @@ class SettingsViewModelTest {
             viewModel.onEvent(SettingsEvent.OpenLanguageSettings)
 
             assertEquals(SettingsEffect.OpenLanguageSettings, viewModel.uiEffects.first())
+        }
+
+    @Test
+    fun `opens the developer tools`() =
+        runTest {
+            val viewModel = settingsViewModel()
+
+            viewModel.onEvent(SettingsEvent.OpenDeveloperTools)
+
+            assertEquals(SettingsEffect.OpenDeveloperTools, viewModel.uiEffects.first())
         }
 
     @Test
