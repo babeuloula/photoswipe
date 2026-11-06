@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.ui.summary
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.GetMarkedPreviews
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
@@ -172,7 +174,7 @@ private fun SummaryContent(
             if (summary.markedForDeletionCount > 0) {
                 Column {
                     SummaryHeading(stringResource(R.string.summary_to_confirm))
-                    MarkedGroup(state)
+                    MarkedGroup(state, onOpen = { onEvent(SummaryEvent.OpenMarked(it)) })
                 }
                 NothingDeletedYet()
             }
@@ -291,16 +293,25 @@ private fun FreedSpace(
     }
 }
 
-/** Médias marqués pour suppression : leur nombre, puis les vignettes des derniers marqués et « +7 ». */
+/**
+ * Médias marqués, avec les vignettes des derniers. Toucher une vignette ouvre la pile des marqués sur
+ * ce média, toucher le groupe ou la case « +7 » l'ouvre au début (PS-112) ; TalkBack ne voit qu'une
+ * action sur le groupe, les vignettes étant plus petites qu'une cible de 48 dp.
+ */
 @Composable
-private fun MarkedGroup(state: SummaryUiState.Loaded) {
+private fun MarkedGroup(
+    state: SummaryUiState.Loaded,
+    onOpen: (MediaId?) -> Unit,
+) {
     val count = state.summary.markedForDeletionCount
+    val openLabel = stringResource(R.string.summary_open_marked)
     Column(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .clip(MaterialTheme.shapes.large)
                 .background(MaterialTheme.colorScheme.surfaceContainer)
+                .clickable(onClickLabel = openLabel) { onOpen(null) }
                 .padding(bottom = if (state.markedPreviews.isEmpty()) 0.dp else 12.dp),
     ) {
         SummaryLine(
@@ -317,7 +328,13 @@ private fun MarkedGroup(state: SummaryUiState.Loaded) {
                 state.markedPreviews.forEach {
                     Thumbnail(
                         it,
-                        Modifier.weight(1f).height(48.dp).clip(MaterialTheme.shapes.small),
+                        Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .clip(MaterialTheme.shapes.small)
+                            .testTag("$MARKED_THUMBNAIL_TAG${it.id.value}")
+                            .clearAndSetSemantics {}
+                            .clickable { onOpen(it.id) },
                     )
                 }
                 repeat(GetMarkedPreviews.DEFAULT_LIMIT - state.markedPreviews.size) { Spacer(Modifier.weight(1f)) }
@@ -326,6 +343,9 @@ private fun MarkedGroup(state: SummaryUiState.Loaded) {
         }
     }
 }
+
+/** Préfixe du repère de test d'une vignette de média marqué, suivi de son identifiant. */
+internal const val MARKED_THUMBNAIL_TAG = "summary_marked_"
 
 /** Case « +7 » des médias marqués sans vignette ; vide s'il n'y en a pas. */
 @Composable

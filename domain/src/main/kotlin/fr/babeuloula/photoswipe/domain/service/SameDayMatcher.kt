@@ -85,6 +85,16 @@ class SameDayMatcher {
     ): OpenEndRange<Instant> =
         start.atStartOfDay(zone).toInstant()..<start.plusDays(days).atStartOfDay(zone).toInstant()
 
+    /**
+     * Jour cible de l'année [reviewYear] dont [media] est un souvenir, dans le fuseau [zone] : le
+     * même jour, ou le 28 février pour un 29 février d'une année non bissextile (ADR 0006).
+     */
+    fun reviewDay(
+        media: MediaItem,
+        reviewYear: Int,
+        zone: ZoneId,
+    ): LocalDate = displayDay(media.takenAt.atZone(zone).toLocalDate(), reviewYear).atYear(reviewYear)
+
     /** Jour où le média pris le [takenOn] est affiché pendant l'année [targetYear]. */
     private fun displayDay(
         takenOn: LocalDate,

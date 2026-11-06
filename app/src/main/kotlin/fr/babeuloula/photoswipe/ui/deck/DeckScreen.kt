@@ -77,12 +77,13 @@ import java.time.format.DateTimeFormatter
  * Pile de swipe d'un jour (SPEC §4.3) : la carte plein écran du média du dessus, à glisser à droite
  * pour la garder ou à gauche pour la marquer à supprimer, ou à trier avec les boutons équivalents
  * placés dessous, avec retour et
- * « Terminer » dans la barre du haut. Gère le chargement, l'erreur et la pile vide.
+ * « Terminer » dans la barre du haut. Sans [day], c'est la pile des médias marqués (PS-112).
+ * Gère le chargement, l'erreur et la pile vide.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeckScreen(
-    day: LocalDate,
+    day: LocalDate?,
     state: DeckUiState,
     onEvent: (DeckEvent) -> Unit,
     modifier: Modifier = Modifier,
@@ -95,7 +96,9 @@ fun DeckScreen(
             TopAppBar(
                 title = {
                     Text(
-                        stringResource(R.string.deck_title, dayAndMonth(LocalContext.current, day)),
+                        // Sans jour : la pile des médias marqués, ouverte depuis le résumé (PS-112).
+                        day?.let { stringResource(R.string.deck_title, dayAndMonth(LocalContext.current, it)) }
+                            ?: stringResource(R.string.deck_marked_title),
                         maxLines = 1,
                     )
                 },

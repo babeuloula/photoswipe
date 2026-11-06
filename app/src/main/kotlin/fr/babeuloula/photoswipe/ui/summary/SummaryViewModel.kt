@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
@@ -93,6 +94,18 @@ sealed interface SummaryEvent {
 
     /** Flèche de retour. */
     data object Back : SummaryEvent
+
+    /**
+     * Vignette d'un média marqué, ou case « +N », touchée : revoir les marqués en grand (PS-112).
+     *
+     * @property first média touché, montré en premier ; `null` pour la case « +N ».
+     */
+    data class OpenMarked(
+        val first: MediaId? = null,
+    ) : SummaryEvent
+
+    /** Retour sur l'écran, par exemple depuis la pile des marqués : les marquages ont pu changer. */
+    data object Resumed : SummaryEvent
 }
 
 /** Navigation demandée par le résumé. */
@@ -109,6 +122,15 @@ sealed interface SummaryEffect {
 
     /** Revenir à l'écran précédent. */
     data object Close : SummaryEffect
+
+    /**
+     * Ouvrir la pile des médias marqués (PS-112).
+     *
+     * @property first média montré en premier, `null` pour commencer par le plus récemment marqué.
+     */
+    data class OpenMarkedDeck(
+        val first: MediaId?,
+    ) : SummaryEffect
 
     /**
      * Lancer un dialogue système ; la réponse revient par [SummaryEvent.SystemRequestAnswered].
@@ -192,7 +214,19 @@ class SummaryViewModel
                 is SummaryEvent.SystemRequestAnswered -> recordAnswer(event.confirmed)
                 SummaryEvent.Later -> effects.trySend(SummaryEffect.GoHome())
                 SummaryEvent.Back -> effects.trySend(SummaryEffect.Close)
+                is SummaryEvent.OpenMarked -> effects.trySend(SummaryEffect.OpenMarkedDeck(event.first))
+                SummaryEvent.Resumed -> refreshWhenIdle()
             }
+        }
+
+        /**
+         * Relit le résumé au retour sur l'écran (pile des marqués, PS-112), sans repasser par le
+         * chargement ; pas pendant une confirmation, dont les dialogues font aussi revenir l'écran.
+         */
+        private fun refreshWhenIdle() {
+            val loaded = state.value as? SummaryUiState.Loaded ?: return
+            if (loaded.confirming || loaded.askingTrashConfirmation) return
+            viewModelScope.launch { refresh() }
         }
 
         /**

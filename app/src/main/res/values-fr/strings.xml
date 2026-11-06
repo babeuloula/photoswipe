@@ -16,6 +16,7 @@
     <string name="limited_access_manage">Gérer l\'accès</string>
     <string name="navigate_back">Retour</string>
     <string name="home_open_settings">Réglages</string>
+    <string name="deck_marked_title">Marqués pour suppression</string>
     <string name="deck_title">Souvenirs du %1$s</string>
     <string name="deck_finish">Terminer</string>
     <string name="deck_memory_label">%1$s · %2$s</string>
@@ -120,6 +121,7 @@
     <string name="deck_already_favorite">Dans vos favoris</string>
     <string name="summary_sorted_today">Trié aujourd\'hui</string>
     <string name="summary_to_confirm">En attente de votre confirmation</string>
+    <string name="summary_open_marked">Voir les médias marqués</string>
     <string name="summary_more_marked">+%1$d</string>
     <string name="summary_more_marked_description">et %1$d autres</string>
     <string name="reminder_text_years">Des photos et vidéos prises un %1$s, de %2$d à %3$d</string>

@@ -15,8 +15,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import kotlinx.coroutines.launch
 
 /**
@@ -29,9 +32,12 @@ import kotlinx.coroutines.launch
 fun SummaryRoute(
     onGoHome: (trashedCount: Int) -> Unit,
     onBack: () -> Unit,
+    onOpenMarkedDeck: (first: MediaId?) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SummaryViewModel = hiltViewModel(),
 ) {
+    // De retour de la pile des marqués (PS-112), le résumé relit les marquages.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onEvent(SummaryEvent.Resumed) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val resources = LocalResources.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -49,6 +55,10 @@ fun SummaryRoute(
 
                 SummaryEffect.Close -> {
                     onBack()
+                }
+
+                is SummaryEffect.OpenMarkedDeck -> {
+                    onOpenMarkedDeck(effect.first)
                 }
 
                 is SummaryEffect.LaunchSystemRequest -> {

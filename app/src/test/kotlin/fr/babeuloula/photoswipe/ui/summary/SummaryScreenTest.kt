@@ -3,6 +3,8 @@ package fr.babeuloula.photoswipe.ui.summary
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -22,6 +24,7 @@ import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -135,6 +138,30 @@ class SummaryScreenTest {
 
         composeRule.onNodeWithText("If you confirm the 12 marked items").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("and 7 more").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun `opens the marked deck on the tapped thumbnail, or from the start on the group`() {
+        val previews = (1L..5L).map { aMediaItem(id = it) }
+        show(SummaryUiState.Loaded(summary.copy(markedForDeletionCount = 12), markedPreviews = previews))
+
+        composeRule.onNodeWithText("12 items marked for deletion").performScrollTo()
+        composeRule.onNodeWithTag("${MARKED_THUMBNAIL_TAG}3", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText("12 items marked for deletion", useUnmergedTree = true).performClick()
+
+        assertEquals(listOf(SummaryEvent.OpenMarked(MediaId(3)), SummaryEvent.OpenMarked(null)), events)
+    }
+
+    @Test
+    fun `offers TalkBack a labelled action to see the marked media`() {
+        show(SummaryUiState.Loaded(summary, markedPreviews = listOf(aMediaItem(id = 1))))
+
+        composeRule
+            .onNode(
+                SemanticsMatcher("click label") {
+                    it.config.getOrNull(SemanticsActions.OnClick)?.label == "See the marked items"
+                },
+            ).assertExists()
     }
 
     @Test
