@@ -4,14 +4,19 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -26,6 +31,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.theme.motion
@@ -76,6 +83,9 @@ internal enum class SwipeTarget { LEFT, RIGHT, MENU }
  * le menu l'animent. [returningFrom] la fait entrer depuis ce côté jusqu'au centre : l'animation
  * inverse de sa sortie, quand sa décision est annulée.
  *
+ * [onIndicationChange] reçoit l'indicateur du geste à chaque image : la pile en tire le bouton à
+ * mettre en avant et la remontée de la carte suivante.
+ *
  * L'état du geste vit dans la composition : l'appelant entoure la carte d'un `key` sur le média,
  * pour que chaque nouvelle carte parte du centre.
  */
@@ -86,6 +96,7 @@ fun SwipeableMediaCard(
     modifier: Modifier = Modifier,
     requestedExit: CardSide? = null,
     returningFrom: CardSide? = null,
+    onIndicationChange: (SwipeIndication?) -> Unit = {},
 ) {
     BoxWithConstraints(modifier = modifier) {
         val size = with(LocalDensity.current) { Offset(maxWidth.toPx(), maxHeight.toPx()) }
@@ -156,16 +167,20 @@ fun SwipeableMediaCard(
                         }
                     },
         ) {
+            val indication = swipeIndication(drag.value, size)
+            SideEffect { onIndicationChange(indication) }
             MediaCard(card = card, active = true, modifier = Modifier.matchParentSize())
-            SwipeIndicator(indication = swipeIndication(drag.value, size), modifier = Modifier.matchParentSize())
+            SwipeIndicator(indication = indication, modifier = Modifier.matchParentSize())
         }
     }
 }
 
 /**
- * Voile coloré du geste en cours : vert et coche vers la droite, rouge et corbeille vers la gauche,
- * bleu et cœur vers le haut, avec une opacité qui suit l'intensité de [indication]. Décoratif : les
- * boutons de la pile portent les actions pour TalkBack.
+ * Voile coloré du geste en cours (ADR 0025) : vert vers la droite, rouge vers la gauche, bleu vers
+ * le haut, et au centre une pastille ronde avec la coche, la corbeille ou le cœur, puis le libellé
+ * (« Garder », « Supprimer », « Favori ou partage »), sur les conteneurs de ces couleurs. L'opacité
+ * suit l'intensité de [indication]. Décoratif : les boutons de la pile portent les actions pour
+ * TalkBack.
  */
 @Composable
 private fun SwipeIndicator(
@@ -174,46 +189,55 @@ private fun SwipeIndicator(
 ) {
     if (indication == null) return
     val colors = MaterialTheme.swipeColors
-    val (color, onColor) =
+    val (veil, container, onContainer) =
         when (indication.side) {
-            CardSide.RIGHT -> colors.keep to colors.onKeep
-            CardSide.LEFT -> colors.delete to colors.onDelete
-            CardSide.TOP -> colors.favorite to colors.onFavorite
+            CardSide.RIGHT -> Triple(colors.keep, colors.keepContainer, colors.onKeepContainer)
+            CardSide.LEFT -> Triple(colors.delete, colors.deleteContainer, colors.onDeleteContainer)
+            CardSide.TOP -> Triple(colors.favorite, colors.favoriteContainer, colors.onFavoriteContainer)
         }
-    Box(
+    Column(
         modifier =
             modifier
                 .testTag(indicatorTag(indication.side))
                 .graphicsLayer { alpha = indication.progress }
-                .clip(MaterialTheme.shapes.medium)
-                .background(color.copy(alpha = MAX_VEIL_ALPHA)),
+                .clip(MaterialTheme.shapes.extraLarge)
+                .background(veil.copy(alpha = MAX_VEIL_ALPHA)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
     ) {
-        Icon(
-            painter =
-                painterResource(
+        Box(
+            modifier = Modifier.size(64.dp).background(container, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter =
+                    painterResource(
+                        when (indication.side) {
+                            CardSide.RIGHT -> R.drawable.ic_check
+                            CardSide.LEFT -> R.drawable.ic_delete
+                            CardSide.TOP -> R.drawable.ic_favorite_filled
+                        },
+                    ),
+                contentDescription = null,
+                tint = onContainer,
+            )
+        }
+        Text(
+            text =
+                stringResource(
                     when (indication.side) {
-                        CardSide.RIGHT -> R.drawable.ic_check
-                        CardSide.LEFT -> R.drawable.ic_delete
-                        CardSide.TOP -> R.drawable.ic_favorite_filled
+                        CardSide.RIGHT -> R.string.deck_keep
+                        CardSide.LEFT -> R.string.deck_delete
+                        CardSide.TOP -> R.string.deck_indicator_menu
                     },
                 ),
-            contentDescription = null,
-            tint = onColor,
+            style = MaterialTheme.typography.labelLarge,
+            color = onContainer,
             modifier =
                 Modifier
-                    .align(
-                        when (indication.side) {
-                            CardSide.RIGHT -> Alignment.TopStart
-
-                            CardSide.LEFT -> Alignment.TopEnd
-
-                            // La carte monte : l'icône se place en bas, la partie qui reste visible.
-                            CardSide.TOP -> Alignment.BottomCenter
-                        },
-                    ).padding(24.dp)
-                    .background(color, MaterialTheme.shapes.extraLarge)
-                    .padding(12.dp)
-                    .size(48.dp),
+                    .clearAndSetSemantics {}
+                    .background(container, CircleShape)
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
         )
     }
 }
@@ -232,7 +256,7 @@ internal fun indicatorTag(side: CardSide): String =
  * @property side côté vers lequel va la carte.
  * @property progress intensité, proportionnelle à la distance jusqu'au seuil de ce côté.
  */
-internal data class SwipeIndication(
+data class SwipeIndication(
     val side: CardSide,
     val progress: Float,
 )
@@ -315,7 +339,7 @@ internal const val DELETE_INDICATOR_TAG = "delete_indicator"
 internal const val FAVORITE_INDICATOR_TAG = "favorite_indicator"
 
 /** Opacité maximale du voile coloré : la photo reste visible dessous. */
-private const val MAX_VEIL_ALPHA = 0.35f
+private const val MAX_VEIL_ALPHA = 0.42f
 
 /** Distance de sortie, en tailles de carte : assez pour quitter l'écran malgré l'inclinaison. */
 private const val EXIT_DISTANCE = 1.5f

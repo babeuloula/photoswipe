@@ -35,7 +35,7 @@ import org.robolectric.annotation.Config
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import java.util.Locale
 
 /**
  * Parcours entre les écrans, avec l'accès aux médias accordé avant le démarrage et une galerie qui
@@ -109,7 +109,7 @@ class PhotoSwipeNavHostTest {
             }
         }
 
-        val today = LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
+        val today = LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM d", Locale.US))
         awaitText(composeRule.activity.getString(R.string.deck_title, today))
         assertEquals(1, opened)
 
@@ -127,7 +127,7 @@ class PhotoSwipeNavHostTest {
     fun `opens the deck of today from its card and comes back`() {
         clickOn(R.string.home_today)
 
-        val today = LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
+        val today = LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM d", Locale.US))
         awaitText(composeRule.activity.getString(R.string.deck_title, today))
 
         goBack()
