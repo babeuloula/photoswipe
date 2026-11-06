@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="developer_tools_seed_added">
+        <item quantity="one">%d photo ou vidéo ajoutée à la galerie.</item>
+        <item quantity="many">%d photos et vidéos ajoutées à la galerie.</item>
+        <item quantity="other">%d photos et vidéos ajoutées à la galerie.</item>
+    </plurals>
+    <plurals name="developer_tools_seed_removed">
+        <item quantity="one">%d média d\'exemple retiré de la galerie.</item>
+        <item quantity="many">%d médias d\'exemple retirés de la galerie.</item>
+        <item quantity="other">%d médias d\'exemple retirés de la galerie.</item>
+    </plurals>
+</resources>

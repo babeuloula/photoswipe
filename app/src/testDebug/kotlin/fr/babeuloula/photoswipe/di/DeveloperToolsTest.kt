@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -51,7 +52,13 @@ class DeveloperToolsTest {
         var resets = 0
         composeRule.activity.setContent {
             PhotoSwipeTheme {
-                DeveloperToolsScreen(initialDemoData = false, onDemoDataChange = {}, onResetDecisions = { resets++ })
+                DeveloperToolsScreen(
+                    initialDemoData = false,
+                    onDemoDataChange = {},
+                    onResetDecisions = { resets++ },
+                    onSeedGallery = { 0 },
+                    onRemoveSeeded = { 0 },
+                )
             }
         }
 
@@ -65,4 +72,58 @@ class DeveloperToolsTest {
         composeRule.waitUntil { resets == 1 }
         composeRule.onNodeWithText(text(R.string.developer_tools_reset_done)).assertExists()
     }
+
+    @Test
+    fun `adds and removes the sample media of the gallery`() {
+        var seeded = 0
+        composeRule.activity.setContent {
+            PhotoSwipeTheme {
+                DeveloperToolsScreen(
+                    initialDemoData = false,
+                    onDemoDataChange = {},
+                    onResetDecisions = {},
+                    onSeedGallery = { 42.also { seeded += it } },
+                    onRemoveSeeded = { seeded.also { seeded = 0 } },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(text(R.string.developer_tools_seed_add)).performScrollTo().performClick()
+        composeRule.waitUntil { seeded == 42 }
+        composeRule.onNodeWithText(plural(R.plurals.developer_tools_seed_added, 42)).assertExists()
+
+        composeRule.onNodeWithText(text(R.string.developer_tools_seed_remove)).performScrollTo().performClick()
+        composeRule.waitUntil { seeded == 0 }
+        composeRule.onNodeWithText(plural(R.plurals.developer_tools_seed_removed, 42)).assertExists()
+    }
+
+    @Test
+    fun `tells when the gallery could not be changed`() {
+        composeRule.activity.setContent {
+            PhotoSwipeTheme {
+                DeveloperToolsScreen(
+                    initialDemoData = false,
+                    onDemoDataChange = {},
+                    onResetDecisions = {},
+                    onSeedGallery = { error("no storage") },
+                    onRemoveSeeded = { 0 },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(text(R.string.developer_tools_seed_add)).performScrollTo().performClick()
+
+        composeRule.waitUntil {
+            composeRule
+                .onAllNodesWithText(
+                    text(R.string.developer_tools_seed_failed),
+                ).fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+    }
+
+    private fun plural(
+        id: Int,
+        count: Int,
+    ): String = application.resources.getQuantityString(id, count, count)
 }

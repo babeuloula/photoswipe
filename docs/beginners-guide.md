@@ -109,7 +109,7 @@ photoswipe/
 │       │   ├── AndroidManifest.xml   Carte d'identité de l'application
 │       │   ├── kotlin/               Code Kotlin : PhotoSwipeApplication, MainActivity, di/ (modules Hilt), permission/ (lecture des autorisations), locale/ (langue de l'application), reminder/ (notification du rappel, replanification après un changement d'heure), ui/ (écrans Compose : ui/navigation/ pour le passage d'un écran à l'autre, ui/permission/ pour l'accès aux photos, ui/home/ pour l'accueil, ui/deck/ pour la pile de swipe et la carte de chaque média, ui/summary/ pour le résumé avant confirmation, ui/settings/ pour les réglages, ui/licenses/ pour les licences) et ui/theme/ (thème Material 3)
 │       │   └── res/                  Ressources : textes (values/ en anglais, values-fr/ en français), thème de la fenêtre (themes.xml), icônes
-│       ├── debug/                    Code présent seulement dans la version de développement : outils développeur (données de démo, remise à zéro des décisions), aussi ouverts depuis les réglages
+│       ├── debug/                    Code présent seulement dans la version de développement : outils développeur (données de démo, médias d'exemple dans la vraie galerie, remise à zéro des décisions), aussi ouverts depuis les réglages
 │       ├── release/                  Code présent seulement dans la version publiée (lecture de la vraie galerie)
 │       ├── test/                     Tests unitaires du module (Robolectric pour ce qui touche à Android)
 │       └── testDebug/, testRelease/  Tests propres à chaque version
@@ -133,6 +133,7 @@ photoswipe/
 │   ├── src/main/kotlin/…/settings/   DataStoreSettingsRepository : enregistre les réglages (rappel quotidien)
 │   ├── src/main/kotlin/…/media/      MediaStoreMediaSource : lit les photos et vidéos de la galerie du téléphone (MediaStore)
 │   ├── src/main/kotlin/…/di/         Modules Hilt : disent quelle classe de data fournir pour chaque interface du domaine
+│   ├── src/debug/                    Version de développement seulement : le seeder qui ajoute de vraies photos et vidéos datées à la galerie (seed/), et sa vidéo d'exemple (res/raw)
 │   ├── src/androidTest/              Tests instrumentés : ils tournent sur un émulateur ou un téléphone (vraie galerie, vraie base)
 │   └── src/test/
 ├── domain/                    Module « domaine » : les règles métier, en Kotlin pur

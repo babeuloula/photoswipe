@@ -11,4 +11,9 @@
     <string name="developer_tools_reset_confirm_text">Every memory becomes to sort again. This cannot be undone.</string>
     <string name="developer_tools_reset_cancel">Cancel</string>
     <string name="developer_tools_reset_done">Decisions reset. Reopen PhotoSwipe to see it.</string>
+    <string name="developer_tools_seed">Sample media in the gallery</string>
+    <string name="developer_tools_seed_hint">Adds real dated photos and videos to the device gallery (folder “PhotoSwipe seed”) for today and the 6 previous days. They belong to PhotoSwipe: Android may skip its trash and favorite dialogues for them. To test those dialogues, push photos with scripts/seed-emulator.sh.</string>
+    <string name="developer_tools_seed_add">Add</string>
+    <string name="developer_tools_seed_remove">Remove</string>
+    <string name="developer_tools_seed_failed">The gallery could not be changed.</string>
 </resources>
