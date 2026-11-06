@@ -6,6 +6,9 @@ build/
 
 # Android
 local.properties
+# Clé d'upload du Play Store et son mot de passe (PS-72) : jamais dans le dépôt.
+keystore.properties
+*.jks
 *.apk
 *.aab
 captures/

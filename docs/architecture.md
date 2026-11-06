@@ -215,3 +215,8 @@ Outils de développement hors APK et hors Gradle : `scripts/seed_photos.py` n'ut
 - **Tests instrumentés** : second job, `./gradlew connectedDebugAndroidTest` sur un émulateur API 34 (`reactivecircus/android-emulator-runner`).
 - **Script de l'émulateur** : le job obligatoire lance aussi les tests Python de `scripts/` et `shellcheck`.
 - **Blocage** : un ruleset GitHub sur `main` exige que le job « Quality, unit tests and debug build » soit vert avant tout merge (ADR [0004](decisions/0004-required-ci-check-on-main.md)). Renommer ce job impose de mettre à jour le ruleset.
+
+## Version et signature release
+
+- `versionCode` : nombre de commits Git (PS-110), toujours croissant. `versionName` : dernier tag `vX.Y.Z` lu par `git describe --tags --long`, converti par `AppVersion` (`build-logic`) : `1.2.0` sur le tag, `1.2.0-dev.5` après, `0.0.0-dev` sans tag (PS-72).
+- Build release : signé par la clé d'upload du Play Store quand `keystore.properties` (racine du dépôt, ignoré par Git, comme `*.jks`) existe ; la clé vit hors du dépôt. Procédure dans [docs/store/README.md](store/README.md).
