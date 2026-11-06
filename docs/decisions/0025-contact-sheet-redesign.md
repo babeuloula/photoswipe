@@ -13,6 +13,7 @@ Le thème Material 3 de base (graine bleue #769CDF, typographie et formes par d�
 - **Garder et favori** : #1E8A4A et #2F6FD0 harmonisés vers la graine (`Blend.harmonize`), écrits en dur dans `SwipeColors` avec leurs conteneurs (tons 40 / 100 / 90 / 10 en clair, 80 / 20 / 30 / 90 en sombre) : appeler `MaterialColors.harmonize` à l'exécution ferait entrer la bibliothèque Material Components (Views). Supprimer reste le rôle `error` et son conteneur.
 - **Rôles fixes** pour ce qui est posé sur les photos (repère, pastilles, boutons de la vidéo) : `primaryFixed`, `primaryFixedDim`, `onPrimaryFixed` de `ColorScheme` (Material 3 1.4), identiques en clair et en sombre.
 - **Mouvement** : la carte sort sans rebond (`fastExit`, amortissement 1, raideur 1 400, vitesse du doigt reprise) ; la carte suivante remonte avec le ressort rapide du schéma standard (`fastSpatialStandard`, 0,9 / 1 400). Le retour au centre garde son léger rebond.
+- **Typographie** (PS-90) : l'échelle Material 3 inchangée, en Atkinson Hyperlegible Next (police variable, graisses 400 / 500 / 600), sauf les styles display en IBM Plex Mono 400 pour les grands nombres ; polices embarquées dans `res/font` (pas de polices téléchargeables : aucune connexion), sous SIL OFL 1.1, citées dans l'écran des licences.
 - **Formes** : l'échelle Material 3 par défaut, que les maquettes reprennent.
 - **Le seuil du geste reste celui de la SPEC** (35 % de la largeur) ; les maquettes parlaient de 120 dp.
 - **Les photos des maquettes n'entrent pas dans l'APK** : les illustrations sont faites de formes du thème.

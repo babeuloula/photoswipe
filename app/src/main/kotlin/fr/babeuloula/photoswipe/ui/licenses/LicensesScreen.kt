@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.licenses
 
+import androidx.annotation.RawRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -31,18 +32,20 @@ import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 
 /**
- * Licences (« À propos » des réglages) : la licence de PhotoSwipe, les bibliothèques embarquées,
- * puis le texte complet de la licence Apache 2.0 qu'elles partagent. Écran statique, sans
- * ViewModel : il n'a ni état ni donnée à charger.
+ * Licences (« À propos » des réglages) : la licence de PhotoSwipe, les bibliothèques et polices
+ * embarquées, puis le texte complet des licences Apache 2.0 et SIL Open Font 1.1. Écran statique,
+ * sans ViewModel : il n'a ni état ni donnée à charger.
  *
- * @param licenseText texte de la licence ; lu par défaut dans `res/raw`.
+ * @param licenseText texte de la licence Apache 2.0 ; lu par défaut dans `res/raw`.
+ * @param fontLicenseText texte de la licence SIL Open Font 1.1 ; lu par défaut dans `res/raw`.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LicensesScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    licenseText: String = apacheLicenseText(),
+    licenseText: String = rawText(R.raw.apache_license_2_0),
+    fontLicenseText: String = rawText(R.raw.sil_open_font_license_1_1),
 ) {
     Scaffold(
         modifier = modifier,
@@ -70,17 +73,23 @@ fun LicensesScreen(
                 OPEN_SOURCE_LIBRARIES.forEach { library ->
                     ListItem(
                         headlineContent = { Text(library.name) },
-                        supportingContent = { Text(stringResource(R.string.licenses_library_notice, library.author)) },
+                        supportingContent = {
+                            Text(
+                                stringResource(
+                                    R.string.licenses_library_notice,
+                                    library.author,
+                                    licenseName(library.license),
+                                ),
+                            )
+                        },
                     )
                 }
                 HorizontalDivider()
                 SectionTitle(stringResource(R.string.licenses_apache_text))
-                Text(
-                    text = licenseText,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.padding(16.dp),
-                )
+                LicenseText(licenseText)
+                HorizontalDivider()
+                SectionTitle(stringResource(R.string.licenses_ofl_text))
+                LicenseText(fontLicenseText)
             }
         }
     }
@@ -100,17 +109,44 @@ private fun SectionTitle(text: String) {
     )
 }
 
-/** Texte de la licence Apache 2.0, lu une fois dans `res/raw` (en anglais, langue de la licence). */
+/** Texte complet d'une licence, en chasse fixe pour garder sa mise en page. */
 @Composable
-private fun apacheLicenseText(): String {
+private fun LicenseText(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        fontFamily = FontFamily.Monospace,
+        modifier = Modifier.padding(16.dp),
+    )
+}
+
+/** Nom localisé de [license]. */
+@Composable
+private fun licenseName(license: OpenSourceLicense): String =
+    stringResource(
+        when (license) {
+            OpenSourceLicense.APACHE_2_0 -> R.string.licenses_name_apache
+            OpenSourceLicense.OFL_1_1 -> R.string.licenses_name_ofl
+        },
+    )
+
+/** Texte d'une licence, lu une fois dans `res/raw` (en anglais, langue de la licence). */
+@Composable
+private fun rawText(
+    @RawRes id: Int,
+): String {
     val resources = LocalResources.current
-    return remember(resources) {
-        resources.openRawResource(R.raw.apache_license_2_0).bufferedReader().use { it.readText() }
-    }
+    return remember(resources, id) { resources.openRawResource(id).bufferedReader().use { it.readText() } }
 }
 
 @PreviewLightDark
 @Composable
 private fun LicensesScreenPreview() {
-    PhotoSwipeTheme { LicensesScreen(onBack = {}, licenseText = "Apache License, Version 2.0") }
+    PhotoSwipeTheme {
+        LicensesScreen(
+            onBack = {},
+            licenseText = "Apache License, Version 2.0",
+            fontLicenseText = "SIL Open Font License",
+        )
+    }
 }
