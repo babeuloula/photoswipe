@@ -30,6 +30,9 @@ complexity:
     # Les builders de test (aMediaItem(), aReviewEntry()…) ont un paramètre par propriété du modèle,
     # tous avec une valeur par défaut : c'est leur raison d'être.
     excludes: ['**/test/**', '**/testFixtures/**']
+    # Les composables exposent, à la manière de Compose, des paramètres optionnels avec valeur par
+    # défaut (modifier, rappels, états d'animation) : seuls les paramètres obligatoires comptent.
+    ignoreDefaultParameters: true
   TooManyFunctions:
     # Une implémentation de port (dépôt Room, fake de test) reprend toutes les méthodes de son
     # interface : c'est le port qui en fixe le nombre, pas la classe.

@@ -32,7 +32,15 @@
     <string name="deck_media_unavailable">Preview unavailable</string>
     <string name="deck_error">The memories of this day could not be loaded.</string>
     <string name="deck_retry">Try again</string>
-    <string name="deck_empty">Nothing left to sort for this day.</string>
+    <string name="deck_empty">Nothing left to sort for this day</string>
+    <string name="deck_empty_body">Your choices are saved. Nothing is deleted without your confirmation.</string>
+    <string name="deck_view_summary">See the summary</string>
+    <string name="deck_back_home">Back to home</string>
+    <string name="deck_progress">%1$d of %2$d</string>
+    <string name="deck_delete">Delete</string>
+    <string name="deck_indicator_menu">Favorite or share</string>
+    <string name="deck_sheet_photo">Photo · %1$s</string>
+    <string name="deck_sheet_video">Video · %1$s</string>
     <!-- Boutons équivalents aux gestes, lus par TalkBack (SPEC §4.3, §8). -->
     <string name="deck_keep">Keep</string>
     <string name="deck_mark_for_deletion">Mark for deletion</string>

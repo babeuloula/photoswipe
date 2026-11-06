@@ -1,21 +1,31 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import android.content.Context
+import android.text.format.DateFormat
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -34,22 +44,34 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import coil3.ImageLoader
+import coil3.compose.AsyncImage
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import fr.babeuloula.photoswipe.ui.theme.monoLabel
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * Pile de swipe d'un jour (SPEC §4.3) : la carte plein écran du média du dessus, à glisser à droite
@@ -71,7 +93,12 @@ fun DeckScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.deck_title, localizedDate(LocalContext.current, day))) },
+                title = {
+                    Text(
+                        stringResource(R.string.deck_title, dayAndMonth(LocalContext.current, day)),
+                        maxLines = 1,
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { onEvent(DeckEvent.Back) }) {
                         Icon(
@@ -92,7 +119,14 @@ fun DeckScreen(
                     .fillMaxSize()
                     .padding(innerPadding),
         ) {
-            DeckContent(state = state, onEvent = onEvent)
+            Column(Modifier.fillMaxSize()) {
+                if (state is DeckUiState.Loaded) {
+                    DeckProgress(position = state.position, total = state.total)
+                }
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    DeckContent(state = state, onEvent = onEvent)
+                }
+            }
         }
     }
 }
@@ -118,27 +152,7 @@ private fun BoxScope.DeckContent(
         }
 
         is DeckUiState.Empty -> {
-            DeckMessage(
-                text = stringResource(R.string.deck_empty),
-                modifier = Modifier.align(Alignment.Center),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_check_circle_filled),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(64.dp),
-                )
-            }
-            if (state.canUndo) {
-                UndoButton(
-                    enabled = true,
-                    onClick = { onEvent(DeckEvent.Undo) },
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 24.dp),
-                )
-            }
+            EmptyDeck(canUndo = state.canUndo, onEvent = onEvent)
         }
 
         is DeckUiState.Loaded -> {
@@ -202,6 +216,8 @@ private fun LoadedDeck(
 ) {
     // Sortie demandée par un bouton ou le menu pour la carte du dessus ; `null` tant qu'il n'y en a pas.
     var requestedExit by remember(state.current.id) { mutableStateOf<CardSide?>(null) }
+    // Geste en cours sur la carte du dessus : bouton mis en avant, remontée de la carte suivante.
+    var indication by remember(state.current.id) { mutableStateOf<SwipeIndication?>(null) }
     // Pendant la sortie de la carte, les boutons sont ignorés : un second tap ne trie pas la suivante.
     val onButton: (DeckButton) -> Unit = { button ->
         if (requestedExit == null) {
@@ -216,19 +232,28 @@ private fun LoadedDeck(
     DeckLayout(
         twoPane = currentWindowLayout().isTwoPane,
         cards = { cardModifier ->
-            CardStack(state = state, requestedExit = requestedExit, onEvent = onEvent, modifier = cardModifier)
+            CardStack(
+                state = state,
+                requestedExit = requestedExit,
+                onEvent = onEvent,
+                onIndicationChange = { indication = it },
+                nextCardProgress = { indication?.progress ?: 0f },
+                modifier = cardModifier,
+            )
         },
         buttons = { vertical, buttonsModifier ->
             DecisionButtons(
                 canUndo = state.canUndo,
                 onClick = onButton,
                 vertical = vertical,
+                highlighted = indication?.side?.takeIf { (indication?.progress ?: 0f) > 0f },
                 modifier = buttonsModifier,
             )
         },
     )
     if (state.menuOpen) {
         CardMenu(
+            card = state.current,
             onFavorite = {
                 onEvent(DeckEvent.CloseMenu)
                 requestedExit = CardSide.TOP
@@ -249,6 +274,8 @@ private fun CardStack(
     state: DeckUiState.Loaded,
     requestedExit: CardSide?,
     onEvent: (DeckEvent) -> Unit,
+    onIndicationChange: (SwipeIndication?) -> Unit,
+    nextCardProgress: () -> Float,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
@@ -259,7 +286,15 @@ private fun CardStack(
                     modifier =
                         Modifier
                             .fillMaxSize()
-                            .clearAndSetSemantics { testTag = NEXT_CARD_TAG },
+                            .graphicsLayer {
+                                // Posée un peu plus bas et plus petite, elle remonte à mesure que la carte du dessus part.
+                                val progress = nextCardProgress()
+                                val scale = lerp(NEXT_CARD_SCALE, 1f, progress)
+                                scaleX = scale
+                                scaleY = scale
+                                transformOrigin = TransformOrigin(NEXT_CARD_PIVOT_X, 1f)
+                                translationY = lerp(NEXT_CARD_OFFSET.toPx(), 0f, progress)
+                            }.clearAndSetSemantics { testTag = NEXT_CARD_TAG },
                 )
             }
         }
@@ -269,6 +304,7 @@ private fun CardStack(
                 onEvent = onEvent,
                 requestedExit = requestedExit,
                 returningFrom = state.returningFrom,
+                onIndicationChange = onIndicationChange,
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -282,11 +318,13 @@ private fun CardStack(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CardMenu(
+    card: MediaCardUiState,
     onFavorite: () -> Unit,
     onShare: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
+        MenuPreview(card)
         ListItem(
             headlineContent = { Text(stringResource(R.string.deck_favorite)) },
             leadingContent = { Icon(painterResource(R.drawable.ic_favorite), contentDescription = null) },
@@ -300,6 +338,42 @@ private fun CardMenu(
                     .clickable(onClick = onShare)
                     .padding(bottom = 24.dp),
         )
+    }
+}
+
+/**
+ * En-tête du menu : la vignette du média, son repère « Il y a 7 ans · 6 nov. 2019 », son type et son
+ * poids, pour savoir à quelle carte s'applique le menu.
+ */
+@Composable
+private fun MenuPreview(card: MediaCardUiState) {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AsyncImage(
+            model = card.uri,
+            contentDescription = null,
+            imageLoader = LocalImageLoader.current,
+            placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
+            error = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(width = 56.dp, height = 72.dp).clip(MaterialTheme.shapes.medium),
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilmEdgeLabel(memoryLabel(context, card.yearsAgo, card.takenOn))
+            Text(
+                text =
+                    stringResource(
+                        if (card.type == MediaType.VIDEO) R.string.deck_sheet_video else R.string.deck_sheet_photo,
+                        fileSizeLabel(context, card.sizeBytes),
+                    ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -338,6 +412,15 @@ private fun DeckScreenPreview() {
         }
     }
 }
+
+/** Pivot horizontal de la carte suivante : son milieu, pour qu'elle grandisse vers le haut depuis son bas. */
+private const val NEXT_CARD_PIVOT_X = 0.5f
+
+/** Taille de la carte suivante au repos, avant de remonter sous la carte du dessus. */
+private const val NEXT_CARD_SCALE = 0.92f
+
+/** Décalage vers le bas de la carte suivante au repos. */
+private val NEXT_CARD_OFFSET = 14.dp
 
 /** Étiquette de test de la carte suivante, préparée sous celle du dessus. */
 internal const val NEXT_CARD_TAG = "next_card"

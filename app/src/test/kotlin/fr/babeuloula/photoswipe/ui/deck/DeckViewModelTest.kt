@@ -404,6 +404,19 @@ class DeckViewModelTest {
         }
 
     @Test
+    fun `counts the sorted cards for the progress of the day`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2021), takenOn(3, 2022))))
+
+            viewModel.onEvent(DeckEvent.Keep)
+
+            val state = viewModel.uiState.value as DeckUiState.Loaded
+            assertEquals(1, state.sortedCount)
+            assertEquals(2, state.position)
+            assertEquals(3, state.total)
+        }
+
+    @Test
     fun `keeps preparing two cards through a deck of thousands of media`() =
         runTest {
             val gallery = (1L..BIG_DECK).map { aMediaItem(id = it, takenAt = takenOn(it, 2020).takenAt) }

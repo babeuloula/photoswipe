@@ -25,6 +25,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
@@ -380,7 +381,7 @@ class DeckScreenTest {
 
         composeRule
             .onNodeWithText(
-                composeRule.activity.getString(R.string.deck_title, "May 14, 2026"),
+                composeRule.activity.getString(R.string.deck_title, "May 14"),
             ).assertIsDisplayed()
     }
 
@@ -595,6 +596,36 @@ class DeckScreenTest {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD), canUndo = false))
 
         composeRule.onNodeWithContentDescription(text(R.string.deck_undo)).assertIsNotEnabled()
+    }
+
+    @Test
+    fun `shows the progress of the day`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD), remainingCount = 20, sortedCount = 3))
+
+        // La barre porte le texte pour TalkBack ; le compteur visible n'est pas relu une seconde fois.
+        composeRule.onNodeWithContentDescription("4 of 23").assertIsDisplayed()
+        composeRule.onNodeWithText("4 of 23").assertDoesNotExist()
+    }
+
+    @Test
+    fun `opens the summary or goes home from an emptied deck`() {
+        show(DeckUiState.Empty())
+
+        composeRule.onNodeWithText(text(R.string.deck_empty_body)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.deck_view_summary)).performScrollTo().performClick()
+        composeRule.onNodeWithText(text(R.string.deck_back_home)).performScrollTo().performClick()
+
+        assertEquals(listOf(DeckEvent.Finish, DeckEvent.Back), events)
+    }
+
+    @Test
+    fun `labels each button of the deck without TalkBack reading the labels twice`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        // Les libellés visibles sous les boutons sont cachés à TalkBack : le bouton porte sa description.
+        composeRule.onNodeWithText(text(R.string.deck_delete)).assertDoesNotExist()
+        composeRule.onNodeWithContentDescription(text(R.string.deck_mark_for_deletion)).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(text(R.string.deck_keep)).assertIsDisplayed()
     }
 
     @Test

@@ -52,6 +52,7 @@ sealed interface DeckUiState {
      * Jamais vide, jamais plus de [VISIBLE_CARDS] : une pile de plusieurs milliers de médias ne
      * prépare que deux cartes.
      * @property remainingCount médias encore à trier, carte du dessus comprise.
+     * @property sortedCount médias de ce jour déjà triés (décisions de la session, reprises du journal).
      * @property canUndo vrai si la dernière décision de la session peut être annulée.
      * @property returningFrom côté d'où revient la carte du dessus après un undo, celui par lequel
      * elle était sortie ; `null` si elle ne revient pas.
@@ -60,6 +61,7 @@ sealed interface DeckUiState {
     data class Loaded(
         val cards: List<MediaCardUiState>,
         val remainingCount: Int = cards.size,
+        val sortedCount: Int = 0,
         val canUndo: Boolean = false,
         val returningFrom: CardSide? = null,
         val menuOpen: Boolean = false,
@@ -73,6 +75,12 @@ sealed interface DeckUiState {
 
         /** Carte suivante, préparée sous celle du dessus ; `null` pour la dernière carte. */
         val next: MediaCardUiState? get() = cards.getOrNull(1)
+
+        /** Rang de la carte du dessus dans la pile du jour, à partir de 1 (« 4 sur 23 »). */
+        val position: Int get() = sortedCount + 1
+
+        /** Médias de la pile du jour : triés et à trier. */
+        val total: Int get() = sortedCount + remainingCount
 
         companion object {
             /** Cartes préparées à l'écran : celle du dessus et la suivante, pas plus. */
@@ -363,6 +371,7 @@ class DeckViewModel
                                     DeckUiState.Loaded.VISIBLE_CARDS,
                                 ).map { MediaCardUiState.of(it, day, clock.zone, galleryFavorite.isFavorite(it)) },
                         remainingCount = deck.size,
+                        sortedCount = session.decisions.size,
                         canUndo = canUndo,
                         returningFrom = returningFrom,
                     )

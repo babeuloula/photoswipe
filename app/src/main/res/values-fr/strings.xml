@@ -26,7 +26,15 @@
     <string name="deck_media_unavailable">Aperçu indisponible</string>
     <string name="deck_error">Les souvenirs de ce jour n\'ont pas pu être chargés.</string>
     <string name="deck_retry">Réessayer</string>
-    <string name="deck_empty">Plus rien à trier pour ce jour.</string>
+    <string name="deck_empty">Plus rien à trier pour ce jour</string>
+    <string name="deck_empty_body">Vos choix sont enregistrés. Rien n\'est supprimé sans votre confirmation.</string>
+    <string name="deck_view_summary">Voir le résumé</string>
+    <string name="deck_back_home">Retour à l\'accueil</string>
+    <string name="deck_progress">%1$d sur %2$d</string>
+    <string name="deck_delete">Supprimer</string>
+    <string name="deck_indicator_menu">Favori ou partage</string>
+    <string name="deck_sheet_photo">Photo · %1$s</string>
+    <string name="deck_sheet_video">Vidéo · %1$s</string>
     <string name="deck_keep">Garder</string>
     <string name="deck_mark_for_deletion">Marquer pour suppression</string>
     <string name="deck_undo">Annuler</string>
