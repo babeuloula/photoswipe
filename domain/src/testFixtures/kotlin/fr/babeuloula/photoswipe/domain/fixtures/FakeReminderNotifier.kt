@@ -1,16 +1,26 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
 import fr.babeuloula.photoswipe.domain.port.ReminderNotifier
+import java.time.LocalDate
 
 /** [ReminderNotifier] en mémoire : retient chaque notification envoyée, dans l'ordre. */
 class FakeReminderNotifier : ReminderNotifier {
-    /** Nombres de médias annoncés par chaque notification envoyée. */
-    val sent: List<Int> get() = notifications.toList()
+    /** Notification envoyée : le nombre de médias annoncés et le jour dont la pile s'ouvre. */
+    data class Sent(
+        val toSortCount: Int,
+        val dayToSort: LocalDate,
+    )
 
-    private val notifications = mutableListOf<Int>()
+    /** Notifications envoyées. */
+    val sent: List<Sent> get() = notifications.toList()
 
-    override fun notify(toSortCount: Int) {
+    private val notifications = mutableListOf<Sent>()
+
+    override fun notify(
+        toSortCount: Int,
+        dayToSort: LocalDate,
+    ) {
         require(toSortCount > 0) { "a reminder must announce media to sort: $toSortCount" }
-        notifications += toSortCount
+        notifications += Sent(toSortCount, dayToSort)
     }
 }

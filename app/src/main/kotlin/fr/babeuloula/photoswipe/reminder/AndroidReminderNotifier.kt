@@ -5,17 +5,18 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.port.ReminderNotifier
 import fr.babeuloula.photoswipe.permission.NotificationPermissionReader
+import java.time.LocalDate
 import javax.inject.Inject
 
 /**
  * [ReminderNotifier] sur les notifications Android (SPEC §3.6) : un canal dédié « Rappel
- * quotidien », un titre au pluriel (« 3 souvenirs à trier »), et un appui qui ouvre l'accueil.
+ * quotidien », un titre au pluriel (« 3 souvenirs à trier »), et un appui qui ouvre directement
+ * la pile du jour à trier, au-dessus de l'accueil.
  * Sans permission de notification, rien n'est affiché.
  */
 class AndroidReminderNotifier
@@ -26,17 +27,17 @@ class AndroidReminderNotifier
     ) : ReminderNotifier {
         private val notificationManager: NotificationManager = context.getSystemService(NotificationManager::class.java)
 
-        override fun notify(toSortCount: Int) {
+        override fun notify(
+            toSortCount: Int,
+            dayToSort: LocalDate,
+        ) {
             if (!permission.isGranted()) return
             createChannel()
             val openHome =
                 PendingIntent.getActivity(
                     context,
                     0,
-                    Intent(
-                        context,
-                        MainActivity::class.java,
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                    MainActivity.openDeckIntent(context, dayToSort),
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
                 )
             val notification =

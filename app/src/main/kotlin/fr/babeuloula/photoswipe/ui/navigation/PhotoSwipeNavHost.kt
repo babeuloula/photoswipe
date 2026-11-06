@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -10,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import fr.babeuloula.photoswipe.ui.home.ConfirmationAnnouncement
 import fr.babeuloula.photoswipe.ui.home.HomeNavigation
+import java.time.LocalDate
 import fr.babeuloula.photoswipe.ui.deck.DeckRoute as DeckDestination
 import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
 import fr.babeuloula.photoswipe.ui.settings.SettingsRoute as SettingsDestination
@@ -17,7 +19,8 @@ import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
 
 /**
  * Graphe de navigation de l'application (SPEC §5.4), en routes typées : accueil, pile d'un jour,
- * résumé, réglages. Les écrans pas encore réalisés sont des coquilles, remplacées ticket par ticket.
+ * résumé, réglages. Le rappel quotidien peut demander d'ouvrir directement une pile
+ * ([deckToOpen]), qui s'empile au-dessus de l'accueil.
  *
  * L'accès aux médias n'est pas une destination : `MediaAccessGate` entoure ce graphe, pour qu'un
  * accès retiré ramène à l'explication quel que soit l'écran (ADR 0014).
@@ -27,7 +30,16 @@ import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
 fun PhotoSwipeNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
+    deckToOpen: LocalDate? = null,
+    onDeckOpened: () -> Unit = {},
 ) {
+    // Notification du rappel : la pile s'ouvre au-dessus de l'accueil, que « Retour » retrouve.
+    LaunchedEffect(deckToOpen) {
+        if (deckToOpen != null) {
+            navController.navigate(DeckRoute.of(deckToOpen)) { launchSingleTop = true }
+            onDeckOpened()
+        }
+    }
     NavHost(navController = navController, startDestination = HomeRoute, modifier = modifier) {
         composable<HomeRoute> { entry ->
             val trashedCount by entry.savedStateHandle.getStateFlow(TRASHED_COUNT_KEY, 0).collectAsState()

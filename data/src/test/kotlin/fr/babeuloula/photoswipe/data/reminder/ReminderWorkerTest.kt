@@ -64,7 +64,7 @@ class ReminderWorkerTest {
             val result = worker(FakeMediaSource()).doWork()
 
             assertEquals(ListenableWorker.Result.success(), result)
-            assertEquals(emptyList<Int>(), notifier.sent)
+            assertEquals(emptyList<FakeReminderNotifier.Sent>(), notifier.sent)
         }
 
     @Test
@@ -73,7 +73,7 @@ class ReminderWorkerTest {
             val result = worker(FakeMediaSource(listOf(takenLastYear(1), takenLastYear(2)))).doWork()
 
             assertEquals(ListenableWorker.Result.success(), result)
-            assertEquals(listOf(2), notifier.sent)
+            assertEquals(listOf(FakeReminderNotifier.Sent(2, LocalDate.of(2026, 7, 15))), notifier.sent)
         }
 
     @Test

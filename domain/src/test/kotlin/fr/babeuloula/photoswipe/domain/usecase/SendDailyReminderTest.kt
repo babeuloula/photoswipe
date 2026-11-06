@@ -48,7 +48,7 @@ class SendDailyReminderTest {
             val sent = sendDailyReminder(media = emptyList())()
 
             assertEquals(0, sent)
-            assertEquals(emptyList<Int>(), notifier.sent)
+            assertEquals(emptyList<FakeReminderNotifier.Sent>(), notifier.sent)
         }
 
     @Test
@@ -58,7 +58,7 @@ class SendDailyReminderTest {
 
             sendDailyReminder(media, entries = listOf(aReviewEntry(mediaId = 1, reviewYear = 2026)))()
 
-            assertEquals(emptyList<Int>(), notifier.sent)
+            assertEquals(emptyList<FakeReminderNotifier.Sent>(), notifier.sent)
         }
 
     @Test
@@ -75,6 +75,16 @@ class SendDailyReminderTest {
             val sent = sendDailyReminder(media)()
 
             assertEquals(3, sent)
-            assertEquals(listOf(3), notifier.sent)
+            assertEquals(listOf(FakeReminderNotifier.Sent(3, today)), notifier.sent)
+        }
+
+    @Test
+    fun `opens the most recent day left to sort when today is done`() =
+        runTest {
+            val media = listOf(takenOn(1, LocalDate.of(2024, 7, 12)), takenOn(2, LocalDate.of(2023, 7, 10)))
+
+            sendDailyReminder(media)()
+
+            assertEquals(listOf(FakeReminderNotifier.Sent(2, LocalDate.of(2026, 7, 12))), notifier.sent)
         }
 }

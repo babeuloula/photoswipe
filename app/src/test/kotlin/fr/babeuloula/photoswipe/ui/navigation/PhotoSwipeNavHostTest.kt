@@ -1,5 +1,7 @@
 package fr.babeuloula.photoswipe.ui.navigation
 
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -19,6 +21,9 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.permission.MEDIA_PERMISSIONS
+import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExternalResource
@@ -91,6 +96,25 @@ class PhotoSwipeNavHostTest {
 
     private fun goBack() {
         composeRule.onNodeWithContentDescription(text(R.string.navigate_back)).performClick()
+    }
+
+    @Test
+    fun `opens the deck asked by the reminder above the home screen`() {
+        var opened = 0
+        composeRule.activity.setContent {
+            CompositionLocalProvider(LocalImageLoader provides composeRule.activity.imageLoader) {
+                PhotoSwipeTheme {
+                    PhotoSwipeNavHost(deckToOpen = LocalDate.now(), onDeckOpened = { opened++ })
+                }
+            }
+        }
+
+        val today = LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
+        awaitText(composeRule.activity.getString(R.string.deck_title, today))
+        assertEquals(1, opened)
+
+        goBack()
+        awaitText(text(R.string.home_today))
     }
 
     @Test
