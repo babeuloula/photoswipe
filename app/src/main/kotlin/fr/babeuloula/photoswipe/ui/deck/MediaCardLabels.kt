@@ -10,8 +10,9 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 /**
- * Étiquette d'un souvenir, « Il y a 3 ans · 14 mai 2023 » (SPEC §4.3) : pluriel et date dans la
- * langue de [context], sans concaténation (SPEC §9).
+ * Repère d'un souvenir, « Il y a 3 ans · 14 mai 2023 » (SPEC §4.3), en date abrégée pour tenir sur
+ * le bord de film (« 14 mai 2023 » en français, « May 14, 2023 » en anglais) : pluriel et date dans
+ * la langue de [context], sans concaténation (SPEC §9).
  */
 fun memoryLabel(
     context: Context,
@@ -22,7 +23,12 @@ fun memoryLabel(
     return resources.getString(
         R.string.deck_memory_label,
         resources.getQuantityString(R.plurals.deck_years_ago, yearsAgo, yearsAgo),
-        localizedDate(context, takenOn),
+        takenOn.format(
+            DateTimeFormatter
+                .ofLocalizedDate(
+                    FormatStyle.MEDIUM,
+                ).withLocale(context.resources.configuration.locales[0]),
+        ),
     )
 }
 

@@ -24,6 +24,18 @@ class MediaCardLabelsTest {
 
     @Test
     @Config(qualifiers = "fr")
+    fun `abbreviates the month to fit the film edge in French`() {
+        assertEquals("Il y a 3 ans · 6 nov. 2023", memoryLabel(context, 3, LocalDate.of(2023, 11, 6)))
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `abbreviates the month to fit the film edge in English`() {
+        assertEquals("3 years ago · Nov 6, 2023", memoryLabel(context, 3, LocalDate.of(2023, 11, 6)))
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
     fun `uses the singular for one year in French`() {
         assertEquals("Il y a 1 an · 14 mai 2025", memoryLabel(context, 1, LocalDate.of(2025, 5, 14)))
     }

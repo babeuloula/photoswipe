@@ -68,3 +68,10 @@ internal val PhotoSwipeTypography =
         labelMedium = Baseline.labelMedium.withFamily(AtkinsonHyperlegibleNext),
         labelSmall = Baseline.labelSmall.withFamily(AtkinsonHyperlegibleNext),
     )
+
+/**
+ * Style du repère de bord de film et de ses puces (ADR 0025) : `labelMedium` (12 / 16) en IBM Plex
+ * Mono 500, chiffres tabulaires. Seul usage de la chasse fixe en petit.
+ */
+val Typography.monoLabel: TextStyle
+    get() = labelMedium.copy(fontFamily = IbmPlexMono, fontWeight = FontWeight.Medium, fontFeatureSettings = "tnum")

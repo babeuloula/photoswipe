@@ -56,6 +56,7 @@ class ContrastTest {
         assertReadable("$theme onKeepContainer", swipe.onKeepContainer, swipe.keepContainer)
         assertReadable("$theme onDeleteContainer", swipe.onDeleteContainer, swipe.deleteContainer)
         assertReadable("$theme onFavoriteContainer", swipe.onFavoriteContainer, swipe.favoriteContainer)
+        assertReadable("$theme favorite on the film edge", swipe.favoriteOnFixed, scheme.onPrimaryFixed)
     }
 
     @Test
