@@ -106,6 +106,31 @@ class TutorialIllustrationsTest {
         composeRule.onNodeWithText(reminder(left)).assertIsDisplayed()
     }
 
+    private fun trashQuestion(): String =
+        composeRule.activity.resources.getQuantityString(R.plurals.summary_trash_confirm_title, MARKED, MARKED)
+
+    @Test
+    fun `the confirmation page shows the summary then the trash confirmation`() {
+        show(TutorialPage.CONFIRMATION, animate = true)
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.summary_freed_space)).assertIsDisplayed()
+        composeRule.onNodeWithText(trashQuestion()).assertDoesNotExist()
+
+        composeRule.mainClock.advanceTimeBy(SUMMARY_MILLIS + SETTLE_MILLIS)
+
+        composeRule.onNodeWithText(trashQuestion()).assertIsDisplayed()
+        composeRule
+            .onNodeWithText(
+                composeRule.activity.getString(R.string.summary_trash_confirm_text),
+            ).assertIsDisplayed()
+    }
+
+    @Test
+    fun `the static confirmation page shows the dialog open`() {
+        show(TutorialPage.CONFIRMATION, animate = false)
+
+        composeRule.onNodeWithText(trashQuestion()).assertIsDisplayed()
+    }
+
     private companion object {
         /** Assez pour que le tirage monte et que la feuille s'ouvre. */
         const val SWIPE_UP_CYCLE_MILLIS = 2_200L

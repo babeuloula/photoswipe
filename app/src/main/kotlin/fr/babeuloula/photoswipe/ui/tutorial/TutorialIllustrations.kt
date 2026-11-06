@@ -42,6 +42,10 @@ internal fun TutorialIllustration(
             CatchUpIllustration(animate = animate, modifier = modifier)
         }
 
+        TutorialPage.CONFIRMATION -> {
+            ConfirmationIllustration(animate = animate, modifier = modifier)
+        }
+
         else -> {
             Box(modifier, contentAlignment = Alignment.Center) {
                 Icon(
