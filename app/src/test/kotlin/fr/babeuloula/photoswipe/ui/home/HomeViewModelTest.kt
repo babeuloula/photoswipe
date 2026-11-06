@@ -45,7 +45,7 @@ class HomeViewModelTest {
             val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025), takenOn(2, 2020), takenOn(3, 2019))))
             repository.save(aReviewEntry(mediaId = 2, reviewYear = 2026))
 
-            assertEquals(loadedWithToday(2, memories = 3), loaded(viewModel))
+            assertEquals(loadedWithToday(2, memories = 3), (loaded(viewModel)).withoutPreviews())
         }
 
     @Test
@@ -56,7 +56,7 @@ class HomeViewModelTest {
 
             repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
 
-            assertEquals(loadedWithToday(1, memories = 2), viewModel.uiState.value)
+            assertEquals(loadedWithToday(1, memories = 2), (viewModel.uiState.value).withoutPreviews())
         }
 
     @Test
@@ -75,7 +75,7 @@ class HomeViewModelTest {
 
             viewModel.onEvent(HomeEvent.Retry)
 
-            assertEquals(loadedWithToday(1), viewModel.uiState.value)
+            assertEquals(loadedWithToday(1), (viewModel.uiState.value).withoutPreviews())
         }
 
     @Test
@@ -88,7 +88,7 @@ class HomeViewModelTest {
 
             viewModel.onEvent(HomeEvent.Resumed)
 
-            assertEquals(loadedWithToday(2), viewModel.uiState.value)
+            assertEquals(loadedWithToday(2), (viewModel.uiState.value).withoutPreviews())
         }
 
     @Test
@@ -189,6 +189,28 @@ class HomeViewModelTest {
             previousDays = (1L..6L).map { ReviewDay(today.minusDays(it), remainingCount = 0) },
         )
 
+    /** État sans les vignettes ni les années des jours, comparé aux nombres seulement. */
+    private fun HomeUiState.withoutPreviews(): HomeUiState =
+        if (this is HomeUiState.Loaded) {
+            copy(
+                today = today.copy(previews = emptyList(), years = null),
+                previousDays = previousDays.map { it.copy(previews = emptyList(), years = null) },
+            )
+        } else {
+            this
+        }
+
+    @Test
+    fun `shows a preview of today's memories and their years`() =
+        runTest {
+            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025), takenOn(2, 2019))))
+
+            val state = loaded(viewModel) as HomeUiState.Loaded
+
+            assertEquals(listOf(MediaId(1), MediaId(2)), state.today.previews.map { it.id })
+            assertEquals(2019..2025, state.today.years)
+        }
+
     private val settings = FakeSettingsRepository()
 
     /** Accès « Gestion des médias » simulé, refusé par défaut. */
@@ -240,7 +262,7 @@ class HomeViewModelTest {
 
             viewModel.onEvent(HomeEvent.Resumed)
 
-            assertEquals(listOf(HomeUiState.Loading, loadedWithToday(1)), states)
+            assertEquals(listOf(HomeUiState.Loading, loadedWithToday(1)), states.map { it.withoutPreviews() })
         }
 
     @Test
@@ -284,7 +306,10 @@ class HomeViewModelTest {
 
             val state = loaded(viewModel) as HomeUiState.Loaded
 
-            assertEquals(ReviewDay(today, remainingCount = 0, memoryCount = 1), state.today)
+            assertEquals(
+                ReviewDay(today, remainingCount = 0, memoryCount = 1),
+                state.today.copy(previews = emptyList(), years = null),
+            )
             assertEquals(true, state.hasMemories)
         }
 

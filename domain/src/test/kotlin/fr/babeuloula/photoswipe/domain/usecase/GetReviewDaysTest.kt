@@ -21,6 +21,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -36,6 +37,7 @@ class GetReviewDaysTest {
                 (15 downTo 9).map { ReviewDay(LocalDate.of(2026, 7, it), remainingCount = 0) },
                 days,
             )
+            assertTrue(days.all { it.previews.isEmpty() && it.years == null })
         }
 
     @Test
@@ -57,8 +59,44 @@ class GetReviewDaysTest {
 
             val days = getReviewDays(today = LocalDate.of(2026, 7, 15), media, entries)().first()
 
-            assertEquals(ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 1, memoryCount = 3), days[0])
-            assertEquals(ReviewDay(LocalDate.of(2026, 7, 14), remainingCount = 1), days[1])
+            assertEquals(
+                ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 1, memoryCount = 3).counts(),
+                days[0].counts(),
+            )
+            assertEquals(ReviewDay(LocalDate.of(2026, 7, 14), remainingCount = 1).counts(), days[1].counts())
+        }
+
+    @Test
+    fun `previews one memory to sort per year, the most recent year first, with the years of the day`() =
+        runTest {
+            val media =
+                listOf(
+                    takenOn(id = 1, LocalDate.of(2016, 7, 15)),
+                    takenOn(id = 2, LocalDate.of(2023, 7, 15)),
+                    takenOn(id = 3, LocalDate.of(2023, 7, 15)),
+                    takenOn(id = 4, LocalDate.of(2025, 7, 15)),
+                    takenOn(id = 5, LocalDate.of(2019, 7, 15)),
+                    takenOn(id = 6, LocalDate.of(2020, 7, 15)),
+                )
+            val entries = listOf(aReviewEntry(mediaId = 4, reviewYear = 2026, decision = KEPT))
+
+            val today = getReviewDays(today = LocalDate.of(2026, 7, 15), media, entries)().first()[0]
+
+            assertEquals(listOf(MediaId(2), MediaId(6), MediaId(5)), today.previews.map { it.id })
+            assertEquals(2016..2025, today.years)
+            assertEquals(3, today.hiddenCount)
+        }
+
+    @Test
+    fun `previews the sorted memories once the whole day is sorted`() =
+        runTest {
+            val media = listOf(takenOn(id = 1, LocalDate.of(2025, 7, 15)))
+            val entries = listOf(aReviewEntry(mediaId = 1, reviewYear = 2026, decision = KEPT))
+
+            val today = getReviewDays(today = LocalDate.of(2026, 7, 15), media, entries)().first()[0]
+
+            assertEquals(listOf(MediaId(1)), today.previews.map { it.id })
+            assertEquals(0, today.hiddenCount)
         }
 
     @Test
@@ -80,7 +118,7 @@ class GetReviewDaysTest {
 
             val days = getReviewDays(today = LocalDate.of(2027, 7, 15), media, entries)().first()
 
-            assertEquals(ReviewDay(LocalDate.of(2027, 7, 15), remainingCount = 1), days[0])
+            assertEquals(ReviewDay(LocalDate.of(2027, 7, 15), remainingCount = 1).counts(), days[0].counts())
         }
 
     @Test
@@ -99,8 +137,11 @@ class GetReviewDaysTest {
 
             val days = getReviewDays(today = LocalDate.of(2027, 1, 2), media, entries)().first()
 
-            assertEquals(ReviewDay(LocalDate.of(2027, 1, 2), remainingCount = 1), days.first())
-            assertEquals(ReviewDay(LocalDate.of(2026, 12, 28), remainingCount = 0, memoryCount = 1), days[5])
+            assertEquals(ReviewDay(LocalDate.of(2027, 1, 2), remainingCount = 1).counts(), days.first().counts())
+            assertEquals(
+                ReviewDay(LocalDate.of(2026, 12, 28), remainingCount = 0, memoryCount = 1).counts(),
+                days[5].counts(),
+            )
         }
 
     @Test
@@ -114,7 +155,7 @@ class GetReviewDaysTest {
 
             val days = getReviewDays(today = LocalDate.of(2027, 2, 28), media)().first()
 
-            assertEquals(ReviewDay(LocalDate.of(2027, 2, 28), remainingCount = 2), days[0])
+            assertEquals(ReviewDay(LocalDate.of(2027, 2, 28), remainingCount = 2).counts(), days[0].counts())
         }
 
     @Test
@@ -170,4 +211,7 @@ class GetReviewDaysTest {
         id: Long,
         date: LocalDate,
     ): MediaItem = aMediaItem(id = id, takenAt = LocalDateTime.of(date, NOON).atZone(FixedClock.PARIS).toInstant())
+
+    /** Date et nombres d'un jour, sans ses vignettes. */
+    private fun ReviewDay.counts() = Triple(date, remainingCount, memoryCount)
 }
