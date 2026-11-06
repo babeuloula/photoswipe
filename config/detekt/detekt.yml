@@ -34,3 +34,18 @@ complexity:
     # Une implémentation de port (dépôt Room, fake de test) reprend toutes les méthodes de son
     # interface : c'est le port qui en fixe le nombre, pas la classe.
     ignoreOverridden: true
+
+# KDoc en français sur toute l'API publique (SPEC §12), vérifiée depuis PS-71. Les tests ne sont pas
+# concernés. Exceptions : les fonctions des modules Hilt (`di`), décrites par la KDoc de leur
+# module, et les `companion object`, dont les membres publics restent documentés un à un.
+comments:
+  UndocumentedPublicClass:
+    active: true
+    searchInInnerObject: false
+    excludes: ['**/test/**', '**/testDebug/**', '**/testRelease/**', '**/androidTest/**']
+  UndocumentedPublicFunction:
+    active: true
+    excludes: ['**/test/**', '**/testDebug/**', '**/testRelease/**', '**/androidTest/**', '**/di/**']
+  UndocumentedPublicProperty:
+    active: true
+    excludes: ['**/test/**', '**/testDebug/**', '**/testRelease/**', '**/androidTest/**']

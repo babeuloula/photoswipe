@@ -37,7 +37,11 @@ data class SettingsUiState(
 
 /** Action de l'utilisateur sur les réglages. */
 sealed interface SettingsEvent {
-    /** Interrupteur du rappel quotidien. */
+    /**
+     * Interrupteur du rappel quotidien.
+     *
+     * @property enabled nouvelle position de l'interrupteur.
+     */
     data class ReminderToggled(
         val enabled: Boolean,
     ) : SettingsEvent
@@ -45,7 +49,11 @@ sealed interface SettingsEvent {
     /** Appui sur l'heure du rappel : ouvrir le sélecteur. */
     data object PickReminderTime : SettingsEvent
 
-    /** Heure choisie dans le sélecteur. */
+    /**
+     * Heure choisie dans le sélecteur.
+     *
+     * @property time heure du rappel.
+     */
     data class ReminderTimePicked(
         val time: LocalTime,
     ) : SettingsEvent
@@ -74,7 +82,11 @@ sealed interface SettingsEvent {
     /** Appui sur « Thème » : ouvrir le choix du thème. */
     data object PickTheme : ThemeEvent
 
-    /** Thème choisi. */
+    /**
+     * Thème choisi.
+     *
+     * @property mode thème de l'application.
+     */
     data class ThemePicked(
         val mode: ThemeMode,
     ) : ThemeEvent

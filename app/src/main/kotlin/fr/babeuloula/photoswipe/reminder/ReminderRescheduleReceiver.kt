@@ -18,6 +18,7 @@ import javax.inject.Inject
  */
 @AndroidEntryPoint
 class ReminderRescheduleReceiver : BroadcastReceiver() {
+    /** Replanifie le rappel sur la nouvelle heure. */
     @Inject
     lateinit var rescheduleReminder: RescheduleReminder
 

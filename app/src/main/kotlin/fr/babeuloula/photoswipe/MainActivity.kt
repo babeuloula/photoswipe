@@ -45,9 +45,11 @@ import javax.inject.Inject
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    /** Chargeur d'images de l'application, fourni aux écrans par [LocalImageLoader]. */
     @Inject
     lateinit var imageLoader: ImageLoader
 
+    /** Réglages, lus pour le thème de l'application. */
     @Inject
     lateinit var settingsRepository: SettingsRepository
 

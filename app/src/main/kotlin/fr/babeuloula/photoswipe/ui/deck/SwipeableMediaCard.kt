@@ -42,8 +42,13 @@ import kotlin.math.abs
 enum class CardSide(
     internal val direction: Offset,
 ) {
+    /** Gauche : marquée pour suppression. */
     LEFT(Offset(-1f, 0f)),
+
+    /** Droite : gardée. */
     RIGHT(Offset(1f, 0f)),
+
+    /** Haut : favori. */
     TOP(Offset(0f, -1f)),
 }
 

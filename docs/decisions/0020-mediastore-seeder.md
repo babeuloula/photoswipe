@@ -17,4 +17,4 @@ La SPEC §10 (niveau 3) demande, en debug seulement, un seeder qui insère de vr
 ## Alternatives envisagées
 - **Encoder les vidéos à la volée** (`MediaCodec` + `MediaMuxer`) : bien plus de code, et `MediaMuxer` n'écrit pas de date de création.
 - **Seeder dans `:app`** : il dupliquerait l'accès à MediaStore hors de `:data`.
-- **Seeder seulement par `adb`** : ne teste pas l'insertion par l'app ; il reste prévu en complément (PS-70) pour les dialogues système.
+- **Seeder seulement par `adb`** : ne teste pas l'insertion par l'app ; il complète le seeder pour les dialogues système (`scripts/seed-emulator.sh`, PS-70).

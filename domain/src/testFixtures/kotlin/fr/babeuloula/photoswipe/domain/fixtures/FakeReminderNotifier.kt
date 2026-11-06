@@ -5,7 +5,12 @@ import java.time.LocalDate
 
 /** [ReminderNotifier] en mémoire : retient chaque notification envoyée, dans l'ordre. */
 class FakeReminderNotifier : ReminderNotifier {
-    /** Notification envoyée : le nombre de médias annoncés et le jour dont la pile s'ouvre. */
+    /**
+     * Notification envoyée.
+     *
+     * @property toSortCount nombre de médias annoncés.
+     * @property dayToSort jour dont la pile s'ouvre.
+     */
     data class Sent(
         val toSortCount: Int,
         val dayToSort: LocalDate,

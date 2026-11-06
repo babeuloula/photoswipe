@@ -5,6 +5,8 @@ package fr.babeuloula.photoswipe.domain.model
  *
  * Classe de valeur : elle évite de confondre un identifiant avec un autre `Long`
  * (taille, date…) sans coût à l'exécution.
+ *
+ * @property value valeur de la colonne `_ID` de MediaStore.
  */
 @JvmInline
 value class MediaId(

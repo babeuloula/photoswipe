@@ -94,7 +94,11 @@ sealed interface SummaryEffect {
     /** Revenir à l'écran précédent. */
     data object Close : SummaryEffect
 
-    /** Lancer un dialogue système ; la réponse revient par [SummaryEvent.SystemRequestAnswered]. */
+    /**
+     * Lancer un dialogue système ; la réponse revient par [SummaryEvent.SystemRequestAnswered].
+     *
+     * @property intentSender dialogue de corbeille ou de favoris à lancer.
+     */
     data class LaunchSystemRequest(
         val intentSender: IntentSender,
     ) : SummaryEffect

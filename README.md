@@ -25,15 +25,23 @@ L'APK seul se construit avec `./gradlew assembleDebug` (dans `app/build/outputs/
 
 ```bash
 ./gradlew test                         # tous les tests unitaires, sans émulateur
-./gradlew quality                      # ktlint, detekt et Android Lint
-./gradlew test quality assembleDebug   # ce que lance la CI
+./gradlew quality                      # ktlint, detekt (KDoc comprise) et Android Lint
+./gradlew test quality assembleDebug   # ce que lance le job obligatoire de la CI
+./gradlew connectedDebugAndroidTest    # tests instrumentés, émulateur démarré (second job de la CI)
+python3 -m unittest discover -s scripts && shellcheck scripts/*.sh   # tests du script de l'émulateur
 ```
 
 Stratégie, tests par module et commandes ciblées : [docs/testing.md](docs/testing.md).
 
-## Utiliser le seeder *(prévu, epic 10)*
+## Remplir l'émulateur de souvenirs
 
-Un seeder de debug et un script `scripts/seed-emulator.sh` rempliront l'émulateur de photos et vidéos datées, pour tester l'application sans ses propres souvenirs.
+Trois façons de tester l'application sans ses propres photos, toutes réservées au développement :
+
+- **Données de démo** (version debug) : « Outils dev PhotoSwipe » (icône à part dans le lanceur, ou Réglages › Outils développeur) › « Données de démo ». La galerie est remplacée par des souvenirs générés, sans fichiers : idéal pour l'accueil et les compteurs.
+- **Seeder** (version debug) : mêmes outils › « Médias d'exemple dans la galerie » › « Ajouter ». De vraies photos et vidéos datées sont insérées dans MediaStore (dossier « PhotoSwipe seed »), une par année sur 5 ans pour aujourd'hui et les 6 jours précédents ; « Retirer » les supprime. Elles appartiennent à l'application : Android peut ne pas afficher ses dialogues de corbeille et de favori pour elles.
+- **Script adb** : `scripts/seed-emulator.sh` pousse des photos JPEG datées par EXIF dans `/sdcard/Pictures/PhotoSwipeAdb` et lance un scan ; `--remove` les retire. Ces photos n'appartiennent pas à l'application : les dialogues système s'affichent. Prérequis : `adb` dans le `PATH`, `python3` et `ffmpeg` (`brew install ffmpeg`).
+
+Détails : [docs/testing.md](docs/testing.md#4-fixtures).
 
 ## Documentation
 

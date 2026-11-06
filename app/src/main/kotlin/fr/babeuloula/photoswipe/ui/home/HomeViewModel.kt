@@ -52,7 +52,11 @@ sealed interface HomeUiState {
 
 /** Action de l'utilisateur ou du système sur l'accueil. */
 sealed interface HomeEvent {
-    /** Tap sur la carte « Aujourd'hui » ou sur un jour à rattraper. */
+    /**
+     * Tap sur la carte « Aujourd'hui » ou sur un jour à rattraper.
+     *
+     * @property date jour dont la pile s'ouvre.
+     */
     data class OpenDay(
         val date: LocalDate,
     ) : HomeEvent
