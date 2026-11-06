@@ -107,7 +107,7 @@ photoswipe/
 │   └── src/
 │       ├── main/
 │       │   ├── AndroidManifest.xml   Carte d'identité de l'application
-│       │   ├── kotlin/               Code Kotlin : PhotoSwipeApplication, MainActivity, di/ (modules Hilt), permission/ (lecture des autorisations), ui/ (écrans Compose : ui/navigation/ pour le passage d'un écran à l'autre, ui/permission/ pour l'accès aux photos, ui/home/ pour l'accueil, ui/deck/ pour la pile de swipe et la carte de chaque média, ui/summary/ pour le résumé avant confirmation, ui/settings/ pour les réglages) et ui/theme/ (thème Material 3)
+│       │   ├── kotlin/               Code Kotlin : PhotoSwipeApplication, MainActivity, di/ (modules Hilt), permission/ (lecture des autorisations), reminder/ (replanification du rappel après un changement d'heure), ui/ (écrans Compose : ui/navigation/ pour le passage d'un écran à l'autre, ui/permission/ pour l'accès aux photos, ui/home/ pour l'accueil, ui/deck/ pour la pile de swipe et la carte de chaque média, ui/summary/ pour le résumé avant confirmation, ui/settings/ pour les réglages) et ui/theme/ (thème Material 3)
 │       │   └── res/                  Ressources : textes (values/ en anglais, values-fr/ en français), thème de la fenêtre (themes.xml), icônes
 │       ├── debug/                    Code présent seulement dans la version de développement : outils développeur et données de démo
 │       ├── release/                  Code présent seulement dans la version publiée (lecture de la vraie galerie)
@@ -128,6 +128,7 @@ photoswipe/
 │   ├── build.gradle.kts
 │   ├── schemas/                      Description de la base Room, générée à la compilation et versionnée (sert à tester les migrations)
 │   ├── src/main/kotlin/…/database/   La base Room : la table des décisions (ReviewEntryEntity) et ses requêtes (ReviewEntryDao), le journal des décisions pour « Annuler » (DecisionRecordEntity, DecisionJournalDao)
+│   ├── src/main/kotlin/…/reminder/   WorkManagerReminderScheduler : planifie chaque jour la tâche du rappel (WorkManager)
 │   ├── src/main/kotlin/…/review/     RoomReviewRepository : enregistre les décisions du domaine dans la base ; RoomDecisionJournal : tient le journal des décisions
 │   ├── src/main/kotlin/…/settings/   DataStoreSettingsRepository : enregistre les réglages (rappel quotidien)
 │   ├── src/main/kotlin/…/media/      MediaStoreMediaSource : lit les photos et vidéos de la galerie du téléphone (MediaStore)

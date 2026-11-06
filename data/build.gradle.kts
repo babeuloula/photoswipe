@@ -13,11 +13,14 @@ android {
 dependencies {
     implementation(project(":domain"))
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.work.runtime)
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
     // Builders, fakes et FixedClock du domaine (SPEC §10).
     testImplementation(testFixtures(project(":domain")))
+    // WorkManager synchrone sur Robolectric (WorkManagerTestInitHelper).
+    testImplementation(libs.work.testing)
 
     // Tests instrumentés sur appareil ou émulateur : ./gradlew :data:connectedDebugAndroidTest
     androidTestImplementation(libs.androidx.test.runner)
