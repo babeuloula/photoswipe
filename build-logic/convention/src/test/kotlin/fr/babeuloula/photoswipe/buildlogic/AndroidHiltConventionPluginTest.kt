@@ -31,4 +31,13 @@ class AndroidHiltConventionPluginTest {
         project.pluginManager.apply(AndroidHiltConventionPlugin::class.java)
         return project
     }
+
+    @Test
+    fun `ksp processing tasks of every variant are recognized to stay out of the build cache`() {
+        assertTrue(isKspTask("kspDebugKotlin"))
+        assertTrue(isKspTask("kspReleaseKotlin"))
+        assertTrue(isKspTask("kspReleaseUnitTestKotlin"))
+        assertFalse(isKspTask("compileReleaseKotlin"))
+        assertFalse(isKspTask("hiltJavaCompileRelease"))
+    }
 }
