@@ -363,11 +363,10 @@ private fun TopRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        FilmEdgeLabel(
-            text = memoryLabel(context, card.yearsAgo, card.takenOn),
-            modifier = Modifier.weight(1f, fill = false),
-        )
-        Spacer(Modifier.weight(1f))
+        // Le repère prend toute la place laissée par le cœur et le bouton du son, sans être coupé.
+        Box(modifier = Modifier.weight(1f)) {
+            FilmEdgeLabel(text = memoryLabel(context, card.yearsAgo, card.takenOn))
+        }
         // Déjà en favori dans la galerie, ou en attente dans l'application (PS-86).
         if (card.favorite) {
             Surface(
