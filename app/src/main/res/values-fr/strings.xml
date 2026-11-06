@@ -87,11 +87,20 @@
     <string name="home_retry">Réessayer</string>
     <string name="home_previous_days">À rattraper</string>
     <string name="home_pending_deletions_review">Vérifier</string>
-    <string name="home_today_done">Tout est trié pour aujourd\'hui\u00A0!</string>
-    <string name="home_today_no_memories">Aucun souvenir pour ce jour</string>
-    <string name="home_today_come_back">Rattrapez les jours ci-dessous, ou revenez demain.</string>
+    <string name="home_today_done">Tout est trié pour aujourd\'hui</string>
+    <string name="home_today_no_memories">Aucun souvenir aujourd\'hui</string>
+    <string name="home_today_no_memories_body">Aucune photo ni vidéo prise un %1$s les années précédentes. Il reste des jours à rattraper.</string>
+    <string name="home_today_with_date">Aujourd\'hui · %1$s</string>
     <string name="home_empty_title">Aucun souvenir cette semaine</string>
-    <string name="home_empty_body">Aucune photo ni vidéo n\'a été prise ces jours-là les années précédentes. De nouveaux souvenirs apparaîtront ici jour après jour.</string>
+    <string name="home_empty_body">Aucune photo ni vidéo prise du %1$s au %2$s les années précédentes. Revenez demain.</string>
+    <string name="home_start_sorting">Commencer le tri</string>
+    <string name="home_view_summary">Voir le résumé</string>
+    <string name="home_years_range">De %1$d à %2$d</string>
+    <string name="home_year_single">En %1$d</string>
+    <string name="home_more_memories">+%1$d</string>
+    <string name="home_more_memories_description">et %1$d autres</string>
+    <string name="home_day_no_memories">Aucun souvenir</string>
+    <string name="home_day_done">Tout est trié</string>
     <!-- Notification du rappel quotidien (SPEC §3.6). -->
     <string name="reminder_channel_name">Rappel quotidien</string>
     <string name="reminder_channel_description">Vous rappelle une fois par jour qu\'il reste des souvenirs à trier.</string>
