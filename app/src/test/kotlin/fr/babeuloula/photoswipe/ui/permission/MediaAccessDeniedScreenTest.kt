@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -49,9 +50,9 @@ class MediaAccessDeniedScreenTest {
     fun `explains the refusal and opens the settings`() {
         show(canAskAgain = false)
 
-        composeRule.onNodeWithText(text(R.string.media_access_denied_title)).assertIsDisplayed()
-        composeRule.onNodeWithText(text(R.string.media_access_denied_body)).assertIsDisplayed()
-        composeRule.onNodeWithText(text(R.string.media_access_open_settings)).performClick()
+        composeRule.onNodeWithText(text(R.string.media_access_denied_title)).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.media_access_denied_body)).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.media_access_open_settings)).performScrollTo().performClick()
 
         assertEquals(listOf("settings"), clicks)
     }
@@ -67,7 +68,7 @@ class MediaAccessDeniedScreenTest {
     fun `lets the user try again while android still asks`() {
         show(canAskAgain = true)
 
-        composeRule.onNodeWithText(text(R.string.media_access_try_again)).performClick()
+        composeRule.onNodeWithText(text(R.string.media_access_try_again)).performScrollTo().performClick()
 
         assertEquals(listOf("again"), clicks)
     }
@@ -77,7 +78,7 @@ class MediaAccessDeniedScreenTest {
     fun `shows the refusal in french`() {
         show(canAskAgain = true)
 
-        composeRule.onNodeWithText("Ouvrir les réglages").assertIsDisplayed()
-        composeRule.onNodeWithText("Réessayer").assertIsDisplayed()
+        composeRule.onNodeWithText("Ouvrir les réglages").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Réessayer").performScrollTo().assertIsDisplayed()
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -34,9 +35,12 @@ class PermissionRationaleScreenTest {
     fun `explains what the app does, why it needs media access and that nothing leaves the phone`() {
         listOf(
             R.string.permission_rationale_what,
+            R.string.permission_rationale_why_title,
             R.string.permission_rationale_why,
+            R.string.permission_rationale_private_title,
             R.string.permission_rationale_private,
-        ).forEach { composeRule.onNodeWithText(text(it)).assertIsDisplayed() }
+            R.string.permission_rationale_next,
+        ).forEach { composeRule.onNodeWithText(text(it)).performScrollTo().assertIsDisplayed() }
     }
 
     @Test
