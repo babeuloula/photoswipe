@@ -38,6 +38,7 @@ import fr.babeuloula.photoswipe.ui.settings.SettingsUiState
 import fr.babeuloula.photoswipe.ui.summary.SummaryScreen
 import fr.babeuloula.photoswipe.ui.summary.SummaryUiState
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import fr.babeuloula.photoswipe.ui.tutorial.TutorialScreen
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -101,6 +102,7 @@ class AccessibilityTest {
     }
 
     private fun everyScreen() {
+        check { TutorialScreen(onDone = {}) }
         check { PermissionRationaleScreen(onContinue = {}) }
         check { MediaAccessDeniedScreen(canAskAgain = false, onOpenSettings = {}, onTryAgain = {}) }
         check { LimitedAccessBanner(onManageAccess = {}) }

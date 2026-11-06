@@ -126,3 +126,4 @@ Objectifs de la SPEC : couverture du domaine **≥ 90 %** (pas encore mesurée a
 Le job obligatoire lance aussi, avant Gradle, les tests Python de `scripts/` et `shellcheck scripts/*.sh`.
 
  Le résumé du run liste les tests passés et échoués ; en cas d'échec, les rapports sont publiés en artefact. Un nouveau type de test s'ajoute à la CI dans la PR qui l'introduit.
+- **Tutoriel au premier lancement** : les réglages DataStore sont vides au début de chaque test Robolectric, donc `MainActivity` montre d'abord le tutoriel (`FirstLaunchTest`). Un test qui démarre `MainActivity` et attend l'explication d'accès ou l'accueil désinstalle `TutorialModule` et lie `ShouldShowTutorial` et `MarkTutorialSeen` construits sur `FakeSettingsRepository(tutorialVersionSeen = Tutorial.CURRENT_VERSION)` (`@UninstallModules`, `@BindValue`), comme `MainActivityTest` (ADR 0027).

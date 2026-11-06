@@ -8,9 +8,16 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.Lifecycle
+import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
+import dagger.hilt.android.testing.UninstallModules
+import fr.babeuloula.photoswipe.di.TutorialModule
+import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
+import fr.babeuloula.photoswipe.domain.model.Tutorial
+import fr.babeuloula.photoswipe.domain.usecase.MarkTutorialSeen
+import fr.babeuloula.photoswipe.domain.usecase.ShouldShowTutorial
 import fr.babeuloula.photoswipe.permission.MEDIA_PERMISSIONS
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -24,12 +31,22 @@ import org.robolectric.annotation.Config
 @HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)
 @Config(application = HiltTestApplication::class)
+@UninstallModules(TutorialModule::class)
 class MainActivityTest {
     @get:Rule(order = 0)
     val hiltRule = HiltAndroidRule(this)
 
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    /** Tutoriel déjà vu : le test commence sur l'écran d'accès aux médias. */
+    @BindValue
+    @JvmField
+    val shouldShowTutorial = ShouldShowTutorial(FakeSettingsRepository(tutorialVersionSeen = Tutorial.CURRENT_VERSION))
+
+    @BindValue
+    @JvmField
+    val markTutorialSeen = MarkTutorialSeen(FakeSettingsRepository())
 
     @Test
     fun `main activity stays in portrait`() {
