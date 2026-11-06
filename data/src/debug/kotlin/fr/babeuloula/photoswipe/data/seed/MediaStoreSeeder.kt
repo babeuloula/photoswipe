@@ -106,8 +106,15 @@ class MediaStoreSeeder
         private fun seededIds(collection: Collection): List<Long> {
             val arguments =
                 Bundle().apply {
-                    putString(ContentResolver.QUERY_ARG_SQL_SELECTION, "${MediaStore.MediaColumns.RELATIVE_PATH} = ?")
-                    putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, arrayOf(collection.relativePath))
+                    // Dossier ou nom : MediaStore peut mettre le dossier à jour un peu après l'insertion.
+                    putString(
+                        ContentResolver.QUERY_ARG_SQL_SELECTION,
+                        "${MediaStore.MediaColumns.RELATIVE_PATH} = ? OR ${MediaStore.MediaColumns.DISPLAY_NAME} LIKE ?",
+                    )
+                    putStringArray(
+                        ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                        arrayOf(collection.relativePath, "${SeedMedia.FILE_PREFIX}%"),
+                    )
                     putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_INCLUDE)
                     putInt(MediaStore.QUERY_ARG_MATCH_PENDING, MediaStore.MATCH_INCLUDE)
                 }
