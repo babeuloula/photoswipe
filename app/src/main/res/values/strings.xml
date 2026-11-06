@@ -62,6 +62,16 @@
     <string name="settings_reminder_time_picker">Choose the reminder time</string>
     <string name="settings_reminder_permission_denied">Without notification permission, PhotoSwipe can\'t remind you: the reminder stays off.</string>
     <string name="settings_reminder_open_settings">Settings</string>
+    <string name="settings_about_section">About</string>
+    <string name="settings_about_version">Version</string>
+    <string name="settings_about_licenses">Licenses</string>
+    <string name="settings_about_licenses_summary">PhotoSwipe and its open source libraries, under the Apache 2.0 license</string>
+    <!-- Licences (« À propos » des réglages). -->
+    <string name="licenses_title">Licenses</string>
+    <string name="licenses_app_notice">Copyright 2026 Jérémy Reynaud. Licensed under the Apache License, Version 2.0.</string>
+    <string name="licenses_libraries">Open source libraries</string>
+    <string name="licenses_library_notice">%1$s · Apache License 2.0</string>
+    <string name="licenses_apache_text">Apache License, Version 2.0</string>
     <!-- Accueil (SPEC §4.2). -->
     <string name="home_today">Today</string>
     <string name="home_error">Your memories could not be loaded.</string>

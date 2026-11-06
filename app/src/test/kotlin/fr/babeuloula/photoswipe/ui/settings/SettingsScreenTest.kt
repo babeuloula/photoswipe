@@ -8,6 +8,7 @@ import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -107,5 +108,20 @@ class SettingsScreenTest {
 
         composeRule.onNodeWithText("Rappel quotidien").assertExists()
         composeRule.onNodeWithText("Me le rappeler chaque jour").assertExists()
+    }
+
+    @Test
+    fun `shows the app version and opens the licenses from the about section`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
+        val version =
+            composeRule.activity.packageManager
+                .getPackageInfo(composeRule.activity.packageName, 0)
+                .versionName!!
+
+        composeRule.onNodeWithText(text(R.string.settings_about_section)).performScrollTo().assertExists()
+        composeRule.onNodeWithText(version).performScrollTo().assertExists()
+        composeRule.onNodeWithText(text(R.string.settings_about_licenses)).performScrollTo().performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenLicenses), events)
     }
 }

@@ -40,3 +40,7 @@ data class SummaryRoute(
 /** Réglages (SPEC §4.5). */
 @Serializable
 data object SettingsRoute
+
+/** Licences de l'application et de ses bibliothèques (« À propos » des réglages). */
+@Serializable
+data object LicensesRoute

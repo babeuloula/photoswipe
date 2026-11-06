@@ -43,3 +43,7 @@ Un seeder de debug et un script `scripts/seed-emulator.sh` rempliront l'émulate
 - [Tests](docs/testing.md) : stratégie, outils et commandes
 - [Décisions (ADR)](docs/decisions/) : décisions structurantes et leur justification, à partir du [modèle](docs/decisions/0000-template.md)
 - [CLAUDE.md](CLAUDE.md) : règles, commandes et processus de contribution
+
+## Licence
+
+PhotoSwipe est distribué sous [licence Apache 2.0](LICENSE). Les bibliothèques embarquées, toutes sous licence Apache 2.0, sont listées dans l'application (Réglages › À propos › Licences).

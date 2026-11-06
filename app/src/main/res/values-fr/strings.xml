@@ -53,6 +53,16 @@
     <string name="settings_reminder_time_picker">Choisir l\'heure du rappel</string>
     <string name="settings_reminder_permission_denied">Sans autorisation de notification, PhotoSwipe ne peut pas vous le rappeler : le rappel reste désactivé.</string>
     <string name="settings_reminder_open_settings">Réglages</string>
+    <string name="settings_about_section">À propos</string>
+    <string name="settings_about_version">Version</string>
+    <string name="settings_about_licenses">Licences</string>
+    <string name="settings_about_licenses_summary">PhotoSwipe et ses bibliothèques open source, sous licence Apache 2.0</string>
+    <!-- Licences (« À propos » des réglages). -->
+    <string name="licenses_title">Licences</string>
+    <string name="licenses_app_notice">Copyright 2026 Jérémy Reynaud. Sous licence Apache, version 2.0.</string>
+    <string name="licenses_libraries">Bibliothèques open source</string>
+    <string name="licenses_library_notice">%1$s · Licence Apache 2.0</string>
+    <string name="licenses_apache_text">Licence Apache, version 2.0 (texte original en anglais)</string>
     <string name="home_today">Aujourd\'hui</string>
     <string name="home_error">Impossible de charger vos souvenirs.</string>
     <string name="home_retry">Réessayer</string>

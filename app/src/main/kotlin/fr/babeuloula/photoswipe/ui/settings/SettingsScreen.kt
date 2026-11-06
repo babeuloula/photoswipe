@@ -47,9 +47,9 @@ import java.time.ZoneId
 import java.util.Date
 
 /**
- * Réglages (SPEC §4) : pour l'instant le rappel quotidien (SPEC §3.6), activé ou non, et son
- * heure, choisie dans le sélecteur d'heure Material 3. La langue et « À propos » arrivent avec
- * l'écran complet des réglages (PS-63).
+ * Réglages (SPEC §4.5), en liste de préférences Material 3 : le rappel quotidien (SPEC §3.6),
+ * activé ou non, et son heure, choisie dans le sélecteur d'heure Material 3 ; puis « À propos » :
+ * version de l'application et licences. L'entrée « Langue » arrive avec PS-64.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,7 +86,10 @@ fun SettingsScreen(
             if (reminder == null) {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             } else {
-                ReminderSection(reminder, onEvent)
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    ReminderSection(reminder, onEvent)
+                    AboutSection(onEvent)
+                }
                 if (state.timePickerOpen) ReminderTimeDialog(reminder.time, onEvent)
             }
         }
@@ -99,16 +102,8 @@ private fun ReminderSection(
     reminder: ReminderSettings,
     onEvent: (SettingsEvent) -> Unit,
 ) {
-    Column(Modifier.verticalScroll(rememberScrollState())) {
-        Text(
-            text = stringResource(R.string.settings_reminder_section),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier =
-                Modifier
-                    .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp)
-                    .semantics { heading() },
-        )
+    Column {
+        SectionTitle(stringResource(R.string.settings_reminder_section))
         // Toute la ligne bascule l'interrupteur, et TalkBack l'annonce comme un interrupteur.
         ListItem(
             headlineContent = { Text(stringResource(R.string.settings_reminder_enabled)) },
@@ -129,6 +124,49 @@ private fun ReminderSection(
             modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.PickReminderTime) },
         )
     }
+}
+
+/** Section « À propos » : version de l'application et licences. */
+@Composable
+private fun AboutSection(onEvent: (SettingsEvent) -> Unit) {
+    Column {
+        SectionTitle(stringResource(R.string.settings_about_section))
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_about_version)) },
+            supportingContent = { Text(appVersion()) },
+        )
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_about_licenses)) },
+            supportingContent = { Text(stringResource(R.string.settings_about_licenses_summary)) },
+            modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenLicenses) },
+        )
+    }
+}
+
+/** Version de l'application installée (`versionName`). */
+@Composable
+private fun appVersion(): String {
+    val context = LocalContext.current
+    return remember(context) {
+        context.packageManager
+            .getPackageInfo(context.packageName, 0)
+            .versionName
+            .orEmpty()
+    }
+}
+
+/** Titre de section, annoncé comme tel par TalkBack. */
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier =
+            Modifier
+                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp)
+                .semantics { heading() },
+    )
 }
 
 /** Sélecteur d'heure Material 3, au format 12 ou 24 heures du téléphone. */

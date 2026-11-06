@@ -159,6 +159,19 @@ class PhotoSwipeNavHostTest {
         awaitText(text(R.string.home_today))
     }
 
+    @Test
+    fun `opens the licenses from the settings and comes back`() {
+        awaitText(text(R.string.home_today))
+        composeRule.onNodeWithContentDescription(text(R.string.home_open_settings)).performClick()
+        awaitText(text(R.string.settings_title))
+        composeRule.onNodeWithText(text(R.string.settings_about_licenses)).performScrollTo().performClick()
+        awaitText(text(R.string.licenses_title))
+
+        goBack()
+
+        awaitText(text(R.string.settings_title))
+    }
+
     private companion object {
         const val TIMEOUT_MILLIS = 5_000L
     }

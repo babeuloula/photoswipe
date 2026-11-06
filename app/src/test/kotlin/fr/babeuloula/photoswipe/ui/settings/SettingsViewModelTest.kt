@@ -184,6 +184,16 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `opens the licenses`() =
+        runTest {
+            val viewModel = settingsViewModel()
+
+            viewModel.onEvent(SettingsEvent.OpenLicenses)
+
+            assertEquals(SettingsEffect.OpenLicenses, viewModel.uiEffects.first())
+        }
+
+    @Test
     fun `goes back with the back arrow`() =
         runTest {
             val viewModel = settingsViewModel()
