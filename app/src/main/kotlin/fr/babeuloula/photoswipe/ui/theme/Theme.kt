@@ -33,7 +33,10 @@ fun PhotoSwipeTheme(
             else -> LightColorScheme
         }
 
-    CompositionLocalProvider(LocalSwipeColors provides swipeColors(colorScheme, darkTheme)) {
+    CompositionLocalProvider(
+        LocalSwipeColors provides swipeColors(colorScheme, darkTheme),
+        LocalPhotoSwipeMotion provides PhotoSwipeMotion(),
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = PhotoSwipeTypography,

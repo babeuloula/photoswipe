@@ -1,9 +1,7 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
@@ -32,6 +30,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import fr.babeuloula.photoswipe.ui.theme.motion
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -94,6 +93,10 @@ fun SwipeableMediaCard(
         val drag = remember { mutableStateOf(Offset.Zero) }
         val scope = rememberCoroutineScope()
         val haptics = LocalHapticFeedback.current
+        // Ressorts du thème (SPEC §8) : retour au centre avec un léger rebond, sortie rapide.
+        val motion = MaterialTheme.motion
+        val returnSpring = remember(motion) { motion.defaultSpatial<Offset>() }
+        val exitSpring = remember(motion) { motion.fastSpatial<Offset>() }
 
         /** Sortie de la carte par [side], voile plein de ce côté, puis décision. */
         suspend fun exit(side: CardSide) {
@@ -314,11 +317,3 @@ private const val EXIT_DISTANCE = 1.5f
 
 /** Inclinaison quand la carte a parcouru toute sa largeur. */
 private const val MAX_ROTATION_DEGREES = 12f
-
-/** Retour au centre souple, avec un léger rebond. */
-private val returnSpring =
-    spring<Offset>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
-
-/** Sortie franche, sans rebond. */
-private val exitSpring =
-    spring<Offset>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)

@@ -69,6 +69,7 @@ La configuration commune est portée par des plugins de convention, dans le buil
 
 ### Thème et interface (Compose, Material 3)
 
+- **Mouvement (SPEC §8)** : `MaterialTheme.motion` (`PhotoSwipeMotion`) fournit les ressorts spatiaux (léger rebond) et d'effets (sans rebond) du schéma Expressive de Material 3, en attendant que `MaterialTheme.motionScheme` soit public dans Material 3 stable. Les écrans s'enchaînent en axe partagé horizontal (`SharedAxisTransitions`, glissement d'un dixième de largeur et fondu), y compris pendant le retour prédictif.
 - **Grands écrans (SPEC §8)** : `currentWindowLayout()` (`ui/common/WindowLayout.kt`) lit la classe de taille de fenêtre de Material 3 Adaptive : `COMPACT` (téléphone, portrait verrouillé), `MEDIUM` (contenu centré, `CenteredContent`, 640 dp au plus), `EXPANDED` et `SHORT` (deux volets : accueil « Aujourd'hui » / jours à rattraper, pile avec boutons en colonne à côté de la carte). Android 16+ ignore le verrou de portrait sur les grands écrans pour notre cible SDK.
 
 - `MainActivity` appelle `enableEdgeToEdge()` puis affiche `PhotoSwipeTheme { PhotoSwipeApp() }`. L'application est dessinée sous les barres système, rendues transparentes.
