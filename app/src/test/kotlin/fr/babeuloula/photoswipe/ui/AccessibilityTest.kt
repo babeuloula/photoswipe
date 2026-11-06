@@ -31,6 +31,7 @@ import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
 import fr.babeuloula.photoswipe.ui.permission.LimitedAccessBanner
 import fr.babeuloula.photoswipe.ui.permission.MediaAccessDeniedScreen
 import fr.babeuloula.photoswipe.ui.permission.PermissionRationaleScreen
+import fr.babeuloula.photoswipe.ui.settings.SettingsEnvironment
 import fr.babeuloula.photoswipe.ui.settings.SettingsScreen
 import fr.babeuloula.photoswipe.ui.settings.SettingsUiState
 import fr.babeuloula.photoswipe.ui.summary.SummaryScreen
@@ -145,7 +146,7 @@ class AccessibilityTest {
             SettingsScreen(
                 state = SettingsUiState(reminder = ReminderSettings.DEFAULT.copy(enabled = true)),
                 onEvent = {},
-                languageLabel = "English",
+                environment = SettingsEnvironment(languageLabel = "English"),
             )
         }
         check { LicensesScreen(onBack = {}, licenseText = "Apache License, Version 2.0") }

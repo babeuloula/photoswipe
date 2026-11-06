@@ -50,7 +50,7 @@ import java.util.Date
 /**
  * Réglages (SPEC §4.5), en liste de préférences Material 3 : le rappel quotidien (SPEC §3.6),
  * activé ou non, et son heure, choisie dans le sélecteur d'heure Material 3 ; la langue de
- * l'application ([languageLabel]), choisie dans le réglage de langue par application d'Android ;
+ * l'application ([SettingsEnvironment.languageLabel]), choisie dans le réglage de langue par application d'Android ;
  * puis « À propos » : version de l'application et licences.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,7 +59,7 @@ fun SettingsScreen(
     state: SettingsUiState,
     onEvent: (SettingsEvent) -> Unit,
     modifier: Modifier = Modifier,
-    languageLabel: String = "",
+    environment: SettingsEnvironment = SettingsEnvironment(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     Scaffold(
@@ -92,8 +92,8 @@ fun SettingsScreen(
                 CenteredContent {
                     Column(Modifier.verticalScroll(rememberScrollState())) {
                         ReminderSection(reminder, onEvent)
-                        LanguageSection(languageLabel, onEvent)
-                        AboutSection(onEvent)
+                        LanguageSection(environment.languageLabel, onEvent)
+                        AboutSection(onEvent, environment.showDeveloperTools)
                     }
                 }
                 if (state.timePickerOpen) ReminderTimeDialog(reminder.time, onEvent)
@@ -132,6 +132,17 @@ private fun ReminderSection(
     }
 }
 
+/**
+ * Ce que les réglages lisent hors de leur ViewModel.
+ *
+ * @property languageLabel langue de l'application, lue dans le système (SPEC §9).
+ * @property showDeveloperTools vrai si la variante a des outils développeur (debug, SPEC §10).
+ */
+data class SettingsEnvironment(
+    val languageLabel: String = "",
+    val showDeveloperTools: Boolean = false,
+)
+
 /** Section « Langue » : la langue de l'application, choisie dans les réglages d'Android (SPEC §9). */
 @Composable
 private fun LanguageSection(
@@ -150,7 +161,10 @@ private fun LanguageSection(
 
 /** Section « À propos » : version de l'application et licences. */
 @Composable
-private fun AboutSection(onEvent: (SettingsEvent) -> Unit) {
+private fun AboutSection(
+    onEvent: (SettingsEvent) -> Unit,
+    showDeveloperTools: Boolean,
+) {
     Column {
         SectionTitle(stringResource(R.string.settings_about_section))
         ListItem(
@@ -162,6 +176,13 @@ private fun AboutSection(onEvent: (SettingsEvent) -> Unit) {
             supportingContent = { Text(stringResource(R.string.settings_about_licenses_summary)) },
             modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenLicenses) },
         )
+        // Variante debug seulement (SPEC §10).
+        if (showDeveloperTools) {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_developer_tools)) },
+                modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenDeveloperTools) },
+            )
+        }
     }
 }
 
@@ -239,7 +260,7 @@ private fun SettingsScreenPreview() {
     PhotoSwipeTheme {
         SettingsScreen(
             state = SettingsUiState(reminder = ReminderSettings.DEFAULT.copy(enabled = true)),
-            languageLabel = "Français",
+            environment = SettingsEnvironment(languageLabel = "Français"),
             onEvent = {},
         )
     }

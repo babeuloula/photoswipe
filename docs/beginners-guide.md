@@ -109,7 +109,7 @@ photoswipe/
 │       │   ├── AndroidManifest.xml   Carte d'identité de l'application
 │       │   ├── kotlin/               Code Kotlin : PhotoSwipeApplication, MainActivity, di/ (modules Hilt), permission/ (lecture des autorisations), locale/ (langue de l'application), reminder/ (notification du rappel, replanification après un changement d'heure), ui/ (écrans Compose : ui/navigation/ pour le passage d'un écran à l'autre, ui/permission/ pour l'accès aux photos, ui/home/ pour l'accueil, ui/deck/ pour la pile de swipe et la carte de chaque média, ui/summary/ pour le résumé avant confirmation, ui/settings/ pour les réglages, ui/licenses/ pour les licences) et ui/theme/ (thème Material 3)
 │       │   └── res/                  Ressources : textes (values/ en anglais, values-fr/ en français), thème de la fenêtre (themes.xml), icônes
-│       ├── debug/                    Code présent seulement dans la version de développement : outils développeur et données de démo
+│       ├── debug/                    Code présent seulement dans la version de développement : outils développeur (données de démo, remise à zéro des décisions), aussi ouverts depuis les réglages
 │       ├── release/                  Code présent seulement dans la version publiée (lecture de la vraie galerie)
 │       ├── test/                     Tests unitaires du module (Robolectric pour ce qui touche à Android)
 │       └── testDebug/, testRelease/  Tests propres à chaque version

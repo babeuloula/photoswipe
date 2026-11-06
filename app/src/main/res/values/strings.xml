@@ -69,6 +69,7 @@
     <string name="settings_about_version">Version</string>
     <string name="settings_about_licenses">Licenses</string>
     <string name="settings_about_licenses_summary">PhotoSwipe and its open source libraries, under the Apache 2.0 license</string>
+    <string name="settings_developer_tools">Developer tools</string>
     <!-- Licences (« À propos » des réglages). -->
     <string name="licenses_title">Licenses</string>
     <string name="licenses_app_notice">Copyright 2026 Jérémy Reynaud. Licensed under the Apache License, Version 2.0.</string>

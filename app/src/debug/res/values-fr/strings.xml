@@ -3,4 +3,11 @@
     <string name="developer_tools_title">Outils dev PhotoSwipe</string>
     <string name="developer_tools_demo_data">Données de démo</string>
     <string name="developer_tools_demo_data_hint">Remplace la galerie par des souvenirs générés pour les 7 derniers jours. Rouvrez PhotoSwipe pour appliquer.</string>
+    <string name="developer_tools_reset">Réinitialiser les décisions</string>
+    <string name="developer_tools_reset_hint">Oublie toutes les décisions : gardés, marqués, favoris en attente et historique d\'annulation. Vos photos et vidéos ne sont pas touchées.</string>
+    <string name="developer_tools_reset_action">Réinitialiser</string>
+    <string name="developer_tools_reset_confirm_title">Réinitialiser toutes les décisions ?</string>
+    <string name="developer_tools_reset_confirm_text">Tous les souvenirs redeviennent à trier. Impossible d\'annuler.</string>
+    <string name="developer_tools_reset_cancel">Annuler</string>
+    <string name="developer_tools_reset_done">Décisions réinitialisées. Rouvrez PhotoSwipe pour le voir.</string>
 </resources>
