@@ -12,6 +12,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.media3.common.MediaItem
@@ -303,7 +304,23 @@ fun rememberCardVideoPlayer(): CardVideoPlayer {
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { videoPlayer.pause() }
     LifecycleEventEffect(Lifecycle.Event.ON_START) { videoPlayer.resume() }
     DisposableEffect(videoPlayer) { onDispose { videoPlayer.release() } }
+    KeepScreenOnWhilePlaying(videoPlayer)
     return videoPlayer
+}
+
+/**
+ * Garde l'écran allumé tant que [videoPlayer] lit une vidéo (SPEC §4.3) : en pause, à la fin de la
+ * vidéo, sur une photo ou en quittant la pile, la mise en veille normale reprend. Passe par
+ * `keepScreenOn` de la vue, sans permission ni `WakeLock`.
+ */
+@Composable
+fun KeepScreenOnWhilePlaying(videoPlayer: CardVideoPlayer) {
+    val view = LocalView.current
+    val playing = videoPlayer.playingUri != null
+    DisposableEffect(view, playing) {
+        view.keepScreenOn = playing
+        onDispose { view.keepScreenOn = false }
+    }
 }
 
 /**
