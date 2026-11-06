@@ -9,8 +9,10 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
+import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.MediaAccess
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
@@ -19,6 +21,7 @@ import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.usecase.CleanOrphanEntries
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
+import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
 import fr.babeuloula.photoswipe.domain.usecase.PrepareFavorites
 import fr.babeuloula.photoswipe.domain.usecase.PrepareTrash
 import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
@@ -62,6 +65,11 @@ class SummaryViewModelTest {
 
     private val factory = FakeMediaActionRequestFactory(batchSize = 2)
 
+    private val settings = FakeSettingsRepository()
+
+    /** Accès « Gestion des médias » simulé, refusé par défaut. */
+    private var mediaManagementGranted = false
+
     private fun summaryViewModel(
         keptCount: Int = 0,
         reviews: ReviewRepository = repository,
@@ -81,8 +89,10 @@ class SummaryViewModelTest {
                             accessReader = { MediaAccess.FULL },
                             guard = { true },
                         ),
+                    offerManageMediaTip = OfferManageMediaTip(settings),
                 ),
             mediaActionIntents = { intentSender },
+            mediaManagement = { mediaManagementGranted },
         )
 
     private suspend fun mark(vararg ids: Long) {
@@ -452,4 +462,77 @@ class SummaryViewModelTest {
             return delegate.entriesMarkedForDeletion()
         }
     }
+
+    @Test
+    fun `asks its own confirmation before trashing when Android no longer asks`() =
+        runTest {
+            mark(1, 2)
+            mediaManagementGranted = true
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+            assertTrue((viewModel.uiState.value as SummaryUiState.Loaded).askingTrashConfirmation)
+            assertEquals(emptyList<SummaryEffect>(), effects)
+
+            viewModel.onEvent(SummaryEvent.TrashConfirmationAccepted)
+
+            assertFalse((viewModel.uiState.value as SummaryUiState.Loaded).askingTrashConfirmation)
+            assertTrue(effects.single() is SummaryEffect.LaunchSystemRequest)
+        }
+
+    @Test
+    fun `sends nothing to the trash when its own confirmation is dismissed`() =
+        runTest {
+            mark(1)
+            mediaManagementGranted = true
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+            viewModel.onEvent(SummaryEvent.TrashConfirmationDismissed)
+
+            assertFalse((viewModel.uiState.value as SummaryUiState.Loaded).askingTrashConfirmation)
+            assertEquals(emptyList<SummaryEffect>(), effects)
+            assertEquals(listOf(ReviewDecision.MARKED_FOR_DELETION), decisions())
+        }
+
+    @Test
+    fun `goes straight to the Android dialog without media management`() =
+        runTest {
+            mark(1)
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+
+            assertFalse((viewModel.uiState.value as SummaryUiState.Loaded).askingTrashConfirmation)
+            assertTrue(effects.single() is SummaryEffect.LaunchSystemRequest)
+        }
+
+    @Test
+    fun `offers media management on the home screen after an Android dialog was accepted`() =
+        runTest {
+            mark(1)
+            val viewModel = summaryViewModel()
+            collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
+
+            assertEquals(ManageMediaTip.OFFERED, settings.manageMediaTip)
+        }
+
+    @Test
+    fun `does not offer media management when Android dialogs were refused`() =
+        runTest {
+            mark(1)
+            val viewModel = summaryViewModel()
+            collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = false))
+
+            assertEquals(ManageMediaTip.NOT_OFFERED, settings.manageMediaTip)
+        }
 }

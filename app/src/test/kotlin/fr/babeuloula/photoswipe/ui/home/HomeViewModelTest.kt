@@ -3,9 +3,11 @@ package fr.babeuloula.photoswipe.ui.home
 import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
+import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
@@ -130,6 +132,52 @@ class HomeViewModelTest {
             assertEquals(HomeEffect.OpenSettings, viewModel.uiEffects.first())
         }
 
+    @Test
+    fun `offers media management once a system confirmation went through`() =
+        runTest {
+            settings.saveManageMediaTip(ManageMediaTip.OFFERED)
+
+            val state = loaded(homeViewModel(FakeMediaSource())) as HomeUiState.Loaded
+
+            assertEquals(true, state.showManageMediaTip)
+        }
+
+    @Test
+    fun `does not offer media management before any system confirmation`() =
+        runTest {
+            val state = loaded(homeViewModel(FakeMediaSource())) as HomeUiState.Loaded
+
+            assertEquals(false, state.showManageMediaTip)
+        }
+
+    @Test
+    fun `hides the media management tip once access is granted, on return from the settings`() =
+        runTest {
+            settings.saveManageMediaTip(ManageMediaTip.OFFERED)
+            val viewModel = homeViewModel(FakeMediaSource())
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+            mediaManagementGranted = true
+            viewModel.onEvent(HomeEvent.Resumed)
+
+            assertEquals(false, (viewModel.uiState.value as HomeUiState.Loaded).showManageMediaTip)
+        }
+
+    @Test
+    fun `opens the media management setting and closes the tip for good`() =
+        runTest {
+            settings.saveManageMediaTip(ManageMediaTip.OFFERED)
+            val viewModel = homeViewModel(FakeMediaSource())
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+            viewModel.onEvent(HomeEvent.OpenManageMediaSettings)
+            assertEquals(HomeEffect.OpenManageMediaSettings, viewModel.uiEffects.first())
+            viewModel.onEvent(HomeEvent.DismissManageMediaTip)
+
+            assertEquals(ManageMediaTip.DISMISSED, settings.manageMediaTip)
+            assertEquals(false, (viewModel.uiState.value as HomeUiState.Loaded).showManageMediaTip)
+        }
+
     /** État chargé avec [count] médias à trier sur [memories] souvenirs aujourd'hui, et aucun les jours précédents. */
     private fun loadedWithToday(
         count: Int,
@@ -140,10 +188,17 @@ class HomeViewModelTest {
             previousDays = (1L..6L).map { ReviewDay(today.minusDays(it), remainingCount = 0) },
         )
 
+    private val settings = FakeSettingsRepository()
+
+    /** Accès « Gestion des médias » simulé, refusé par défaut. */
+    private var mediaManagementGranted = false
+
     private fun homeViewModel(source: MediaSource): HomeViewModel =
         HomeViewModel(
             GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, clock),
             GetSessionSummary(repository),
+            settings,
+            mediaManagement = { mediaManagementGranted },
         )
 
     private suspend fun loaded(viewModel: HomeViewModel): HomeUiState =

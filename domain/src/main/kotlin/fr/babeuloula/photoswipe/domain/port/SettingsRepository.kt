@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.port
 
+import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
@@ -33,4 +34,13 @@ interface SettingsRepository {
 
     /** Enregistre le thème de l'application. */
     suspend fun saveThemeMode(mode: ThemeMode)
+
+    /**
+     * Conseil « Gestion des médias » de l'accueil : la valeur actuelle dès la collecte
+     * ([ManageMediaTip.DEFAULT] si rien n'est enregistré), puis chaque nouvelle valeur.
+     */
+    fun observeManageMediaTip(): Flow<ManageMediaTip>
+
+    /** Enregistre l'état du conseil « Gestion des médias ». */
+    suspend fun saveManageMediaTip(tip: ManageMediaTip)
 }

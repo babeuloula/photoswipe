@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
+import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import kotlinx.coroutines.flow.first
@@ -36,6 +37,17 @@ class SettingsFakesTest {
 
             assertEquals(ThemeMode.DARK, repository.observeThemeMode().first())
             assertEquals(ThemeMode.DARK, repository.themeMode)
+        }
+
+    @Test
+    fun `gives the media management tip as never offered until another state is saved`() =
+        runTest {
+            val repository = FakeSettingsRepository()
+            assertEquals(ManageMediaTip.NOT_OFFERED, repository.observeManageMediaTip().first())
+
+            repository.saveManageMediaTip(ManageMediaTip.OFFERED)
+
+            assertEquals(ManageMediaTip.OFFERED, repository.observeManageMediaTip().first())
         }
 
     @Test

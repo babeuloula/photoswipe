@@ -1,5 +1,10 @@
 package fr.babeuloula.photoswipe.ui.home
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -8,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -30,6 +36,7 @@ fun HomeRoute(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val confirmedMessage = confirmed?.let { confirmationMessage(it) }
     // Résultat de la confirmation du résumé : annoncé une fois, puis oublié. Le message part dans sa
     // propre coroutine : l'oubli fait disparaître [confirmed], ce qui relance cet effet sans l'annuler.
@@ -49,10 +56,24 @@ fun HomeRoute(
                 is HomeEffect.OpenDeck -> navigation.openDeck(effect.date)
                 HomeEffect.OpenSettings -> navigation.openSettings()
                 HomeEffect.OpenSummary -> navigation.openSummary()
+                HomeEffect.OpenManageMediaSettings -> openManageMediaSettings(context)
             }
         }
     }
     HomeScreen(state = state, onEvent = viewModel::onEvent, modifier = modifier, snackbarHostState = snackbarHostState)
+}
+
+/**
+ * Ouvre le réglage « Gestion des médias » d'Android pour PhotoSwipe ; à défaut (réglage absent sur
+ * l'appareil), les informations de l'application.
+ */
+internal fun openManageMediaSettings(context: Context) {
+    val packageUri = Uri.fromParts("package", context.packageName, null)
+    try {
+        context.startActivity(Intent(Settings.ACTION_REQUEST_MANAGE_MEDIA, packageUri))
+    } catch (_: ActivityNotFoundException) {
+        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageUri))
+    }
 }
 
 /** Message de l'annonce : la corbeille, puis les favoris, chacun s'il a eu lieu. */

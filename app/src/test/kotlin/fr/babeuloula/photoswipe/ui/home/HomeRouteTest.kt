@@ -10,6 +10,7 @@ import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
@@ -49,6 +50,8 @@ class HomeRouteTest {
             HomeViewModel(
                 GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), FakeMediaSource(), repository, clock),
                 GetSessionSummary(repository),
+                FakeSettingsRepository(),
+                mediaManagement = { false },
             )
         composeRule.activity.setContent {
             PhotoSwipeTheme {

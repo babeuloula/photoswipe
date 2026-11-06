@@ -8,8 +8,10 @@ import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
+import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.usecase.CleanOrphanEntries
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
+import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
 import fr.babeuloula.photoswipe.domain.usecase.PrepareFavorites
 import fr.babeuloula.photoswipe.domain.usecase.PrepareTrash
 import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
@@ -56,4 +58,8 @@ object ConfirmationModule {
         mediaSource: MediaSource,
         journal: DecisionJournal,
     ): CleanOrphanEntries = CleanOrphanEntries(reviewRepository, mediaSource, journal)
+
+    @Provides
+    fun provideOfferManageMediaTip(settingsRepository: SettingsRepository): OfferManageMediaTip =
+        OfferManageMediaTip(settingsRepository)
 }

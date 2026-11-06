@@ -103,6 +103,9 @@ fun SummaryScreen(
 
                 is SummaryUiState.Loaded -> {
                     CenteredContent { SummaryContent(state = state, onEvent = onEvent) }
+                    if (state.askingTrashConfirmation) {
+                        TrashConfirmationDialog(state.summary.markedForDeletionCount, onEvent)
+                    }
                 }
             }
         }
