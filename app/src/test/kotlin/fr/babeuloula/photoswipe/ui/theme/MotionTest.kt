@@ -32,6 +32,14 @@ class MotionTest {
     }
 
     @Test
+    fun `exits the card fast and without bounce, and raises the next one with the standard spring`() {
+        assertEquals(1f, spring(motion.fastExit<Float>()).dampingRatio)
+        assertEquals(1400f, spring(motion.fastExit<Float>()).stiffness)
+        assertEquals(0.9f, spring(motion.fastSpatialStandard<Float>()).dampingRatio)
+        assertEquals(1400f, spring(motion.fastSpatialStandard<Float>()).stiffness)
+    }
+
+    @Test
     fun `uses effect springs without bounce, faster than the spatial ones`() {
         listOf(motion.fastEffects<Float>(), motion.defaultEffects(), motion.slowEffects()).forEach {
             assertEquals(1f, spring(it).dampingRatio)

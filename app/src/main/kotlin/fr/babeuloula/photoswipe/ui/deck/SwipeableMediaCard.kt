@@ -98,10 +98,10 @@ fun SwipeableMediaCard(
         val drag = remember { mutableStateOf(Offset.Zero) }
         val scope = rememberCoroutineScope()
         val haptics = LocalHapticFeedback.current
-        // Ressorts du thème (SPEC §8) : retour au centre avec un léger rebond, sortie rapide.
+        // Ressorts du thème (SPEC §8) : retour au centre avec un léger rebond, sortie rapide sans rebond.
         val motion = MaterialTheme.motion
         val returnSpring = remember(motion) { motion.defaultSpatial<Offset>() }
-        val exitSpring = remember(motion) { motion.fastSpatial<Offset>() }
+        val exitSpring = remember(motion) { motion.fastExit<Offset>() }
 
         /** Sortie de la carte par [side], voile plein de ce côté, puis décision. */
         suspend fun exit(side: CardSide) {

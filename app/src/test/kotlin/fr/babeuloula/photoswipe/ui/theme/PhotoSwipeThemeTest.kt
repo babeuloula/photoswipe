@@ -8,6 +8,7 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -38,6 +39,18 @@ class PhotoSwipeThemeTest {
         val colors = colorSchemeOf { PhotoSwipeTheme(darkTheme = true, dynamicColor = false, content = it) }
 
         assertEquals(DarkColorScheme, colors)
+    }
+
+    @Test
+    fun `builds the fallback palettes from the amber seed, fixed roles included`() {
+        assertEquals(Color(0xFF785A0B), LightColorScheme.primary)
+        assertEquals(Color(0xFFEAC16C), DarkColorScheme.primary)
+        assertEquals(Color(0xFFFFF8F2), LightColorScheme.surface)
+        assertEquals(Color(0xFF15130F), DarkColorScheme.surface)
+        listOf(LightColorScheme, DarkColorScheme).forEach {
+            assertEquals(Color(0xFFEAC16C), it.primaryFixedDim)
+            assertEquals(Color(0xFF261A00), it.onPrimaryFixed)
+        }
     }
 
     @Test

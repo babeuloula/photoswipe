@@ -10,59 +10,85 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * Couleurs des indicateurs de la pile (SPEC §4.3) : vert pour garder, rouge pour supprimer, bleu
- * pour le menu favori.
+ * pour le menu favori, chacune avec son conteneur, plus doux, et leurs couleurs de contenu.
  *
- * Material 3 n'a pas de rôle « succès » : le vert est une couleur personnalisée du thème, générée
- * avec Material Theme Builder (source #4CAF50) pour le clair et le sombre. Le bleu l'est aussi
- * (source #2196F3) : le rôle `primary` suivrait le fond d'écran et ne serait pas toujours bleu. Le
- * rouge reprend le rôle `error` du schéma, couleurs dynamiques comprises.
+ * Material 3 n'a pas de rôle « succès » : le vert est une couleur personnalisée du thème, comme le
+ * bleu (le rôle `primary` suit le fond d'écran et ne serait pas toujours bleu). Ce sont les
+ * couleurs #1E8A4A et #2F6FD0 harmonisées vers la graine #8A6A1E (`Blend.harmonize` de
+ * material-color-utilities), aux tons 40 / 100 / 90 / 10 en clair et 80 / 20 / 30 / 90 en sombre
+ * (ADR 0025). Le rouge reprend les rôles `error` du schéma, couleurs dynamiques comprises.
  *
- * @property keep voile et bouton « Garder ».
+ * @property keep voile du geste « Garder », bouton pressé.
  * @property onKeep contenu (icône, texte) posé sur [keep].
- * @property delete voile et bouton « Supprimer ».
+ * @property keepContainer bouton « Garder » au repos, pastille du voile.
+ * @property onKeepContainer contenu posé sur [keepContainer].
+ * @property delete voile du geste « Supprimer », bouton pressé.
  * @property onDelete contenu posé sur [delete].
- * @property favorite voile du menu favori.
+ * @property deleteContainer bouton « Supprimer » au repos, pastille du voile.
+ * @property onDeleteContainer contenu posé sur [deleteContainer].
+ * @property favorite voile du menu favori, cœur des favoris.
  * @property onFavorite contenu posé sur [favorite].
+ * @property favoriteContainer pastille du voile du menu favori.
+ * @property onFavoriteContainer contenu posé sur [favoriteContainer].
  */
 @Immutable
 data class SwipeColors(
     val keep: Color,
     val onKeep: Color,
+    val keepContainer: Color,
+    val onKeepContainer: Color,
     val delete: Color,
     val onDelete: Color,
+    val deleteContainer: Color,
+    val onDeleteContainer: Color,
     val favorite: Color,
     val onFavorite: Color,
+    val favoriteContainer: Color,
+    val onFavoriteContainer: Color,
 )
 
-/** Vert de « garder » du thème clair, et sa couleur de contenu. */
-private val KeepLight = Color(0xFF2E6B30)
-private val OnKeepLight = Color(0xFFFFFFFF)
+/** Tons d'une couleur personnalisée : la couleur, son contenu, son conteneur et le contenu de celui-ci. */
+private data class CustomTones(
+    val color: Color,
+    val onColor: Color,
+    val container: Color,
+    val onContainer: Color,
+)
 
-/** Vert de « garder » du thème sombre, et sa couleur de contenu. */
-private val KeepDark = Color(0xFF94D78F)
-private val OnKeepDark = Color(0xFF00390A)
+/** Vert de « garder » du thème clair. */
+private val KeepLight = CustomTones(Color(0xFF316B16), Color(0xFFFFFFFF), Color(0xFFB1F48F), Color(0xFF062100))
 
-/** Bleu du menu favori du thème clair, et sa couleur de contenu. */
-private val FavoriteLight = Color(0xFF1F5FA6)
-private val OnFavoriteLight = Color(0xFFFFFFFF)
+/** Vert de « garder » du thème sombre. */
+private val KeepDark = CustomTones(Color(0xFF96D876), Color(0xFF103900), Color(0xFF1A5200), Color(0xFFB1F48F))
 
-/** Bleu du menu favori du thème sombre, et sa couleur de contenu. */
-private val FavoriteDark = Color(0xFFA4C9FF)
-private val OnFavoriteDark = Color(0xFF00315D)
+/** Bleu du menu favori du thème clair. */
+private val FavoriteLight = CustomTones(Color(0xFF00629D), Color(0xFFFFFFFF), Color(0xFFCFE5FF), Color(0xFF001D33))
+
+/** Bleu du menu favori du thème sombre. */
+private val FavoriteDark = CustomTones(Color(0xFF99CBFF), Color(0xFF003354), Color(0xFF004A78), Color(0xFFCFE5FF))
 
 /** Couleurs des indicateurs pour [colorScheme], en clair ou en sombre selon [darkTheme]. */
 internal fun swipeColors(
     colorScheme: ColorScheme,
     darkTheme: Boolean,
-): SwipeColors =
-    SwipeColors(
-        keep = if (darkTheme) KeepDark else KeepLight,
-        onKeep = if (darkTheme) OnKeepDark else OnKeepLight,
+): SwipeColors {
+    val keep = if (darkTheme) KeepDark else KeepLight
+    val favorite = if (darkTheme) FavoriteDark else FavoriteLight
+    return SwipeColors(
+        keep = keep.color,
+        onKeep = keep.onColor,
+        keepContainer = keep.container,
+        onKeepContainer = keep.onContainer,
         delete = colorScheme.error,
         onDelete = colorScheme.onError,
-        favorite = if (darkTheme) FavoriteDark else FavoriteLight,
-        onFavorite = if (darkTheme) OnFavoriteDark else OnFavoriteLight,
+        deleteContainer = colorScheme.errorContainer,
+        onDeleteContainer = colorScheme.onErrorContainer,
+        favorite = favorite.color,
+        onFavorite = favorite.onColor,
+        favoriteContainer = favorite.container,
+        onFavoriteContainer = favorite.onContainer,
     )
+}
 
 /** Fournies par [PhotoSwipeTheme]. */
 internal val LocalSwipeColors = staticCompositionLocalOf { swipeColors(LightColorScheme, darkTheme = false) }

@@ -43,10 +43,19 @@ class ContrastTest {
         assertReadable("$theme onPrimaryContainer", scheme.onPrimaryContainer, scheme.primaryContainer)
         assertReadable("$theme onSecondaryContainer", scheme.onSecondaryContainer, scheme.secondaryContainer)
         assertReadable("$theme onError", scheme.onError, scheme.error)
+        assertReadable("$theme onErrorContainer", scheme.onErrorContainer, scheme.errorContainer)
+        assertReadable("$theme onSurface on containers", scheme.onSurface, scheme.surfaceContainerHighest)
+        assertReadable("$theme onSurfaceVariant on containers", scheme.onSurfaceVariant, scheme.surfaceContainerHighest)
+        // Repère « Il y a 3 ans » et pastilles posées sur les photos : rôles fixes (ADR 0025).
+        assertReadable("$theme film edge label", scheme.primaryFixedDim, scheme.onPrimaryFixed)
+        assertReadable("$theme film edge chip", scheme.primaryFixed, scheme.onPrimaryFixed)
         val swipe = swipeColors(scheme, darkTheme)
         assertReadable("$theme onKeep", swipe.onKeep, swipe.keep)
         assertReadable("$theme onDelete", swipe.onDelete, swipe.delete)
         assertReadable("$theme onFavorite", swipe.onFavorite, swipe.favorite)
+        assertReadable("$theme onKeepContainer", swipe.onKeepContainer, swipe.keepContainer)
+        assertReadable("$theme onDeleteContainer", swipe.onDeleteContainer, swipe.deleteContainer)
+        assertReadable("$theme onFavoriteContainer", swipe.onFavoriteContainer, swipe.favoriteContainer)
     }
 
     @Test
