@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
  * Préférences de l'utilisateur (SPEC §5.2). Implémenté dans `:data` sur DataStore.
  *
  * La langue n'y figure pas : elle passe par le réglage de langue par application d'Android
- * (SPEC §4). Les réglages du tutoriel arriveront avec l'epic 11.
+ * (SPEC §4).
  */
 interface SettingsRepository {
     /** Réglages du rappel quotidien, [ReminderSettings.DEFAULT] tant que rien n'a été enregistré. */
@@ -43,4 +43,13 @@ interface SettingsRepository {
 
     /** Enregistre l'état du conseil « Gestion des médias ». */
     suspend fun saveManageMediaTip(tip: ManageMediaTip)
+
+    /**
+     * Version du tutoriel déjà vue (SPEC §4), [fr.babeuloula.photoswipe.domain.model.Tutorial.NEVER_SEEN]
+     * tant qu'il n'a jamais été vu.
+     */
+    suspend fun tutorialVersionSeen(): Int
+
+    /** Enregistre la version du tutoriel vue. */
+    suspend fun saveTutorialVersionSeen(version: Int)
 }

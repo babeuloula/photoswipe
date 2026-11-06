@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
+import fr.babeuloula.photoswipe.domain.model.Tutorial
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -27,7 +28,8 @@ import javax.inject.Inject
  * (ADR 0007). L'heure est stockée en minutes depuis minuit ; une valeur hors limites, ou un fichier
  * illisible, retombe sur la valeur par défaut au lieu de faire échouer l'écran. Le thème est stocké
  * par son nom ; un nom inconnu retombe sur [ThemeMode.DEFAULT], le thème du téléphone. De même pour
- * le conseil « Gestion des médias » ([ManageMediaTip.DEFAULT]).
+ * le conseil « Gestion des médias » ([ManageMediaTip.DEFAULT]). La version du tutoriel vue vaut
+ * [Tutorial.NEVER_SEEN] tant que rien n'est enregistré.
  *
  * @param dataStore magasin de préférences, unique pour son fichier : il est fourni par l'injection
  * de dépendances, jamais créé ici.
@@ -62,6 +64,13 @@ class DataStoreSettingsRepository
             dataStore.edit { it[MANAGE_MEDIA_TIP] = tip.name }
         }
 
+        override suspend fun tutorialVersionSeen(): Int =
+            preferences().first()[TUTORIAL_VERSION_SEEN] ?: Tutorial.NEVER_SEEN
+
+        override suspend fun saveTutorialVersionSeen(version: Int) {
+            dataStore.edit { it[TUTORIAL_VERSION_SEEN] = version }
+        }
+
         /** Préférences enregistrées ; un fichier illisible se lit comme vide. */
         private fun preferences(): Flow<Preferences> =
             dataStore.data.catch { error -> if (error is IOException) emit(emptyPreferences()) else throw error }
@@ -89,6 +98,7 @@ class DataStoreSettingsRepository
             val REMINDER_MINUTE_OF_DAY = intPreferencesKey("reminder_minute_of_day")
             val THEME_MODE = stringPreferencesKey("theme_mode")
             val MANAGE_MEDIA_TIP = stringPreferencesKey("manage_media_tip")
+            val TUTORIAL_VERSION_SEEN = intPreferencesKey("tutorial_version_seen")
             const val MINUTES_PER_HOUR = 60
             const val MINUTES_PER_DAY = 24 * MINUTES_PER_HOUR
         }
