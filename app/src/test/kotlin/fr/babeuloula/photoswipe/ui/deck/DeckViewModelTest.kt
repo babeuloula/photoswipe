@@ -28,6 +28,7 @@ import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
 import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.GetPendingFavorites
+import fr.babeuloula.photoswipe.domain.usecase.GetPreviousDecisions
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
@@ -85,7 +86,19 @@ class DeckViewModelTest {
     ): DeckViewModel =
         DeckViewModel(
             savedStateHandle = SavedStateHandle(mapOf("epochDay" to day.toEpochDay())),
-            getDeckForDay = GetDeckForDay(SameDayMatcher(), source, repository, RecentYearsFirstOrdering(), clock),
+            loading =
+                DeckLoading(
+                    getDeckForDay =
+                        GetDeckForDay(
+                            SameDayMatcher(),
+                            source,
+                            repository,
+                            RecentYearsFirstOrdering(),
+                            clock,
+                        ),
+                    getDaySession = GetDaySession(journal, repository, source, ReviewWindowProvider(clock)),
+                    getPreviousDecisions = GetPreviousDecisions(repository),
+                ),
             decisions =
                 DeckDecisions(
                     keepMedia = KeepMedia(repository, journal, clock),
@@ -93,7 +106,6 @@ class DeckViewModelTest {
                     favoriteMedia = FavoriteMedia(repository, journal, clock),
                     undoLastDecision = UndoLastDecision(repository, journal),
                 ),
-            getDaySession = GetDaySession(journal, repository, source, ReviewWindowProvider(clock)),
             clock = clock,
             galleryFavorite =
                 GalleryFavorite(
@@ -666,6 +678,45 @@ class DeckViewModelTest {
             viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = true))
 
             assertEquals(DeckEffect.OpenSummary, effects.last())
+        }
+
+    @Test
+    fun `shows the previous decision of each card of a reopened day, again after an undo`() =
+        runTest {
+            repository.save(
+                aReviewEntry(mediaId = 1, reviewYear = 2026, decision = ReviewDecision.KEPT, reopened = true),
+            )
+            repository.save(
+                aReviewEntry(
+                    mediaId = 2,
+                    reviewYear = 2026,
+                    decision = ReviewDecision.MARKED_FOR_DELETION,
+                    reopened = true,
+                ),
+            )
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023), takenOn(3, 2021))))
+
+            val cards = (viewModel.uiState.value as DeckUiState.Loaded).cards
+            assertEquals(
+                mapOf(MediaId(2) to ReviewDecision.MARKED_FOR_DELETION, MediaId(3) to null),
+                cards.associate { it.id to it.previousDecision },
+            )
+
+            viewModel.onEvent(DeckEvent.Keep)
+            viewModel.onEvent(DeckEvent.Undo)
+
+            assertEquals(
+                ReviewDecision.MARKED_FOR_DELETION,
+                (viewModel.uiState.value as DeckUiState.Loaded).current.previousDecision,
+            )
+        }
+
+    @Test
+    fun `shows no previous decision on a day sorted for the first time`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
+
+            assertEquals(null, (viewModel.uiState.value as DeckUiState.Loaded).current.previousDecision)
         }
 
     @Test

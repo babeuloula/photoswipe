@@ -36,6 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -115,6 +116,7 @@ internal fun TodayCard(
                 today,
                 onOpenDay = onOpenDay,
                 onSummary = { onEvent(HomeEvent.OpenPendingDeletions) },
+                onResort = { onEvent(HomeEvent.ResortDay(today.date)) },
                 compact = compact,
             )
         }
@@ -167,6 +169,7 @@ private fun MemoriesCard(
     today: ReviewDay,
     onOpenDay: () -> Unit,
     onSummary: () -> Unit,
+    onResort: () -> Unit,
     compact: Boolean,
 ) {
     val toSort = today.remainingCount > 0
@@ -209,7 +212,7 @@ private fun MemoriesCard(
             when {
                 toSort -> TodayCount(today.remainingCount, onStart = onOpenDay.takeUnless { compact })
                 compact -> Text(stringResource(R.string.home_today_done), style = MaterialTheme.typography.bodyLarge)
-                else -> AllSorted(onSummary)
+                else -> AllSorted(onSummary, onResort)
             }
         }
     }
@@ -295,9 +298,12 @@ private fun TodayCount(
     }
 }
 
-/** Tout est trié aujourd'hui : coche verte, et « Voir le résumé ». */
+/** Tout est trié aujourd'hui : coche verte, « Retrier » (ADR 0026) et « Voir le résumé ». */
 @Composable
-private fun AllSorted(onSummary: () -> Unit) {
+private fun AllSorted(
+    onSummary: () -> Unit,
+    onResort: () -> Unit,
+) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -316,7 +322,10 @@ private fun AllSorted(onSummary: () -> Unit) {
             )
             Text(stringResource(R.string.home_today_done), style = MaterialTheme.typography.bodyLarge)
         }
-        FilledTonalButton(onClick = onSummary) { Text(stringResource(R.string.home_view_summary)) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = onResort) { Text(stringResource(R.string.home_resort)) }
+            FilledTonalButton(onClick = onSummary) { Text(stringResource(R.string.home_view_summary)) }
+        }
     }
 }
 

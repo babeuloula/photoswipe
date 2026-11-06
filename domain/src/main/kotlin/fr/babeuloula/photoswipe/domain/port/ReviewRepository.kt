@@ -37,13 +37,16 @@ interface ReviewRepository {
         reviewYear: Int,
     )
 
-    /** Entrées marquées pour suppression et pas encore confirmées, toutes années confondues. */
+    /**
+     * Entrées marquées pour suppression et pas encore confirmées, toutes années confondues ; une
+     * entrée rouverte pour être retriée n'en fait plus partie (ADR 0026).
+     */
     suspend fun entriesMarkedForDeletion(): List<ReviewEntry>
 
     /** Entrées dont le favori système est demandé mais pas encore appliqué. */
     suspend fun entriesWithPendingFavorite(): List<ReviewEntry>
 
-    /** Passe à `TRASHED` les entrées marquées pour suppression des médias [mediaIds]. */
+    /** Passe à `TRASHED` les entrées marquées pour suppression, non rouvertes, des médias [mediaIds]. */
     suspend fun markTrashed(mediaIds: Set<MediaId>)
 
     /** Retire le favori en attente des entrées des médias [mediaIds], toutes années : il est appliqué. */

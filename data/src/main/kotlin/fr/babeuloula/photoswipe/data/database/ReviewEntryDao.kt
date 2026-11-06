@@ -35,8 +35,8 @@ interface ReviewEntryDao {
         reviewYear: Int,
     )
 
-    /** Entrées marquées pour suppression et pas encore confirmées, toutes années confondues. */
-    @Query("SELECT * FROM review_entry WHERE decision = 'MARKED_FOR_DELETION'")
+    /** Entrées marquées pour suppression, ni confirmées ni rouvertes, toutes années confondues. */
+    @Query("SELECT * FROM review_entry WHERE decision = 'MARKED_FOR_DELETION' AND reopened = 0")
     suspend fun entriesMarkedForDeletion(): List<ReviewEntryEntity>
 
     /** Entrées dont le favori système est demandé mais pas encore appliqué. */
@@ -45,7 +45,8 @@ interface ReviewEntryDao {
 
     /** Passe à `TRASHED` les entrées marquées pour suppression des médias [mediaIds]. */
     @Query(
-        "UPDATE review_entry SET decision = 'TRASHED' WHERE decision = 'MARKED_FOR_DELETION' AND media_id IN (:mediaIds)",
+        "UPDATE review_entry SET decision = 'TRASHED' " +
+            "WHERE decision = 'MARKED_FOR_DELETION' AND reopened = 0 AND media_id IN (:mediaIds)",
     )
     suspend fun markTrashed(mediaIds: List<Long>)
 

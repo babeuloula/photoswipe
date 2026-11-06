@@ -17,6 +17,8 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDecision
  * @property favoritePending favori système demandé, pas encore appliqué.
  * @property sizeBytes taille du média au moment de la décision, pour l'espace libéré estimé.
  * @property decidedAt instant de la décision en millisecondes epoch, pour l'undo.
+ * @property reopened jour rouvert pour être retrié (version 3, ADR 0026) : le média est de nouveau
+ * à trier, sa décision reste lisible pour la pile.
  */
 @Entity(tableName = "review_entry", primaryKeys = ["media_id", "review_year"])
 data class ReviewEntryEntity(
@@ -26,4 +28,5 @@ data class ReviewEntryEntity(
     @ColumnInfo(name = "favorite_pending") val favoritePending: Boolean,
     @ColumnInfo(name = "size_bytes") val sizeBytes: Long,
     @ColumnInfo(name = "decided_at") val decidedAt: Long,
+    @ColumnInfo(name = "reopened") val reopened: Boolean = false,
 )

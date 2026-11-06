@@ -63,6 +63,20 @@ class GetDeckForDayTest {
         }
 
     @Test
+    fun `offers again the media of a reopened day`() =
+        runTest {
+            val media = (1L..3L).map { takenOn(id = it, LocalDate.of(2025, 7, 15), LocalTime.of(it.toInt(), 0)) }
+            val entries =
+                listOf(
+                    aReviewEntry(mediaId = 1, reviewYear = 2026, decision = KEPT, reopened = true),
+                    aReviewEntry(mediaId = 2, reviewYear = 2026, decision = MARKED_FOR_DELETION, reopened = true),
+                    aReviewEntry(mediaId = 3, reviewYear = 2026, decision = KEPT),
+                )
+
+            assertEquals(listOf(1L, 2L), ids(getDeckForDay(media, entries)(today)))
+        }
+
+    @Test
     fun `offers again a media kept the previous year`() =
         runTest {
             val media = listOf(takenOn(id = 1, LocalDate.of(2024, 7, 15)))

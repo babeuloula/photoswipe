@@ -19,6 +19,7 @@ class ReviewEntryMapperTest {
                 sizeBytes = 3_500_000,
                 decidedAt = Instant.parse("2025-07-15T18:30:12.345Z"),
                 favoritePending = true,
+                reopened = true,
             )
 
         val entity = entry.toEntity()
@@ -31,6 +32,7 @@ class ReviewEntryMapperTest {
                 favoritePending = true,
                 sizeBytes = 3_500_000,
                 decidedAt = Instant.parse("2025-07-15T18:30:12.345Z").toEpochMilli(),
+                reopened = true,
             ),
             entity,
         )

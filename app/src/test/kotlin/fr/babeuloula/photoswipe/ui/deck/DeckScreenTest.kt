@@ -37,6 +37,7 @@ import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import kotlinx.coroutines.launch
@@ -824,5 +825,28 @@ class DeckScreenTest {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(favorite = true))))
 
         composeRule.onNodeWithContentDescription("Dans vos favoris").assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows the previous decision of a card being sorted again`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(previousDecision = ReviewDecision.KEPT))))
+
+        composeRule.onNodeWithContentDescription("Kept last time").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `describes a previous deletion mark in French`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(previousDecision = ReviewDecision.MARKED_FOR_DELETION))))
+
+        composeRule.onNodeWithContentDescription("Marqué pour suppression la dernière fois").assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows no previous decision on a card sorted for the first time`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        composeRule.onNodeWithContentDescription("Kept last time").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Marked for deletion last time").assertDoesNotExist()
     }
 }

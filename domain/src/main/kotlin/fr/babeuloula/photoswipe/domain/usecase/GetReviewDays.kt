@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.domain.usecase
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
+import fr.babeuloula.photoswipe.domain.model.isSorted
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
@@ -59,7 +60,11 @@ class GetReviewDays(
         entries: List<ReviewEntry>,
         zone: ZoneId,
     ): List<ReviewDay> {
-        val treatedByYear = entries.groupBy({ it.reviewYear }, { it.mediaId }).mapValues { it.value.toSet() }
+        val treatedByYear =
+            entries
+                .filter { it.isSorted }
+                .groupBy({ it.reviewYear }, { it.mediaId })
+                .mapValues { it.value.toSet() }
         return mediaByDay.map { (day, media) ->
             val treated = treatedByYear[day.year].orEmpty()
             val remaining = media.filter { it.id !in treated }

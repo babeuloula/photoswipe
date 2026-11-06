@@ -1,6 +1,8 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.OptIn
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
@@ -58,6 +61,7 @@ import coil3.compose.AsyncImage
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeChip
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
@@ -367,6 +371,8 @@ private fun TopRow(
         Box(modifier = Modifier.weight(1f)) {
             FilmEdgeLabel(text = memoryLabel(context, card.yearsAgo, card.takenOn))
         }
+        // Décision d'avant, sur un jour rouvert pour être retrié (ADR 0026) ; le favori a son cœur.
+        card.previousDecision?.let { PreviousDecisionBadge(it) }
         // Déjà en favori dans la galerie, ou en attente dans l'application (PS-86).
         if (card.favorite) {
             Surface(
@@ -386,6 +392,53 @@ private fun TopRow(
         trailing()
     }
 }
+
+/**
+ * Pastille de la décision prise la dernière fois sur ce média, quand son jour est retrié : coche
+ * verte pour un média gardé, corbeille rouge pour un média marqué pour suppression. TalkBack la lit.
+ */
+@Composable
+private fun PreviousDecisionBadge(decision: ReviewDecision) {
+    val colors = MaterialTheme.swipeColors
+    val style =
+        when (decision) {
+            ReviewDecision.MARKED_FOR_DELETION -> {
+                PreviousDecisionStyle(
+                    R.drawable.ic_delete,
+                    colors.deleteContainer,
+                    colors.onDeleteContainer,
+                    R.string.deck_previously_marked,
+                )
+            }
+
+            else -> {
+                PreviousDecisionStyle(
+                    R.drawable.ic_check,
+                    colors.keepContainer,
+                    colors.onKeepContainer,
+                    R.string.deck_previously_kept,
+                )
+            }
+        }
+    Surface(
+        color = style.container,
+        contentColor = style.content,
+        shape = CircleShape,
+        modifier = Modifier.size(FAVORITE_BADGE_SIZE),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(painter = painterResource(style.icon), contentDescription = stringResource(style.description))
+        }
+    }
+}
+
+/** Icône, couleurs et description de la pastille d'une décision précédente. */
+private data class PreviousDecisionStyle(
+    @param:DrawableRes val icon: Int,
+    val container: Color,
+    val content: Color,
+    @param:StringRes val description: Int,
+)
 
 /**
  * Bas de la carte : pour une vidéo ([isVideo]), ▶ et la durée au repos, ⏸ et le temps restant

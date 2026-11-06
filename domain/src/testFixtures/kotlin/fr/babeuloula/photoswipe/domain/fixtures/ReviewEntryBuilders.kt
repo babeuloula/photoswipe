@@ -26,6 +26,7 @@ fun aReviewEntry(
     sizeBytes: Long = DEFAULT_SIZE_BYTES,
     decidedAt: Instant = DEFAULT_DECIDED_AT,
     favoritePending: Boolean = false,
+    reopened: Boolean = false,
 ): ReviewEntry =
     ReviewEntry(
         mediaId = MediaId(mediaId),
@@ -34,6 +35,7 @@ fun aReviewEntry(
         sizeBytes = sizeBytes,
         decidedAt = decidedAt,
         favoritePending = favoritePending,
+        reopened = reopened,
     )
 
 /**

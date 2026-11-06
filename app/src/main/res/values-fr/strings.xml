@@ -98,6 +98,7 @@
     <string name="home_empty_title">Aucun souvenir cette semaine</string>
     <string name="home_empty_body">Aucune photo ni vidéo prise du %1$s au %2$s les années précédentes. Revenez demain.</string>
     <string name="home_start_sorting">Commencer le tri</string>
+    <string name="home_resort">Retrier</string>
     <string name="home_view_summary">Voir le résumé</string>
     <string name="home_years_range">De %1$d à %2$d</string>
     <string name="home_year_single">En %1$d</string>
@@ -114,6 +115,8 @@
     <string name="home_manage_media_tip_dismiss">Fermer le conseil</string>
     <string name="summary_trash_confirm_text">Vous pourrez les restaurer depuis la corbeille de votre galerie pendant 30 jours.</string>
     <string name="summary_trash_confirm_action">Mettre à la corbeille</string>
+    <string name="deck_previously_kept">Gardé la dernière fois</string>
+    <string name="deck_previously_marked">Marqué pour suppression la dernière fois</string>
     <string name="deck_already_favorite">Dans vos favoris</string>
     <string name="summary_sorted_today">Trié aujourd\'hui</string>
     <string name="summary_to_confirm">En attente de votre confirmation</string>

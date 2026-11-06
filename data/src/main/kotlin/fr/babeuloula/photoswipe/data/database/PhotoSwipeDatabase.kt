@@ -10,11 +10,12 @@ import androidx.room.RoomDatabase
  */
 @Database(
     entities = [ReviewEntryEntity::class, DecisionRecordEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
     autoMigrations = [
         // Version 2 (PS-57) : ajout du journal des décisions pour l'undo (ADR 0019).
         AutoMigration(from = 1, to = 2),
+        // Version 3 (PS-108) : colonne `reopened`, par la migration manuelle [MIGRATION_2_3].
     ],
 )
 abstract class PhotoSwipeDatabase : RoomDatabase() {

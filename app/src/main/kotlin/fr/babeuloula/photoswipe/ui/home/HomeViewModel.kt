@@ -9,6 +9,7 @@ import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
+import fr.babeuloula.photoswipe.domain.usecase.ReopenDay
 import fr.babeuloula.photoswipe.permission.MediaManagementReader
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -68,6 +69,15 @@ sealed interface HomeEvent {
         val date: LocalDate,
     ) : HomeEvent
 
+    /**
+     * « Retrier » un jour déjà trié (ADR 0026) : ses médias reviennent à trier, puis sa pile s'ouvre.
+     *
+     * @property date jour à retrier.
+     */
+    data class ResortDay(
+        val date: LocalDate,
+    ) : HomeEvent
+
     /** « Réessayer » après une erreur. */
     data object Retry : HomeEvent
 
@@ -121,6 +131,7 @@ class HomeViewModel
         private val getSessionSummary: GetSessionSummary,
         private val settingsRepository: SettingsRepository,
         private val mediaManagement: MediaManagementReader,
+        private val reopenDay: ReopenDay,
     ) : ViewModel() {
         /** Demandes de calcul ; la valeur dit s'il faut repasser par l'état de chargement. */
         private val reloads = MutableSharedFlow<Boolean>(replay = 1).apply { tryEmit(false) }
@@ -140,6 +151,14 @@ class HomeViewModel
             when (event) {
                 is HomeEvent.OpenDay -> {
                     effects.trySend(HomeEffect.OpenDeck(event.date))
+                }
+
+                is HomeEvent.ResortDay -> {
+                    viewModelScope.launch {
+                        runCatching { reopenDay(event.date) }.onSuccess {
+                            effects.trySend(HomeEffect.OpenDeck(event.date))
+                        }
+                    }
                 }
 
                 HomeEvent.Retry -> {

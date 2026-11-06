@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.ui.deck
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneId
@@ -21,6 +22,8 @@ import java.time.ZoneId
  * @property duration durée d'une vidéo, `null` pour une photo ou une vidéo de durée inconnue.
  * @property favorite vrai si le média est en favori dans la galerie, ou en favori en attente dans
  * l'application : la carte affiche un cœur (PS-86).
+ * @property previousDecision décision d'avant (gardé, marqué pour suppression), sur un jour rouvert
+ * pour être retrié (ADR 0026) ; `null` sinon.
  */
 data class MediaCardUiState(
     val id: MediaId,
@@ -31,17 +34,20 @@ data class MediaCardUiState(
     val sizeBytes: Long,
     val duration: Duration? = null,
     val favorite: Boolean = false,
+    val previousDecision: ReviewDecision? = null,
 ) {
     companion object {
         /**
          * Carte du souvenir [media] montré dans la pile du jour [day], dans le fuseau [zone] ;
-         * [favorite] vaut vrai par défaut si la galerie le dit en favori.
+         * [favorite] vaut vrai par défaut si la galerie le dit en favori ; [previousDecision] est
+         * la décision d'avant, sur un jour rouvert pour être retrié.
          */
         fun of(
             media: MediaItem,
             day: LocalDate,
             zone: ZoneId,
             favorite: Boolean = media.isFavorite,
+            previousDecision: ReviewDecision? = null,
         ): MediaCardUiState {
             val takenOn = media.takenAt.atZone(zone).toLocalDate()
             return MediaCardUiState(
@@ -53,6 +59,7 @@ data class MediaCardUiState(
                 sizeBytes = media.sizeBytes,
                 duration = media.duration,
                 favorite = favorite,
+                previousDecision = previousDecision,
             )
         }
     }

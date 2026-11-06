@@ -93,6 +93,20 @@ class FakeReviewRepositoryTest {
         }
 
     @Test
+    fun `leaves a reopened deletion out of the pending ones and out of the trash`() =
+        runTest {
+            val reopened = aReviewEntry(mediaId = 1, decision = MARKED_FOR_DELETION, reopened = true)
+            val repository =
+                FakeReviewRepository(listOf(reopened, aReviewEntry(mediaId = 2, decision = MARKED_FOR_DELETION)))
+
+            assertEquals(listOf(MediaId(2)), repository.entriesMarkedForDeletion().map { it.mediaId })
+
+            repository.markTrashed(setOf(MediaId(1), MediaId(2)))
+
+            assertEquals(listOf(reopened), repository.entriesFor(reopened.reviewYear, setOf(MediaId(1))))
+        }
+
+    @Test
     fun `clears the pending favorite of the given media, in every year`() =
         runTest {
             val repository =
