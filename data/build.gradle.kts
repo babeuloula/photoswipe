@@ -14,6 +14,9 @@ dependencies {
     implementation(project(":domain"))
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.work.runtime)
+    // Tâche du rappel injectée par Hilt (@HiltWorker).
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
