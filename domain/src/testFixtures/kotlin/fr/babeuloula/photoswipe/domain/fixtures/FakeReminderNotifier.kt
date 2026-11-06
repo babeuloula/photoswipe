@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
+import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.port.ReminderNotifier
 import java.time.LocalDate
 
@@ -10,10 +11,14 @@ class FakeReminderNotifier : ReminderNotifier {
      *
      * @property toSortCount nombre de médias annoncés.
      * @property dayToSort jour dont la pile s'ouvre.
+     * @property years années des souvenirs de ce jour, si elles sont connues.
+     * @property preview souvenir montré en vignette, s'il y en a un.
      */
     data class Sent(
         val toSortCount: Int,
         val dayToSort: LocalDate,
+        val years: IntRange? = null,
+        val preview: MediaItem? = null,
     )
 
     /** Notifications envoyées. */
@@ -24,8 +29,10 @@ class FakeReminderNotifier : ReminderNotifier {
     override fun notify(
         toSortCount: Int,
         dayToSort: LocalDate,
+        years: IntRange?,
+        preview: MediaItem?,
     ) {
         require(toSortCount > 0) { "a reminder must announce media to sort: $toSortCount" }
-        notifications += Sent(toSortCount, dayToSort)
+        notifications += Sent(toSortCount, dayToSort, years, preview)
     }
 }

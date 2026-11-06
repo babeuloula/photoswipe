@@ -21,6 +21,7 @@ Le thème Material 3 de base (graine bleue #769CDF, typographie et formes par d�
 - **Résumé** (PS-96) : espace libéré en grand, sans carte, et ce dont il dépend ; vignettes des cinq derniers marqués (`GetMarkedPreviews`, aperçu facultatif : son échec n'empêche pas le résumé) ; « Confirmer la suppression » en `primary` (une seule couleur d'accent par écran) ; dialogue de corbeille avec icône.
 - **Réglages** (PS-97) : sections en listes segmentées ; le thème se choisit par boutons radio dans la liste, sans dialogue (une étape de moins, comme dans les maquettes) ; l'heure du rappel garde le `TimePicker` Material 3.
 - **Accès aux photos** (PS-98) : pile de tirages dessinée avec les conteneurs du thème et une icône (aucune photo), repère d'exemple daté d'il y a trois ans ; tirages vides au refus.
+- **Notification** (PS-99) : titre « … à trier aujourd'hui », texte avec le jour et les années, vignette d'un souvenir en grande icône, couleur ambre fixe (`notification_accent`, le primary de repli : Android colore la notification hors de Compose).
 - **Formes** : l'échelle Material 3 par défaut, que les maquettes reprennent.
 - **Le seuil du geste reste celui de la SPEC** (35 % de la largeur) ; les maquettes parlaient de 120 dp.
 - **Les photos des maquettes n'entrent pas dans l'APK** : les illustrations sont faites de formes du thème.

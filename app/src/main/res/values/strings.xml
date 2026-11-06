@@ -129,4 +129,6 @@
     <string name="summary_to_confirm">Waiting for your confirmation</string>
     <string name="summary_more_marked">+%1$d</string>
     <string name="summary_more_marked_description">and %1$d more</string>
+    <string name="reminder_text_years">Photos and videos taken on %1$s, from %2$d to %3$d</string>
+    <string name="reminder_text_year">Photos and videos taken on %1$s, in %2$d</string>
 </resources>

@@ -19,7 +19,9 @@ class SendDailyReminder(
         val days = getReviewDays().first()
         val toSort = days.sumOf { it.remainingCount }
         // Jours d'aujourd'hui au plus ancien : la pile ouverte est la plus récente qui reste à trier.
-        days.firstOrNull { it.remainingCount > 0 }?.let { notifier.notify(toSort, it.date) }
+        days.firstOrNull { it.remainingCount > 0 }?.let { day ->
+            notifier.notify(toSort, day.date, years = day.years, preview = day.previews.firstOrNull())
+        }
         return toSort
     }
 }
