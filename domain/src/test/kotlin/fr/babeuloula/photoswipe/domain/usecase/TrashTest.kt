@@ -4,6 +4,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.MediaId
@@ -13,9 +14,11 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDecision.TRASHED
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequest
+import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 /** `PrepareTrash` et `RecordTrashResult`, testés ensemble comme l'écran de confirmation les enchaîne. */
 class TrashTest {
@@ -120,7 +123,9 @@ class TrashTest {
                     ),
                 )
 
-            val summary = GetSessionSummary(repository)(ReviewSession())
+            val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 0))
+            val summary =
+                GetSessionSummary(repository, FakeDecisionJournal(repository), ReviewWindowProvider(clock), clock)()
             val requested = prepareTrash(repository, batchSize = 2)().flatMap { it.mediaIds }
 
             assertEquals(summary.markedForDeletionCount, requested.size)

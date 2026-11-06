@@ -126,8 +126,8 @@ sealed interface SummaryEffect {
 }
 
 /**
- * ViewModel du résumé : les gardés viennent de la route (la session de la pile, ADR 0017), le
- * reste des demandes en attente en base, par `GetSessionSummary` (ADR 0011).
+ * ViewModel du résumé : gardés et favoris du tri d'aujourd'hui, marqués et espace libéré de toutes
+ * les demandes de corbeille en attente, par `GetSessionSummary` (ADR 0011, 0024).
  *
  * La confirmation présente les dialogues de corbeille (`PrepareTrash`), un par lot ; les favoris
  * sont appliqués dès la pile (SPEC §2). Chaque réponse est enregistrée lot par lot
@@ -140,15 +140,11 @@ sealed interface SummaryEffect {
 class SummaryViewModel
     @Inject
     constructor(
-        savedStateHandle: SavedStateHandle,
         private val getSessionSummary: GetSessionSummary,
         private val confirmation: ConfirmationActions,
         private val mediaActionIntents: MediaActionIntents,
         private val mediaManagement: MediaManagementReader,
     ) : ViewModel() {
-        /** Médias gardés pendant la session qui mène au résumé. */
-        private val keptCount: Int = savedStateHandle.toRoute<SummaryRoute>().keptCount
-
         private val state = MutableStateFlow<SummaryUiState>(SummaryUiState.Loading)
         private val effects = Channel<SummaryEffect>(Channel.BUFFERED)
 
@@ -283,8 +279,8 @@ class SummaryViewModel
         /** Relit le résumé en base et le publie ; pendant une confirmation, l'ancien reste affiché. */
         private suspend fun refresh(): SummaryUiState {
             val loaded =
-                runCatching { getSessionSummary(ReviewSession()) }.fold(
-                    onSuccess = { SummaryUiState.Loaded(it.copy(keptCount = keptCount)) },
+                runCatching { getSessionSummary() }.fold(
+                    onSuccess = { SummaryUiState.Loaded(it) },
                     onFailure = { SummaryUiState.Error },
                 )
             state.value = loaded

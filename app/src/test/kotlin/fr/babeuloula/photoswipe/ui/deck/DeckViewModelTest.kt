@@ -168,28 +168,7 @@ class DeckViewModelTest {
 
             viewModel.onEvent(DeckEvent.Finish)
 
-            assertEquals(DeckEffect.OpenSummary(keptCount = 0), viewModel.uiEffects.first())
-        }
-
-    @Test
-    fun `hands the media kept during the session to the summary`() =
-        runTest {
-            val viewModel =
-                deckViewModel(
-                    FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2021), takenOn(3, 2022), takenOn(4, 2023))),
-                )
-            viewModel.onEvent(DeckEvent.Keep)
-            viewModel.onEvent(DeckEvent.Keep)
-            viewModel.onEvent(DeckEvent.MarkForDeletion)
-            viewModel.onEvent(DeckEvent.Favorite)
-            viewModel.onEvent(DeckEvent.Undo)
-
-            viewModel.onEvent(DeckEvent.Finish)
-
-            assertEquals(
-                DeckEffect.OpenSummary(keptCount = 2),
-                viewModel.uiEffects.first { it is DeckEffect.OpenSummary },
-            )
+            assertEquals(DeckEffect.OpenSummary, viewModel.uiEffects.first())
         }
 
     @Test
@@ -454,7 +433,7 @@ class DeckViewModelTest {
             assertTrue(effects.isEmpty())
 
             viewModel.onEvent(DeckEvent.MarkForDeletion)
-            assertEquals(listOf<DeckEffect>(DeckEffect.OpenSummary(keptCount = 1)), effects)
+            assertEquals(listOf<DeckEffect>(DeckEffect.OpenSummary), effects)
         }
 
     @Test
@@ -567,7 +546,7 @@ class DeckViewModelTest {
             assertEquals(CardSide.TOP, (after.uiState.value as DeckUiState.Loaded).returningFrom)
             after.onEvent(DeckEvent.Finish)
 
-            assertEquals(DeckEffect.OpenSummary(keptCount = 1), effects.last())
+            assertEquals(DeckEffect.OpenSummary, effects.last())
         }
 
     /** Journal dont aucune écriture n'aboutit : base indisponible. */
@@ -673,7 +652,7 @@ class DeckViewModelTest {
 
             viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = true))
 
-            assertEquals(DeckEffect.OpenSummary(keptCount = 0), effects.last())
+            assertEquals(DeckEffect.OpenSummary, effects.last())
         }
 
     @Test

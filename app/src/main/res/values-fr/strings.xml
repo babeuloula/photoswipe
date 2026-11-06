@@ -91,4 +91,6 @@
     <string name="summary_trash_confirm_text">Vous pourrez les restaurer depuis la corbeille de votre galerie pendant 30 jours.</string>
     <string name="summary_trash_confirm_action">Mettre à la corbeille</string>
     <string name="deck_already_favorite">Dans vos favoris</string>
+    <string name="summary_sorted_today">Trié aujourd\'hui</string>
+    <string name="summary_to_confirm">En attente de votre confirmation</string>
 </resources>

@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.home
 
 import fr.babeuloula.photoswipe.MainDispatcherRule
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
@@ -196,7 +197,7 @@ class HomeViewModelTest {
     private fun homeViewModel(source: MediaSource): HomeViewModel =
         HomeViewModel(
             GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, clock),
-            GetSessionSummary(repository),
+            GetSessionSummary(repository, FakeDecisionJournal(repository), ReviewWindowProvider(clock), clock),
             settings,
             mediaManagement = { mediaManagementGranted },
         )

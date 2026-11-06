@@ -3,13 +3,13 @@ package fr.babeuloula.photoswipe.ui.summary
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.IntentSender
-import androidx.lifecycle.SavedStateHandle
 import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
@@ -19,8 +19,11 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
+import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.usecase.CleanOrphanEntries
+import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
+import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
 import fr.babeuloula.photoswipe.domain.usecase.PrepareTrash
 import fr.babeuloula.photoswipe.domain.usecase.RecordTrashResult
@@ -39,6 +42,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.io.IOException
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 /** Robolectric : la route typée se relit depuis le `SavedStateHandle` avec le `Bundle` d'Android. */
 @RunWith(RobolectricTestRunner::class)
@@ -63,18 +68,17 @@ class SummaryViewModelTest {
 
     private val factory = FakeMediaActionRequestFactory(batchSize = 2)
 
+    private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 0))
+    private val journal = FakeDecisionJournal(repository)
+
     private val settings = FakeSettingsRepository()
 
     /** Accès « Gestion des médias » simulé, refusé par défaut. */
     private var mediaManagementGranted = false
 
-    private fun summaryViewModel(
-        keptCount: Int = 0,
-        reviews: ReviewRepository = repository,
-    ): SummaryViewModel =
+    private fun summaryViewModel(reviews: ReviewRepository = repository): SummaryViewModel =
         SummaryViewModel(
-            savedStateHandle = SavedStateHandle(mapOf("keptCount" to keptCount)),
-            getSessionSummary = GetSessionSummary(reviews),
+            getSessionSummary = GetSessionSummary(reviews, journal, ReviewWindowProvider(clock), clock),
             confirmation =
                 ConfirmationActions(
                     prepareTrash = PrepareTrash(reviews, gallery, factory),
@@ -106,22 +110,25 @@ class SummaryViewModelTest {
     private fun decisions() = repository.entries.sortedBy { it.mediaId.value }.map { it.decision }
 
     @Test
-    fun `shows the media kept during the session and all pending requests`() =
+    fun `shows what was kept and favorited today and all pending deletions`() =
         runTest {
+            val today = LocalDate.of(2026, 7, 15)
+            KeepMedia(repository, journal, clock)(aMediaItem(id = 4), today)
+            KeepMedia(repository, journal, clock)(aMediaItem(id = 5), today.minusDays(2))
+            FavoriteMedia(repository, journal, clock)(aMediaItem(id = 6), today)
             repository.save(
                 aReviewEntry(mediaId = 1, decision = ReviewDecision.MARKED_FOR_DELETION, sizeBytes = 3_000_000),
             )
             repository.save(
                 aReviewEntry(mediaId = 2, decision = ReviewDecision.MARKED_FOR_DELETION, sizeBytes = 45_000_000),
             )
-            repository.save(aReviewEntry(mediaId = 3, decision = ReviewDecision.KEPT, favoritePending = true))
 
-            val viewModel = summaryViewModel(keptCount = 5)
+            val viewModel = summaryViewModel()
 
             assertEquals(
                 SummaryUiState.Loaded(
                     SessionSummary(
-                        keptCount = 5,
+                        keptCount = 2,
                         markedForDeletionCount = 2,
                         favoriteCount = 1,
                         estimatedFreedBytes = 48_000_000,

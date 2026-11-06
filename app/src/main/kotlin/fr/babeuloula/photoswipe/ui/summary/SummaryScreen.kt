@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,8 +48,9 @@ import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
 
 /**
- * Résumé avant confirmation (SPEC §3.5) : l'espace libéré estimé en tête, puis les gardés et les
- * marqués pour suppression (les favoris sont appliqués dès la pile). « Confirmer la suppression » présente les dialogues
+ * Résumé avant confirmation (SPEC §3.5) : l'espace libéré estimé en tête, puis ce qui a été trié
+ * aujourd'hui (gardés, favoris, ADR 0024) et ce qui attend la confirmation (marqués pour suppression,
+ * toutes sessions confondues). « Confirmer la suppression » présente les dialogues
  * système de corbeille ; « Plus tard » ramène à l'accueil sans rien changer.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -129,11 +131,20 @@ private fun SummaryContent(
         FreedSpaceCard(summary.estimatedFreedBytes)
         val colors = MaterialTheme.swipeColors
         Column {
+            SummaryHeading(stringResource(R.string.summary_sorted_today))
             SummaryLine(
                 Icons.Filled.Check,
                 colors.keep,
                 pluralStringResource(R.plurals.summary_kept, summary.keptCount, summary.keptCount),
             )
+            SummaryLine(
+                Icons.Filled.Favorite,
+                colors.favorite,
+                pluralStringResource(R.plurals.summary_favorites, summary.favoriteCount, summary.favoriteCount),
+            )
+        }
+        Column {
+            SummaryHeading(stringResource(R.string.summary_to_confirm))
             SummaryLine(
                 Icons.Filled.Delete,
                 colors.delete,
@@ -174,6 +185,17 @@ private fun ConfirmButton(
     ) {
         Text(stringResource(R.string.summary_confirm))
     }
+}
+
+/** Titre d'un groupe de lignes, annoncé comme tel par TalkBack. */
+@Composable
+private fun SummaryHeading(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).semantics { heading() },
+    )
 }
 
 /** Espace libéré estimé, mis en avant : c'est ce que la confirmation rendra au téléphone. */

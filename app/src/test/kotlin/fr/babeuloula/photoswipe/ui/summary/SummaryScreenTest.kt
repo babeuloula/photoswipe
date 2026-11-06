@@ -55,12 +55,14 @@ class SummaryScreenTest {
     }
 
     @Test
-    fun `shows the kept and marked counts, not the favorites applied in the deck`() {
+    fun `shows what was kept and favorited today, then what waits for confirmation`() {
         show(SummaryUiState.Loaded(summary))
 
         composeRule.onNodeWithText("12 items kept").assertIsDisplayed()
         composeRule.onNodeWithText("4 items marked for deletion").assertIsDisplayed()
-        composeRule.onNodeWithText("1 favorite").assertDoesNotExist()
+        composeRule.onNodeWithText("1 favorite").assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.summary_sorted_today)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.summary_to_confirm)).assertIsDisplayed()
     }
 
     @Test
@@ -70,6 +72,8 @@ class SummaryScreenTest {
 
         composeRule.onNodeWithText("1 média gardé").assertIsDisplayed()
         composeRule.onNodeWithText("2 médias marqués pour suppression").assertIsDisplayed()
+        composeRule.onNodeWithText("0 favori").assertIsDisplayed()
+        composeRule.onNodeWithText("Trié aujourd'hui").assertIsDisplayed()
         composeRule.onNodeWithText("Espace libéré estimé").assertIsDisplayed()
     }
 
@@ -77,7 +81,7 @@ class SummaryScreenTest {
     fun `says nothing is deleted yet`() {
         show(SummaryUiState.Loaded(summary))
 
-        composeRule.onNodeWithText(text(R.string.summary_nothing_deleted_yet)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.summary_nothing_deleted_yet)).performScrollTo().assertIsDisplayed()
     }
 
     @Test

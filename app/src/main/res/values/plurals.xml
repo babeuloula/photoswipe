@@ -48,4 +48,8 @@
         <item quantity="one">Move %d item to the trash?</item>
         <item quantity="other">Move %d items to the trash?</item>
     </plurals>
+    <plurals name="summary_favorites">
+        <item quantity="one">%d favorite</item>
+        <item quantity="other">%d favorites</item>
+    </plurals>
 </resources>
