@@ -6,6 +6,9 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -22,7 +25,19 @@ class SettingsViewModelTest {
     private val repository = FakeSettingsRepository()
     private val scheduler = FakeReminderScheduler()
 
-    private fun settingsViewModel() = SettingsViewModel(repository, UpdateReminderSettings(repository, scheduler))
+    /** Permission de notification simulée, accordée par défaut. */
+    private var notificationsAllowed = true
+
+    private fun settingsViewModel() =
+        SettingsViewModel(repository, UpdateReminderSettings(repository, scheduler)) { notificationsAllowed }
+
+    private fun TestScope.collectEffects(viewModel: SettingsViewModel): List<SettingsEffect> {
+        val effects = mutableListOf<SettingsEffect>()
+        backgroundScope.launch(
+            UnconfinedTestDispatcher(testScheduler),
+        ) { viewModel.uiEffects.collect { effects += it } }
+        return effects
+    }
 
     @Test
     fun `shows the reminder disabled at 18 00 on a fresh install`() {
@@ -91,6 +106,82 @@ class SettingsViewModelTest {
         assertFalse(viewModel.uiState.value.timePickerOpen)
         assertEquals(ReminderSettings.DEFAULT, repository.reminder)
     }
+
+    @Test
+    fun `asks for the notification permission before enabling the reminder`() =
+        runTest {
+            notificationsAllowed = false
+            val viewModel = settingsViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SettingsEvent.ReminderToggled(enabled = true))
+
+            assertEquals(listOf<SettingsEffect>(SettingsEffect.RequestNotificationPermission), effects)
+            assertFalse(repository.reminder.enabled)
+            assertNull(scheduler.scheduledTime)
+        }
+
+    @Test
+    fun `enables the reminder once the notification permission is granted`() {
+        notificationsAllowed = false
+        val viewModel = settingsViewModel()
+        viewModel.onEvent(SettingsEvent.ReminderToggled(enabled = true))
+
+        viewModel.onEvent(SettingsEvent.NotificationPermissionAnswered(granted = true, canAskAgain = false))
+
+        assertTrue(repository.reminder.enabled)
+        assertEquals(LocalTime.of(18, 0), scheduler.scheduledTime)
+    }
+
+    @Test
+    fun `keeps the reminder off and explains when notifications are refused`() =
+        runTest {
+            notificationsAllowed = false
+            val viewModel = settingsViewModel()
+            val effects = collectEffects(viewModel)
+            viewModel.onEvent(SettingsEvent.ReminderToggled(enabled = true))
+
+            viewModel.onEvent(SettingsEvent.NotificationPermissionAnswered(granted = false, canAskAgain = true))
+
+            assertEquals(SettingsEffect.NotificationPermissionDenied(canAskAgain = true), effects.last())
+            assertFalse(
+                viewModel.uiState.value.reminder!!
+                    .enabled,
+            )
+            assertNull(scheduler.scheduledTime)
+        }
+
+    @Test
+    fun `opens the notification settings when Android will not ask again`() =
+        runTest {
+            val viewModel = settingsViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SettingsEvent.NotificationPermissionAnswered(granted = false, canAskAgain = false))
+            viewModel.onEvent(SettingsEvent.OpenNotificationSettings)
+
+            assertEquals(
+                listOf(
+                    SettingsEffect.NotificationPermissionDenied(canAskAgain = false),
+                    SettingsEffect.OpenNotificationSettings,
+                ),
+                effects,
+            )
+        }
+
+    @Test
+    fun `disables the reminder without asking for any permission`() =
+        runTest {
+            repository.saveReminderSettings(ReminderSettings(enabled = true, time = LocalTime.of(18, 0)))
+            notificationsAllowed = false
+            val viewModel = settingsViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SettingsEvent.ReminderToggled(enabled = false))
+
+            assertTrue(effects.isEmpty())
+            assertFalse(repository.reminder.enabled)
+        }
 
     @Test
     fun `goes back with the back arrow`() =

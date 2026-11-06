@@ -60,6 +60,8 @@
     <string name="settings_reminder_time">Reminder time</string>
     <string name="settings_reminder_time_summary">Around %1$s: Android may send it a little later.</string>
     <string name="settings_reminder_time_picker">Choose the reminder time</string>
+    <string name="settings_reminder_permission_denied">Without notification permission, PhotoSwipe can\'t remind you: the reminder stays off.</string>
+    <string name="settings_reminder_open_settings">Settings</string>
     <!-- Accueil (SPEC §4.2). -->
     <string name="home_today">Today</string>
     <string name="home_error">Your memories could not be loaded.</string>

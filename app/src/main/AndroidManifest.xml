@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <!-- Accès partiel d'Android 14+ : l'utilisateur ne partage qu'une sélection (SPEC §4.1). -->
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+    <!-- Rappel quotidien : demandée seulement quand l'utilisateur l'active (SPEC §3.6). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".PhotoSwipeApplication"

@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
+import fr.babeuloula.photoswipe.permission.NotificationPermissionReader
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,6 +48,21 @@ sealed interface SettingsEvent {
     /** Sélecteur fermé sans choisir. */
     data object TimePickerDismissed : SettingsEvent
 
+    /**
+     * Réponse à la demande de permission de notification.
+     *
+     * @property granted vrai si l'utilisateur l'a accordée.
+     * @property canAskAgain vrai si Android acceptera de la redemander ; sinon, seuls les réglages
+     * système le peuvent.
+     */
+    data class NotificationPermissionAnswered(
+        val granted: Boolean,
+        val canAskAgain: Boolean,
+    ) : SettingsEvent
+
+    /** « Réglages » du message de refus : ouvrir les réglages de notification de l'application. */
+    data object OpenNotificationSettings : SettingsEvent
+
     /** Flèche de retour. */
     data object Back : SettingsEvent
 }
@@ -55,12 +71,30 @@ sealed interface SettingsEvent {
 sealed interface SettingsEffect {
     /** Revenir à l'écran précédent. */
     data object Close : SettingsEffect
+
+    /** Afficher la demande système `POST_NOTIFICATIONS` ; la réponse revient par un événement. */
+    data object RequestNotificationPermission : SettingsEffect
+
+    /**
+     * Notifications refusées : le rappel reste désactivé, l'écran explique pourquoi.
+     *
+     * @property canAskAgain faux si Android ne redemandera plus : le message propose les réglages.
+     */
+    data class NotificationPermissionDenied(
+        val canAskAgain: Boolean,
+    ) : SettingsEffect
+
+    /** Ouvrir les réglages de notification de l'application. */
+    data object OpenNotificationSettings : SettingsEffect
 }
 
 /**
  * ViewModel des réglages : il observe les réglages du rappel enregistrés et enregistre chaque
  * changement par `UpdateReminderSettings`, qui reprogramme la tâche du rappel (SPEC §3.6).
  * L'heure se choisit aussi rappel désactivé : elle servira à l'activation.
+ *
+ * Activer le rappel demande d'abord la permission de notification, seulement à ce moment-là
+ * (SPEC §3.6) : refusée, le rappel reste désactivé et l'écran l'explique.
  */
 @HiltViewModel
 class SettingsViewModel
@@ -68,6 +102,7 @@ class SettingsViewModel
     constructor(
         settingsRepository: SettingsRepository,
         private val updateReminderSettings: UpdateReminderSettings,
+        private val notificationPermission: NotificationPermissionReader,
     ) : ViewModel() {
         private val state = MutableStateFlow(SettingsUiState())
         private val effects = Channel<SettingsEffect>(Channel.BUFFERED)
@@ -91,7 +126,19 @@ class SettingsViewModel
         fun onEvent(event: SettingsEvent) {
             when (event) {
                 is SettingsEvent.ReminderToggled -> {
-                    save { it.copy(enabled = event.enabled) }
+                    toggleReminder(event.enabled)
+                }
+
+                is SettingsEvent.NotificationPermissionAnswered -> {
+                    if (event.granted) {
+                        save { it.copy(enabled = true) }
+                    } else {
+                        effects.trySend(SettingsEffect.NotificationPermissionDenied(event.canAskAgain))
+                    }
+                }
+
+                SettingsEvent.OpenNotificationSettings -> {
+                    effects.trySend(SettingsEffect.OpenNotificationSettings)
                 }
 
                 SettingsEvent.PickReminderTime -> {
@@ -110,6 +157,15 @@ class SettingsViewModel
                 SettingsEvent.Back -> {
                     effects.trySend(SettingsEffect.Close)
                 }
+            }
+        }
+
+        /** Active le rappel si les notifications sont permises, sinon les demande d'abord ; le désactive. */
+        private fun toggleReminder(enabled: Boolean) {
+            if (enabled && !notificationPermission.isGranted()) {
+                effects.trySend(SettingsEffect.RequestNotificationPermission)
+            } else {
+                save { it.copy(enabled = enabled) }
             }
         }
 
