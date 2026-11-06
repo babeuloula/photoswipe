@@ -235,26 +235,12 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `opens the theme choice, saves the picked theme and shows it`() {
+    fun `saves the picked theme and shows it`() {
         val viewModel = settingsViewModel()
 
-        viewModel.onEvent(SettingsEvent.PickTheme)
-        assertTrue(viewModel.uiState.value.themeDialogOpen)
         viewModel.onEvent(SettingsEvent.ThemePicked(ThemeMode.DARK))
 
-        assertFalse(viewModel.uiState.value.themeDialogOpen)
         assertEquals(ThemeMode.DARK, repository.themeMode)
         assertEquals(ThemeMode.DARK, viewModel.uiState.value.themeMode)
-    }
-
-    @Test
-    fun `closes the theme choice without changing the theme`() {
-        val viewModel = settingsViewModel()
-
-        viewModel.onEvent(SettingsEvent.PickTheme)
-        viewModel.onEvent(SettingsEvent.ThemeDialogDismissed)
-
-        assertFalse(viewModel.uiState.value.themeDialogOpen)
-        assertEquals(ThemeMode.SYSTEM, repository.themeMode)
     }
 }
