@@ -256,6 +256,8 @@ class SummaryViewModel
          */
         private suspend fun finish(failed: Boolean = false) {
             if (trashedCount > 0 || favoritedCount > 0) {
+                // Les médias partis à la corbeille ne sont plus dans la galerie : leurs lignes sont purgées.
+                if (trashedCount > 0) confirmation.orphanCleanup.run()
                 effects.trySend(SummaryEffect.GoHome(trashedCount, favoritedCount))
                 return
             }

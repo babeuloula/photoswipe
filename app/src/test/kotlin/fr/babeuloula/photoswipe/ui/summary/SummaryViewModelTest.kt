@@ -11,16 +11,19 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
+import fr.babeuloula.photoswipe.domain.model.MediaAccess
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
+import fr.babeuloula.photoswipe.domain.usecase.CleanOrphanEntries
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.PrepareFavorites
 import fr.babeuloula.photoswipe.domain.usecase.PrepareTrash
 import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
 import fr.babeuloula.photoswipe.domain.usecase.RecordTrashResult
+import fr.babeuloula.photoswipe.permission.OrphanCleanup
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -72,6 +75,12 @@ class SummaryViewModelTest {
                     recordTrashResult = RecordTrashResult(reviews, FakeDecisionJournal(repository)),
                     prepareFavorites = PrepareFavorites(reviews, gallery, factory),
                     recordFavoriteResult = RecordFavoriteResult(reviews),
+                    orphanCleanup =
+                        OrphanCleanup(
+                            CleanOrphanEntries(reviews, gallery, FakeDecisionJournal(repository)),
+                            accessReader = { MediaAccess.FULL },
+                            guard = { true },
+                        ),
                 ),
             mediaActionIntents = { intentSender },
         )
@@ -189,6 +198,23 @@ class SummaryViewModelTest {
 
             assertEquals(List(3) { ReviewDecision.TRASHED }, decisions())
             assertEquals(SummaryEffect.GoHome(trashedCount = 3), effects.last())
+        }
+
+    @Test
+    fun `forgets the trashed media once they left the gallery`() =
+        runTest {
+            mark(1, 2)
+            repository.save(aReviewEntry(mediaId = 3))
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.Confirm)
+            gallery.remove(MediaId(1))
+            gallery.remove(MediaId(2))
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
+
+            assertEquals(listOf(3L), repository.entries.map { it.mediaId.value })
+            assertEquals(SummaryEffect.GoHome(trashedCount = 2), effects.last())
         }
 
     @Test
@@ -362,7 +388,9 @@ class SummaryViewModelTest {
             viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
 
             assertEquals(SummaryEffect.GoHome(trashedCount = 1, favoritedCount = 1), effects.last())
-            assertEquals(listOf(1L), pendingFavorites())
+            // Le média 1 a quitté la galerie : le nettoyage des orphelins a oublié toutes ses entrées.
+            assertEquals(emptyList<Long>(), pendingFavorites())
+            assertEquals(listOf(2L), repository.entries.map { it.mediaId.value })
         }
 
     @Test
