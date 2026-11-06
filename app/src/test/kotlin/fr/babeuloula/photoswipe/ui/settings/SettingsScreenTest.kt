@@ -133,6 +133,15 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `offers to watch the tutorial again from the about section`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
+
+        composeRule.onNodeWithText(text(R.string.settings_about_tutorial)).performScrollTo().performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenTutorial), events)
+    }
+
+    @Test
     fun `shows the app language and opens its system setting`() {
         composeRule.activity.setContent {
             PhotoSwipeTheme {

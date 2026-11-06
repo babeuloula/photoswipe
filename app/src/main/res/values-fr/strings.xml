@@ -151,4 +151,6 @@
     <string name="tutorial_practice_undone">Annulé : la carte est revenue.</string>
     <string name="tutorial_practice_done">Bravo, vous savez trier !</string>
     <string name="tutorial_practice_restart">Recommencer</string>
+    <string name="settings_about_tutorial">Revoir le tutoriel</string>
+    <string name="settings_about_tutorial_summary">Le fonctionnement du tri, et un essai sur des cartes d\'exemple</string>
 </resources>

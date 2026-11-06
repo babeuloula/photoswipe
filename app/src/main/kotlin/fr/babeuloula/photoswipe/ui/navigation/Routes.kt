@@ -48,3 +48,7 @@ data object SettingsRoute
 /** Licences de l'application et de ses bibliothèques (« À propos » des réglages). */
 @Serializable
 data object LicensesRoute
+
+/** Tutoriel revu depuis les réglages (SPEC §4) : le même parcours, sans changer l'état « tutoriel vu ». */
+@Serializable
+data object TutorialRoute

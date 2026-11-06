@@ -169,13 +169,13 @@ private fun LanguageSection(
     }
 }
 
-/** Section « À propos » : version de l'application et licences. */
+/** Section « À propos » : version de l'application, tutoriel à revoir et licences. */
 @Composable
 private fun AboutSection(
     onEvent: (SettingsEvent) -> Unit,
     showDeveloperTools: Boolean,
 ) {
-    // Version, licences et, en debug, les outils développeur.
+    // Version, tutoriel, licences et, en debug, les outils développeur.
     val count = if (showDeveloperTools) ABOUT_ROWS + 1 else ABOUT_ROWS
     PreferenceSection(stringResource(R.string.settings_about_section)) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -186,6 +186,13 @@ private fun AboutSection(
             )
             PreferenceRow(
                 shape = segmentShape(1, count),
+                title = stringResource(R.string.settings_about_tutorial),
+                summary = stringResource(R.string.settings_about_tutorial_summary),
+                trailing = { TrailingIcon(R.drawable.ic_chevron_right) },
+                modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenTutorial) },
+            )
+            PreferenceRow(
+                shape = segmentShape(2, count),
                 title = stringResource(R.string.settings_about_licenses),
                 summary = stringResource(R.string.settings_about_licenses_summary),
                 trailing = { TrailingIcon(R.drawable.ic_chevron_right) },
@@ -194,7 +201,7 @@ private fun AboutSection(
             // Variante debug seulement (SPEC §10).
             if (showDeveloperTools) {
                 PreferenceRow(
-                    shape = segmentShape(2, count),
+                    shape = segmentShape(ABOUT_ROWS, count),
                     title = stringResource(R.string.settings_developer_tools),
                     trailing = { TrailingIcon(R.drawable.ic_chevron_right) },
                     modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenDeveloperTools) },
@@ -205,7 +212,7 @@ private fun AboutSection(
 }
 
 /** Lignes de « À propos » dans toutes les variantes : version et licences. */
-private const val ABOUT_ROWS = 2
+private const val ABOUT_ROWS = 3
 
 /** Version de l'application installée (`versionName`). */
 @Composable
