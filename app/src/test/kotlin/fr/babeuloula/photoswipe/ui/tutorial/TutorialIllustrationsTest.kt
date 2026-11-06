@@ -66,7 +66,29 @@ class TutorialIllustrationsTest {
         composeRule.onNodeWithText(yearsAgo(3), substring = true).assertIsDisplayed()
     }
 
+    @Test
+    fun `the swipe up page opens the favorite and share menu`() {
+        show(TutorialPage.SWIPE_UP, animate = true)
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.deck_share)).assertDoesNotExist()
+
+        composeRule.mainClock.advanceTimeBy(SWIPE_UP_CYCLE_MILLIS)
+
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.deck_favorite)).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.deck_share)).assertIsDisplayed()
+    }
+
+    @Test
+    fun `the static swipe up page shows the menu open`() {
+        show(TutorialPage.SWIPE_UP, animate = false)
+
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.deck_favorite)).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.deck_share)).assertIsDisplayed()
+    }
+
     private companion object {
+        /** Assez pour que le tirage monte et que la feuille s'ouvre. */
+        const val SWIPE_UP_CYCLE_MILLIS = 2_200L
+
         /** Temps laissé à la transition d'un tirage au suivant. */
         const val SETTLE_MILLIS = 1_000L
     }
