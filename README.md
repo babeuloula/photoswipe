@@ -19,7 +19,7 @@ Gradle est fourni par le wrapper (`./gradlew`) : rien d'autre à installer.
 ./gradlew installDebug                                          # compile et installe la version debug
 ```
 
-L'APK seul se construit avec `./gradlew assembleDebug` (dans `app/build/outputs/apk/debug/`). Depuis Android Studio, ouvrir le dossier du projet puis lancer la configuration `app`.
+L'APK seul se construit avec `./gradlew assembleDebug` (dans `app/build/outputs/apk/debug/`). Il s'installe par-dessus la version précédente, sans désinstaller ni perdre les décisions : les builds debug sont signés par la clé partagée `app/debug.keystore` et leur `versionCode` est le nombre de commits Git (PS-110). Depuis Android Studio, ouvrir le dossier du projet puis lancer la configuration `app`.
 
 ## Lancer les tests
 

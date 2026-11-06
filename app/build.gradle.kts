@@ -8,13 +8,36 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Numéro de version : le nombre de commits, pour qu'un nouveau build s'installe par-dessus l'ancien
+// (PS-110). 1 si Git est absent ou si l'historique est tronqué (clone superficiel de la CI).
+val commitCount: Int =
+    providers
+        .exec {
+            commandLine("git", "rev-list", "--count", "HEAD")
+            isIgnoreExitValue = true
+        }.standardOutput.asText
+        .get()
+        .trim()
+        .toIntOrNull() ?: 1
+
 android {
     namespace = "fr.babeuloula.photoswipe"
 
     defaultConfig {
         applicationId = "fr.babeuloula.photoswipe"
-        versionCode = 1
+        versionCode = commitCount
         versionName = "0.1.0"
+    }
+
+    // Clé de debug partagée, versionnée dans le dépôt privé (PS-110) : tous les builds debug, de
+    // n'importe quelle machine, ont la même signature et se mettent à jour sans désinstaller l'app.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {

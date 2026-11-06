@@ -22,7 +22,7 @@ Le **SDK** (Software Development Kit) Android contient les bibliothèques du sys
 ### Gradle
 L'outil de **construction** (« build ») du projet. Il télécharge les bibliothèques, compile le code, lance les tests et produit l'APK. On le pilote avec des **tâches**, par exemple :
 - `./gradlew test` lance les tests ;
-- `./gradlew assembleDebug` produit l'APK de développement.
+- `./gradlew assembleDebug` produit l'APK de développement ; il se met à jour par-dessus la version installée (même clé de signature `app/debug.keystore`, numéro de version qui suit les commits).
 
 Les fichiers de configuration Gradle sont écrits en Kotlin et se terminent par `.gradle.kts`.
 
