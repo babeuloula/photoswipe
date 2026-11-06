@@ -96,6 +96,8 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
 
 > ⚠️ Android affiche un dialogue de confirmation pour chaque requête de ce type sur des médias dont l'app n'est pas propriétaire. C'est pourquoi tout est groupé en fin de session et non fait à chaque swipe.
 
+5. **Accès « Gestion des médias »** (`MANAGE_MEDIA`, ADR 0023) : donné par l'utilisateur dans les réglages d'Android, il fait appliquer les demandes de corbeille et de favori **sans dialogue d'Android** (vérifié sur émulateur, `ManageMediaInstrumentedTest`). Après le premier dialogue d'Android validé, l'accueil propose : « Marre des confirmations ? Activez la gestion des médias dans les paramètres », le mot « paramètres » ouvrant le réglage ; le conseil se ferme pour de bon, et disparaît une fois l'accès donné. Avec l'accès, PhotoSwipe affiche **sa propre confirmation** (dialogue Material 3) avant l'envoi à la corbeille, puisque celle d'Android disparaît.
+
 ### 3.6 Notification
 - Tâche périodique quotidienne (WorkManager). L'heure est approximative (Doze), c'est acceptable.
 - Envoyée **seulement si** le nombre de médias à trier sur la fenêtre est > 0.
@@ -356,3 +358,4 @@ Pour une publication future : Google encadre l'accès large aux photos et vidéo
 7. Effet réel sur Google Photos de la suppression locale d'un média sauvegardé : à vérifier sur appareil, **ne pas le promettre dans l'UI**.
 8. Tutoriel : affiché **avant** l'écran de permissions, avec un mode entraînement sur cartes d'exemple. OK ?
 9. Tutoriel : animations en Compose pur (sans Lottie), 5 pages + entraînement. OK ?
+10. Accès « Gestion des médias » proposé sur l'accueil après le premier dialogue d'Android validé, avec une confirmation de PhotoSwipe à la place de celle d'Android (§3.5, ADR 0023) : décidé par Jérémy le 2026-11-05.

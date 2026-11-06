@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performFirstLinkClick
 import androidx.compose.ui.test.performScrollToNode
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -214,5 +215,37 @@ class HomeScreenTest {
         composeRule.onNodeWithText("Aujourd'hui").assertIsDisplayed()
         composeRule.onNodeWithText("mercredi 15 juillet 2026").assertIsDisplayed()
         composeRule.onNodeWithText("12 médias à trier").assertIsDisplayed()
+    }
+
+    @Test
+    fun `offers media management with a settings link and a close button`() {
+        show(loaded(todayCount = 1).copy(showManageMediaTip = true))
+        val message =
+            composeRule.activity.getString(
+                R.string.home_manage_media_tip,
+                text(R.string.home_manage_media_tip_link),
+            )
+
+        composeRule.onNodeWithText(message).assertIsDisplayed().performFirstLinkClick()
+        composeRule.onNodeWithContentDescription(text(R.string.home_manage_media_tip_dismiss)).performClick()
+
+        assertEquals(listOf(HomeEvent.OpenManageMediaSettings, HomeEvent.DismissManageMediaTip), events)
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `offers media management in French`() {
+        show(loaded(todayCount = 1).copy(showManageMediaTip = true))
+
+        composeRule
+            .onNodeWithText("Marre des confirmations ? Activez la gestion des médias dans les paramètres.")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `hides the media management tip by default`() {
+        show(loaded(todayCount = 1))
+
+        composeRule.onNodeWithContentDescription(text(R.string.home_manage_media_tip_dismiss)).assertDoesNotExist()
     }
 }

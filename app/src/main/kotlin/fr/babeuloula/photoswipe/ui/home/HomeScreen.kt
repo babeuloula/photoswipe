@@ -59,7 +59,8 @@ import java.time.format.FormatStyle
 /**
  * Accueil (SPEC §4.2) : carte « Aujourd'hui » et les 6 jours précédents, chacun avec son nombre de
  * médias à trier ; un tap ouvre la pile du jour. Une bannière signale les suppressions en attente
- * et ouvre le résumé. Gère le chargement et l'erreur.
+ * et ouvre le résumé ; un conseil propose l'accès « Gestion des médias » après un premier dialogue
+ * d'Android validé. Gère le chargement et l'erreur.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,11 +103,7 @@ fun HomeScreen(
                 }
 
                 is HomeUiState.Loaded -> {
-                    HomeDays(
-                        state = state,
-                        onOpenDay = { onEvent(HomeEvent.OpenDay(it)) },
-                        onOpenPendingDeletions = { onEvent(HomeEvent.OpenPendingDeletions) },
-                    )
+                    HomeDays(state = state, onEvent = onEvent)
                 }
             }
         }
@@ -124,9 +121,9 @@ fun HomeScreen(
 @Composable
 private fun HomeDays(
     state: HomeUiState.Loaded,
-    onOpenDay: (LocalDate) -> Unit,
-    onOpenPendingDeletions: () -> Unit,
+    onEvent: (HomeEvent) -> Unit,
 ) {
+    val onOpenDay = { day: LocalDate -> onEvent(HomeEvent.OpenDay(day)) }
     if (currentWindowLayout().isTwoPane && state.hasMemories) {
         // Grand écran ou paysage : « Aujourd'hui » à gauche, les jours à rattraper à droite.
         Row(
@@ -143,9 +140,7 @@ private fun HomeDays(
                         .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                if (state.pendingDeletionCount > 0) {
-                    PendingDeletionsBanner(state.pendingDeletionCount, onClick = onOpenPendingDeletions)
-                }
+                HomeBanners(state, onEvent)
                 TodayCard(state.today, onClick = { onOpenDay(state.today.date) })
             }
             LazyColumn(
@@ -166,9 +161,7 @@ private fun HomeDays(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
-            if (state.pendingDeletionCount > 0) {
-                item { PendingDeletionsBanner(state.pendingDeletionCount, onClick = onOpenPendingDeletions) }
-            }
+            if (state.showManageMediaTip || state.pendingDeletionCount > 0) item { HomeBanners(state, onEvent) }
             if (!state.hasMemories) {
                 item { NoMemories() }
             } else {
@@ -212,35 +205,6 @@ private fun PreviousDay(
                 .clickable(enabled = hasMedia, onClick = onClick)
                 .alpha(if (hasMedia) 1f else DISABLED_ALPHA),
     )
-}
-
-/**
- * Bannière des suppressions en attente (SPEC §3.4) : des médias sont marqués mais pas encore
- * envoyés à la corbeille. Un tap ouvre le résumé pour les confirmer.
- */
-@Composable
-private fun PendingDeletionsBanner(
-    count: Int,
-    onClick: () -> Unit,
-) {
-    Card(
-        onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            modifier = Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = pluralStringResource(R.plurals.home_pending_deletions, count, count),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f),
-            )
-            TextButton(onClick = onClick) { Text(stringResource(R.string.home_pending_deletions_review)) }
-        }
-    }
 }
 
 /** Opacité d'un jour sans média, celle des contenus désactivés de Material 3. */

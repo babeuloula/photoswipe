@@ -11,6 +11,11 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
     <!-- Rappel quotidien : demandée seulement quand l'utilisateur l'active (SPEC §3.6). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Accès « Gestion des médias », donné par l'utilisateur dans les réglages d'Android : la
+         corbeille et les favoris s'appliquent sans dialogue système (SPEC §3.5, ADR 0023). -->
+    <uses-permission
+        android:name="android.permission.MANAGE_MEDIA"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:name=".PhotoSwipeApplication"

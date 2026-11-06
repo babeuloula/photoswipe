@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import kotlinx.coroutines.CoroutineScope
@@ -121,6 +122,17 @@ class DataStoreSettingsRepositoryTest {
             dataStore.edit { it[stringPreferencesKey("theme_mode")] = "SEPIA" }
 
             assertEquals(ThemeMode.SYSTEM, DataStoreSettingsRepository(dataStore).observeThemeMode().first())
+        }
+
+    @Test
+    fun `stores the media management tip, never offered by default`() =
+        runTest {
+            val repository = DataStoreSettingsRepository(dataStore())
+            assertEquals(ManageMediaTip.NOT_OFFERED, repository.observeManageMediaTip().first())
+
+            repository.saveManageMediaTip(ManageMediaTip.DISMISSED)
+
+            assertEquals(ManageMediaTip.DISMISSED, repository.observeManageMediaTip().first())
         }
 
     private fun TestScope.dataStore(

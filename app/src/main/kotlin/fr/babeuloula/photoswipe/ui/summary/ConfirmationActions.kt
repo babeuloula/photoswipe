@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.summary
 
+import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
 import fr.babeuloula.photoswipe.domain.usecase.PrepareFavorites
 import fr.babeuloula.photoswipe.domain.usecase.PrepareTrash
 import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
@@ -17,6 +18,7 @@ import javax.inject.Inject
  * @property prepareFavorites prépare les dialogues de favoris, par lots.
  * @property recordFavoriteResult enregistre la réponse à un dialogue de favoris.
  * @property orphanCleanup nettoie les décisions des médias disparus.
+ * @property offerManageMediaTip propose l'accès « Gestion des médias » après un dialogue d'Android validé.
  */
 class ConfirmationActions
     @Inject
@@ -26,4 +28,5 @@ class ConfirmationActions
         val prepareFavorites: PrepareFavorites,
         val recordFavoriteResult: RecordFavoriteResult,
         val orphanCleanup: OrphanCleanup,
+        val offerManageMediaTip: OfferManageMediaTip,
     )

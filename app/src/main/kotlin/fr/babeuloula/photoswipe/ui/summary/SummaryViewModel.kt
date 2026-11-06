@@ -10,6 +10,7 @@ import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequest
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
+import fr.babeuloula.photoswipe.permission.MediaManagementReader
 import fr.babeuloula.photoswipe.ui.common.MediaActionIntents
 import fr.babeuloula.photoswipe.ui.navigation.SummaryRoute
 import kotlinx.coroutines.channels.Channel
@@ -36,10 +37,13 @@ sealed interface SummaryUiState {
      * demandes en attente (ADR 0011).
      * @property confirming vrai pendant les dialogues système (corbeille puis favoris) : le bouton
      * de confirmation est désactivé, pour ne pas les lancer deux fois.
+     * @property askingTrashConfirmation vrai pendant la confirmation de PhotoSwipe, qui remplace le
+     * dialogue de corbeille d'Android quand l'accès « Gestion des médias » est donné.
      */
     data class Loaded(
         val summary: SessionSummary,
         val confirming: Boolean = false,
+        val askingTrashConfirmation: Boolean = false,
     ) : SummaryUiState {
         /** Vrai s'il y a des médias à envoyer à la corbeille ou à mettre en favori dans la galerie. */
         val canConfirm: Boolean
@@ -60,6 +64,12 @@ sealed interface SummaryEvent {
      * puis ceux des favoris (SPEC §3.5).
      */
     data object Confirm : SummaryEvent
+
+    /** « Envoyer à la corbeille » de la confirmation de PhotoSwipe, avec l'accès « Gestion des médias ». */
+    data object TrashConfirmationAccepted : SummaryEvent
+
+    /** Confirmation de PhotoSwipe fermée sans rien envoyer à la corbeille. */
+    data object TrashConfirmationDismissed : SummaryEvent
 
     /**
      * Réponse au dialogue système en cours.
@@ -141,6 +151,7 @@ class SummaryViewModel
         private val getSessionSummary: GetSessionSummary,
         private val confirmation: ConfirmationActions,
         private val mediaActionIntents: MediaActionIntents,
+        private val mediaManagement: MediaManagementReader,
     ) : ViewModel() {
         /** Médias gardés pendant la session qui mène au résumé. */
         private val keptCount: Int = savedStateHandle.toRoute<SummaryRoute>().keptCount
@@ -180,18 +191,40 @@ class SummaryViewModel
         fun onEvent(event: SummaryEvent) {
             when (event) {
                 SummaryEvent.Retry -> load()
-                SummaryEvent.Confirm -> confirm()
+                SummaryEvent.Confirm -> askThenConfirm()
+                SummaryEvent.TrashConfirmationAccepted -> confirm()
+                SummaryEvent.TrashConfirmationDismissed -> closeTrashConfirmation()
                 is SummaryEvent.SystemRequestAnswered -> recordAnswer(event.confirmed)
                 SummaryEvent.Later -> effects.trySend(SummaryEffect.GoHome())
                 SummaryEvent.Back -> effects.trySend(SummaryEffect.Close)
             }
         }
 
+        /**
+         * Avec l'accès « Gestion des médias », Android n'affiche plus son dialogue de corbeille :
+         * PhotoSwipe demande alors sa propre confirmation avant d'envoyer quoi que ce soit (ADR 0023).
+         * Sans lui, ou pour des favoris seuls, la confirmation commence tout de suite.
+         */
+        private fun askThenConfirm() {
+            val loaded = state.value as? SummaryUiState.Loaded ?: return
+            if (!loaded.canConfirm) return
+            if (loaded.confirmsDeletion && mediaManagement.isGranted()) {
+                state.value = loaded.copy(askingTrashConfirmation = true)
+            } else {
+                confirm()
+            }
+        }
+
+        private fun closeTrashConfirmation() {
+            val loaded = state.value as? SummaryUiState.Loaded ?: return
+            state.value = loaded.copy(askingTrashConfirmation = false)
+        }
+
         /** Commence la confirmation par les dialogues de corbeille. */
         private fun confirm() {
             val loaded = state.value as? SummaryUiState.Loaded ?: return
             if (!loaded.canConfirm) return
-            state.value = loaded.copy(confirming = true)
+            state.value = loaded.copy(confirming = true, askingTrashConfirmation = false)
             step = ConfirmationStep.TRASH
             presentedCount = 0
             trashedCount = 0
@@ -262,6 +295,8 @@ class SummaryViewModel
             if (trashedCount > 0 || favoritedCount > 0) {
                 // Les médias partis à la corbeille ne sont plus dans la galerie : leurs lignes sont purgées.
                 if (trashedCount > 0) confirmation.orphanCleanup.run()
+                // Un dialogue d'Android vient d'être validé : l'accueil proposera de s'en passer.
+                if (!mediaManagement.isGranted()) runCatching { confirmation.offerManageMediaTip() }
                 effects.trySend(SummaryEffect.GoHome(trashedCount, favoritedCount))
                 return
             }

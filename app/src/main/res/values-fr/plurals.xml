@@ -61,4 +61,9 @@
         <item quantity="many">%d de souvenirs à trier</item>
         <item quantity="other">%d souvenirs à trier</item>
     </plurals>
+    <plurals name="summary_trash_confirm_title">
+        <item quantity="one">Mettre %d média à la corbeille ?</item>
+        <item quantity="many">Mettre %d de médias à la corbeille ?</item>
+        <item quantity="other">Mettre %d médias à la corbeille ?</item>
+    </plurals>
 </resources>

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
@@ -25,7 +26,8 @@ import javax.inject.Inject
  * Une valeur absente prend celle de [ReminderSettings.DEFAULT] : rappel désactivé, 18:00
  * (ADR 0007). L'heure est stockée en minutes depuis minuit ; une valeur hors limites, ou un fichier
  * illisible, retombe sur la valeur par défaut au lieu de faire échouer l'écran. Le thème est stocké
- * par son nom ; un nom inconnu retombe sur [ThemeMode.DEFAULT], le thème du téléphone.
+ * par son nom ; un nom inconnu retombe sur [ThemeMode.DEFAULT], le thème du téléphone. De même pour
+ * le conseil « Gestion des médias » ([ManageMediaTip.DEFAULT]).
  *
  * @param dataStore magasin de préférences, unique pour son fichier : il est fourni par l'injection
  * de dépendances, jamais créé ici.
@@ -48,6 +50,16 @@ class DataStoreSettingsRepository
 
         override suspend fun saveThemeMode(mode: ThemeMode) {
             dataStore.edit { it[THEME_MODE] = mode.name }
+        }
+
+        override fun observeManageMediaTip(): Flow<ManageMediaTip> =
+            preferences()
+                .map { preferences ->
+                    ManageMediaTip.entries.find { it.name == preferences[MANAGE_MEDIA_TIP] } ?: ManageMediaTip.DEFAULT
+                }.distinctUntilChanged()
+
+        override suspend fun saveManageMediaTip(tip: ManageMediaTip) {
+            dataStore.edit { it[MANAGE_MEDIA_TIP] = tip.name }
         }
 
         /** Préférences enregistrées ; un fichier illisible se lit comme vide. */
@@ -76,6 +88,7 @@ class DataStoreSettingsRepository
             val REMINDER_ENABLED = booleanPreferencesKey("reminder_enabled")
             val REMINDER_MINUTE_OF_DAY = intPreferencesKey("reminder_minute_of_day")
             val THEME_MODE = stringPreferencesKey("theme_mode")
+            val MANAGE_MEDIA_TIP = stringPreferencesKey("manage_media_tip")
             const val MINUTES_PER_HOUR = 60
             const val MINUTES_PER_DAY = 24 * MINUTES_PER_HOUR
         }

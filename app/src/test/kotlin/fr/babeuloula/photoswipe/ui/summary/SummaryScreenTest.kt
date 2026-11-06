@@ -4,6 +4,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -142,5 +143,31 @@ class SummaryScreenTest {
         composeRule.onNodeWithText(text(R.string.summary_retry)).performClick()
 
         assertEquals(listOf<SummaryEvent>(SummaryEvent.Retry), events)
+    }
+
+    @Test
+    fun `asks its own confirmation before trashing with media management`() {
+        show(
+            SummaryUiState.Loaded(
+                SessionSummary(
+                    keptCount = 0,
+                    markedForDeletionCount = 3,
+                    favoriteCount = 0,
+                    estimatedFreedBytes = 9_000_000,
+                ),
+                askingTrashConfirmation = true,
+            ),
+        )
+
+        composeRule.onNode(isDialog()).assertExists()
+        composeRule
+            .onNodeWithText(
+                composeRule.activity.resources.getQuantityString(R.plurals.summary_trash_confirm_title, 3, 3),
+            ).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.summary_trash_confirm_text)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.summary_trash_confirm_action)).performClick()
+        composeRule.onNodeWithText(composeRule.activity.getString(android.R.string.cancel)).performClick()
+
+        assertEquals(listOf(SummaryEvent.TrashConfirmationAccepted, SummaryEvent.TrashConfirmationDismissed), events)
     }
 }

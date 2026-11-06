@@ -86,4 +86,9 @@
     <string name="reminder_channel_name">Rappel quotidien</string>
     <string name="reminder_channel_description">Vous rappelle une fois par jour qu\'il reste des souvenirs à trier.</string>
     <string name="reminder_text">Vos photos de ce jour, les années passées, vous attendent.</string>
+    <string name="home_manage_media_tip">Marre des confirmations ? Activez la gestion des médias dans les %1$s.</string>
+    <string name="home_manage_media_tip_link">paramètres</string>
+    <string name="home_manage_media_tip_dismiss">Fermer le conseil</string>
+    <string name="summary_trash_confirm_text">Vous pourrez les restaurer depuis la corbeille de votre galerie pendant 30 jours.</string>
+    <string name="summary_trash_confirm_action">Mettre à la corbeille</string>
 </resources>

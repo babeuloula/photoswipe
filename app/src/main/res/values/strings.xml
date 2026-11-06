@@ -97,4 +97,9 @@
     <string name="reminder_channel_name">Daily reminder</string>
     <string name="reminder_channel_description">Reminds you once a day when memories are waiting to be sorted.</string>
     <string name="reminder_text">Your photos from this day in past years are waiting for you.</string>
+    <string name="home_manage_media_tip">Tired of confirming every time? Turn on media management in the %1$s.</string>
+    <string name="home_manage_media_tip_link">settings</string>
+    <string name="home_manage_media_tip_dismiss">Close the tip</string>
+    <string name="summary_trash_confirm_text">You can restore them from your gallery trash for 30 days.</string>
+    <string name="summary_trash_confirm_action">Move to trash</string>
 </resources>
