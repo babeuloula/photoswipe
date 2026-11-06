@@ -22,6 +22,7 @@ import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.usecase.CleanOrphanEntries
 import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
+import fr.babeuloula.photoswipe.domain.usecase.GetMarkedPreviews
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
@@ -79,6 +80,7 @@ class SummaryViewModelTest {
     private fun summaryViewModel(reviews: ReviewRepository = repository): SummaryViewModel =
         SummaryViewModel(
             getSessionSummary = GetSessionSummary(reviews, journal, ReviewWindowProvider(clock), clock),
+            getMarkedPreviews = GetMarkedPreviews(reviews, gallery),
             confirmation =
                 ConfirmationActions(
                     prepareTrash = PrepareTrash(reviews, gallery, factory),
@@ -134,7 +136,12 @@ class SummaryViewModelTest {
                         estimatedFreedBytes = 48_000_000,
                     ),
                 ),
-                viewModel.uiState.value,
+                (viewModel.uiState.value as SummaryUiState.Loaded).copy(markedPreviews = emptyList()),
+            )
+            // Vignettes des marqués encore dans la galerie, les plus récents d'abord.
+            assertEquals(
+                setOf(MediaId(1), MediaId(2)),
+                (viewModel.uiState.value as SummaryUiState.Loaded).markedPreviews.map { it.id }.toSet(),
             )
         }
 
@@ -292,7 +299,8 @@ class SummaryViewModelTest {
     fun `keeps the marks and says so when the system dialogs cannot be prepared`() =
         runTest {
             mark(1)
-            val viewModel = summaryViewModel(reviews = FailingOnceRepository(repository, failOnRead = 2))
+            // Lectures des marquages : le résumé, ses vignettes, puis la préparation des dialogues.
+            val viewModel = summaryViewModel(reviews = FailingOnceRepository(repository, failOnRead = 3))
             val effects = collectEffects(viewModel)
 
             viewModel.onEvent(SummaryEvent.Confirm)

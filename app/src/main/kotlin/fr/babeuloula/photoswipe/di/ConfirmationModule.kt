@@ -11,6 +11,7 @@ import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.usecase.CleanOrphanEntries
+import fr.babeuloula.photoswipe.domain.usecase.GetMarkedPreviews
 import fr.babeuloula.photoswipe.domain.usecase.GetPendingFavorites
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
@@ -34,6 +35,12 @@ object ConfirmationModule {
         window: ReviewWindowProvider,
         clock: Clock,
     ): GetSessionSummary = GetSessionSummary(reviewRepository, journal, window, clock)
+
+    @Provides
+    fun provideGetMarkedPreviews(
+        reviewRepository: ReviewRepository,
+        mediaSource: MediaSource,
+    ): GetMarkedPreviews = GetMarkedPreviews(reviewRepository, mediaSource)
 
     @Provides
     fun providePrepareTrash(

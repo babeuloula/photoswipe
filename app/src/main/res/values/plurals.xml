@@ -52,4 +52,9 @@
         <item quantity="one">%d favorite</item>
         <item quantity="other">%d favorites</item>
     </plurals>
+    <!-- Sous l'espace libéré du résumé : il dépend de la confirmation (ADR 0025). -->
+    <plurals name="summary_if_confirmed">
+        <item quantity="one">If you confirm the %d marked item</item>
+        <item quantity="other">If you confirm the %d marked items</item>
+    </plurals>
 </resources>

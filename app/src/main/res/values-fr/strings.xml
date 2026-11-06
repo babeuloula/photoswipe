@@ -113,4 +113,6 @@
     <string name="deck_already_favorite">Dans vos favoris</string>
     <string name="summary_sorted_today">Trié aujourd\'hui</string>
     <string name="summary_to_confirm">En attente de votre confirmation</string>
+    <string name="summary_more_marked">+%1$d</string>
+    <string name="summary_more_marked_description">et %1$d autres</string>
 </resources>

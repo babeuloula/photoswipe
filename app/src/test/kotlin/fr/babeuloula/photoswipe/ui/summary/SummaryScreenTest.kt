@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.summary
 
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -10,12 +11,15 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
+import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -38,7 +42,11 @@ class SummaryScreenTest {
     private val events = mutableListOf<SummaryEvent>()
 
     private fun show(state: SummaryUiState) {
-        composeRule.activity.setContent { PhotoSwipeTheme { SummaryScreen(state = state, onEvent = { events += it }) } }
+        composeRule.activity.setContent {
+            CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
+                PhotoSwipeTheme { SummaryScreen(state = state, onEvent = { events += it }) }
+            }
+        }
     }
 
     private fun text(id: Int): String = composeRule.activity.getString(id)
@@ -59,7 +67,7 @@ class SummaryScreenTest {
         show(SummaryUiState.Loaded(summary))
 
         composeRule.onNodeWithText("12 items kept").assertIsDisplayed()
-        composeRule.onNodeWithText("4 items marked for deletion").assertIsDisplayed()
+        composeRule.onNodeWithText("4 items marked for deletion").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("1 favorite").assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.summary_sorted_today)).assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.summary_to_confirm)).assertIsDisplayed()
@@ -70,11 +78,20 @@ class SummaryScreenTest {
     fun `shows the summary in French`() {
         show(SummaryUiState.Loaded(summary.copy(keptCount = 1, markedForDeletionCount = 2, favoriteCount = 0)))
 
-        composeRule.onNodeWithText("1 média gardé").assertIsDisplayed()
-        composeRule.onNodeWithText("2 médias marqués pour suppression").assertIsDisplayed()
-        composeRule.onNodeWithText("0 favori").assertIsDisplayed()
-        composeRule.onNodeWithText("Trié aujourd'hui").assertIsDisplayed()
-        composeRule.onNodeWithText("Espace libéré estimé").assertIsDisplayed()
+        composeRule.onNodeWithText("1 média gardé").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("2 médias marqués pour suppression").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("0 favori").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Trié aujourd'hui").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Espace libéré estimé").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun `previews the last marked media and says how many others wait, and what the freed space depends on`() {
+        val previews = (1L..5L).map { aMediaItem(id = it) }
+        show(SummaryUiState.Loaded(summary.copy(markedForDeletionCount = 12), markedPreviews = previews))
+
+        composeRule.onNodeWithText("If you confirm the 12 marked items").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("and 7 more").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -88,7 +105,7 @@ class SummaryScreenTest {
     fun `goes home later or back with the arrow`() {
         show(SummaryUiState.Loaded(summary))
 
-        composeRule.onNodeWithText(text(R.string.summary_later)).performScrollTo().performClick()
+        composeRule.onNodeWithText(text(R.string.summary_later)).performClick()
         composeRule.onNodeWithContentDescription(text(R.string.navigate_back)).performClick()
 
         assertEquals(listOf(SummaryEvent.Later, SummaryEvent.Back), events)
@@ -100,7 +117,6 @@ class SummaryScreenTest {
 
         composeRule
             .onNodeWithText(text(R.string.summary_confirm))
-            .performScrollTo()
             .assertIsEnabled()
             .performClick()
 

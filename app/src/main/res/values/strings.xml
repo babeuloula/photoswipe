@@ -124,4 +124,6 @@
     <string name="deck_already_favorite">In your favorites</string>
     <string name="summary_sorted_today">Sorted today</string>
     <string name="summary_to_confirm">Waiting for your confirmation</string>
+    <string name="summary_more_marked">+%1$d</string>
+    <string name="summary_more_marked_description">and %1$d more</string>
 </resources>

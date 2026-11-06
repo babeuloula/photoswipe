@@ -56,4 +56,9 @@
         <item quantity="many">%d de favoris</item>
         <item quantity="other">%d favoris</item>
     </plurals>
+    <!-- Sous l'espace libéré du résumé : il dépend de la confirmation (ADR 0025). -->
+    <plurals name="summary_if_confirmed">
+        <item quantity="one">Si vous confirmez le %d média marqué</item>
+        <item quantity="other">Si vous confirmez les %d médias marqués</item>
+    </plurals>
 </resources>
