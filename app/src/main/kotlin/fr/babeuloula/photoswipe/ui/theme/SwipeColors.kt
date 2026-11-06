@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.Color
  * @property onFavorite contenu posé sur [favorite].
  * @property favoriteContainer pastille du voile du menu favori.
  * @property onFavoriteContainer contenu posé sur [favoriteContainer].
+ * @property favoriteOnFixed cœur posé sur le brun du bord de film (`onPrimaryFixed`), le même en
+ *   clair et en sombre.
  */
 @Immutable
 data class SwipeColors(
@@ -45,6 +47,7 @@ data class SwipeColors(
     val onFavorite: Color,
     val favoriteContainer: Color,
     val onFavoriteContainer: Color,
+    val favoriteOnFixed: Color,
 )
 
 /** Tons d'une couleur personnalisée : la couleur, son contenu, son conteneur et le contenu de celui-ci. */
@@ -87,6 +90,7 @@ internal fun swipeColors(
         onFavorite = favorite.onColor,
         favoriteContainer = favorite.container,
         onFavoriteContainer = favorite.onContainer,
+        favoriteOnFixed = FavoriteDark.color,
     )
 }
 

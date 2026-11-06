@@ -8,14 +8,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -56,6 +58,8 @@ import coil3.compose.AsyncImage
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.ui.common.FilmEdgeChip
+import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.motion
@@ -65,9 +69,10 @@ import java.time.Duration
 import java.time.LocalDate
 
 /**
- * Carte plein écran d'un souvenir (SPEC §4.3) : l'image, chargée par Coil à la taille de la carte,
- * et en bas l'étiquette « Il y a 3 ans · 14 mai 2023 » avec le poids du fichier. Sans état : elle
- * affiche [card] et rien d'autre.
+ * Carte plein écran d'un souvenir (SPEC §4.3), arrondie à 28 dp : l'image, chargée par Coil à la
+ * taille de la carte ; en haut le repère de bord de film « Il y a 3 ans · 6 nov. 2023 » et, s'il y a
+ * lieu, le cœur des favoris ; en bas le poids du fichier et, pour une vidéo, sa durée (ADR 0025).
+ * Sans état : elle affiche [card] et rien d'autre.
  *
  * Si l'image ne s'ouvre pas (fichier disparu, données de démo sans fichier, vidéo dont la
  * miniature n'est pas encore gérée), une icône et un message remplacent l'image.
@@ -94,6 +99,7 @@ fun MediaCard(
         }
     Card(
         modifier = modifier,
+        shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -111,22 +117,26 @@ fun MediaCard(
                 Unavailable(type = card.type, modifier = Modifier.align(Alignment.Center))
             }
             val videoPlayer = LocalCardVideoPlayer.current
-            if (active && card.type == MediaType.VIDEO && videoPlayer != null) {
-                ActiveVideo(card = card, videoPlayer = videoPlayer)
-            } else if (card.type == MediaType.VIDEO) {
-                VideoBadge(
-                    remaining = card.duration,
-                    playing = false,
-                    modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
-                )
-            }
-            MemoryLabel(
+            val video =
+                if (active && card.type == MediaType.VIDEO && videoPlayer != null) {
+                    activeVideo(card = card, videoPlayer = videoPlayer)
+                } else {
+                    null
+                }
+            TopRow(
                 card = card,
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomStart)
-                        .fillMaxWidth()
-                        .padding(12.dp),
+                modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(CARD_PADDING),
+            ) {
+                if (video != null && !video.ended) {
+                    SoundButton(muted = video.muted, onToggle = video.toggleSound)
+                }
+            }
+            BottomChips(
+                sizeBytes = card.sizeBytes,
+                duration = shownDuration(card, video),
+                isVideo = card.type == MediaType.VIDEO && video?.ended != true,
+                playing = video?.playing == true,
+                modifier = Modifier.align(Alignment.BottomStart).padding(CARD_PADDING),
             )
         }
     }
@@ -145,10 +155,10 @@ fun MediaCard(
  */
 @OptIn(UnstableApi::class)
 @Composable
-private fun BoxScope.ActiveVideo(
+private fun BoxScope.activeVideo(
     card: MediaCardUiState,
     videoPlayer: CardVideoPlayer,
-) {
+): ActiveVideoState {
     LaunchedEffect(card.uri, videoPlayer) {
         if (!videoPlayer.resumesImmediately(card.uri)) delay(AUTOPLAY_DELAY.toMillis())
         videoPlayer.play(card.uri)
@@ -181,19 +191,43 @@ private fun BoxScope.ActiveVideo(
         onToggle = { if (playing) videoPlayer.pauseByUser(card.uri) else videoPlayer.play(card.uri) },
         modifier = Modifier.matchParentSize(),
     )
-    if (!ended) {
-        VideoBadge(
-            remaining = card.duration?.let { (it - position).coerceAtLeast(Duration.ZERO) },
-            playing = playing,
-            modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
-        )
-        SoundButton(
-            muted = videoPlayer.muted,
-            onToggle = videoPlayer::toggleSound,
-            modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
-        )
-    }
+    return ActiveVideoState(
+        playing = playing,
+        ended = ended,
+        remaining = card.duration?.let { (it - position).coerceAtLeast(Duration.ZERO) },
+        muted = videoPlayer.muted,
+        toggleSound = videoPlayer::toggleSound,
+    )
 }
+
+/** Durée affichée d'une vidéo : totale au repos, restante pendant la lecture, rien à la fin. */
+private fun shownDuration(
+    card: MediaCardUiState,
+    video: ActiveVideoState?,
+): Duration? =
+    when {
+        card.type != MediaType.VIDEO -> null
+        video == null -> card.duration
+        video.ended -> null
+        else -> video.remaining
+    }
+
+/**
+ * État de la vidéo de la carte du dessus, lu par les pastilles et le bouton du son.
+ *
+ * @property playing vidéo en cours de lecture.
+ * @property ended vidéo lue jusqu'au bout.
+ * @property remaining temps restant, si la durée est connue.
+ * @property muted son coupé.
+ * @property toggleSound active ou coupe le son.
+ */
+private class ActiveVideoState(
+    val playing: Boolean,
+    val ended: Boolean,
+    val remaining: Duration?,
+    val muted: Boolean,
+    val toggleSound: () -> Unit,
+)
 
 /**
  * Zone de tap de la vidéo et son gros bouton central : ▶ tant qu'elle ne joue pas ; au démarrage,
@@ -229,8 +263,8 @@ private fun PlayPauseOverlay(
         contentAlignment = Alignment.Center,
     ) {
         Surface(
-            color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = LABEL_ALPHA),
-            contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+            color = MaterialTheme.colorScheme.onPrimaryFixed,
+            contentColor = MaterialTheme.colorScheme.primaryFixed,
             shape = CircleShape,
             modifier =
                 Modifier
@@ -266,14 +300,15 @@ private fun SoundButton(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FilledTonalIconButton(
+    FilledIconButton(
         onClick = onToggle,
         colors =
-            IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.inverseSurface.copy(alpha = LABEL_ALPHA),
-                contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+            IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.onPrimaryFixed,
+                contentColor = MaterialTheme.colorScheme.primaryFixed,
             ),
-        modifier = modifier,
+        // Cible de 48 dp, dans le coin de la carte : déborde de la marge du repère.
+        modifier = modifier.offset(x = 8.dp, y = (-8).dp).size(48.dp),
     ) {
         Icon(
             painter = painterResource(if (muted) R.drawable.ic_volume_off else R.drawable.ic_volume_up),
@@ -286,10 +321,10 @@ private fun SoundButton(
 }
 
 /** Taille du gros bouton central d'une vidéo. */
-private val BIG_BUTTON_SIZE = 72.dp
+private val BIG_BUTTON_SIZE = 64.dp
 
 /** Taille de son icône. */
-private val BIG_ICON_SIZE = 44.dp
+private val BIG_ICON_SIZE = 32.dp
 
 /** Temps pendant lequel ⏸ reste visible au démarrage, avant de s'effacer. */
 private val PAUSE_ICON_VISIBLE: Duration = Duration.ofMillis(PAUSE_ICON_VISIBLE_MILLIS)
@@ -312,79 +347,77 @@ internal val AUTOPLAY_DELAY: Duration = Duration.ofMillis(AUTOPLAY_DELAY_MILLIS)
 /** Rafraîchissement du temps restant pendant la lecture. */
 private val PROGRESS_TICK: Duration = Duration.ofMillis(PROGRESS_TICK_MILLIS)
 
-/** Étiquette du bas de la carte : « Il y a 3 ans · 14 mai 2023 », le poids du fichier et, s'il y a lieu, un cœur. */
+/**
+ * Haut de la carte : le repère de bord de film « Il y a 3 ans · 6 nov. 2023 », le cœur d'un média
+ * déjà en favori (PS-86) et, pour la vidéo du dessus, [trailing] (le bouton du son).
+ */
 @Composable
-private fun MemoryLabel(
+private fun TopRow(
     card: MediaCardUiState,
     modifier: Modifier = Modifier,
+    trailing: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = LABEL_ALPHA),
-        shape = MaterialTheme.shapes.medium,
+    Row(
         modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Top,
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = memoryLabel(context, card.yearsAgo, card.takenOn),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = fileSizeLabel(context, card.sizeBytes),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            // Déjà en favori dans la galerie, ou en attente dans l'application (PS-86).
-            if (card.favorite) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_favorite_filled),
-                    contentDescription = stringResource(R.string.deck_already_favorite),
-                    tint = MaterialTheme.swipeColors.favorite,
-                )
+        FilmEdgeLabel(
+            text = memoryLabel(context, card.yearsAgo, card.takenOn),
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        Spacer(Modifier.weight(1f))
+        // Déjà en favori dans la galerie, ou en attente dans l'application (PS-86).
+        if (card.favorite) {
+            Surface(
+                color = MaterialTheme.colorScheme.onPrimaryFixed,
+                contentColor = MaterialTheme.swipeColors.favoriteOnFixed,
+                shape = CircleShape,
+                modifier = Modifier.size(FAVORITE_BADGE_SIZE),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_favorite_filled),
+                        contentDescription = stringResource(R.string.deck_already_favorite),
+                    )
+                }
             }
         }
+        trailing()
     }
 }
 
 /**
- * Pastille d'une vidéo (SPEC §4.3) : ▶ et la durée tant qu'elle ne joue pas, ⏸ et le temps restant
- * pendant la lecture. Simple information : TalkBack lit « Durée : 00:32 ».
+ * Bas de la carte : pour une vidéo ([isVideo]), ▶ et la durée au repos, ⏸ et le temps restant
+ * pendant la lecture ; puis le poids du fichier. TalkBack lit « Durée : 00:32 ».
  */
 @Composable
-private fun VideoBadge(
-    remaining: Duration?,
+private fun BottomChips(
+    sizeBytes: Long,
+    duration: Duration?,
+    isVideo: Boolean,
     playing: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val label = remaining?.let { durationLabel(it) }
-    val description = label?.let { stringResource(R.string.deck_video_duration, it) }
-    Surface(
-        color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = LABEL_ALPHA),
-        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-        shape = MaterialTheme.shapes.small,
-        modifier = modifier.clearAndSetSemantics { description?.let { contentDescription = it } },
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Icon(
-                painter =
-                    if (playing) {
+    val context = LocalContext.current
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (isVideo) {
+            val label = duration?.let { durationLabel(it) }
+            val description = label?.let { stringResource(R.string.deck_video_duration, it) }
+            FilmEdgeChip(modifier = Modifier.clearAndSetSemantics { description?.let { contentDescription = it } }) {
+                Icon(
+                    painter =
                         painterResource(
-                            R.drawable.ic_pause_filled,
-                        )
-                    } else {
-                        painterResource(R.drawable.ic_play_arrow_filled)
-                    },
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-            if (label != null) Text(text = label, style = MaterialTheme.typography.labelLarge)
+                            if (playing) R.drawable.ic_pause_filled else R.drawable.ic_play_arrow_filled,
+                        ),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                if (label != null) Text(label)
+            }
         }
+        FilmEdgeChip { Text(fileSizeLabel(context, sizeBytes)) }
     }
 }
 
@@ -422,8 +455,11 @@ private fun Unavailable(
     }
 }
 
-/** Opacité du fond de l'étiquette : lisible sur n'importe quelle photo sans la masquer. */
-private const val LABEL_ALPHA = 0.85f
+/** Marge du repère et des pastilles dans la carte. */
+private val CARD_PADDING = 16.dp
+
+/** Taille de la pastille du cœur des favoris. */
+private val FAVORITE_BADGE_SIZE = 40.dp
 
 /** Souvenir fixe des aperçus : une photo du 14 mai 2023, montrée le 14 mai 2026. */
 internal val PREVIEW_CARD =
