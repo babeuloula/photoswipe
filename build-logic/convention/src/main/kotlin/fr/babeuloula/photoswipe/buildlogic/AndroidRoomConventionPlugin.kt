@@ -15,7 +15,7 @@ import org.gradle.api.artifacts.VersionCatalogsExtension
 class AndroidRoomConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            pluginManager.apply("com.google.devtools.ksp")
+            applyKsp()
             pluginManager.apply("androidx.room")
             extensions.getByType(RoomExtension::class.java).schemaDirectory(layout.projectDirectory.dir(SCHEMA_DIRECTORY).asFile.path)
 
