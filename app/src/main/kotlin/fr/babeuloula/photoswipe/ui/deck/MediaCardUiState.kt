@@ -19,6 +19,8 @@ import java.time.ZoneId
  * pile et non depuis aujourd'hui : un jour rattrapé garde son « Il y a N ans ».
  * @property sizeBytes poids du fichier en octets.
  * @property duration durée d'une vidéo, `null` pour une photo ou une vidéo de durée inconnue.
+ * @property favorite vrai si le média est en favori dans la galerie, ou en favori en attente dans
+ * l'application : la carte affiche un cœur (PS-86).
  */
 data class MediaCardUiState(
     val id: MediaId,
@@ -28,13 +30,18 @@ data class MediaCardUiState(
     val yearsAgo: Int,
     val sizeBytes: Long,
     val duration: Duration? = null,
+    val favorite: Boolean = false,
 ) {
     companion object {
-        /** Carte du souvenir [media] montré dans la pile du jour [day], dans le fuseau [zone]. */
+        /**
+         * Carte du souvenir [media] montré dans la pile du jour [day], dans le fuseau [zone] ;
+         * [favorite] vaut vrai par défaut si la galerie le dit en favori.
+         */
         fun of(
             media: MediaItem,
             day: LocalDate,
             zone: ZoneId,
+            favorite: Boolean = media.isFavorite,
         ): MediaCardUiState {
             val takenOn = media.takenAt.atZone(zone).toLocalDate()
             return MediaCardUiState(
@@ -45,6 +52,7 @@ data class MediaCardUiState(
                 yearsAgo = day.year - takenOn.year,
                 sizeBytes = media.sizeBytes,
                 duration = media.duration,
+                favorite = favorite,
             )
         }
     }

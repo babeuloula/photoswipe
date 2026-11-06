@@ -59,6 +59,17 @@ class MediaStoreMediaSourceTest {
         }
 
     @Test
+    fun `reads whether a media is already in the gallery favorites`() =
+        runTest {
+            provider.addImage(id = 1, dateTaken = july15th2025.toEpochMilli(), favorite = true)
+            provider.addImage(id = 2, dateTaken = july15th2025.toEpochMilli())
+
+            val media = source.mediaTakenIn(listOf(july15th2025..<july15th2025.plusSeconds(1)))
+
+            assertEquals(mapOf(1L to true, 2L to false), media.associate { it.id.value to it.isFavorite })
+        }
+
+    @Test
     fun `maps a photo to a media item with its content uri, date and size`() =
         runTest {
             provider.addImage(id = 42, dateTaken = july15th2025.toEpochMilli(), size = 3_500_000)

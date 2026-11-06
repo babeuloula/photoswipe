@@ -78,6 +78,7 @@ class MediaStoreMediaSource
                             takenAt = takenAt(columns),
                             sizeBytes = nonNegativeLong(columns.size) ?: 0,
                             duration = columns.duration?.let { nonNegativeLong(it) }?.let { Duration.ofMillis(it) },
+                            isFavorite = getInt(columns.favorite) == 1,
                         ),
                     )
                 }
@@ -114,6 +115,7 @@ class MediaStoreMediaSource
             val dateTaken = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_TAKEN)
             val dateAdded = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_ADDED)
             val size = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)
+            val favorite = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.IS_FAVORITE)
             val duration = cursor.getColumnIndex(MediaStore.MediaColumns.DURATION).takeIf { it >= 0 }
         }
 
@@ -148,4 +150,5 @@ private val COMMON_PROJECTION =
         MediaStore.MediaColumns.DATE_TAKEN,
         MediaStore.MediaColumns.DATE_ADDED,
         MediaStore.MediaColumns.SIZE,
+        MediaStore.MediaColumns.IS_FAVORITE,
     )

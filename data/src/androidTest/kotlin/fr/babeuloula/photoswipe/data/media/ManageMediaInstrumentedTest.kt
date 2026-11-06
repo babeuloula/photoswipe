@@ -8,6 +8,9 @@ import android.provider.MediaStore
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import fr.babeuloula.photoswipe.domain.model.MediaId
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -81,6 +84,9 @@ class ManageMediaInstrumentedTest {
         launch(MediaStore.createFavoriteRequest(resolver, listOf(photoUri()), true).intentSender)
 
         assertTrue(waitFor { column(MediaStore.MediaColumns.IS_FAVORITE).takeIf { it == 1 } } == 1)
+        // La galerie lue par l'application voit le favori (cœur de la carte, PS-86).
+        val media = runBlocking { MediaStoreMediaSource(resolver, Dispatchers.IO).mediaByIds(setOf(MediaId(photoId))) }
+        assertTrue(media.single().isFavorite)
     }
 
     @Test

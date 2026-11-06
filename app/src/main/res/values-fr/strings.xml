@@ -90,4 +90,5 @@
     <string name="home_manage_media_tip_dismiss">Fermer le conseil</string>
     <string name="summary_trash_confirm_text">Vous pourrez les restaurer depuis la corbeille de votre galerie pendant 30 jours.</string>
     <string name="summary_trash_confirm_action">Mettre à la corbeille</string>
+    <string name="deck_already_favorite">Dans vos favoris</string>
 </resources>

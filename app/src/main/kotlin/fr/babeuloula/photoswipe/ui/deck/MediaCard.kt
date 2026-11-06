@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
@@ -63,6 +64,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.motion
+import fr.babeuloula.photoswipe.ui.theme.swipeColors
 import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.LocalDate
@@ -315,7 +317,7 @@ internal val AUTOPLAY_DELAY: Duration = Duration.ofMillis(AUTOPLAY_DELAY_MILLIS)
 /** Rafraîchissement du temps restant pendant la lecture. */
 private val PROGRESS_TICK: Duration = Duration.ofMillis(PROGRESS_TICK_MILLIS)
 
-/** Étiquette du bas de la carte : « Il y a 3 ans · 14 mai 2023 » et le poids du fichier. */
+/** Étiquette du bas de la carte : « Il y a 3 ans · 14 mai 2023 », le poids du fichier et, s'il y a lieu, un cœur. */
 @Composable
 private fun MemoryLabel(
     card: MediaCardUiState,
@@ -327,16 +329,26 @@ private fun MemoryLabel(
         shape = MaterialTheme.shapes.medium,
         modifier = modifier,
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = memoryLabel(context, card.yearsAgo, card.takenOn),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = fileSizeLabel(context, card.sizeBytes),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = memoryLabel(context, card.yearsAgo, card.takenOn),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = fileSizeLabel(context, card.sizeBytes),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            // Déjà en favori dans la galerie, ou en attente dans l'application (PS-86).
+            if (card.favorite) {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = stringResource(R.string.deck_already_favorite),
+                    tint = MaterialTheme.swipeColors.favorite,
+                )
+            }
         }
     }
 }

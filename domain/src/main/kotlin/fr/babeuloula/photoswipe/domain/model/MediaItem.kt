@@ -14,6 +14,7 @@ import java.time.Instant
  * en jour local se fait au moment du calcul, avec le fuseau de l'appareil (ADR 0006).
  * @property sizeBytes taille du fichier en octets, utilisée pour l'espace libéré estimé.
  * @property duration durée d'une vidéo, `null` si elle est inconnue ; toujours `null` pour une photo.
+ * @property isFavorite vrai si le média est déjà en favori dans la galerie (`IS_FAVORITE`).
  */
 data class MediaItem(
     val id: MediaId,
@@ -22,6 +23,7 @@ data class MediaItem(
     val takenAt: Instant,
     val sizeBytes: Long,
     val duration: Duration? = null,
+    val isFavorite: Boolean = false,
 ) {
     init {
         require(sizeBytes >= 0) { "sizeBytes must not be negative: $sizeBytes" }

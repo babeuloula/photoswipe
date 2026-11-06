@@ -27,6 +27,7 @@ import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
 import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
+import fr.babeuloula.photoswipe.domain.usecase.GetPendingFavorites
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
@@ -101,6 +102,7 @@ class DeckViewModelTest {
                     OfferManageMediaTip(settings),
                     mediaActionIntents = { intentSender },
                     mediaManagement = { mediaManagementGranted },
+                    GetPendingFavorites(repository),
                 ),
         )
 
@@ -672,5 +674,51 @@ class DeckViewModelTest {
             viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = true))
 
             assertEquals(DeckEffect.OpenSummary(keptCount = 0), effects.last())
+        }
+
+    @Test
+    fun `shows a heart on a media already in the gallery favorites`() =
+        runTest {
+            val favorite = takenOn(1, 2020).copy(isFavorite = true)
+            val viewModel = deckViewModel(FakeMediaSource(listOf(favorite, takenOn(2, 2023))))
+
+            val cards = (viewModel.uiState.value as DeckUiState.Loaded).cards
+
+            assertEquals(mapOf(MediaId(2) to false, MediaId(1) to true), cards.associate { it.id to it.favorite })
+        }
+
+    @Test
+    fun `shows a heart on a media whose favorite is still pending in the app`() =
+        runTest {
+            repository.save(
+                aReviewEntry(mediaId = 1, reviewYear = 2025, decision = ReviewDecision.KEPT, favoritePending = true),
+            )
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
+
+            assertTrue((viewModel.uiState.value as DeckUiState.Loaded).current.favorite)
+        }
+
+    @Test
+    fun `shows a heart on a card brought back by undo once its favorite was accepted`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+            viewModel.onEvent(DeckEvent.Favorite)
+            viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = true))
+
+            viewModel.onEvent(DeckEvent.Undo)
+
+            assertTrue((viewModel.uiState.value as DeckUiState.Loaded).current.favorite)
+        }
+
+    @Test
+    fun `drops the heart of a refused favorite cancelled by undo`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+            viewModel.onEvent(DeckEvent.Favorite)
+            viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = false))
+
+            viewModel.onEvent(DeckEvent.Undo)
+
+            assertEquals(false, (viewModel.uiState.value as DeckUiState.Loaded).current.favorite)
         }
 }
