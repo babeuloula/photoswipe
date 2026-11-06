@@ -16,6 +16,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -44,7 +45,8 @@ import javax.inject.Inject
 /**
  * Outils développeur (SPEC §10), présents seulement dans la variante debug : une entrée à part
  * dans le lanceur, déclarée par le manifeste debug, et une entrée dans les réglages. Ils activent
- * les données de démo et remettent la base des décisions à zéro.
+ * les données de démo, ajoutent des médias d'exemple à la vraie galerie (ou les retirent) et
+ * remettent la base des décisions à zéro.
  */
 @AndroidEntryPoint
 class DeveloperToolsActivity : ComponentActivity() {
@@ -53,6 +55,9 @@ class DeveloperToolsActivity : ComponentActivity() {
 
     @Inject
     lateinit var decisionsReset: DecisionsReset
+
+    @Inject
+    lateinit var gallerySeeder: GallerySeeder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -63,23 +68,48 @@ class DeveloperToolsActivity : ComponentActivity() {
                     initialDemoData = settings.demoDataEnabled,
                     onDemoDataChange = { settings.demoDataEnabled = it },
                     onResetDecisions = decisionsReset::resetAll,
+                    onSeedGallery = gallerySeeder::seed,
+                    onRemoveSeeded = gallerySeeder::removeSeeded,
                 )
             }
         }
     }
 }
 
-/** Écran des outils : données de démo, puis remise à zéro des décisions, confirmée par un dialogue. */
+/**
+ * Écran des outils : données de démo, médias d'exemple dans la galerie, puis remise à zéro des
+ * décisions, confirmée par un dialogue.
+ */
 @Composable
 internal fun DeveloperToolsScreen(
     initialDemoData: Boolean,
     onDemoDataChange: (Boolean) -> Unit,
     onResetDecisions: suspend () -> Unit,
+    onSeedGallery: suspend () -> Int,
+    onRemoveSeeded: suspend () -> Int,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val resources = LocalResources.current
     var confirmingReset by remember { mutableStateOf(false) }
+    var seeding by remember { mutableStateOf(false) }
+
+    fun runSeeder(
+        action: suspend () -> Int,
+        done: Int,
+    ) {
+        seeding = true
+        scope.launch {
+            val message =
+                runCatching { action() }.fold(
+                    onSuccess = { count -> resources.getQuantityString(done, count, count) },
+                    onFailure = { resources.getString(R.string.developer_tools_seed_failed) },
+                )
+            seeding = false
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(message)
+        }
+    }
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { innerPadding ->
         Column(
             modifier =
@@ -97,6 +127,17 @@ internal fun DeveloperToolsScreen(
                 modifier = Modifier.semantics { heading() },
             )
             DemoDataRow(initialDemoData, onDemoDataChange)
+            ToolDescription(R.string.developer_tools_seed, R.string.developer_tools_seed_hint)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(
+                    onClick = { runSeeder(onSeedGallery, R.plurals.developer_tools_seed_added) },
+                    enabled = !seeding,
+                ) { Text(stringResource(R.string.developer_tools_seed_add)) }
+                OutlinedButton(
+                    onClick = { runSeeder(onRemoveSeeded, R.plurals.developer_tools_seed_removed) },
+                    enabled = !seeding,
+                ) { Text(stringResource(R.string.developer_tools_seed_remove)) }
+            }
             ToolDescription(R.string.developer_tools_reset, R.string.developer_tools_reset_hint)
             Button(
                 onClick = { confirmingReset = true },

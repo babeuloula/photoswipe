@@ -37,6 +37,8 @@ class MediaSourceBindingTest {
             "fr.babeuloula.photoswipe.di.SwitchableMediaSource",
             "fr.babeuloula.photoswipe.debug.DeveloperSettings",
             "fr.babeuloula.photoswipe.debug.DecisionsReset",
+            "fr.babeuloula.photoswipe.debug.GallerySeeder",
+            "fr.babeuloula.photoswipe.data.seed.MediaStoreSeeder",
         ).forEach { name -> assertTrue(name, runCatching { Class.forName(name) }.isFailure) }
     }
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pluriels des outils développeur, variante debug seulement (SPEC §10). -->
+<resources>
+    <plurals name="developer_tools_seed_added">
+        <item quantity="one">%d photo or video added to the gallery.</item>
+        <item quantity="other">%d photos and videos added to the gallery.</item>
+    </plurals>
+    <plurals name="developer_tools_seed_removed">
+        <item quantity="one">%d sample media removed from the gallery.</item>
+        <item quantity="other">%d sample media removed from the gallery.</item>
+    </plurals>
+</resources>

@@ -10,4 +10,9 @@
     <string name="developer_tools_reset_confirm_text">Tous les souvenirs redeviennent à trier. Impossible d\'annuler.</string>
     <string name="developer_tools_reset_cancel">Annuler</string>
     <string name="developer_tools_reset_done">Décisions réinitialisées. Rouvrez PhotoSwipe pour le voir.</string>
+    <string name="developer_tools_seed">Médias d\'exemple dans la galerie</string>
+    <string name="developer_tools_seed_hint">Ajoute de vraies photos et vidéos datées à la galerie de l\'appareil (dossier « PhotoSwipe seed ») pour aujourd\'hui et les 6 jours précédents. Elles appartiennent à PhotoSwipe : Android peut sauter ses dialogues de corbeille et de favori pour elles. Pour tester ces dialogues, poussez des photos avec scripts/seed-emulator.sh.</string>
+    <string name="developer_tools_seed_add">Ajouter</string>
+    <string name="developer_tools_seed_remove">Retirer</string>
+    <string name="developer_tools_seed_failed">Impossible de modifier la galerie.</string>
 </resources>
