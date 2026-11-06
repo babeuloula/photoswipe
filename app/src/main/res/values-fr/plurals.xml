@@ -31,11 +31,6 @@
         <item quantity="many">%d de médias marqués pour suppression</item>
         <item quantity="other">%d médias marqués pour suppression</item>
     </plurals>
-    <plurals name="summary_favorites">
-        <item quantity="one">%d favori</item>
-        <item quantity="many">%d de favoris</item>
-        <item quantity="other">%d favoris</item>
-    </plurals>
     <plurals name="summary_trashed">
         <item quantity="one">%d média envoyé à la corbeille. Vous pouvez le restaurer depuis la corbeille de votre galerie pendant environ 30 jours.</item>
         <item quantity="many">%d de médias envoyés à la corbeille. Vous pouvez les restaurer depuis la corbeille de votre galerie pendant environ 30 jours.</item>
@@ -45,16 +40,6 @@
         <item quantity="one">%d média reste marqué pour suppression.</item>
         <item quantity="many">%d de médias restent marqués pour suppression.</item>
         <item quantity="other">%d médias restent marqués pour suppression.</item>
-    </plurals>
-    <plurals name="summary_still_favorite">
-        <item quantity="one">%d favori reste en attente.</item>
-        <item quantity="many">%d de favoris restent en attente.</item>
-        <item quantity="other">%d favoris restent en attente.</item>
-    </plurals>
-    <plurals name="summary_favorited">
-        <item quantity="one">%d média ajouté aux favoris de votre galerie.</item>
-        <item quantity="many">%d de médias ajoutés aux favoris de votre galerie.</item>
-        <item quantity="other">%d médias ajoutés aux favoris de votre galerie.</item>
     </plurals>
     <plurals name="reminder_title">
         <item quantity="one">%d souvenir à trier</item>

@@ -1,14 +1,20 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import android.app.PendingIntent
+import android.content.Intent
+import android.content.IntentSender
 import androidx.lifecycle.SavedStateHandle
 import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
+import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.DecisionRecord
+import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
@@ -23,6 +29,9 @@ import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
+import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
+import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
+import fr.babeuloula.photoswipe.domain.usecase.RequestFavorite
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -35,6 +44,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import java.io.IOException
 import java.time.Instant
 import java.time.LocalDate
@@ -84,7 +94,26 @@ class DeckViewModelTest {
                 ),
             getDaySession = GetDaySession(journal, repository, source, ReviewWindowProvider(clock)),
             clock = clock,
+            galleryFavorite =
+                GalleryFavorite(
+                    RequestFavorite(FakeMediaActionRequestFactory()),
+                    RecordFavoriteResult(repository),
+                    OfferManageMediaTip(settings),
+                    mediaActionIntents = { intentSender },
+                    mediaManagement = { mediaManagementGranted },
+                ),
         )
+
+    private val settings = FakeSettingsRepository()
+
+    /** Accès « Gestion des médias » simulé, refusé par défaut. */
+    private var mediaManagementGranted = false
+
+    /** Demande système factice : un vrai `IntentSender`, jamais lancé ici. */
+    private val intentSender: IntentSender =
+        PendingIntent
+            .getActivity(RuntimeEnvironment.getApplication(), 0, Intent(), PendingIntent.FLAG_IMMUTABLE)
+            .intentSender
 
     private fun DeckViewModel.cardIds(): List<MediaId> =
         when (val state = uiState.value) {
@@ -155,7 +184,10 @@ class DeckViewModelTest {
 
             viewModel.onEvent(DeckEvent.Finish)
 
-            assertEquals(DeckEffect.OpenSummary(keptCount = 2), viewModel.uiEffects.first())
+            assertEquals(
+                DeckEffect.OpenSummary(keptCount = 2),
+                viewModel.uiEffects.first { it is DeckEffect.OpenSummary },
+            )
         }
 
     @Test
@@ -571,4 +603,74 @@ class DeckViewModelTest {
 
         override suspend fun mediaByIds(ids: Set<MediaId>): List<MediaItem> = delegate.mediaByIds(ids)
     }
+
+    @Test
+    fun `asks the gallery to favorite the media right away`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+
+            viewModel.onEvent(DeckEvent.Favorite)
+
+            assertEquals(DeckEffect.LaunchFavoriteRequest(intentSender), viewModel.uiEffects.first())
+        }
+
+    @Test
+    fun `applies the favorite once the request is accepted`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+            viewModel.onEvent(DeckEvent.Favorite)
+
+            viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = true))
+
+            val entry = repository.entries.single()
+            assertEquals(ReviewDecision.KEPT, entry.decision)
+            assertEquals(false, entry.favoritePending)
+            assertEquals(ManageMediaTip.OFFERED, settings.manageMediaTip)
+        }
+
+    @Test
+    fun `keeps the media with its favorite pending when the request is refused`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+            viewModel.onEvent(DeckEvent.Favorite)
+
+            viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = false))
+
+            val entry = repository.entries.single()
+            assertEquals(ReviewDecision.KEPT, entry.decision)
+            assertTrue(entry.favoritePending)
+            assertEquals(ManageMediaTip.NOT_OFFERED, settings.manageMediaTip)
+        }
+
+    @Test
+    fun `does not offer media management when the favorite went through silently`() =
+        runTest {
+            mediaManagementGranted = true
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2023))))
+            viewModel.onEvent(DeckEvent.Favorite)
+
+            viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = true))
+
+            assertEquals(ManageMediaTip.NOT_OFFERED, settings.manageMediaTip)
+        }
+
+    @Test
+    fun `opens the summary only once the favorite of the last card is answered`() =
+        runTest {
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
+            val effects = mutableListOf<DeckEffect>()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                viewModel.uiEffects.collect {
+                    effects +=
+                        it
+                }
+            }
+
+            viewModel.onEvent(DeckEvent.Favorite)
+            assertEquals(listOf<DeckEffect>(DeckEffect.LaunchFavoriteRequest(intentSender)), effects)
+
+            viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = true))
+
+            assertEquals(DeckEffect.OpenSummary(keptCount = 0), effects.last())
+        }
 }

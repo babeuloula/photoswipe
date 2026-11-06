@@ -12,9 +12,9 @@ import java.time.LocalDate
  * Met un média en favori pendant la revue d'un jour (menu du swipe vers le haut, SPEC §2).
  *
  * Un favori est toujours gardé : la décision est `KEPT`, avec un favori système en attente
- * (`favorite_pending`). Le favori n'est appliqué à la galerie qu'en fin de session, par une demande
- * système groupée (SPEC §3.5) ; ici, seule la décision est écrite, avant de rendre la main
- * (SPEC §3.4). Sur un média déjà gardé cette année, la décision gardée est remplacée et l'undo la
+ * (`favorite_pending`). La pile demande aussitôt le favori à la galerie (`RequestFavorite`), et
+ * `RecordFavoriteResult` l'applique si l'utilisateur accepte (SPEC §2, §3.5) ; ici, seule la
+ * décision est écrite, avant de rendre la main (SPEC §3.4). Sur un média déjà gardé cette année, la décision gardée est remplacée et l'undo la
  * restaure.
  *
  * @param journal journal du jour, pour l'undo (ADR 0019).

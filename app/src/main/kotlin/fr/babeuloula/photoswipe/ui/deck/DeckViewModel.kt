@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import android.content.IntentSender
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -106,8 +107,18 @@ sealed interface DeckEvent {
     /** Menu fermé sans choix : la carte reste en place. */
     data object CloseMenu : DeckEvent
 
-    /** « Favori » du menu : garder le média et demander sa mise en favori (SPEC §2, §3.5). */
+    /** « Favori » du menu : garder le média et demander aussitôt sa mise en favori à la galerie (SPEC §2). */
     data object Favorite : DeckEvent
+
+    /**
+     * Réponse à la demande de favori de la galerie (dialogue d'Android, ou accord immédiat avec
+     * l'accès « Gestion des médias »).
+     *
+     * @property confirmed vrai si le favori a été accepté.
+     */
+    data class FavoriteRequestAnswered(
+        val confirmed: Boolean,
+    ) : DeckEvent
 
     /** « Partager » du menu : envoyer le média du dessus ailleurs, sans changer son état (SPEC §2). */
     data object Share : DeckEvent
@@ -137,6 +148,15 @@ sealed interface DeckEffect {
         val uri: String,
         val type: MediaType,
     ) : DeckEffect
+
+    /**
+     * Lancer la demande de favori de la galerie ; la réponse revient par [DeckEvent.FavoriteRequestAnswered].
+     *
+     * @property intentSender demande système d'ajout aux favoris.
+     */
+    data class LaunchFavoriteRequest(
+        val intentSender: IntentSender,
+    ) : DeckEffect
 }
 
 /**
@@ -155,6 +175,7 @@ class DeckViewModel
         private val decisions: DeckDecisions,
         private val getDaySession: GetDaySession,
         private val clock: Clock,
+        private val galleryFavorite: GalleryFavorite,
     ) : ViewModel() {
         /** Jour cible de la pile. */
         val day: LocalDate = savedStateHandle.toRoute<DeckRoute>().day
@@ -185,16 +206,52 @@ class DeckViewModel
         /** Traite une action de l'utilisateur. */
         fun onEvent(event: DeckEvent) {
             when (event) {
-                DeckEvent.Retry -> load()
-                DeckEvent.Finish -> effects.trySend(DeckEffect.OpenSummary(keptCount()))
-                DeckEvent.Back -> effects.trySend(DeckEffect.Close)
-                DeckEvent.Keep -> decideTopCard(decisions.keepMedia::invoke)
-                DeckEvent.MarkForDeletion -> decideTopCard(decisions.markForDeletion::invoke)
-                DeckEvent.Favorite -> decideTopCard(decisions.favoriteMedia::invoke)
-                DeckEvent.Undo -> undo()
-                DeckEvent.OpenMenu -> setMenuOpen(true)
-                DeckEvent.CloseMenu -> setMenuOpen(false)
-                DeckEvent.Share -> shareTopCard()
+                DeckEvent.Retry -> {
+                    load()
+                }
+
+                DeckEvent.Finish -> {
+                    effects.trySend(DeckEffect.OpenSummary(keptCount()))
+                }
+
+                DeckEvent.Back -> {
+                    effects.trySend(DeckEffect.Close)
+                }
+
+                DeckEvent.Keep -> {
+                    decideTopCard(decisions.keepMedia::invoke)
+                }
+
+                DeckEvent.MarkForDeletion -> {
+                    decideTopCard(decisions.markForDeletion::invoke)
+                }
+
+                DeckEvent.Favorite -> {
+                    decideTopCard(decisions.favoriteMedia::invoke) { media ->
+                        // Le favori est demandé aussitôt à la galerie (SPEC §2) ; sinon, il reste en attente.
+                        galleryFavorite.request(media)?.let { effects.trySend(DeckEffect.LaunchFavoriteRequest(it)) }
+                    }
+                }
+
+                is DeckEvent.FavoriteRequestAnswered -> {
+                    viewModelScope.launch { if (galleryFavorite.answer(event.confirmed)) openSummaryWhenDone() }
+                }
+
+                DeckEvent.Undo -> {
+                    undo()
+                }
+
+                DeckEvent.OpenMenu -> {
+                    setMenuOpen(true)
+                }
+
+                DeckEvent.CloseMenu -> {
+                    setMenuOpen(false)
+                }
+
+                DeckEvent.Share -> {
+                    shareTopCard()
+                }
             }
         }
 
@@ -220,7 +277,10 @@ class DeckViewModel
          * Un marquage n'est qu'une décision en base : rien n'est supprimé avant la confirmation
          * du résumé (SPEC §3.5). La dernière carte triée mène au résumé (SPEC §3.4).
          */
-        private fun decideTopCard(decide: suspend (MediaItem, LocalDate) -> SessionDecision) {
+        private fun decideTopCard(
+            decide: suspend (MediaItem, LocalDate) -> SessionDecision,
+            afterDecision: (MediaItem) -> Unit = {},
+        ) {
             val media = deck.removeFirstOrNull() ?: return
             render()
             viewModelScope.launch {
@@ -228,7 +288,8 @@ class DeckViewModel
                     onSuccess = {
                         session = session.record(it)
                         render()
-                        if (deck.isEmpty()) effects.trySend(DeckEffect.OpenSummary(keptCount()))
+                        afterDecision(media)
+                        openSummaryWhenDone()
                     },
                     onFailure = {
                         deck.addFirst(media)
@@ -236,6 +297,14 @@ class DeckViewModel
                     },
                 )
             }
+        }
+
+        /**
+         * La dernière carte triée mène au résumé (SPEC §3.4), une fois la demande de favori traitée :
+         * quitter la pile avant perdrait sa réponse.
+         */
+        private fun openSummaryWhenDone() {
+            if (deck.isEmpty() && !galleryFavorite.isPending) effects.trySend(DeckEffect.OpenSummary(keptCount()))
         }
 
         /**

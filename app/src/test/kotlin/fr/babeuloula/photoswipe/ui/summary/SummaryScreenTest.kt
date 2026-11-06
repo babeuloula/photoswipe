@@ -55,12 +55,12 @@ class SummaryScreenTest {
     }
 
     @Test
-    fun `shows the kept, marked and favorite counts`() {
+    fun `shows the kept and marked counts, not the favorites applied in the deck`() {
         show(SummaryUiState.Loaded(summary))
 
         composeRule.onNodeWithText("12 items kept").assertIsDisplayed()
         composeRule.onNodeWithText("4 items marked for deletion").assertIsDisplayed()
-        composeRule.onNodeWithText("1 favorite").assertIsDisplayed()
+        composeRule.onNodeWithText("1 favorite").assertDoesNotExist()
     }
 
     @Test
@@ -70,7 +70,6 @@ class SummaryScreenTest {
 
         composeRule.onNodeWithText("1 média gardé").assertIsDisplayed()
         composeRule.onNodeWithText("2 médias marqués pour suppression").assertIsDisplayed()
-        composeRule.onNodeWithText("0 favori").assertIsDisplayed()
         composeRule.onNodeWithText("Espace libéré estimé").assertIsDisplayed()
     }
 
@@ -105,27 +104,14 @@ class SummaryScreenTest {
     }
 
     @Test
-    fun `cannot confirm when nothing is marked or favorite`() {
+    fun `cannot confirm when nothing is marked`() {
         show(
             SummaryUiState.Loaded(
                 SessionSummary(keptCount = 3, markedForDeletionCount = 0, favoriteCount = 0, estimatedFreedBytes = 0),
             ),
         )
 
-        composeRule.onNodeWithText(text(R.string.summary_apply_favorites)).assertIsNotEnabled()
-    }
-
-    @Test
-    fun `applies the favorites alone when nothing is marked`() {
-        show(SummaryUiState.Loaded(summary.copy(markedForDeletionCount = 0, estimatedFreedBytes = 0)))
-
-        composeRule
-            .onNodeWithText(text(R.string.summary_apply_favorites))
-            .performScrollTo()
-            .assertIsEnabled()
-            .performClick()
-
-        assertEquals(listOf<SummaryEvent>(SummaryEvent.Confirm), events)
+        composeRule.onNodeWithText(text(R.string.summary_confirm)).assertIsNotEnabled()
     }
 
     @Test

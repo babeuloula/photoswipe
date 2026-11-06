@@ -49,7 +49,6 @@
     <string name="summary_later">Later</string>
     <string name="summary_confirm">Confirm deletion</string>
     <string name="summary_marked_media_missing">These items are no longer in your gallery, so there is nothing to apply.</string>
-    <string name="summary_apply_favorites">Add to gallery favorites</string>
     <string name="summary_nothing_applied">Nothing was changed in your gallery.</string>
     <string name="summary_error">The summary could not be loaded.</string>
     <string name="summary_retry">Try again</string>

@@ -42,10 +42,9 @@ class HomeRouteTest {
     /** Affiche l'accueil ; l'annonce disparaît une fois faite, comme dans le graphe de navigation. */
     private fun show(
         trashedCount: Int,
-        favoritedCount: Int = 0,
         onAnnounced: () -> Unit,
     ) {
-        val pending = mutableStateOf(trashedCount to favoritedCount)
+        val pending = mutableStateOf(trashedCount)
         val viewModel =
             HomeViewModel(
                 GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), FakeMediaSource(), repository, clock),
@@ -58,10 +57,10 @@ class HomeRouteTest {
                 HomeRoute(
                     navigation = HomeNavigation(openDeck = {}, openSettings = {}, openSummary = {}),
                     confirmed =
-                        if (pending.value != 0 to 0) {
-                            ConfirmationAnnouncement(pending.value.first, pending.value.second) {
+                        if (pending.value != 0) {
+                            ConfirmationAnnouncement(pending.value) {
                                 onAnnounced()
-                                pending.value = 0 to 0
+                                pending.value = 0
                             }
                         } else {
                             null
@@ -82,22 +81,6 @@ class HomeRouteTest {
                 .onAllNodesWithText(
                     "3 items moved to the trash",
                     substring = true,
-                ).fetchSemanticsNodes()
-                .isNotEmpty()
-        }
-        assertEquals(1, announced)
-    }
-
-    @Test
-    fun `announces the media added to the gallery favorites`() {
-        var announced = 0
-        show(trashedCount = 2, favoritedCount = 1) { announced++ }
-
-        composeRule.waitUntil(TIMEOUT_MILLIS) {
-            composeRule
-                .onAllNodesWithText(
-                    "2 items moved to the trash. You can restore them from your gallery's trash for about 30 days. " +
-                        "1 item added to your gallery favorites.",
                 ).fetchSemanticsNodes()
                 .isNotEmpty()
         }
