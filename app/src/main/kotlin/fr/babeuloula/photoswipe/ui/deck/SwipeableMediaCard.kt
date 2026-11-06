@@ -8,10 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -29,7 +25,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.theme.motion
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
 import kotlinx.coroutines.launch
@@ -191,12 +189,14 @@ private fun SwipeIndicator(
                 .background(color.copy(alpha = MAX_VEIL_ALPHA)),
     ) {
         Icon(
-            imageVector =
-                when (indication.side) {
-                    CardSide.RIGHT -> Icons.Filled.Check
-                    CardSide.LEFT -> Icons.Filled.Delete
-                    CardSide.TOP -> Icons.Filled.Favorite
-                },
+            painter =
+                painterResource(
+                    when (indication.side) {
+                        CardSide.RIGHT -> R.drawable.ic_check
+                        CardSide.LEFT -> R.drawable.ic_delete
+                        CardSide.TOP -> R.drawable.ic_favorite_filled
+                    },
+                ),
             contentDescription = null,
             tint = onColor,
             modifier =

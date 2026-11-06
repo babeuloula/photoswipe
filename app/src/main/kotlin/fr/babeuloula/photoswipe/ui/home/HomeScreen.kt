@@ -14,10 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -40,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -78,7 +75,10 @@ fun HomeScreen(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = { onEvent(HomeEvent.OpenSettings) }) {
-                        Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.home_open_settings))
+                        Icon(
+                            painterResource(R.drawable.ic_settings),
+                            contentDescription = stringResource(R.string.home_open_settings),
+                        )
                     }
                 },
             )
@@ -251,7 +251,10 @@ private fun TodayCard(
 private fun NothingToSortToday(allSorted: Boolean) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Icon(
-            imageVector = if (allSorted) Icons.Filled.CheckCircle else Icons.Filled.DateRange,
+            painter =
+                painterResource(
+                    if (allSorted) R.drawable.ic_check_circle_filled else R.drawable.ic_calendar_today,
+                ),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
         )
@@ -279,7 +282,7 @@ private fun NoMemories() {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Icon(
-            imageVector = Icons.Filled.DateRange,
+            painter = painterResource(R.drawable.ic_calendar_today),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(64.dp),

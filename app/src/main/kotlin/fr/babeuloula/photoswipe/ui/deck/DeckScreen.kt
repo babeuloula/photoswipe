@@ -11,11 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
@@ -79,7 +75,7 @@ fun DeckScreen(
                 navigationIcon = {
                     IconButton(onClick = { onEvent(DeckEvent.Back) }) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            painterResource(R.drawable.ic_arrow_back),
                             contentDescription = stringResource(R.string.navigate_back),
                         )
                     }
@@ -127,7 +123,7 @@ private fun BoxScope.DeckContent(
                 modifier = Modifier.align(Alignment.Center),
             ) {
                 Icon(
-                    imageVector = Icons.Filled.CheckCircle,
+                    painter = painterResource(R.drawable.ic_check_circle_filled),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(64.dp),
@@ -293,12 +289,12 @@ private fun CardMenu(
     ModalBottomSheet(onDismissRequest = onDismiss) {
         ListItem(
             headlineContent = { Text(stringResource(R.string.deck_favorite)) },
-            leadingContent = { Icon(Icons.Filled.Favorite, contentDescription = null) },
+            leadingContent = { Icon(painterResource(R.drawable.ic_favorite), contentDescription = null) },
             modifier = Modifier.clickable(onClick = onFavorite),
         )
         ListItem(
             headlineContent = { Text(stringResource(R.string.deck_share)) },
-            leadingContent = { Icon(Icons.Filled.Share, contentDescription = null) },
+            leadingContent = { Icon(painterResource(R.drawable.ic_share), contentDescription = null) },
             modifier =
                 Modifier
                     .clickable(onClick = onShare)

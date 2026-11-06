@@ -179,7 +179,6 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Lifecycle Runtime Compose | `:app` | `collectAsStateWithLifecycle` (l'état n'est lu qu'au premier plan) et `LifecycleResumeEffect` (relire l'accès aux médias au retour des réglages) |
 | Navigation Compose | `:app` | Navigation entre écrans avec routes typées imposée par la SPEC §5.4 (ADR [0014](decisions/0014-typed-navigation.md)) |
 | kotlinx-serialization (core + plugin) | `:app` | Routes de navigation typées `@Serializable` |
-| Material Icons Core | `:app` | Icônes standard (flèche de retour), version donnée par la BOM Compose ; pas d'`icons-extended`, trop lourde |
 | Hilt Lifecycle ViewModel Compose | `:app` | `hiltViewModel()` : ViewModels `@HiltViewModel` injectés par constructeur dans Compose |
 | Hilt + KSP | `:app` | Injection de dépendances imposée par la SPEC §5.5 ; KSP plutôt que kapt, plus rapide et maintenu |
 | AndroidX Activity Compose | `:app` | `ComponentActivity` (classe de base exigée par `@AndroidEntryPoint`), `setContent` et `enableEdgeToEdge` |
@@ -189,6 +188,7 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Media3 ExoPlayer | `:app` | Lecture des vidéos imposée par la SPEC §7 : un seul lecteur pour toute la pile, réutilisé de carte en carte et libéré en quittant l'écran |
 | Media3 UI Compose | `:app` | Surface vidéo et état de présentation (première image rendue, taille de la vidéo) en Compose, sans `PlayerView` |
 | Compose Material 3 | `:app` | Material 3 imposé par la SPEC §8 : thème, couleurs dynamiques, composants standards |
+| Material Symbols Rounded (vecteurs de `res/drawable`) | `:app` | Une seule famille d'icônes, arrondie, 24 dp (ADR 0025) : fichiers XML tirés du dépôt `google/material-design-icons`, sans bibliothèque d'icônes Compose |
 | Atkinson Hyperlegible Next, IBM Plex Mono (polices, SIL OFL 1.1) | `:app` (`res/font`) | Typographie de la refonte (ADR 0025) : police d'interface conçue pour la lisibilité, et chasse fixe pour les grands nombres et le repère « Il y a 3 ans » ; embarquées, car l'app n'a pas accès à internet |
 | Compose UI Test (JUnit 4) | `:app` (tests) | Tests de rendu Compose (`createAndroidComposeRule`) sur Robolectric |
 | Hilt Android Testing | `:app` (tests) | `@HiltAndroidTest` et `HiltAndroidRule` pour vérifier l'injection dans les tests |
