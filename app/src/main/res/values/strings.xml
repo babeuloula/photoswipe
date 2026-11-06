@@ -98,11 +98,20 @@
     <string name="home_previous_days">Catch up</string>
     <string name="home_pending_deletions_review">Review</string>
     <!-- États vides de l'accueil (SPEC §4, §14). -->
-    <string name="home_today_done">All done for today!</string>
-    <string name="home_today_no_memories">No memories from this day</string>
-    <string name="home_today_come_back">Catch up on the days below, or come back tomorrow.</string>
+    <string name="home_today_done">All sorted for today</string>
+    <string name="home_today_no_memories">No memories today</string>
+    <string name="home_today_no_memories_body">No photo or video taken on %1$s in previous years. There are still days to catch up on.</string>
+    <string name="home_today_with_date">Today · %1$s</string>
     <string name="home_empty_title">No memories this week</string>
-    <string name="home_empty_body">No photos or videos were taken on these days in previous years. New memories will show up here day after day.</string>
+    <string name="home_empty_body">No photo or video taken from %1$s to %2$s in previous years. Come back tomorrow.</string>
+    <string name="home_start_sorting">Start sorting</string>
+    <string name="home_view_summary">See the summary</string>
+    <string name="home_years_range">From %1$d to %2$d</string>
+    <string name="home_year_single">In %1$d</string>
+    <string name="home_more_memories">+%1$d</string>
+    <string name="home_more_memories_description">and %1$d more</string>
+    <string name="home_day_no_memories">No memories</string>
+    <string name="home_day_done">All sorted</string>
     <!-- Notification du rappel quotidien (SPEC §3.6). -->
     <string name="reminder_channel_name">Daily reminder</string>
     <string name="reminder_channel_description">Reminds you once a day when memories are waiting to be sorted.</string>

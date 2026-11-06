@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.home
 
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
@@ -10,12 +11,15 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performFirstLinkClick
 import androidx.compose.ui.test.performScrollToNode
+import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
+import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -39,7 +43,11 @@ class HomeScreenTest {
     private val events = mutableListOf<HomeEvent>()
 
     private fun show(state: HomeUiState) {
-        composeRule.activity.setContent { PhotoSwipeTheme { HomeScreen(state = state, onEvent = { events += it }) } }
+        composeRule.activity.setContent {
+            CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
+                PhotoSwipeTheme { HomeScreen(state = state, onEvent = { events += it }) }
+            }
+        }
     }
 
     private fun text(id: Int): String = composeRule.activity.getString(id)
@@ -97,8 +105,7 @@ class HomeScreenTest {
             ).copy(today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 0, memoryCount = 4)),
         )
 
-        composeRule.onNodeWithText("All done for today!").assertIsDisplayed()
-        composeRule.onNodeWithText(text(R.string.home_today_come_back)).assertIsDisplayed()
+        composeRule.onNodeWithText("All sorted for today").assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.home_today)).performClick()
 
         assertEquals(emptyList<HomeEvent>(), events)
@@ -108,7 +115,7 @@ class HomeScreenTest {
     fun `says that today has no memories while other days do`() {
         show(loaded(todayCount = 0))
 
-        composeRule.onNodeWithText("No memories from this day").assertIsDisplayed()
+        composeRule.onNodeWithText("No memories today").assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.home_previous_days)).assertIsDisplayed()
     }
 
@@ -118,7 +125,9 @@ class HomeScreenTest {
         show(HomeUiState.Loaded(today = empty.first(), previousDays = empty.drop(1)))
 
         composeRule.onNodeWithText(text(R.string.home_empty_title)).assertIsDisplayed()
-        composeRule.onNodeWithText(text(R.string.home_empty_body)).assertIsDisplayed()
+        composeRule
+            .onNodeWithText("No photo or video taken from July 9 to July 15 in previous years. Come back tomorrow.")
+            .assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.home_today)).assertDoesNotExist()
     }
 
@@ -131,7 +140,7 @@ class HomeScreenTest {
             ).copy(today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 0, memoryCount = 2)),
         )
 
-        composeRule.onNodeWithText("Tout est trié pour aujourd'hui\u00A0!").assertIsDisplayed()
+        composeRule.onNodeWithText("Tout est trié pour aujourd'hui").assertIsDisplayed()
     }
 
     @Test
@@ -139,17 +148,46 @@ class HomeScreenTest {
         show(loaded(todayCount = 1))
 
         composeRule.onNodeWithText(text(R.string.home_previous_days)).assertIsDisplayed()
-        composeRule.onNodeWithText("Tuesday, July 14, 2026").assertIsDisplayed()
+        composeRule.onNodeWithText("Tuesday, July 14").assertIsDisplayed()
         composeRule.onNodeWithText("3 items to sort").assertIsDisplayed()
-        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Thursday, July 9, 2026"))
-        composeRule.onNodeWithText("Thursday, July 9, 2026").assertIsDisplayed()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Thursday, July 9"))
+        composeRule.onNodeWithText("Thursday, July 9").assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows the years of today's memories, how many are not previewed, and starts sorting`() {
+        val media = (1L..3L).map { aMediaItem(id = it) }
+        show(
+            loaded(todayCount = 23).copy(
+                today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 23, previews = media, years = 2016..2025),
+            ),
+        )
+
+        composeRule.onNodeWithText("From 2016 to 2025").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("and 20 more").assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.home_start_sorting)).performClick()
+
+        assertEquals(listOf<HomeEvent>(HomeEvent.OpenDay(LocalDate.of(2026, 7, 15))), events)
+    }
+
+    @Test
+    fun `opens the summary once everything is sorted today`() {
+        show(
+            loaded(
+                todayCount = 0,
+            ).copy(today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 0, memoryCount = 4)),
+        )
+
+        composeRule.onNodeWithText(text(R.string.home_view_summary)).performClick()
+
+        assertEquals(listOf<HomeEvent>(HomeEvent.OpenPendingDeletions), events)
     }
 
     @Test
     fun `opens the deck of a previous day`() {
         show(loaded(todayCount = 1))
 
-        composeRule.onNodeWithText("Tuesday, July 14, 2026").performClick()
+        composeRule.onNodeWithText("Tuesday, July 14").performClick()
 
         assertEquals(listOf<HomeEvent>(HomeEvent.OpenDay(LocalDate.of(2026, 7, 14))), events)
     }
@@ -158,7 +196,8 @@ class HomeScreenTest {
     fun `greys out a previous day without media and ignores taps`() {
         show(loaded(todayCount = 1))
 
-        composeRule.onNodeWithText("Monday, July 13, 2026").performClick()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Monday, July 13"))
+        composeRule.onNodeWithText("Monday, July 13").performClick()
 
         assertEquals(emptyList<HomeEvent>(), events)
     }
@@ -168,7 +207,7 @@ class HomeScreenTest {
         show(loaded(todayCount = 12))
 
         composeRule.onNodeWithText(text(R.string.home_today)).assertIsDisplayed()
-        composeRule.onNodeWithText("Wednesday, July 15, 2026").assertIsDisplayed()
+        composeRule.onNodeWithText("Wednesday, July 15").assertIsDisplayed()
         composeRule.onNodeWithText("12 items to sort").assertIsDisplayed()
     }
 
@@ -213,7 +252,7 @@ class HomeScreenTest {
         show(loaded(todayCount = 12))
 
         composeRule.onNodeWithText("Aujourd'hui").assertIsDisplayed()
-        composeRule.onNodeWithText("mercredi 15 juillet 2026").assertIsDisplayed()
+        composeRule.onNodeWithText("Mercredi 15 juillet").assertIsDisplayed()
         composeRule.onNodeWithText("12 médias à trier").assertIsDisplayed()
     }
 
