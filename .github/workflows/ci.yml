@@ -40,6 +40,13 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
+      # Script de seed de l'émulateur (PS-70) : tests Python (bibliothèque standard) et shellcheck,
+      # tous deux préinstallés sur le runner.
+      - name: Seed script tests and shellcheck
+        run: |
+          python3 -m unittest discover -s scripts -v
+          shellcheck scripts/*.sh
+
       # Une seule invocation Gradle : avec org.gradle.parallel, Gradle répartit tests, qualité et build
       # entre les cœurs du runner et ne compile chaque module qu'une fois.
       # --continue : un échec n'arrête pas les tâches indépendantes, toutes les erreurs remontent d'un coup.

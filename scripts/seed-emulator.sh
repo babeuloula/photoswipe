@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Pousse sur l'émulateur (ou le téléphone) des photos JPEG datées par leur EXIF, puis lance un
+# scan de MediaStore (SPEC §10). Contrairement au seeder des outils développeur, ces photos
+# n'appartiennent pas à PhotoSwipe : les dialogues système de corbeille et de favori s'affichent.
+#
+# Usage :
+#   scripts/seed-emulator.sh            # une photo par année sur 5 ans, aujourd'hui et les 6 jours précédents
+#   scripts/seed-emulator.sh --years 3  # options passées à seed_photos.py (--years, --days)
+#   scripts/seed-emulator.sh --remove   # retire les photos poussées
+#
+# Prérequis : adb (SDK Android), python3 et ffmpeg. Avec plusieurs appareils, choisir la cible
+# par la variable ANDROID_SERIAL (par exemple ANDROID_SERIAL=emulator-5554).
+set -euo pipefail
+
+readonly DEVICE_FOLDER="/sdcard/Pictures/PhotoSwipeAdb"
+SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPTS
+
+require() {
+    command -v "$1" >/dev/null 2>&1 || {
+        echo "Missing command: $1 ($2)" >&2
+        exit 1
+    }
+}
+
+scan_media() {
+    adb shell content call --uri content://media --method scan_volume --arg external_primary >/dev/null
+}
+
+require adb "Android SDK platform-tools"
+adb get-state >/dev/null
+
+if [[ "${1:-}" == "--remove" ]]; then
+    adb shell rm -rf "$DEVICE_FOLDER"
+    scan_media
+    echo "Removed $DEVICE_FOLDER"
+    exit 0
+fi
+
+require python3 "https://www.python.org"
+require ffmpeg "brew install ffmpeg"
+
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+
+count="$(python3 "$SCRIPTS/seed_photos.py" "$work" "$@")"
+adb shell mkdir -p "$DEVICE_FOLDER"
+adb push "$work/." "$DEVICE_FOLDER/" >/dev/null
+scan_media
+echo "Pushed $count dated photos to $DEVICE_FOLDER"
