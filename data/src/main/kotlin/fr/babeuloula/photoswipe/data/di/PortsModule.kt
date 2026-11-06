@@ -5,11 +5,13 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.data.media.MediaStoreActionRequestFactory
+import fr.babeuloula.photoswipe.data.reminder.PendingReminderScheduler
 import fr.babeuloula.photoswipe.data.review.RoomDecisionJournal
 import fr.babeuloula.photoswipe.data.review.RoomReviewRepository
 import fr.babeuloula.photoswipe.data.settings.DataStoreSettingsRepository
 import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
+import fr.babeuloula.photoswipe.domain.port.ReminderScheduler
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import javax.inject.Singleton
@@ -17,8 +19,8 @@ import javax.inject.Singleton
 /**
  * Lie chaque port du domaine à son implémentation Android (SPEC §5.5) : le domaine et l'UI ne
  * connaissent que les interfaces. `MediaSource` est lié dans `:app`, par variante : MediaStore en
- * release, MediaStore ou données de démo en debug (ADR 0015). `ReminderScheduler` sera lié avec
- * son implémentation (epic 8).
+ * release, MediaStore ou données de démo en debug (ADR 0015). `ReminderScheduler` est lié à une
+ * implémentation provisoire qui ne planifie rien, jusqu'à la tâche WorkManager de PS-61.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -34,6 +36,9 @@ abstract class PortsModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(implementation: DataStoreSettingsRepository): SettingsRepository
+
+    @Binds
+    abstract fun bindReminderScheduler(implementation: PendingReminderScheduler): ReminderScheduler
 
     @Binds
     abstract fun bindMediaActionRequestFactory(

@@ -4,17 +4,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import fr.babeuloula.photoswipe.R
-import fr.babeuloula.photoswipe.ui.common.ShellScreen
 import fr.babeuloula.photoswipe.ui.home.ConfirmationAnnouncement
 import fr.babeuloula.photoswipe.ui.home.HomeNavigation
 import fr.babeuloula.photoswipe.ui.deck.DeckRoute as DeckDestination
 import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
+import fr.babeuloula.photoswipe.ui.settings.SettingsRoute as SettingsDestination
 import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
 
 /**
@@ -73,11 +71,7 @@ fun PhotoSwipeNavHost(
             )
         }
         composable<SettingsRoute> {
-            ShellScreen(
-                title = stringResource(R.string.settings_title),
-                onBack = navController::popBackStack,
-                actions = emptyList(),
-            )
+            SettingsDestination(onBack = navController::popBackStack)
         }
     }
 }

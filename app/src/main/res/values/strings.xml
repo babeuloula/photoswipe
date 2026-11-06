@@ -17,7 +17,6 @@
     <string name="limited_access_manage">Manage access</string>
     <!-- Coquilles des écrans, remplacées par les écrans réels (epics 4, 5, 7 et 9). -->
     <string name="navigate_back">Back</string>
-    <string name="shell_coming_soon">This screen is coming soon.</string>
     <string name="home_open_settings">Settings</string>
     <string name="deck_title">Memories of %1$s</string>
     <string name="deck_finish">Finish</string>
@@ -55,6 +54,12 @@
     <string name="summary_error">The summary could not be loaded.</string>
     <string name="summary_retry">Try again</string>
     <string name="settings_title">Settings</string>
+    <string name="settings_reminder_section">Daily reminder</string>
+    <string name="settings_reminder_enabled">Remind me every day</string>
+    <string name="settings_reminder_enabled_summary">A notification only when memories are waiting to be sorted.</string>
+    <string name="settings_reminder_time">Reminder time</string>
+    <string name="settings_reminder_time_summary">Around %1$s: Android may send it a little later.</string>
+    <string name="settings_reminder_time_picker">Choose the reminder time</string>
     <!-- Accueil (SPEC §4.2). -->
     <string name="home_today">Today</string>
     <string name="home_error">Your memories could not be loaded.</string>
