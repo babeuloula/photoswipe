@@ -20,7 +20,7 @@ Restent dans le dépôt :
 
 - `versionName` vient du dernier tag Git `vX.Y.Z` (`AppVersion` de `build-logic`) : `1.2.0` sur le commit du tag, `1.2.0-dev.5` cinq commits plus loin, `0.0.0-dev` sans tag.
 - `versionCode` est le nombre de commits (PS-110) : toujours croissant, donc accepté par le Play Store à chaque nouvelle version.
-- Publier une version : `git tag v1.0.0 && git push origin v1.0.0`, puis construire l'AAB depuis ce commit.
+- Publier une version : `git tag v1.0.0 && git push origin v1.0.0`. Le workflow `Release` (voir plus bas) construit et publie le reste.
 
 ## Build release signé (AAB)
 
@@ -34,6 +34,26 @@ Restent dans le dépôt :
    ```
 3. `./gradlew :app:bundleRelease` produit `app/build/outputs/bundle/release/app-release.aab`, signé par cette clé. Sans `keystore.properties`, l'AAB n'est pas signé.
 4. Sauvegarder la clé et son mot de passe dans un gestionnaire de mots de passe : avec la signature d'application par Google Play, une clé d'upload perdue se remplace, mais il faut passer par le support Google.
+
+## Release par tag (CI)
+
+Pousser un tag `vX.Y.Z` lance le workflow `.github/workflows/release.yml` (PS-115) :
+
+1. checkout de tout l'historique et des tags (`versionCode` = nombre de commits, `versionName` = version du tag) ;
+2. clé d'upload reconstituée depuis les secrets dans le dossier temporaire du runner, et `keystore.properties` qui la désigne ;
+3. `./gradlew test quality bundleRelease assembleRelease`, puis vérification des signatures (`jarsigner`, `apksigner`) ;
+4. version GitHub du tag créée (notes générées depuis les PR) avec `photoswipe-vX.Y.Z.aab` (pour le Play Store) et `photoswipe-vX.Y.Z.apk` (installation directe) ; si elle existe déjà, ses fichiers sont remplacés ;
+5. clé et `keystore.properties` effacés, même en cas d'échec.
+
+Secrets du dépôt (Settings → Secrets and variables → Actions) :
+
+| Secret | Valeur |
+|---|---|
+| `PHOTOSWIPE_UPLOAD_KEYSTORE_BASE64` | `base64 -i ~/.android/photoswipe-upload.jks` |
+| `PHOTOSWIPE_UPLOAD_KEYSTORE_PASSWORD` | `storePassword` de `keystore.properties` |
+| `PHOTOSWIPE_UPLOAD_KEY_PASSWORD` | `keyPassword` de `keystore.properties` |
+
+Sans ces secrets, le workflow s'arrête avant le build : aucune release non signée n'est publiée.
 
 ## Captures d'écran
 
