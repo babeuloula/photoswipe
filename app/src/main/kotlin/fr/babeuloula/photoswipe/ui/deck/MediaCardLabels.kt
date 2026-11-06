@@ -41,11 +41,24 @@ fun localizedDate(
         DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(context.resources.configuration.locales[0]),
     )
 
-/** Poids d'un fichier, arrondi et localisé par Android (« 3,5 Mo », « 3.5 MB »). */
+/**
+ * Poids d'un fichier. Sous un kilo-octet, le nombre d'octets au pluriel de la langue (« 0 octet »,
+ * « 512 octets »), là où Android écrirait « 0 octet(s) » ; au-delà, arrondi et localisé par Android
+ * (« 3,5 Mo », « 3.5 MB »).
+ */
 fun fileSizeLabel(
     context: Context,
     sizeBytes: Long,
-): String = Formatter.formatShortFileSize(context, sizeBytes)
+): String =
+    if (sizeBytes < BYTES_PER_KILOBYTE) {
+        val count = sizeBytes.toInt()
+        context.resources.getQuantityString(R.plurals.file_size_bytes, count, count)
+    } else {
+        Formatter.formatShortFileSize(context, sizeBytes)
+    }
+
+/** Un kilo-octet pour Android, qui compte en puissances de 10 (SI) depuis Android 8. */
+private const val BYTES_PER_KILOBYTE = 1000L
 
 /**
  * Durée d'une vidéo au format des lecteurs, avec les chiffres de la langue de l'appareil :

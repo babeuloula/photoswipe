@@ -2,15 +2,19 @@ package fr.babeuloula.photoswipe.ui.summary
 
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.text.TextLayoutResult
 import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -22,11 +26,13 @@ import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /** Résumé composé seul dans `MainActivity`, avec des états fixés. */
 @HiltAndroidTest
@@ -60,6 +66,43 @@ class SummaryScreenTest {
 
         composeRule.onNodeWithText(text(R.string.summary_freed_space)).assertIsDisplayed()
         composeRule.onNodeWithText("48 MB").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `writes a freed space under a kilobyte without parentheses`() {
+        show(SummaryUiState.Loaded(summary.copy(markedForDeletionCount = 0, estimatedFreedBytes = 0)))
+
+        composeRule.onNodeWithText("0 octet").assertIsDisplayed()
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `keeps the freed space on a single line`() {
+        show(SummaryUiState.Loaded(summary.copy(estimatedFreedBytes = 999_000_000)))
+
+        assertEquals(1, freedSpaceLayout().lineCount)
+        assertFalse(freedSpaceLayout().didOverflowWidth)
+    }
+
+    @Test
+    @Config(qualifiers = "fr", fontScale = 2.0f)
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `keeps the freed space on a single line with a font at 200 percent`() {
+        show(SummaryUiState.Loaded(summary.copy(estimatedFreedBytes = 512)))
+
+        composeRule.onNodeWithText("512 octets").assertIsDisplayed()
+        assertEquals(1, freedSpaceLayout().lineCount)
+        assertFalse(freedSpaceLayout().didOverflowWidth)
+    }
+
+    /** Mise en page du texte de l'espace libéré. */
+    private fun freedSpaceLayout(): TextLayoutResult {
+        val layouts = mutableListOf<TextLayoutResult>()
+        composeRule.onNodeWithTag(FREED_SPACE_TAG).performSemanticsAction(SemanticsActions.GetTextLayoutResult) {
+            it(layouts)
+        }
+        return layouts.single()
     }
 
     @Test

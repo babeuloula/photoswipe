@@ -57,4 +57,9 @@
         <item quantity="one">If you confirm the %d marked item</item>
         <item quantity="other">If you confirm the %d marked items</item>
     </plurals>
+    <!-- Poids d'un fichier de moins d'un kilo-octet (SPEC §3.5, §4.3). -->
+    <plurals name="file_size_bytes">
+        <item quantity="one">%d byte</item>
+        <item quantity="other">%d bytes</item>
+    </plurals>
 </resources>

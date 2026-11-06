@@ -61,4 +61,9 @@
         <item quantity="one">Si vous confirmez le %d média marqué</item>
         <item quantity="other">Si vous confirmez les %d médias marqués</item>
     </plurals>
+    <plurals name="file_size_bytes">
+        <item quantity="one">%d octet</item>
+        <item quantity="many">%d d\'octets</item>
+        <item quantity="other">%d octets</item>
+    </plurals>
 </resources>
