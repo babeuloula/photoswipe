@@ -7,4 +7,11 @@
     <uses-permission
         android:name="android.permission.MANAGE_MEDIA"
         tools:ignore="ProtectedPermissions" />
+
+    <application>
+        <!-- Activité vide au premier plan : les demandes système se lancent depuis elle, comme dans l'app. -->
+        <activity
+            android:name="android.app.Activity"
+            android:exported="false" />
+    </application>
 </manifest>

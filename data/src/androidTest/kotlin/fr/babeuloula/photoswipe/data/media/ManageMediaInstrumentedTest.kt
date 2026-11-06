@@ -1,10 +1,11 @@
 package fr.babeuloula.photoswipe.data.media
 
+import android.app.Activity
 import android.content.ContentUris
-import android.content.Intent
 import android.content.IntentSender
 import android.os.Bundle
 import android.provider.MediaStore
+import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
@@ -31,6 +32,7 @@ class ManageMediaInstrumentedTest {
     private val resolver = context.contentResolver
     private val images = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
     private var photoId = 0L
+    private val scenarios = mutableListOf<ActivityScenario<Activity>>()
 
     @Before
     fun pushPhotoOwnedByTheShell() {
@@ -42,6 +44,7 @@ class ManageMediaInstrumentedTest {
 
     @After
     fun removePhoto() {
+        scenarios.forEach { it.close() }
         shell("appops set ${context.packageName} MANAGE_MEDIA default")
         shell("input keyevent KEYCODE_BACK")
         shell("rm -f $PHOTO_PATH /sdcard/Pictures/.trashed-*$PHOTO_NAME")
@@ -82,8 +85,14 @@ class ManageMediaInstrumentedTest {
         assertEquals(allowed, MediaStore.canManageMedia(context))
     }
 
+    /**
+     * Lance la demande depuis une activité au premier plan, comme l'application : Android 14+
+     * refuse qu'un processus en arrière-plan ouvre l'activité de MediaStore.
+     */
     private fun launch(sender: IntentSender) {
-        context.startIntentSender(sender, null, Intent.FLAG_ACTIVITY_NEW_TASK, Intent.FLAG_ACTIVITY_NEW_TASK, 0)
+        val scenario = ActivityScenario.launch(Activity::class.java)
+        scenarios += scenario
+        scenario.onActivity { it.startIntentSenderForResult(sender, 0, null, 0, 0, 0) }
     }
 
     private fun photoUri() = ContentUris.withAppendedId(images, photoId)
