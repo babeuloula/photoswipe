@@ -97,6 +97,26 @@ class PhotoSwipeThemeTest {
         assertSame(PhotoSwipeShapes, shapes)
     }
 
+    @Test
+    fun `sets numbers in IBM Plex Mono and the rest in Atkinson Hyperlegible Next, on the Material 3 scale`() {
+        val baseline = Typography()
+
+        listOf(PhotoSwipeTypography.displayLarge, PhotoSwipeTypography.displaySmall).forEach {
+            assertEquals(IbmPlexMono, it.fontFamily)
+        }
+        listOf(
+            PhotoSwipeTypography.headlineSmall,
+            PhotoSwipeTypography.titleLarge,
+            PhotoSwipeTypography.titleMedium,
+            PhotoSwipeTypography.bodyLarge,
+            PhotoSwipeTypography.bodyMedium,
+            PhotoSwipeTypography.labelLarge,
+        ).forEach { assertEquals(AtkinsonHyperlegibleNext, it.fontFamily) }
+        assertEquals(baseline.displayLarge.fontSize, PhotoSwipeTypography.displayLarge.fontSize)
+        assertEquals(baseline.titleMedium.fontWeight, PhotoSwipeTypography.titleMedium.fontWeight)
+        assertEquals(baseline.bodyMedium.lineHeight, PhotoSwipeTypography.bodyMedium.lineHeight)
+    }
+
     /** Compose `theme` autour d'un contenu qui relève le `ColorScheme` reçu. */
     private fun colorSchemeOf(theme: @Composable (content: @Composable () -> Unit) -> Unit): ColorScheme {
         lateinit var colors: ColorScheme

@@ -63,14 +63,17 @@
     <string name="settings_about_section">À propos</string>
     <string name="settings_about_version">Version</string>
     <string name="settings_about_licenses">Licences</string>
-    <string name="settings_about_licenses_summary">PhotoSwipe et ses bibliothèques open source, sous licence Apache 2.0</string>
+    <string name="settings_about_licenses_summary">PhotoSwipe, ses bibliothèques et ses polices open source</string>
     <string name="settings_developer_tools">Outils développeur</string>
     <!-- Licences (« À propos » des réglages). -->
     <string name="licenses_title">Licences</string>
     <string name="licenses_app_notice">Copyright 2026 Jérémy Reynaud. Sous licence Apache, version 2.0.</string>
     <string name="licenses_libraries">Bibliothèques open source</string>
-    <string name="licenses_library_notice">%1$s · Licence Apache 2.0</string>
+    <string name="licenses_library_notice">%1$s · %2$s</string>
+    <string name="licenses_name_apache">Licence Apache 2.0</string>
+    <string name="licenses_name_ofl">Licence SIL Open Font 1.1</string>
     <string name="licenses_apache_text">Licence Apache, version 2.0 (texte original en anglais)</string>
+    <string name="licenses_ofl_text">Licence SIL Open Font, version 1.1 (texte original en anglais)</string>
     <string name="home_today">Aujourd\'hui</string>
     <string name="home_error">Impossible de charger vos souvenirs.</string>
     <string name="home_retry">Réessayer</string>

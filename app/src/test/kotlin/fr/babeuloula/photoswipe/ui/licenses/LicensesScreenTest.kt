@@ -54,6 +54,23 @@ class LicensesScreenTest {
     }
 
     @Test
+    fun `shows the full SIL Open Font License text and the license of each font`() {
+        show()
+
+        composeRule.onNodeWithText("END OF TERMS AND CONDITIONS", substring = true).assertExists()
+        composeRule
+            .onNodeWithText(
+                "SIL OPEN FONT LICENSE Version 1.1",
+                substring = true,
+            ).performScrollTo()
+            .assertExists()
+        val ofl = text(R.string.licenses_name_ofl)
+        OPEN_SOURCE_LIBRARIES.filter { it.license == OpenSourceLicense.OFL_1_1 }.forEach {
+            composeRule.onNodeWithText("${it.author} · $ofl").performScrollTo().assertExists()
+        }
+    }
+
+    @Test
     fun `goes back with the back arrow`() {
         show()
 

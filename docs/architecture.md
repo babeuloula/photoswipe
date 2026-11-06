@@ -154,6 +154,7 @@ Relevées le 2026-11-03 sur les sources officielles (Google Maven, Maven Central
 | detekt | 1.23.8 | Dernière stable ; la 2.0 n'est qu'en alpha (ADR 0003) |
 | Coil (`coil-compose-core`, `coil-video`) | 3.6.3 | Chargement des images et miniatures vidéo (ADR 0016) |
 | Media3 (`exoplayer`, `ui-compose`) | 1.11.1 | Lecture des vidéos de la pile |
+| Polices Atkinson Hyperlegible Next (variable) et IBM Plex Mono (400, 500) | dépôt `google/fonts`, relevé le 2026-11-06 | Fichiers `.ttf` dans `app/src/main/res/font`, hors catalogue Gradle |
 | GitHub Actions | `checkout@v7`, `setup-java@v6`, `gradle/actions/setup-gradle@v6`, `upload-artifact@v7`, `mikepenz/action-junit-report@v6` | CI |
 
 ## 6. Bibliothèques et justification
@@ -188,6 +189,7 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Media3 ExoPlayer | `:app` | Lecture des vidéos imposée par la SPEC §7 : un seul lecteur pour toute la pile, réutilisé de carte en carte et libéré en quittant l'écran |
 | Media3 UI Compose | `:app` | Surface vidéo et état de présentation (première image rendue, taille de la vidéo) en Compose, sans `PlayerView` |
 | Compose Material 3 | `:app` | Material 3 imposé par la SPEC §8 : thème, couleurs dynamiques, composants standards |
+| Atkinson Hyperlegible Next, IBM Plex Mono (polices, SIL OFL 1.1) | `:app` (`res/font`) | Typographie de la refonte (ADR 0025) : police d'interface conçue pour la lisibilité, et chasse fixe pour les grands nombres et le repère « Il y a 3 ans » ; embarquées, car l'app n'a pas accès à internet |
 | Compose UI Test (JUnit 4) | `:app` (tests) | Tests de rendu Compose (`createAndroidComposeRule`) sur Robolectric |
 | Hilt Android Testing | `:app` (tests) | `@HiltAndroidTest` et `HiltAndroidRule` pour vérifier l'injection dans les tests |
 | Robolectric | `:app`, `:data` (tests) | Exécute le framework Android sur la JVM : tests Hilt sans émulateur, en local comme en CI |
