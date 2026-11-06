@@ -98,7 +98,7 @@ class HomeScreenTest {
     }
 
     @Test
-    fun `says that everything is sorted today and keeps the card inactive`() {
+    fun `says that everything is sorted today and sorts it again when the card is tapped`() {
         show(
             loaded(
                 todayCount = 0,
@@ -108,7 +108,7 @@ class HomeScreenTest {
         composeRule.onNodeWithText("All sorted for today").assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.home_today)).performClick()
 
-        assertEquals(emptyList<HomeEvent>(), events)
+        assertEquals(listOf<HomeEvent>(HomeEvent.ResortDay(LocalDate.of(2026, 7, 15))), events)
     }
 
     @Test
