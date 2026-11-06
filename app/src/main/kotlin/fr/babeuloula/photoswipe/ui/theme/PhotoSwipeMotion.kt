@@ -28,6 +28,18 @@ class PhotoSwipeMotion internal constructor() {
     /** Déplacement ample et posé. */
     fun <T> slowSpatial(): FiniteAnimationSpec<T> = spring(SPATIAL_DAMPING, SLOW_SPATIAL_STIFFNESS)
 
+    /**
+     * Sortie rapide, sans rebond : la carte qui quitte l'écran, après un geste validé ou un bouton.
+     * Le ressort reprend la vitesse du doigt (ADR 0025).
+     */
+    fun <T> fastExit(): FiniteAnimationSpec<T> = spring(EFFECTS_DAMPING, FAST_EXIT_STIFFNESS)
+
+    /**
+     * Déplacement court à peine amorti, celui du schéma *standard* de Material 3 : la carte
+     * suivante qui remonte sous la carte du dessus (ADR 0025).
+     */
+    fun <T> fastSpatialStandard(): FiniteAnimationSpec<T> = spring(STANDARD_FAST_SPATIAL_DAMPING, FAST_EXIT_STIFFNESS)
+
     /** Effet bref, par exemple un bouton qui s'efface. */
     fun <T> fastEffects(): FiniteAnimationSpec<T> = spring(EFFECTS_DAMPING, FAST_EFFECTS_STIFFNESS)
 
@@ -48,6 +60,10 @@ class PhotoSwipeMotion internal constructor() {
         const val FAST_EFFECTS_STIFFNESS = 3800f
         const val DEFAULT_EFFECTS_STIFFNESS = 1600f
         const val SLOW_EFFECTS_STIFFNESS = 800f
+
+        // Schéma standard de Material 3 (MotionScheme.standard()), déplacement rapide.
+        const val STANDARD_FAST_SPATIAL_DAMPING = 0.9f
+        const val FAST_EXIT_STIFFNESS = 1400f
     }
 }
 
