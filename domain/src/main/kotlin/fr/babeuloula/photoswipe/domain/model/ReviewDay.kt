@@ -9,9 +9,10 @@ import java.time.LocalDate
  * @property remainingCount nombre de médias qui restent à trier pour ce jour.
  * @property memoryCount nombre de souvenirs de ce jour, triés ou non : 0 signifie qu'aucun média
  * n'a été trouvé, et non que tout est trié. Par défaut, égal à [remainingCount] (rien de trié).
- * @property previews quelques souvenirs du jour à montrer en vignette, au plus [PREVIEW_COUNT], un
- * par année, de la plus récente à la plus ancienne ; ceux qui restent à trier d'abord, ou, si tout
- * est trié, ceux déjà triés.
+ * @property previews souvenirs du jour à montrer en vignette dans une bande de [PREVIEW_SLOTS] cases :
+ * tous s'ils y tiennent, sinon un de moins, la dernière case donnant le nombre des autres (« +20 »).
+ * Ceux qui restent à trier d'abord ; dans chaque groupe, une vignette par année de la plus récente à
+ * la plus ancienne, puis une deuxième par année, et ainsi de suite.
  * @property years années de prise de vue des souvenirs du jour, de la plus ancienne à la plus
  * récente (« de 2016 à 2025 ») ; `null` s'il n'y en a aucun.
  */
@@ -36,7 +37,7 @@ data class ReviewDay(
     val hiddenCount: Int get() = (memoryCount - previews.size).coerceAtLeast(0)
 
     companion object {
-        /** Vignettes au plus par jour : trois photos, puis le nombre des autres. */
-        const val PREVIEW_COUNT = 3
+        /** Cases de la bande de vignettes : quatre photos, ou trois et le nombre des autres. */
+        const val PREVIEW_SLOTS = 4
     }
 }

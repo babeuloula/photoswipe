@@ -171,6 +171,18 @@ class HomeScreenTest {
     }
 
     @Test
+    fun `shows four previews without a count when every memory fits in the strip`() {
+        val media = (1L..4L).map { aMediaItem(id = it) }
+        show(
+            loaded(todayCount = 4).copy(
+                today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 4, previews = media, years = 2016..2025),
+            ),
+        )
+
+        composeRule.onNodeWithContentDescription("and", substring = true).assertDoesNotExist()
+    }
+
+    @Test
     fun `opens the summary once everything is sorted today`() {
         show(
             loaded(

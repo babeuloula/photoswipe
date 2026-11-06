@@ -111,7 +111,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
 
 1. **Permissions / onboarding** : explication courte, demande `READ_MEDIA_IMAGES` + `READ_MEDIA_VIDEO`. Gérer l'accès partiel d'Android 14+ (`READ_MEDIA_VISUAL_USER_SELECTED`) avec une bannière « accès limité, vos souvenirs peuvent être incomplets » et un raccourci pour étendre la sélection. Gérer le refus avec un lien vers les réglages.
 2. **Accueil** :
-   - carte « Aujourd'hui » (nombre à trier), avec une vignette par année et les années des souvenirs (« De 2016 à 2025 ») ;
+   - carte « Aujourd'hui » (nombre à trier), avec une bande de 4 vignettes (tous les souvenirs s'ils y tiennent, sinon 3 vignettes, une par année d'abord, et « +N ») et les années des souvenirs (« De 2016 à 2025 ») ;
    - jour tout trié : « Retrier » sur la carte « Aujourd'hui », et un appui sur un jour précédent tout trié le rouvre (§3.3, ADR 0026) ;
    - liste des 6 jours précédents avec leur nombre en attente et une vignette ;
    - bannière « N médias en attente de suppression » ;

@@ -219,8 +219,8 @@ private fun MemoriesCard(
 }
 
 /**
- * Bande de vignettes du jour, une par année, avec l'année dessous en chasse fixe ; la dernière case
- * donne le nombre des autres souvenirs (« +20 »).
+ * Bande de vignettes du jour en [ReviewDay.PREVIEW_SLOTS] cases, l'année sous chaque vignette en
+ * chasse fixe ; s'il reste des souvenirs hors de la bande, la dernière case en donne le nombre (« +20 »).
  */
 @Composable
 private fun PreviewStrip(
@@ -244,17 +244,19 @@ private fun PreviewStrip(
                 )
             }
         }
-        repeat(ReviewDay.PREVIEW_COUNT - today.previews.size) { Spacer(Modifier.weight(1f)) }
-        Box(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .height(PREVIEW_HEIGHT)
-                    .clip(MaterialTheme.shapes.small)
-                    .background(if (today.hiddenCount > 0) tileColor else Color.Transparent),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (today.hiddenCount > 0) {
+        val moreTile = today.hiddenCount > 0
+        val emptySlots = ReviewDay.PREVIEW_SLOTS - today.previews.size - if (moreTile) 1 else 0
+        repeat(emptySlots.coerceAtLeast(0)) { Spacer(Modifier.weight(1f)) }
+        if (moreTile) {
+            Box(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .height(PREVIEW_HEIGHT)
+                        .clip(MaterialTheme.shapes.small)
+                        .background(tileColor),
+                contentAlignment = Alignment.Center,
+            ) {
                 val description = stringResource(R.string.home_more_memories_description, today.hiddenCount)
                 Text(
                     text = stringResource(R.string.home_more_memories, today.hiddenCount),
