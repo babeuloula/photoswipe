@@ -110,18 +110,20 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
 
 1. **Permissions / onboarding** : explication courte, demande `READ_MEDIA_IMAGES` + `READ_MEDIA_VIDEO`. Gérer l'accès partiel d'Android 14+ (`READ_MEDIA_VISUAL_USER_SELECTED`) avec une bannière « accès limité, vos souvenirs peuvent être incomplets » et un raccourci pour étendre la sélection. Gérer le refus avec un lien vers les réglages.
 2. **Accueil** :
-   - carte « Aujourd'hui » (nombre à trier) ;
-   - liste des 6 jours précédents avec leur nombre en attente ;
+   - carte « Aujourd'hui » (nombre à trier), avec une vignette par année et les années des souvenirs (« De 2016 à 2025 ») ;
+   - liste des 6 jours précédents avec leur nombre en attente et une vignette ;
    - bannière « N médias en attente de suppression » ;
    - accès aux réglages.
 3. **Pile de swipe** :
-   - carte plein écran (image ou vidéo) avec étiquette « Il y a 3 ans · 14 mai 2023 » et poids du fichier ;
-   - glisser à gauche : indicateur rouge + icône corbeille ; à droite : indicateur vert + coche ; en haut : menu favori / partage ;
-   - **boutons équivalents sous la carte** (supprimer / garder / menu / annuler) pour l'accessibilité et TalkBack ;
+   - carte plein écran (image ou vidéo) avec le repère de bord de film « Il y a 3 ans · 14 mai 2023 » et le poids du fichier, et la progression du jour (« 4 sur 23 ») ;
+   - glisser à gauche : indicateur rouge + icône corbeille ; à droite : indicateur vert + coche ; en haut : menu favori / partage (feuille avec un aperçu du média) ;
+   - **boutons équivalents sous la carte** (supprimer / annuler / plus d'actions / garder), libellés, pour l'accessibilité et TalkBack ; celui du côté glissé se remplit pendant le geste ;
+   - pile vidée : « Voir le résumé » et « Retour à l'accueil » ;
    - retour haptique, animations à ressort, seuil de déclenchement et retour au centre si geste incomplet ;
    - vidéos : lecture automatique muette, tap pour activer le son.
-4. **Résumé / confirmation** : voir §3.5.
-5. **Réglages** : notification (on/off + heure), langue (réglage de langue par application d'Android 13+), thème (celui du téléphone, clair ou sombre), à propos. En debug : outils développeur (§10).
+4. **Résumé / confirmation** : voir §3.5 ; vignettes des derniers médias marqués.
+5. **Réglages** : notification (on/off + heure), langue (réglage de langue par application d'Android 13+), thème (celui du téléphone, clair ou sombre, en boutons radio dans la liste), à propos. En debug : outils développeur (§10).
+6. **Icône** : icône adaptative « pile de tirages » avec sa couche monochrome (icône à thème), écran de démarrage de la plateforme.
 
 États vides soignés : rien à trier aujourd'hui, permissions refusées, aucun média trouvé.
 
@@ -246,6 +248,7 @@ Objectif : une UI qui suit au maximum les recommandations de Google et évolue a
 - **Edge-to-edge**, gestion des insets, **retour prédictif** activé (`enableOnBackInvokedCallback`).
 - **Mises en page adaptatives** (`WindowSizeClass`) : téléphone, pliable, tablette.
 - Typographie, formes et mouvements : uniquement via le thème (`MaterialTheme`), aucune valeur en dur dispersée.
+- **Direction « planche-contact »** (ADR 0025) : palette de repli ambre (graine #8A6A1E) aux neutres gris papier ; Atkinson Hyperlegible Next pour le texte et IBM Plex Mono pour les grands nombres et le repère « Il y a N ans », polices embarquées ; icônes Material Symbols Rounded seulement ; une seule couleur d'accent par écran (« Confirmer la suppression » en `primary`).
 - **Accessibilité** : alternatives aux gestes (boutons), `contentDescription`, tailles de cible ≥ 48 dp, contrastes, support TalkBack et grande police.
 
 ---

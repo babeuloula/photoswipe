@@ -47,6 +47,8 @@ La carte d'identité de l'application pour Android : son nom, ses écrans (« ac
 ### Ressources (`res/`)
 Tout ce qui n'est pas du code : textes traduits (`strings.xml`), icônes, couleurs, etc. `values/` contient la version par défaut (anglais) et `values-fr/` la traduction française. Android choisit automatiquement selon la langue du téléphone.
 - **Pluriels** (`plurals.xml`) : « 1 média », « 3 médias ». Chaque langue a ses règles (en français, 0 est au singulier), donc on ne colle jamais un nombre et un mot nous-mêmes : on demande la bonne forme à Android avec `getQuantityString`.
+- **Icônes** (`res/drawable/ic_*.xml`) : des vecteurs Material Symbols Rounded, une seule famille dans toute l'app. Pour en ajouter une, prendre le fichier `symbols/android/<nom>/materialsymbolsrounded/<nom>_24px.xml` (ou `<nom>_fill1_24px.xml` pour une icône pleine, enregistrée en `ic_<nom>_filled.xml`) du dépôt `google/material-design-icons`, retirer son attribut `android:tint` et la lire avec `painterResource(R.drawable.ic_<nom>)`.
+- **Polices** (`res/font/`) : Atkinson Hyperlegible Next et IBM Plex Mono, embarquées car l'app n'a pas accès à internet ; elles sont citées dans l'écran des licences.
 - **Langue par application** (`res/xml/locales_config.xml`) : la liste des langues que l'on peut choisir pour PhotoSwipe seule, dans les réglages d'Android 13+, sans changer la langue du téléphone.
 - **Ajouter une langue** : créer `values-xx/` avec toutes les clés, puis ajouter `xx` dans `locales_config.xml`. Un test (`LocalizationTest`) échoue si une clé manque ou si la langue n'est pas déclarée.
 
@@ -108,7 +110,7 @@ photoswipe/
 │       ├── main/
 │       │   ├── AndroidManifest.xml   Carte d'identité de l'application
 │       │   ├── kotlin/               Code Kotlin : PhotoSwipeApplication, MainActivity, di/ (modules Hilt), permission/ (lecture des autorisations), locale/ (langue de l'application), reminder/ (notification du rappel, replanification après un changement d'heure), ui/ (écrans Compose : ui/navigation/ pour le passage d'un écran à l'autre, ui/permission/ pour l'accès aux photos, ui/home/ pour l'accueil, ui/deck/ pour la pile de swipe et la carte de chaque média, ui/summary/ pour le résumé avant confirmation, ui/settings/ pour les réglages, ui/licenses/ pour les licences) et ui/theme/ (thème Material 3)
-│       │   └── res/                  Ressources : textes (values/ en anglais, values-fr/ en français), thème de la fenêtre (themes.xml), icônes
+│       │   └── res/                  Ressources : textes (values/ en anglais, values-fr/ en français), thème de la fenêtre et écran de démarrage (themes.xml), couleurs hors Compose (values/colors.xml, values-night/ pour le sombre), icônes (drawable/), icône de l'application (mipmap-anydpi/), polices (font/), textes des licences (raw/)
 │       ├── debug/                    Code présent seulement dans la version de développement : outils développeur (données de démo, médias d'exemple dans la vraie galerie, remise à zéro des décisions), aussi ouverts depuis les réglages
 │       ├── release/                  Code présent seulement dans la version publiée (lecture de la vraie galerie)
 │       ├── test/                     Tests unitaires du module (Robolectric pour ce qui touche à Android)
