@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -35,7 +37,7 @@ import fr.babeuloula.photoswipe.ui.theme.swipeColors
 import kotlinx.coroutines.delay
 
 /**
- * Page « favori ou partage » : le tirage glisse vers le haut sous le voile bleu du favori, puis la
+ * Page « favori ou partage » : devant deux tirages inclinés (ceux des pages précédentes), le tirage glisse vers le haut sous le voile bleu du favori, puis la
  * feuille « Ajouter aux favoris » / « Partager » de la pile monte du bas. Statique ([animate] faux) :
  * tirage relevé et feuille ouverte.
  */
@@ -62,6 +64,20 @@ internal fun SwipeUpIllustration(
     BoxWithConstraints(modifier.clipToBounds(), contentAlignment = Alignment.TopCenter) {
         val liftPx = with(LocalDensity.current) { LIFT_DISTANCE.toPx() }
         val heightPx = with(LocalDensity.current) { maxHeight.toPx() }
+        // Les tirages de derrière, comme aux pages précédentes : ils restent en place quand la carte monte.
+        val scheme = MaterialTheme.colorScheme
+        Box(Modifier.padding(top = PRINT_TOP), contentAlignment = Alignment.Center) {
+            SamplePrint(
+                scheme.surfaceContainerHighest,
+                Modifier.offset(x = (-44).dp, y = 12.dp).rotate(-BACK_TILT),
+                showIcon = false,
+            )
+            SamplePrint(
+                scheme.surfaceContainerHigh,
+                Modifier.offset(x = 44.dp, y = 8.dp).rotate(BACK_TILT),
+                showIcon = false,
+            )
+        }
         LiftedPrint(lift = { lift.value }, liftPx = liftPx)
         // La feuille n'existe qu'une fois sortie : fermée, elle n'est ni dessinée ni lue.
         if (sheet.value > 0f) {
@@ -85,7 +101,7 @@ private fun LiftedPrint(
     Box(
         modifier =
             Modifier
-                .padding(top = 32.dp)
+                .padding(top = PRINT_TOP)
                 .graphicsLayer { translationY = -liftPx * lift() },
         contentAlignment = Alignment.Center,
     ) {
@@ -146,6 +162,12 @@ private fun SheetRow(
         Text(label, style = MaterialTheme.typography.bodyLarge)
     }
 }
+
+/** Marge au-dessus du tirage. */
+private val PRINT_TOP = 32.dp
+
+/** Inclinaison des tirages de derrière, en degrés, comme aux pages précédentes. */
+private const val BACK_TILT = 8f
 
 /** Distance dont le tirage monte. */
 private val LIFT_DISTANCE = 24.dp
