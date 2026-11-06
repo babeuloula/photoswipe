@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsRoute(
     onBack: () -> Unit,
+    onOpenLicenses: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -49,6 +50,10 @@ fun SettingsRoute(
             when (effect) {
                 SettingsEffect.Close -> {
                     onBack()
+                }
+
+                SettingsEffect.OpenLicenses -> {
+                    onOpenLicenses()
                 }
 
                 SettingsEffect.RequestNotificationPermission -> {

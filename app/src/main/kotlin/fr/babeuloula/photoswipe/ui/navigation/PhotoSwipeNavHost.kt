@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import fr.babeuloula.photoswipe.ui.home.ConfirmationAnnouncement
 import fr.babeuloula.photoswipe.ui.home.HomeNavigation
+import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
 import java.time.LocalDate
 import fr.babeuloula.photoswipe.ui.deck.DeckRoute as DeckDestination
 import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
@@ -19,7 +20,7 @@ import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
 
 /**
  * Graphe de navigation de l'application (SPEC §5.4), en routes typées : accueil, pile d'un jour,
- * résumé, réglages. Le rappel quotidien peut demander d'ouvrir directement une pile
+ * résumé, réglages, licences. Le rappel quotidien peut demander d'ouvrir directement une pile
  * ([deckToOpen]), qui s'empile au-dessus de l'accueil.
  *
  * L'accès aux médias n'est pas une destination : `MediaAccessGate` entoure ce graphe, pour qu'un
@@ -83,7 +84,13 @@ fun PhotoSwipeNavHost(
             )
         }
         composable<SettingsRoute> {
-            SettingsDestination(onBack = navController::popBackStack)
+            SettingsDestination(
+                onBack = navController::popBackStack,
+                onOpenLicenses = { navController.navigate(LicensesRoute) },
+            )
+        }
+        composable<LicensesRoute> {
+            LicensesScreen(onBack = navController::popBackStack)
         }
     }
 }

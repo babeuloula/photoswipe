@@ -63,6 +63,9 @@ sealed interface SettingsEvent {
     /** « Réglages » du message de refus : ouvrir les réglages de notification de l'application. */
     data object OpenNotificationSettings : SettingsEvent
 
+    /** « Licences » de la section « À propos ». */
+    data object OpenLicenses : SettingsEvent
+
     /** Flèche de retour. */
     data object Back : SettingsEvent
 }
@@ -71,6 +74,9 @@ sealed interface SettingsEvent {
 sealed interface SettingsEffect {
     /** Revenir à l'écran précédent. */
     data object Close : SettingsEffect
+
+    /** Ouvrir les licences de l'application et de ses bibliothèques. */
+    data object OpenLicenses : SettingsEffect
 
     /** Afficher la demande système `POST_NOTIFICATIONS` ; la réponse revient par un événement. */
     data object RequestNotificationPermission : SettingsEffect
@@ -152,6 +158,10 @@ class SettingsViewModel
 
                 SettingsEvent.TimePickerDismissed -> {
                     state.update { it.copy(timePickerOpen = false) }
+                }
+
+                SettingsEvent.OpenLicenses -> {
+                    effects.trySend(SettingsEffect.OpenLicenses)
                 }
 
                 SettingsEvent.Back -> {
