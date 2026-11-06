@@ -194,13 +194,28 @@ class DeckScreenTest {
     }
 
     @Test
-    fun `plays at once from the big play button without waiting`() {
+    fun `plays at once with the sound from the big play button without waiting`() {
         val videoPlayer = RecordingVideoPlayer(composeRule.activity)
         showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
 
         composeRule.onNodeWithContentDescription("Play video").performClick()
 
-        assertEquals(listOf("play ${video.uri}"), videoPlayer.calls)
+        assertEquals(listOf("play with sound ${video.uri}"), videoPlayer.calls)
+        videoPlayer.release()
+    }
+
+    @Test
+    fun `lets the sound be cut again after the big play button`() {
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        showWithPlayer(DeckUiState.Loaded(listOf(video)), videoPlayer)
+
+        composeRule.onNodeWithContentDescription("Play video").performClick()
+        update { videoPlayer.playingUri = video.uri }
+        advance(Duration.ofMillis(TOLERANCE_MILLIS))
+        composeRule.onNodeWithContentDescription("Turn sound off").performClick()
+
+        assertEquals(listOf("play with sound ${video.uri}", "sound"), videoPlayer.calls)
+        assertTrue(videoPlayer.muted)
         videoPlayer.release()
     }
 

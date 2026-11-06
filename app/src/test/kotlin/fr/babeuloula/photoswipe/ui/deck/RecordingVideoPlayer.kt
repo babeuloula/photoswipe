@@ -34,6 +34,11 @@ internal class RecordingVideoPlayer(
         calls += "play $uri"
     }
 
+    override fun playByUser(uri: String) {
+        calls += "play with sound $uri"
+        muted = false
+    }
+
     override fun position(uri: String): Duration = position
 
     override fun pauseByUser(uri: String) {
