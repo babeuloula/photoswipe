@@ -94,7 +94,11 @@ Konsist lit les sources de `:app`, `:data` et `:domain` sans les compiler. Chaqu
   - Les fonctions `suspend` s'appellent dans `runTest { }` (kotlinx-coroutines-test).
   - Qualité : ktlint et detekt analysent aussi `src/testFixtures` ; `MagicNumber` et `LongParameterList` y sont désactivées comme dans les tests.
 - **Seeder MediaStore** (debug, SPEC §10 niveau 3) : outils développeur (« Outils dev PhotoSwipe » dans le lanceur, ou Réglages → Outils développeur) → « Médias d'exemple dans la galerie » → « Ajouter ». Il insère dans le dossier `PhotoSwipe seed` une photo par année sur 5 ans pour aujourd'hui et les 6 jours précédents, plus une vidéo par jour ; « Retirer » les supprime, corbeille comprise (ADR [0020](decisions/0020-mediastore-seeder.md)).
-  - **Limite** : ces médias appartiennent à PhotoSwipe. Android peut donc sauter ses dialogues de corbeille et de favori pour eux, et ils ne sont plus retirables par l'app après une désinstallation. Pour tester les dialogues système, il faut des médias poussés par `adb` : script `scripts/seed-emulator.sh` *(prévu, PS-70)*.
+  - **Limite** : ces médias appartiennent à PhotoSwipe. Android peut donc sauter ses dialogues de corbeille et de favori pour eux, et ils ne sont plus retirables par l'app après une désinstallation. Pour tester les dialogues système, il faut des médias poussés par `adb` (ci-dessous).
+- **Script `scripts/seed-emulator.sh`** (SPEC §10) : génère des photos JPEG datées par leur EXIF (`DateTimeOriginal` et décalage horaire du fuseau de l'ordinateur, heure d'été comprise ; une couleur par année), les pousse par `adb` dans `/sdcard/Pictures/PhotoSwipeAdb` puis lance un scan de MediaStore (`content call --method scan_volume`). Ces photos appartiennent au shell (`com.android.shell`), pas à PhotoSwipe : les dialogues système de corbeille et de favori s'affichent bien.
+  - Prérequis : `adb` (dans le `PATH`, par exemple `export PATH="$PATH:$HOME/Library/Android/sdk/platform-tools"`), `python3` et `ffmpeg` (`brew install ffmpeg`). Avec plusieurs appareils : `ANDROID_SERIAL=emulator-5554`.
+  - `scripts/seed-emulator.sh` : une photo par année sur 5 ans pour aujourd'hui et les 6 jours précédents (35 photos) ; `--years N` et `--days N` changent la répartition ; `scripts/seed-emulator.sh --remove` retire le dossier et relance le scan.
+  - Tests : `python3 -m unittest discover -s scripts` (plan des dates, 29 février, EXIF relu, couleurs) et `shellcheck scripts/*.sh`, lancés par le job obligatoire de la CI.
 
 ## 5. Prévu par la SPEC (§11)
 
