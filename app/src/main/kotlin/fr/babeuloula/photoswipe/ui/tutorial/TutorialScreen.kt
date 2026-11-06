@@ -61,8 +61,17 @@ fun TutorialScreen(
     val isLast = pagerState.currentPage == pages.lastIndex
     CenteredContent(modifier) {
         Column(Modifier.fillMaxSize().padding(vertical = 24.dp)) {
-            HorizontalPager(state = pagerState, modifier = Modifier.weight(1f).fillMaxWidth()) { index ->
-                TutorialPageContent(pages[index], animate = animate)
+            // Sur la page d'entraînement, les gestes vont aux cartes, pas au carrousel.
+            HorizontalPager(
+                state = pagerState,
+                userScrollEnabled = pages[pagerState.currentPage] != TutorialPage.PRACTICE,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+            ) { index ->
+                if (pages[index] == TutorialPage.PRACTICE) {
+                    PracticePage()
+                } else {
+                    TutorialPageContent(pages[index], animate = animate)
+                }
             }
             PageIndicator(
                 current = pagerState.currentPage,

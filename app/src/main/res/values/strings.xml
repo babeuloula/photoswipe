@@ -153,4 +153,13 @@
     <string name="tutorial_catch_up_body">Missed a day? The last 7 days stay on the home screen. A daily reminder, which you can turn on in the settings, lets you know only when memories are left to sort.</string>
     <string name="tutorial_confirmation_title">Nothing is final</string>
     <string name="tutorial_confirmation_body">Marked media are deleted together, once you confirm at the end of sorting. They go to the system trash, where you can restore them for about 30 days.</string>
+    <string name="tutorial_practice_title">Give it a try</string>
+    <string name="tutorial_practice_body">These sample cards are not your photos: swipe them or use the buttons, nothing is saved.</string>
+    <string name="tutorial_practice_kept">Kept: it would come back next year.</string>
+    <string name="tutorial_practice_marked">Marked: nothing is deleted before you confirm.</string>
+    <string name="tutorial_practice_favorite">Favorite: kept and added to your favorites.</string>
+    <string name="tutorial_practice_shared">In the app, this opens Android\'s share sheet.</string>
+    <string name="tutorial_practice_undone">Undone: the card is back.</string>
+    <string name="tutorial_practice_done">Well done, you know how to sort!</string>
+    <string name="tutorial_practice_restart">Start again</string>
 </resources>

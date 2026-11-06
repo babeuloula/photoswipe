@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.tutorial
 
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -14,6 +15,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -42,7 +44,9 @@ class TutorialScreenTest {
 
     private fun show() {
         composeRule.activity.setContent {
-            PhotoSwipeTheme { TutorialScreen(onDone = { doneCount++ }) }
+            CompositionLocalProvider(LocalImageLoader provides composeRule.activity.imageLoader) {
+                PhotoSwipeTheme { TutorialScreen(onDone = { doneCount++ }) }
+            }
         }
         composeRule.waitForIdle()
     }

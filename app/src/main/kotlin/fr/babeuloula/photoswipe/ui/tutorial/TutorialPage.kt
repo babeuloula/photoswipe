@@ -31,4 +31,7 @@ enum class TutorialPage(
 
     /** La confirmation groupée et la corbeille restaurable. */
     CONFIRMATION(R.string.tutorial_confirmation_title, R.string.tutorial_confirmation_body, R.drawable.ic_delete),
+
+    /** Mode entraînement : trier des cartes d'exemple, jamais les vraies photos. */
+    PRACTICE(R.string.tutorial_practice_title, R.string.tutorial_practice_body, R.drawable.ic_photo_library),
 }

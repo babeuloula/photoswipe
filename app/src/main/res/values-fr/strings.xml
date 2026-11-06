@@ -142,4 +142,13 @@
     <string name="tutorial_catch_up_body">Un jour de manqué ? Les 7 derniers jours restent sur l\'accueil. Un rappel quotidien, à activer dans les réglages, vous prévient seulement s\'il reste des souvenirs à trier.</string>
     <string name="tutorial_confirmation_title">Rien n\'est définitif</string>
     <string name="tutorial_confirmation_body">Les médias marqués sont supprimés ensemble, quand vous confirmez à la fin du tri. Ils partent dans la corbeille du système, d\'où vous pouvez les restaurer pendant environ 30 jours.</string>
+    <string name="tutorial_practice_title">Essayez</string>
+    <string name="tutorial_practice_body">Ces cartes d\'exemple ne sont pas vos photos : glissez-les ou utilisez les boutons, rien n\'est enregistré.</string>
+    <string name="tutorial_practice_kept">Gardée : elle reviendrait l\'année prochaine.</string>
+    <string name="tutorial_practice_marked">Marquée : rien n\'est supprimé avant votre confirmation.</string>
+    <string name="tutorial_practice_favorite">Favori : gardée et ajoutée à vos favoris.</string>
+    <string name="tutorial_practice_shared">Dans l\'app, cela ouvre le partage d\'Android.</string>
+    <string name="tutorial_practice_undone">Annulé : la carte est revenue.</string>
+    <string name="tutorial_practice_done">Bravo, vous savez trier !</string>
+    <string name="tutorial_practice_restart">Recommencer</string>
 </resources>

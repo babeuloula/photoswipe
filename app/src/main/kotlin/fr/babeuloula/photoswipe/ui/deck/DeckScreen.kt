@@ -213,7 +213,7 @@ private fun DeckLayout(
  * peut être annulée.
  */
 @Composable
-private fun LoadedDeck(
+internal fun LoadedDeck(
     state: DeckUiState.Loaded,
     onEvent: (DeckEvent) -> Unit,
 ) {
