@@ -8,11 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,8 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -70,7 +66,7 @@ fun SummaryScreen(
                 navigationIcon = {
                     IconButton(onClick = { onEvent(SummaryEvent.Back) }) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            painterResource(R.drawable.ic_arrow_back),
                             contentDescription = stringResource(R.string.navigate_back),
                         )
                     }
@@ -133,12 +129,12 @@ private fun SummaryContent(
         Column {
             SummaryHeading(stringResource(R.string.summary_sorted_today))
             SummaryLine(
-                Icons.Filled.Check,
+                painterResource(R.drawable.ic_check),
                 colors.keep,
                 pluralStringResource(R.plurals.summary_kept, summary.keptCount, summary.keptCount),
             )
             SummaryLine(
-                Icons.Filled.Favorite,
+                painterResource(R.drawable.ic_favorite_filled),
                 colors.favorite,
                 pluralStringResource(R.plurals.summary_favorites, summary.favoriteCount, summary.favoriteCount),
             )
@@ -146,7 +142,7 @@ private fun SummaryContent(
         Column {
             SummaryHeading(stringResource(R.string.summary_to_confirm))
             SummaryLine(
-                Icons.Filled.Delete,
+                painterResource(R.drawable.ic_delete),
                 colors.delete,
                 pluralStringResource(
                     R.plurals.summary_marked,
@@ -220,7 +216,7 @@ private fun FreedSpaceCard(bytes: Long) {
 /** Une ligne du détail : icône de la décision et nombre de médias. */
 @Composable
 private fun SummaryLine(
-    icon: ImageVector,
+    icon: Painter,
     tint: androidx.compose.ui.graphics.Color,
     text: String,
 ) {

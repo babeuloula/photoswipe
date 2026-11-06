@@ -13,10 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalIconButton
@@ -38,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.ColorPainter
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -248,10 +243,10 @@ private fun PlayPauseOverlay(
                     painter =
                         if (playing) {
                             painterResource(
-                                R.drawable.ic_pause,
+                                R.drawable.ic_pause_filled,
                             )
                         } else {
-                            rememberVectorPainter(Icons.Filled.PlayArrow)
+                            painterResource(R.drawable.ic_play_arrow_filled)
                         },
                     contentDescription = null,
                     modifier = Modifier.size(BIG_ICON_SIZE),
@@ -344,7 +339,7 @@ private fun MemoryLabel(
             // Déjà en favori dans la galerie, ou en attente dans l'application (PS-86).
             if (card.favorite) {
                 Icon(
-                    imageVector = Icons.Filled.Favorite,
+                    painter = painterResource(R.drawable.ic_favorite_filled),
                     contentDescription = stringResource(R.string.deck_already_favorite),
                     tint = MaterialTheme.swipeColors.favorite,
                 )
@@ -380,10 +375,10 @@ private fun VideoBadge(
                 painter =
                     if (playing) {
                         painterResource(
-                            R.drawable.ic_pause,
+                            R.drawable.ic_pause_filled,
                         )
                     } else {
-                        rememberVectorPainter(Icons.Filled.PlayArrow)
+                        painterResource(R.drawable.ic_play_arrow_filled)
                     },
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
@@ -405,7 +400,16 @@ private fun Unavailable(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Icon(
-            imageVector = if (type == MediaType.VIDEO) Icons.Filled.PlayArrow else Icons.Filled.Warning,
+            painter =
+                painterResource(
+                    if (type ==
+                        MediaType.VIDEO
+                    ) {
+                        R.drawable.ic_play_arrow_filled
+                    } else {
+                        R.drawable.ic_warning
+                    },
+                ),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(48.dp),
