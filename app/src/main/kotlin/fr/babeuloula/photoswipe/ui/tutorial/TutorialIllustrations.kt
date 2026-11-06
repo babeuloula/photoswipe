@@ -34,6 +34,10 @@ internal fun TutorialIllustration(
             SameDayIllustration(animate = animate, modifier = modifier)
         }
 
+        TutorialPage.SWIPE_UP -> {
+            SwipeUpIllustration(animate = animate, modifier = modifier)
+        }
+
         else -> {
             Box(modifier, contentAlignment = Alignment.Center) {
                 Icon(
