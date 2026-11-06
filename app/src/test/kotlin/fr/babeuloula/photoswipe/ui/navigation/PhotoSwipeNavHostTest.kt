@@ -160,6 +160,19 @@ class PhotoSwipeNavHostTest {
     }
 
     @Test
+    fun `stays on the settings when a language change recreates the app`() {
+        awaitText(text(R.string.home_today))
+        composeRule.onNodeWithContentDescription(text(R.string.home_open_settings)).performClick()
+        awaitText(text(R.string.settings_title))
+
+        composeRule.activityRule.scenario.recreate()
+
+        awaitText(text(R.string.settings_title))
+        goBack()
+        awaitText(text(R.string.home_today))
+    }
+
+    @Test
     fun `opens the licenses from the settings and comes back`() {
         awaitText(text(R.string.home_today))
         composeRule.onNodeWithContentDescription(text(R.string.home_open_settings)).performClick()

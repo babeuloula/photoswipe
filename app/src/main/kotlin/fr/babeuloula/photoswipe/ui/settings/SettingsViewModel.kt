@@ -63,6 +63,9 @@ sealed interface SettingsEvent {
     /** « Réglages » du message de refus : ouvrir les réglages de notification de l'application. */
     data object OpenNotificationSettings : SettingsEvent
 
+    /** « Langue » : ouvrir le réglage de langue par application d'Android. */
+    data object OpenLanguageSettings : SettingsEvent
+
     /** « Licences » de la section « À propos ». */
     data object OpenLicenses : SettingsEvent
 
@@ -74,6 +77,9 @@ sealed interface SettingsEvent {
 sealed interface SettingsEffect {
     /** Revenir à l'écran précédent. */
     data object Close : SettingsEffect
+
+    /** Ouvrir le réglage de langue par application d'Android 13+ (SPEC §9). */
+    data object OpenLanguageSettings : SettingsEffect
 
     /** Ouvrir les licences de l'application et de ses bibliothèques. */
     data object OpenLicenses : SettingsEffect
@@ -158,6 +164,10 @@ class SettingsViewModel
 
                 SettingsEvent.TimePickerDismissed -> {
                     state.update { it.copy(timePickerOpen = false) }
+                }
+
+                SettingsEvent.OpenLanguageSettings -> {
+                    effects.trySend(SettingsEffect.OpenLanguageSettings)
                 }
 
                 SettingsEvent.OpenLicenses -> {

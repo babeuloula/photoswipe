@@ -62,6 +62,9 @@
     <string name="settings_reminder_time_picker">Choose the reminder time</string>
     <string name="settings_reminder_permission_denied">Without notification permission, PhotoSwipe can\'t remind you: the reminder stays off.</string>
     <string name="settings_reminder_open_settings">Settings</string>
+    <string name="settings_language_section">Language</string>
+    <string name="settings_language">App language</string>
+    <string name="settings_language_system">Phone language (%1$s)</string>
     <string name="settings_about_section">About</string>
     <string name="settings_about_version">Version</string>
     <string name="settings_about_licenses">Licenses</string>
