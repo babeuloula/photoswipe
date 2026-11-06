@@ -58,6 +58,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
+    // Fabrique Hilt des tâches WorkManager, branchée dans PhotoSwipeApplication (rappel quotidien).
+    implementation(libs.work.runtime)
+    implementation(libs.androidx.hilt.work)
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)

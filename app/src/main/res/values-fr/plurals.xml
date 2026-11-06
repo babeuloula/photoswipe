@@ -56,4 +56,9 @@
         <item quantity="many">%d de médias ajoutés aux favoris de votre galerie.</item>
         <item quantity="other">%d médias ajoutés aux favoris de votre galerie.</item>
     </plurals>
+    <plurals name="reminder_title">
+        <item quantity="one">%d souvenir à trier</item>
+        <item quantity="many">%d de souvenirs à trier</item>
+        <item quantity="other">%d souvenirs à trier</item>
+    </plurals>
 </resources>

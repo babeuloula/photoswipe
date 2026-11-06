@@ -6,9 +6,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import java.time.LocalDate
 import java.time.LocalTime
 
-/** `FakeSettingsRepository` et `FakeReminderScheduler` respectent le contrat de leurs ports. */
+/** `FakeSettingsRepository`, `FakeReminderScheduler` et `FakeReminderNotifier` respectent le contrat de leurs ports. */
 class SettingsFakesTest {
     @Test
     fun `gives the default reminder settings until something is saved, then the saved ones`() =
@@ -34,5 +36,20 @@ class SettingsFakesTest {
         scheduler.cancel()
 
         assertNull(scheduler.scheduledTime)
+    }
+
+    @Test
+    fun `remembers each reminder notification and refuses an empty one`() {
+        val notifier = FakeReminderNotifier()
+
+        val day = LocalDate.of(2026, 7, 15)
+        notifier.notify(3, day)
+        notifier.notify(1, day.minusDays(1))
+
+        assertEquals(
+            listOf(FakeReminderNotifier.Sent(3, day), FakeReminderNotifier.Sent(1, day.minusDays(1))),
+            notifier.sent,
+        )
+        assertThrows<IllegalArgumentException> { notifier.notify(0, day) }
     }
 }
