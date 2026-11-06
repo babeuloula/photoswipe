@@ -90,7 +90,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
 
 ### 3.5 Confirmation en fin de session
 1. Écran de résumé : **espace libéré estimé**, puis « Trié aujourd'hui » (gardés, favoris : tout ce qui a été trié aujourd'hui, toutes piles confondues, ADR 0024) et « En attente de votre confirmation » (marqués).
-2. Bouton « Confirmer la suppression » : demande système `createTrashRequest` (par lots pour éviter les limites de taille des Intents, par exemple 500 URI).
+2. Bouton « Confirmer la suppression » : demande système `createTrashRequest` (par lots pour éviter les limites de taille des Intents, par exemple 500 URI). Sans média marqué, le résumé n'affiche ni le groupe « En attente », ni ce bouton : un seul bouton « Retour à l'accueil ».
 3. Le résumé ne demande plus les favoris : « Confirmer la suppression » ne concerne que la corbeille.
 4. Résultat refusé ou annulé : **les marquages restent en base**, rien n'est perdu ; message clair à l'utilisateur.
 

@@ -168,13 +168,20 @@ private fun SummaryContent(
                     )
                 }
             }
-            Column {
-                SummaryHeading(stringResource(R.string.summary_to_confirm))
-                MarkedGroup(state)
+            // Rien n'attend : ni groupe « En attente », ni mention d'une suppression à venir.
+            if (summary.markedForDeletionCount > 0) {
+                Column {
+                    SummaryHeading(stringResource(R.string.summary_to_confirm))
+                    MarkedGroup(state)
+                }
+                NothingDeletedYet()
             }
-            NothingDeletedYet()
         }
-        SummaryActions(canConfirm = state.canConfirm, onEvent = onEvent)
+        SummaryActions(
+            nothingMarked = summary.markedForDeletionCount == 0,
+            canConfirm = state.canConfirm,
+            onEvent = onEvent,
+        )
     }
 }
 
@@ -195,9 +202,13 @@ private fun NothingDeletedYet() {
     }
 }
 
-/** « Confirmer la suppression », inactif sans marquage ou pendant les dialogues, et « Plus tard ». */
+/**
+ * « Confirmer la suppression », inactif pendant les dialogues, et « Plus tard » ; quand rien n'est
+ * marqué pour suppression ([nothingMarked]), un seul bouton « Retour à l'accueil ».
+ */
 @Composable
 private fun SummaryActions(
+    nothingMarked: Boolean,
     canConfirm: Boolean,
     onEvent: (SummaryEvent) -> Unit,
 ) {
@@ -205,6 +216,15 @@ private fun SummaryActions(
         modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        if (nothingMarked) {
+            Button(
+                onClick = { onEvent(SummaryEvent.Later) },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+            ) {
+                Text(stringResource(R.string.summary_back_home))
+            }
+            return@Column
+        }
         Button(
             onClick = { onEvent(SummaryEvent.Confirm) },
             enabled = canConfirm,

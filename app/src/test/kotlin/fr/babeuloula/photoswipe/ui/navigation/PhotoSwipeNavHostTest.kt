@@ -141,9 +141,9 @@ class PhotoSwipeNavHostTest {
         awaitText(text(R.string.summary_title))
 
         composeRule.waitUntil(TIMEOUT_MILLIS) {
-            composeRule.onAllNodesWithText(text(R.string.summary_later)).fetchSemanticsNodes().isNotEmpty()
+            composeRule.onAllNodesWithText(text(R.string.summary_back_home)).fetchSemanticsNodes().isNotEmpty()
         }
-        composeRule.onNodeWithText(text(R.string.summary_later)).performClick()
+        composeRule.onNodeWithText(text(R.string.summary_back_home)).performClick()
 
         awaitText(text(R.string.home_today))
     }

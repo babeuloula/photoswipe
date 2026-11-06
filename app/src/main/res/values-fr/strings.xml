@@ -48,6 +48,7 @@
     <string name="summary_title">Résumé</string>
     <string name="summary_freed_space">Espace libéré estimé</string>
     <string name="summary_nothing_deleted_yet">Rien n\'est encore supprimé : vos choix sont enregistrés et attendent votre confirmation.</string>
+    <string name="summary_back_home">Retour à l\'accueil</string>
     <string name="summary_later">Plus tard</string>
     <string name="summary_confirm">Confirmer la suppression</string>
     <string name="summary_marked_media_missing">Ces médias ne sont plus dans votre galerie : il n\'y a rien à appliquer.</string>
