@@ -89,7 +89,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
 - Les marquages non confirmés restent visibles sur l'accueil (« N médias en attente de suppression »).
 
 ### 3.5 Confirmation en fin de session
-1. Écran de résumé : nombre gardés / marqués, **espace libéré estimé** (les favoris sont appliqués dès la pile, §2).
+1. Écran de résumé : **espace libéré estimé**, puis « Trié aujourd'hui » (gardés, favoris : tout ce qui a été trié aujourd'hui, toutes piles confondues, ADR 0024) et « En attente de votre confirmation » (marqués).
 2. Bouton « Confirmer la suppression » : demande système `createTrashRequest` (par lots pour éviter les limites de taille des Intents, par exemple 500 URI).
 3. Le résumé ne demande plus les favoris : « Confirmer la suppression » ne concerne que la corbeille.
 4. Résultat refusé ou annulé : **les marquages restent en base**, rien n'est perdu ; message clair à l'utilisateur.
@@ -355,7 +355,7 @@ Pour une publication future : Google encadre l'accès large aux photos et vidéo
 4. 29 février affiché le 28 février des années non bissextiles. OK ?
 5. Heure de notification par défaut : 18:00. OK ?
 6. `applicationId` : `fr.babeuloula.photoswipe`. À confirmer.
-7. Effet réel sur Google Photos de la suppression locale d'un média sauvegardé : à vérifier sur appareil, **ne pas le promettre dans l'UI**.
+7. Effet réel sur Google Photos de la suppression locale d'un média sauvegardé : à vérifier sur appareil, **ne pas le promettre dans l'UI**. De même, le favori système (`IS_FAVORITE` de MediaStore) n'apparaît pas comme étoile dans Google Photos, qui garde ses propres favoris : constaté sur émulateur le 2026-11-06 (MediaStore à jour, pas d'étoile). Les galeries qui lisent MediaStore l'affichent.
 8. Tutoriel : affiché **avant** l'écran de permissions, avec un mode entraînement sur cartes d'exemple. OK ?
 9. Tutoriel : animations en Compose pur (sans Lottie), 5 pages + entraînement. OK ?
 10. Accès « Gestion des médias » proposé sur l'accueil après le premier dialogue d'Android validé, avec une confirmation de PhotoSwipe à la place de celle d'Android (§3.5, ADR 0023) : décidé par Jérémy le 2026-11-05.

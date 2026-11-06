@@ -207,7 +207,7 @@ class HomeViewModel
                 .catch { emit(false) }
 
         /** Marquages à confirmer : le même nombre que le résumé annoncera (ADR 0011). */
-        private suspend fun pendingDeletionCount(): Int = getSessionSummary(ReviewSession()).markedForDeletionCount
+        private suspend fun pendingDeletionCount(): Int = getSessionSummary().markedForDeletionCount
 
         private companion object {
             /** Garde le calcul actif pendant une rotation ou un court passage en arrière-plan. */

@@ -51,4 +51,9 @@
         <item quantity="many">Mettre %d de médias à la corbeille ?</item>
         <item quantity="other">Mettre %d médias à la corbeille ?</item>
     </plurals>
+    <plurals name="summary_favorites">
+        <item quantity="one">%d favori</item>
+        <item quantity="many">%d de favoris</item>
+        <item quantity="other">%d favoris</item>
+    </plurals>
 </resources>

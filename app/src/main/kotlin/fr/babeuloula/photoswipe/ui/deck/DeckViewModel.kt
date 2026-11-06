@@ -126,14 +126,8 @@ sealed interface DeckEvent {
 
 /** Navigation demandée par la pile. */
 sealed interface DeckEffect {
-    /**
-     * Ouvrir le résumé de la session (SPEC §3.5).
-     *
-     * @property keptCount médias gardés pendant la session, sans les favoris (ADR 0011, 0017).
-     */
-    data class OpenSummary(
-        val keptCount: Int,
-    ) : DeckEffect
+    /** Ouvrir le résumé (SPEC §3.5), qui lit lui-même le tri du jour (ADR 0024). */
+    data object OpenSummary : DeckEffect
 
     /** Quitter la pile, vers l'écran précédent. */
     data object Close : DeckEffect
@@ -211,7 +205,7 @@ class DeckViewModel
                 }
 
                 DeckEvent.Finish -> {
-                    effects.trySend(DeckEffect.OpenSummary(keptCount()))
+                    effects.trySend(DeckEffect.OpenSummary)
                 }
 
                 DeckEvent.Back -> {
@@ -307,7 +301,7 @@ class DeckViewModel
          * quitter la pile avant perdrait sa réponse.
          */
         private fun openSummaryWhenDone() {
-            if (deck.isEmpty() && !galleryFavorite.isPending) effects.trySend(DeckEffect.OpenSummary(keptCount()))
+            if (deck.isEmpty() && !galleryFavorite.isPending) effects.trySend(DeckEffect.OpenSummary)
         }
 
         /**
@@ -331,12 +325,6 @@ class DeckViewModel
                 }
             }
         }
-
-        /**
-         * Médias gardés pendant la session, sans les favoris : les décisions sorties à droite. Une
-         * décision annulée a quitté la session, elle n'est donc pas comptée (ADR 0011).
-         */
-        private fun keptCount(): Int = session.decisions.count { it.exitSide() == CardSide.RIGHT }
 
         /**
          * Côté par lequel la carte est sortie, lu sur l'entrée écrite au swipe : marquée à gauche,

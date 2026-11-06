@@ -51,7 +51,7 @@ fun PhotoSwipeNavHost(
         composable<DeckRoute> {
             DeckDestination(
                 onBack = navController::popBackStack,
-                onOpenSummary = { keptCount -> navController.navigate(SummaryRoute(keptCount)) },
+                onOpenSummary = { navController.navigate(SummaryRoute) },
             )
         }
         composable<SummaryRoute> {
@@ -105,7 +105,7 @@ private fun NavGraphBuilder.homeDestination(navController: NavHostController) {
                 HomeNavigation(
                     openDeck = { day -> navController.navigate(DeckRoute.of(day)) },
                     openSettings = { navController.navigate(SettingsRoute) },
-                    openSummary = { navController.navigate(SummaryRoute()) },
+                    openSummary = { navController.navigate(SummaryRoute) },
                 ),
             confirmed =
                 if (trashedCount > 0) {

@@ -8,6 +8,7 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
@@ -48,7 +49,7 @@ class HomeRouteTest {
         val viewModel =
             HomeViewModel(
                 GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), FakeMediaSource(), repository, clock),
-                GetSessionSummary(repository),
+                GetSessionSummary(repository, FakeDecisionJournal(repository), ReviewWindowProvider(clock), clock),
                 FakeSettingsRepository(),
                 mediaManagement = { false },
             )

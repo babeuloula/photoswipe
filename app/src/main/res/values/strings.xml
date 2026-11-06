@@ -102,4 +102,6 @@
     <string name="summary_trash_confirm_text">You can restore them from your gallery trash for 30 days.</string>
     <string name="summary_trash_confirm_action">Move to trash</string>
     <string name="deck_already_favorite">In your favorites</string>
+    <string name="summary_sorted_today">Sorted today</string>
+    <string name="summary_to_confirm">Waiting for your confirmation</string>
 </resources>

@@ -1,6 +1,6 @@
 # 0017 — Gardés de la session transmis au résumé par la route
 
-- **Statut** : accepté
+- **Statut** : remplacé par l'ADR [0024](0024-summary-sorted-today.md) (PS-88)
 - **Date** : 2026-11-05
 - **Ticket** : PS-53
 

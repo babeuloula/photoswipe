@@ -9,6 +9,7 @@ import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
+import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.usecase.CleanOrphanEntries
 import fr.babeuloula.photoswipe.domain.usecase.GetPendingFavorites
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
@@ -17,6 +18,7 @@ import fr.babeuloula.photoswipe.domain.usecase.PrepareTrash
 import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
 import fr.babeuloula.photoswipe.domain.usecase.RecordTrashResult
 import fr.babeuloula.photoswipe.domain.usecase.RequestFavorite
+import java.time.Clock
 
 /**
  * Fournit les use cases du résumé et de la confirmation de fin de session (SPEC §3.5), à part de
@@ -26,8 +28,12 @@ import fr.babeuloula.photoswipe.domain.usecase.RequestFavorite
 @InstallIn(SingletonComponent::class)
 object ConfirmationModule {
     @Provides
-    fun provideGetSessionSummary(reviewRepository: ReviewRepository): GetSessionSummary =
-        GetSessionSummary(reviewRepository)
+    fun provideGetSessionSummary(
+        reviewRepository: ReviewRepository,
+        journal: DecisionJournal,
+        window: ReviewWindowProvider,
+        clock: Clock,
+    ): GetSessionSummary = GetSessionSummary(reviewRepository, journal, window, clock)
 
     @Provides
     fun providePrepareTrash(
