@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carte d'exemple du mode entraînement du tutoriel (SPEC §4) : des fleurs dans un pré. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="400dp"
+    android:viewportWidth="300"
+    android:viewportHeight="400">
+    <path android:fillColor="#DDEBC8" android:pathData="M0,0h300v400h-300z" />
+    <path android:fillColor="#7FA65A" android:pathData="M0,250C90,230 210,240 300,255L300,400L0,400Z" />
+    <path android:strokeColor="#4E7A33" android:strokeWidth="6" android:pathData="M90,300L90,190M200,320L200,170M150,330L150,230" />
+    <path android:fillColor="#E46F6F" android:pathData="M90,175m-26,0a26,26 0,1 1,52 0a26,26 0,1 1,-52 0" />
+    <path android:fillColor="#F2C14E" android:pathData="M200,155m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0" />
+    <path android:fillColor="#B48FD8" android:pathData="M150,215m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:fillColor="#FFF4D6" android:pathData="M90,175m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0M200,155m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0M150,215m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0" />
+</vector>

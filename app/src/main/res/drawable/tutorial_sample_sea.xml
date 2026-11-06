@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carte d'exemple du mode entraînement du tutoriel (SPEC §4) : la mer et un voilier. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="400dp"
+    android:viewportWidth="300"
+    android:viewportHeight="400">
+    <path android:fillColor="#BFE0F2" android:pathData="M0,0h300v400h-300z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M60,80m-30,0a30,14 0,1 1,60 0a30,14 0,1 1,-60 0" />
+    <path android:fillColor="#3E7CA6" android:pathData="M0,230h300v170h-300z" />
+    <path android:fillColor="#2A5D80" android:pathData="M0,300C50,285 100,315 150,300C200,285 250,315 300,300L300,400L0,400Z" />
+    <path android:fillColor="#E9DCC0" android:pathData="M0,360C80,340 220,350 300,370L300,400L0,400Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M170,140L170,215L120,215Z" />
+    <path android:fillColor="#7A3E2B" android:pathData="M110,220L200,220L185,240L125,240Z" />
+</vector>
