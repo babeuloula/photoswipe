@@ -85,7 +85,10 @@ sealed interface SummaryEvent {
         val confirmed: Boolean,
     ) : SummaryEvent
 
-    /** « Plus tard » : revenir à l'accueil, les marquages et favoris restent en attente. */
+    /**
+     * « Plus tard », ou « Retour à l'accueil » quand rien n'est marqué : revenir à l'accueil, les
+     * marquages restent en attente.
+     */
     data object Later : SummaryEvent
 
     /** Flèche de retour. */

@@ -166,15 +166,44 @@ class SummaryScreenTest {
         assertEquals(listOf<SummaryEvent>(SummaryEvent.Confirm), events)
     }
 
-    @Test
-    fun `cannot confirm when nothing is marked`() {
-        show(
-            SummaryUiState.Loaded(
-                SessionSummary(keptCount = 3, markedForDeletionCount = 0, favoriteCount = 0, estimatedFreedBytes = 0),
-            ),
-        )
+    private val nothingMarked =
+        SessionSummary(keptCount = 3, markedForDeletionCount = 0, favoriteCount = 0, estimatedFreedBytes = 0)
 
-        composeRule.onNodeWithText(text(R.string.summary_confirm)).assertIsNotEnabled()
+    @Test
+    fun `offers only a way back home when nothing is marked`() {
+        show(SummaryUiState.Loaded(nothingMarked))
+
+        composeRule.onNodeWithText(text(R.string.summary_back_home)).assertIsDisplayed().performClick()
+
+        assertEquals(listOf<SummaryEvent>(SummaryEvent.Later), events)
+        composeRule.onNodeWithText(text(R.string.summary_confirm)).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.summary_later)).assertDoesNotExist()
+    }
+
+    @Test
+    fun `hides what waits for confirmation when nothing is marked`() {
+        show(SummaryUiState.Loaded(nothingMarked))
+
+        composeRule.onNodeWithText(text(R.string.summary_sorted_today)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.summary_to_confirm)).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.summary_nothing_deleted_yet)).assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `offers the way back home in French`() {
+        show(SummaryUiState.Loaded(nothingMarked))
+
+        composeRule.onNodeWithText("Retour à l'accueil").assertIsDisplayed()
+    }
+
+    @Test
+    fun `keeps the confirmation and later buttons when something is marked`() {
+        show(SummaryUiState.Loaded(summary))
+
+        composeRule.onNodeWithText(text(R.string.summary_confirm)).assertIsEnabled()
+        composeRule.onNodeWithText(text(R.string.summary_later)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.summary_back_home)).assertDoesNotExist()
     }
 
     @Test
