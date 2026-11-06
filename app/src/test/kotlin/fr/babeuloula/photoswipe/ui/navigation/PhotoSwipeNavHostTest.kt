@@ -17,9 +17,14 @@ import dagger.hilt.android.testing.UninstallModules
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.di.MediaSourceModule
+import fr.babeuloula.photoswipe.di.TutorialModule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
+import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
+import fr.babeuloula.photoswipe.domain.model.Tutorial
 import fr.babeuloula.photoswipe.domain.port.MediaSource
+import fr.babeuloula.photoswipe.domain.usecase.MarkTutorialSeen
+import fr.babeuloula.photoswipe.domain.usecase.ShouldShowTutorial
 import fr.babeuloula.photoswipe.permission.MEDIA_PERMISSIONS
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -42,7 +47,7 @@ import java.util.Locale
  * contient un souvenir du jour (la carte « Aujourd'hui » est donc active).
  */
 @HiltAndroidTest
-@UninstallModules(MediaSourceModule::class)
+@UninstallModules(MediaSourceModule::class, TutorialModule::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(application = HiltTestApplication::class)
 class PhotoSwipeNavHostTest {
@@ -59,6 +64,15 @@ class PhotoSwipeNavHostTest {
 
     @get:Rule(order = 2)
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    /** Tutoriel déjà vu : le test commence sur l'accueil. */
+    @BindValue
+    @JvmField
+    val shouldShowTutorial = ShouldShowTutorial(FakeSettingsRepository(tutorialVersionSeen = Tutorial.CURRENT_VERSION))
+
+    @BindValue
+    @JvmField
+    val markTutorialSeen = MarkTutorialSeen(FakeSettingsRepository())
 
     /** Un souvenir pris aujourd'hui il y a un an, à midi. */
     @BindValue
