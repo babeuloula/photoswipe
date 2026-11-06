@@ -30,11 +30,13 @@ import java.time.format.DateTimeFormatter
  * Le test insère ses propres photos JPEG, datées par leur EXIF, puis les supprime. Une application
  * lit sans permission les médias qu'elle a elle-même ajoutés (Android 13+) : les médias de
  * l'appareil restent invisibles et ne perturbent pas le test. Les dates choisies (années 1990)
- * évitent toute confusion avec de vraies photos.
+ * évitent toute confusion avec de vraies photos. Après chaque insertion, le test attend que
+ * MediaStore ait indexé ses fichiers ([MediaStoreIndexing]).
  */
 @RunWith(AndroidJUnit4::class)
 class MediaStoreMediaSourceInstrumentedTest {
-    private val resolver: ContentResolver = InstrumentationRegistry.getInstrumentation().targetContext.contentResolver
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
+    private val resolver: ContentResolver = context.contentResolver
     private val source = MediaStoreMediaSource(resolver, Dispatchers.IO)
     private val zone = ZoneId.systemDefault()
     private val inserted = mutableListOf<Uri>()
@@ -51,9 +53,11 @@ class MediaStoreMediaSourceInstrumentedTest {
             val july15th1995 = insertPhoto("ps30-a.jpg", takenAt(LocalDate.of(1995, 7, 15)))
             val july15th1998 = insertPhoto("ps30-b.jpg", takenAt(LocalDate.of(1998, 7, 15)))
             val july16th1998 = insertPhoto("ps30-c.jpg", takenAt(LocalDate.of(1998, 7, 16)))
+            assertEquals(3, MediaStoreIndexing.scanOwnMedia(context))
 
             val ranges = SameDayMatcher().rangesFor(LocalDate.of(1999, 7, 15), zone)
-            val ids = source.mediaTakenIn(ranges).map { it.id }
+            val expected = setOf(july15th1995, july15th1998)
+            val ids = MediaStoreIndexing.eventually(expected) { source.mediaTakenIn(ranges).map { it.id }.toSet() }
 
             assertTrue(ids.containsAll(listOf(july15th1995, july15th1998)))
             assertTrue(july16th1998 !in ids)
@@ -64,6 +68,9 @@ class MediaStoreMediaSourceInstrumentedTest {
         runTest {
             val takenAt = takenAt(LocalDate.of(1996, 3, 2))
             val id = insertPhoto("ps30-d.jpg", takenAt)
+            assertEquals(1, MediaStoreIndexing.scanOwnMedia(context))
+
+            MediaStoreIndexing.eventually(takenAt) { source.mediaByIds(setOf(id)).singleOrNull()?.takenAt }
 
             val media = source.mediaByIds(setOf(id)).single()
 
