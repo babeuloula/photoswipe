@@ -2,12 +2,12 @@ package fr.babeuloula.photoswipe.data.seed
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import fr.babeuloula.photoswipe.data.media.MediaStoreIndexing
 import fr.babeuloula.photoswipe.data.media.MediaStoreMediaSource
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -42,22 +42,8 @@ class MediaStoreSeederInstrumentedTest {
             seeder.removeSeeded()
         }
 
-    /** Médias de la galerie pris le jour du test ; MediaStore les met à jour un peu après l'insertion. */
+    /** Médias de la galerie pris le jour du test ; MediaStore les met à jour en les indexant (`MediaStoreIndexing`). */
     private suspend fun mediaOfTheDay() = source.mediaTakenIn(SameDayMatcher().rangesFor(day.plusYears(1), zone))
-
-    /** Attend jusqu'à 10 secondes que [read] renvoie [expected], et renvoie la dernière valeur lue. */
-    private suspend fun <T> eventually(
-        expected: T,
-        read: suspend () -> T,
-    ): T {
-        var value = read()
-        repeat(POLL_ATTEMPTS) {
-            if (value == expected) return value
-            withContext(Dispatchers.IO) { Thread.sleep(POLL_MILLIS) }
-            value = read()
-        }
-        return value
-    }
 
     @Test
     fun `seeds photos and videos that the gallery reads at their date`() =
@@ -69,9 +55,15 @@ class MediaStoreSeederInstrumentedTest {
                 )
 
             assertEquals(2, seeder.seed(plan))
+            assertEquals(2, MediaStoreIndexing.scanOwnMedia(context))
 
             val expected = plan.map { it.type to it.takenAt.toInstant() }.toSet()
-            assertEquals(expected, eventually(expected) { mediaOfTheDay().map { it.type to it.takenAt }.toSet() })
+            assertEquals(
+                expected,
+                MediaStoreIndexing.eventually(expected) {
+                    mediaOfTheDay().map { it.type to it.takenAt }.toSet()
+                },
+            )
         }
 
     @Test
@@ -81,11 +73,6 @@ class MediaStoreSeederInstrumentedTest {
 
             assertEquals(1, seeder.removeSeeded())
 
-            assertEquals(emptyList<Any>(), eventually(emptyList()) { mediaOfTheDay() })
+            assertEquals(emptyList<Any>(), MediaStoreIndexing.eventually(emptyList()) { mediaOfTheDay() })
         }
-
-    private companion object {
-        const val POLL_ATTEMPTS = 50
-        const val POLL_MILLIS = 200L
-    }
 }
