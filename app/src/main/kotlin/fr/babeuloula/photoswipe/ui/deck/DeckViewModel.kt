@@ -258,7 +258,10 @@ class DeckViewModel
         private fun load() {
             state.value = DeckUiState.Loading
             viewModelScope.launch {
-                runCatching { getDeckForDay(day) to getDaySession(day) }.fold(
+                runCatching {
+                    galleryFavorite.loadPending()
+                    getDeckForDay(day) to getDaySession(day)
+                }.fold(
                     onSuccess = { (cards, resumed) ->
                         deck.clear()
                         deck.addAll(cards)
@@ -318,6 +321,11 @@ class DeckViewModel
                 val result = runCatching { decisions.undoLastDecision(session) }.getOrNull()
                 if (result is UndoLastDecision.Result.Undone) {
                     session = result.session
+                    if (result.decision.exitSide() ==
+                        CardSide.TOP
+                    ) {
+                        galleryFavorite.forgetPending(result.decision.media.id)
+                    }
                     deck.addFirst(result.decision.media)
                     render(returningFrom = result.decision.exitSide())
                 }
@@ -365,7 +373,7 @@ class DeckViewModel
                             deck
                                 .take(
                                     DeckUiState.Loaded.VISIBLE_CARDS,
-                                ).map { MediaCardUiState.of(it, day, clock.zone) },
+                                ).map { MediaCardUiState.of(it, day, clock.zone, galleryFavorite.isFavorite(it)) },
                         remainingCount = deck.size,
                         canUndo = canUndo,
                         returningFrom = returningFrom,

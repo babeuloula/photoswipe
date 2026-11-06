@@ -26,6 +26,7 @@ fun aMediaItem(
     takenAt: Instant = DEFAULT_TAKEN_AT,
     sizeBytes: Long = DEFAULT_SIZE_BYTES,
     duration: Duration? = null,
+    isFavorite: Boolean = false,
 ): MediaItem =
     MediaItem(
         id = MediaId(id),
@@ -34,6 +35,7 @@ fun aMediaItem(
         takenAt = takenAt,
         sizeBytes = sizeBytes,
         duration = duration,
+        isFavorite = isFavorite,
     )
 
 /** URI de contenu MediaStore d'un média, du type `content://media/external/images/media/42`. */

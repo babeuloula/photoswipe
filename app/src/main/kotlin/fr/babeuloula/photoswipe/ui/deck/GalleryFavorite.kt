@@ -1,8 +1,10 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import android.content.IntentSender
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequest
+import fr.babeuloula.photoswipe.domain.usecase.GetPendingFavorites
 import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
 import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
 import fr.babeuloula.photoswipe.domain.usecase.RequestFavorite
@@ -15,6 +17,9 @@ import javax.inject.Inject
  * favori, puis enregistre la réponse. Android affiche son dialogue, ou applique le favori sans
  * rien demander avec l'accès « Gestion des médias » (ADR 0023). Un dialogue d'Android validé fait
  * proposer cet accès sur l'accueil. Une demande à la fois, propre à la pile qui l'utilise.
+ *
+ * Il sait aussi quels médias montrer avec un cœur (PS-86) : en favori dans la galerie, accepté
+ * pendant la session, ou en favori en attente dans l'application.
  */
 class GalleryFavorite
     @Inject
@@ -24,8 +29,29 @@ class GalleryFavorite
         private val offerManageMediaTip: OfferManageMediaTip,
         private val mediaActionIntents: MediaActionIntents,
         private val mediaManagement: MediaManagementReader,
+        private val getPendingFavorites: GetPendingFavorites,
     ) {
         private var pending: MediaActionRequest? = null
+
+        /** Favoris acceptés par la galerie pendant la session. */
+        private val accepted = mutableSetOf<MediaId>()
+
+        /** Favoris en attente dans l'application : lus au chargement, ou refusés pendant la session. */
+        private val waiting = mutableSetOf<MediaId>()
+
+        /** Relit les favoris en attente enregistrés ; une lecture impossible n'affiche simplement pas de cœur. */
+        suspend fun loadPending() {
+            waiting.clear()
+            waiting += runCatching { getPendingFavorites() }.getOrDefault(emptySet())
+        }
+
+        /** Vrai si [media] doit porter un cœur. */
+        fun isFavorite(media: MediaItem): Boolean = media.isFavorite || media.id in accepted || media.id in waiting
+
+        /** Favori annulé par « Annuler » : s'il n'était qu'en attente, le cœur disparaît. */
+        fun forgetPending(id: MediaId) {
+            waiting -= id
+        }
 
         /** Vrai tant qu'une demande attend sa réponse. */
         val isPending: Boolean get() = pending != null
@@ -48,6 +74,7 @@ class GalleryFavorite
             val request = pending ?: return false
             pending = null
             runCatching { recordFavoriteResult(request, confirmed) }
+            if (confirmed) accepted += request.mediaIds else waiting += request.mediaIds
             if (confirmed && !mediaManagement.isGranted()) runCatching { offerManageMediaTip() }
             return true
         }

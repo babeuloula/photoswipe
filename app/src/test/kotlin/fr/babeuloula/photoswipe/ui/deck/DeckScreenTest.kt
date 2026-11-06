@@ -811,4 +811,26 @@ class DeckScreenTest {
         /** Nombre maximal d'images attendues pour voir apparaître une carte annulée. */
         const val MAX_FRAMES = 20
     }
+
+    @Test
+    fun `shows a described heart on a card already in favorite`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(favorite = true))))
+
+        composeRule.onNodeWithContentDescription(text(R.string.deck_already_favorite)).assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows no heart on a card that is not in favorite`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        composeRule.onNodeWithContentDescription(text(R.string.deck_already_favorite)).assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `describes the heart in French`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(favorite = true))))
+
+        composeRule.onNodeWithContentDescription("Dans vos favoris").assertIsDisplayed()
+    }
 }

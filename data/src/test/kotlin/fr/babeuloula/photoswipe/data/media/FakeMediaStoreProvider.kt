@@ -34,7 +34,8 @@ class FakeMediaStoreProvider : ContentProvider() {
                     "${MediaStore.MediaColumns.DATE_ADDED} INTEGER NOT NULL, " +
                     "${MediaStore.MediaColumns.SIZE} INTEGER, " +
                     "${MediaStore.MediaColumns.DURATION} INTEGER, " +
-                    "${MediaStore.MediaColumns.IS_TRASHED} INTEGER NOT NULL DEFAULT 0)",
+                    "${MediaStore.MediaColumns.IS_TRASHED} INTEGER NOT NULL DEFAULT 0, " +
+                    "${MediaStore.MediaColumns.IS_FAVORITE} INTEGER NOT NULL DEFAULT 0)",
             )
         }
         return true
@@ -47,8 +48,9 @@ class FakeMediaStoreProvider : ContentProvider() {
         dateAdded: Long = 0,
         size: Long? = 1_000,
         trashed: Boolean = false,
+        favorite: Boolean = false,
     ) {
-        insert(IMAGES, id, dateTaken, dateAdded, size, duration = null, trashed)
+        insert(IMAGES, id, dateTaken, dateAdded, size, duration = null, trashed, favorite)
     }
 
     /** Ajoute une vidéo ; [duration] en millisecondes. */
@@ -60,7 +62,7 @@ class FakeMediaStoreProvider : ContentProvider() {
         duration: Long? = 5_000,
         trashed: Boolean = false,
     ) {
-        insert(VIDEOS, id, dateTaken, dateAdded, size, duration, trashed)
+        insert(VIDEOS, id, dateTaken, dateAdded, size, duration, trashed, favorite = false)
     }
 
     @Suppress("LongParameterList")
@@ -72,6 +74,7 @@ class FakeMediaStoreProvider : ContentProvider() {
         size: Long?,
         duration: Long?,
         trashed: Boolean,
+        favorite: Boolean,
     ) {
         val values =
             ContentValues().apply {
@@ -81,6 +84,7 @@ class FakeMediaStoreProvider : ContentProvider() {
                 put(MediaStore.MediaColumns.SIZE, size)
                 put(MediaStore.MediaColumns.DURATION, duration)
                 put(MediaStore.MediaColumns.IS_TRASHED, if (trashed) 1 else 0)
+                put(MediaStore.MediaColumns.IS_FAVORITE, if (favorite) 1 else 0)
             }
         database.insertOrThrow(table, null, values)
     }
