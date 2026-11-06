@@ -1,4 +1,7 @@
 // Module application : point d'entrée Android, UI et assemblage DI (SPEC §5.4).
+import fr.babeuloula.photoswipe.buildlogic.AppVersion
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.photoswipe.android.application)
     alias(libs.plugins.photoswipe.android.hilt)
@@ -20,13 +23,33 @@ val commitCount: Int =
         .trim()
         .toIntOrNull() ?: 1
 
+// Nom de version : le dernier tag Git vX.Y.Z (1.2.0 sur le tag, 1.2.0-dev.5 après), 0.0.0-dev sans
+// tag (PS-72, `AppVersion` de build-logic).
+val versionFromTag: String =
+    AppVersion.nameFrom(
+        providers
+            .exec {
+                commandLine("git", "describe", "--tags", "--long", "--match", "v[0-9]*")
+                isIgnoreExitValue = true
+            }.standardOutput.asText
+            .get(),
+    )
+
+// Clé d'upload du Play Store, hors dépôt (PS-72) : `keystore.properties` à la racine, ignoré par Git
+// (storeFile, storePassword, keyAlias, keyPassword). Sans lui, le build release n'est pas signé.
+val uploadKey: Properties? =
+    rootProject
+        .file("keystore.properties")
+        .takeIf { it.isFile }
+        ?.let { file -> Properties().apply { file.inputStream().use { load(it) } } }
+
 android {
     namespace = "fr.babeuloula.photoswipe"
 
     defaultConfig {
         applicationId = "fr.babeuloula.photoswipe"
         versionCode = commitCount
-        versionName = "0.1.0"
+        versionName = versionFromTag
     }
 
     // Clé de debug partagée, versionnée dans le dépôt privé (PS-110) : tous les builds debug, de
@@ -38,6 +61,14 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+        if (uploadKey != null) {
+            create("upload") {
+                storeFile = file(uploadKey.getProperty("storeFile"))
+                storePassword = uploadKey.getProperty("storePassword")
+                keyAlias = uploadKey.getProperty("keyAlias")
+                keyPassword = uploadKey.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -45,6 +76,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            if (uploadKey != null) signingConfig = signingConfigs.getByName("upload")
         }
     }
 }
