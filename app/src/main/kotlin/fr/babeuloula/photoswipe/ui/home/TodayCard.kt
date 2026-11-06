@@ -60,6 +60,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -87,7 +88,8 @@ import java.time.format.FormatStyle
 /**
  * Carte « Aujourd'hui » (ADR 0025) : la date, le repère des années, une bande de vignettes rangées
  * par année et le nombre de médias à trier, avec « Commencer le tri ». Tout trié : la carte passe
- * en surface, une coche le dit et « Voir le résumé » mène au résumé. Sans souvenir ce jour-là, ou de
+ * en surface, une coche le dit, « Voir le résumé » mène au résumé, et « Retrier » ou un appui sur
+ * la carte rouvre le jour (ADR 0026, PS-111). Sans souvenir ce jour-là, ou de
  * toute la semaine, elle le dit en texte.
  */
 @Composable
@@ -176,18 +178,25 @@ private fun MemoriesCard(
     val scheme = MaterialTheme.colorScheme
     val container = if (toSort) scheme.primaryContainer else scheme.surfaceContainerHigh
     val content = if (toSort) scheme.onPrimaryContainer else scheme.onSurface
+    // Tout trié : toucher la carte, photos comprises, retrie le jour comme « Retrier » (PS-111).
+    val resortLabel = stringResource(R.string.home_resort)
     Card(
-        onClick = onOpenDay,
-        enabled = toSort,
+        onClick = if (toSort) onOpenDay else onResort,
         shape = MaterialTheme.shapes.extraLarge,
         colors =
             CardDefaults.cardColors(
                 containerColor = container,
                 contentColor = content,
-                disabledContainerColor = container,
-                disabledContentColor = content,
             ),
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth().semantics {
+                if (!toSort) {
+                    onClick(label = resortLabel) {
+                        onResort()
+                        true
+                    }
+                }
+            },
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
