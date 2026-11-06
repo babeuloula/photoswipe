@@ -55,10 +55,17 @@ interface CardVideoPlayer {
     fun resumesImmediately(uri: String): Boolean
 
     /**
-     * Lit [uri] en muet, une fois. Une vidéo en pause reprend là où elle était ; une vidéo arrivée
+     * Lit [uri] une fois, lecture automatique comprise : muette au départ, puis avec le dernier
+     * réglage du son choisi par l'utilisateur. Une vidéo en pause reprend là où elle était ; une vidéo arrivée
      * à la fin repart du début.
      */
     fun play(uri: String)
+
+    /**
+     * Lecture lancée par l'utilisateur (bouton ▶) : comme [play], mais avec le son, qu'il peut
+     * encore couper. Le son reste activé pour les vidéos suivantes (SPEC §4.3).
+     */
+    fun playByUser(uri: String)
 
     /** Position de lecture de [uri], `null` si ce n'est pas la vidéo chargée. */
     fun position(uri: String): Duration?
@@ -181,6 +188,11 @@ class ExoCardVideoPlayer(
         pausedByUser = false
         exoPlayer.playWhenReady = true
         playingUri = uri
+    }
+
+    override fun playByUser(uri: String) {
+        if (muted) toggleSound()
+        play(uri)
     }
 
     override fun position(uri: String): Duration? =

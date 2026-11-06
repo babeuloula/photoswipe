@@ -148,7 +148,7 @@ fun MediaCard(
  *
  * Le son est coupé au départ ; le bouton en haut à droite l'active ou le coupe. Un gros bouton ▶
  * au centre attend la lecture ; au démarrage il devient ⏸ puis s'efface en fondu.
- * Un tap sur la vidéo la met en pause (le ▶ revient et reste) ou la relance. La pastille du haut
+ * Un tap sur la vidéo la met en pause (le ▶ revient et reste) ou la relance avec le son. La pastille du haut
  * donne le temps restant ; à la fin de la vidéo, elle disparaît et seul le ▶ reste. La surface
  * reste transparente jusqu'à la première image, pour que la miniature ne laisse pas place à un
  * rectangle noir.
@@ -188,7 +188,7 @@ private fun BoxScope.activeVideo(
     }
     PlayPauseOverlay(
         playing = playing,
-        onToggle = { if (playing) videoPlayer.pauseByUser(card.uri) else videoPlayer.play(card.uri) },
+        onToggle = { if (playing) videoPlayer.pauseByUser(card.uri) else videoPlayer.playByUser(card.uri) },
         modifier = Modifier.matchParentSize(),
     )
     return ActiveVideoState(

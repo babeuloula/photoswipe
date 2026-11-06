@@ -120,7 +120,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
    - **boutons équivalents sous la carte** (supprimer / annuler / plus d'actions / garder), libellés, pour l'accessibilité et TalkBack ; celui du côté glissé se remplit pendant le geste ;
    - pile vidée : « Voir le résumé » et « Retour à l'accueil » ;
    - retour haptique, animations à ressort, seuil de déclenchement et retour au centre si geste incomplet ;
-   - vidéos : lecture automatique muette, tap pour activer le son.
+   - vidéos : lecture automatique muette, écran gardé allumé pendant la lecture ; un appui sur le bouton ▶ lance la vidéo avec le son, que le bouton du son peut couper ; le choix du son vaut pour les vidéos suivantes.
 4. **Résumé / confirmation** : voir §3.5 ; vignettes des derniers médias marqués.
 5. **Réglages** : notification (on/off + heure), langue (réglage de langue par application d'Android 13+), thème (celui du téléphone, clair ou sombre, en boutons radio dans la liste), à propos. En debug : outils développeur (§10).
 6. **Icône** : icône adaptative « pile de tirages » avec sa couche monochrome (icône à thème), écran de démarrage de la plateforme.

@@ -209,6 +209,43 @@ class ExoCardVideoPlayerTest {
     }
 
     @Test
+    fun `turns the sound on when the user plays a video`() {
+        videoPlayer.playByUser(first)
+
+        assertFalse(videoPlayer.muted)
+        assertEquals(1f, player.volume)
+        assertTrue(player.playWhenReady)
+        assertEquals(first, videoPlayer.playingUri)
+    }
+
+    @Test
+    fun `keeps the automatic playback muted`() {
+        videoPlayer.play(first)
+
+        assertTrue(videoPlayer.muted)
+        assertEquals(0f, player.volume)
+    }
+
+    @Test
+    fun `keeps the sound on for the next videos after the user played one`() {
+        videoPlayer.playByUser(first)
+
+        videoPlayer.play(second)
+
+        assertEquals(1f, player.volume)
+    }
+
+    @Test
+    fun `lets the sound be cut after the user played a video`() {
+        videoPlayer.playByUser(first)
+
+        videoPlayer.toggleSound()
+
+        assertTrue(videoPlayer.muted)
+        assertEquals(0f, player.volume)
+    }
+
+    @Test
     fun `keeps the sound setting for the next videos`() {
         videoPlayer.play(first)
         videoPlayer.toggleSound()
