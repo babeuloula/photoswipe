@@ -25,7 +25,7 @@ class FavoriteMediaTest {
         runTest {
             val media = aMediaItem(id = 42, sizeBytes = 3_500_000)
 
-            val decision = favoriteMedia(media, today)
+            val decision = favoriteMedia(media, today).single()
 
             assertEquals(
                 listOf(
@@ -61,7 +61,7 @@ class FavoriteMediaTest {
             val repository = FakeReviewRepository(listOf(kept))
             val media = aMediaItem(id = 1)
 
-            val decision = FavoriteMedia(repository, FakeDecisionJournal(repository), clock)(media, today)
+            val decision = FavoriteMedia(repository, FakeDecisionJournal(repository), clock)(media, today).single()
 
             assertEquals(listOf(true), repository.entries.map { it.favoritePending })
             assertEquals(media, decision.media)

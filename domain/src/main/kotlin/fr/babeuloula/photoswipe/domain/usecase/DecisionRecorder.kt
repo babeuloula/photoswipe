@@ -6,6 +6,7 @@ import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
+import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import java.time.Clock
 import java.time.LocalDate
 
@@ -18,6 +19,7 @@ internal class DecisionRecorder(
     private val reviewRepository: ReviewRepository,
     private val journal: DecisionJournal,
     private val clock: Clock,
+    private val sameDayMatcher: SameDayMatcher = SameDayMatcher(),
 ) {
     /**
      * Écrit [decision] pour le couple ([media], année de [day]), avec un favori en attente si
@@ -42,4 +44,20 @@ internal class DecisionRecorder(
             )
         return SessionDecision(media, journal.record(day, made, previous))
     }
+
+    /**
+     * Garde [media] pour chaque autre année de revue où il est encore marqué pour suppression
+     * (PS-113) : une décision vaut pour un couple (média, année), et la confirmation enverrait sinon
+     * à la corbeille un média gardé cette année. Chaque décision est journalisée dans le jour de
+     * revue de son année, comme dans la pile des marqués ; renvoie les décisions à empiler.
+     */
+    suspend fun keepOtherMarkings(
+        media: MediaItem,
+        day: LocalDate,
+    ): List<SessionDecision> =
+        reviewRepository
+            .entriesMarkedForDeletion()
+            .filter { it.mediaId == media.id && it.reviewYear != day.year }
+            .sortedBy { it.reviewYear }
+            .map { record(media, sameDayMatcher.reviewDay(media, it.reviewYear, clock.zone), ReviewDecision.KEPT) }
 }

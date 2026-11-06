@@ -15,8 +15,8 @@ class ReviewMarkedMedia(
     private val markForDeletion: MarkForDeletion,
     private val favoriteMedia: FavoriteMedia,
 ) {
-    /** Garde [marked] : il quitte les médias à supprimer, pour chacune de ses années. */
-    suspend fun keep(marked: MarkedMedia): List<SessionDecision> = marked.reviewDays.map { keepMedia(marked.media, it) }
+    /** Garde [marked] : il quitte les médias à supprimer, pour chacune de ses années (`KeepMedia` lève les autres). */
+    suspend fun keep(marked: MarkedMedia): List<SessionDecision> = keepMedia(marked.media, marked.reviewDays.first())
 
     /** Laisse [marked] marqué pour suppression (la décision est réécrite, pour pouvoir l'annuler). */
     suspend fun markForDeletion(marked: MarkedMedia): List<SessionDecision> =
@@ -24,6 +24,5 @@ class ReviewMarkedMedia(
 
     /** Garde [marked] en favori : le favori sur son année la plus récente, gardé pour les autres. */
     suspend fun favorite(marked: MarkedMedia): List<SessionDecision> =
-        listOf(favoriteMedia(marked.media, marked.reviewDays.first())) +
-            marked.reviewDays.drop(1).map { keepMedia(marked.media, it) }
+        favoriteMedia(marked.media, marked.reviewDays.first())
 }
