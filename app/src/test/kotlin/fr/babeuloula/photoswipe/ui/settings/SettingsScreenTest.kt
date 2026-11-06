@@ -124,4 +124,22 @@ class SettingsScreenTest {
 
         assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenLicenses), events)
     }
+
+    @Test
+    fun `shows the app language and opens its system setting`() {
+        composeRule.activity.setContent {
+            PhotoSwipeTheme {
+                SettingsScreen(
+                    state = SettingsUiState(reminder = ReminderSettings.DEFAULT),
+                    onEvent = { events += it },
+                    languageLabel = "Français",
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Français").performScrollTo().assertExists()
+        composeRule.onNodeWithText(text(R.string.settings_language)).performScrollTo().performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenLanguageSettings), events)
+    }
 }

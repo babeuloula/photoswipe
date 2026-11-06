@@ -48,8 +48,9 @@ import java.util.Date
 
 /**
  * Réglages (SPEC §4.5), en liste de préférences Material 3 : le rappel quotidien (SPEC §3.6),
- * activé ou non, et son heure, choisie dans le sélecteur d'heure Material 3 ; puis « À propos » :
- * version de l'application et licences. L'entrée « Langue » arrive avec PS-64.
+ * activé ou non, et son heure, choisie dans le sélecteur d'heure Material 3 ; la langue de
+ * l'application ([languageLabel]), choisie dans le réglage de langue par application d'Android ;
+ * puis « À propos » : version de l'application et licences.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +58,7 @@ fun SettingsScreen(
     state: SettingsUiState,
     onEvent: (SettingsEvent) -> Unit,
     modifier: Modifier = Modifier,
+    languageLabel: String = "",
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     Scaffold(
@@ -88,6 +90,7 @@ fun SettingsScreen(
             } else {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     ReminderSection(reminder, onEvent)
+                    LanguageSection(languageLabel, onEvent)
                     AboutSection(onEvent)
                 }
                 if (state.timePickerOpen) ReminderTimeDialog(reminder.time, onEvent)
@@ -122,6 +125,22 @@ private fun ReminderSection(
                 Text(stringResource(R.string.settings_reminder_time_summary, timeLabel(reminder.time)))
             },
             modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.PickReminderTime) },
+        )
+    }
+}
+
+/** Section « Langue » : la langue de l'application, choisie dans les réglages d'Android (SPEC §9). */
+@Composable
+private fun LanguageSection(
+    languageLabel: String,
+    onEvent: (SettingsEvent) -> Unit,
+) {
+    Column {
+        SectionTitle(stringResource(R.string.settings_language_section))
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_language)) },
+            supportingContent = { Text(languageLabel) },
+            modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenLanguageSettings) },
         )
     }
 }
@@ -217,6 +236,7 @@ private fun SettingsScreenPreview() {
     PhotoSwipeTheme {
         SettingsScreen(
             state = SettingsUiState(reminder = ReminderSettings.DEFAULT.copy(enabled = true)),
+            languageLabel = "Français",
             onEvent = {},
         )
     }

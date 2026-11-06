@@ -184,6 +184,16 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `opens the app language settings`() =
+        runTest {
+            val viewModel = settingsViewModel()
+
+            viewModel.onEvent(SettingsEvent.OpenLanguageSettings)
+
+            assertEquals(SettingsEffect.OpenLanguageSettings, viewModel.uiEffects.first())
+        }
+
+    @Test
     fun `opens the licenses`() =
         runTest {
             val viewModel = settingsViewModel()
