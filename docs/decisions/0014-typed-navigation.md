@@ -21,5 +21,5 @@ La SPEC §5.4 demande Navigation Compose avec des routes typées, et le ticket d
 - **`LocalDate` dans la route avec un `NavType` personnalisé** : plus de code pour un gain nul.
 
 ## Conséquences
-- Chaque écran réel remplace sa coquille dans `PhotoSwipeNavHost` et garde sa route.
+- Chaque écran réel remplace sa coquille dans `PhotoSwipeNavHost` et garde sa route. Les réglages (PS-59) ont remplacé la dernière : `ShellScreen` a été supprimé.
 - Les écrans du graphe ont leur propre `Scaffold` (marges des barres système) ; la bannière d'accès limité consomme la marge de la barre d'état au-dessus d'eux.

@@ -12,7 +12,6 @@
     <string name="limited_access_message">Accès limité : vos souvenirs peuvent être incomplets.</string>
     <string name="limited_access_manage">Gérer l\'accès</string>
     <string name="navigate_back">Retour</string>
-    <string name="shell_coming_soon">Cet écran arrive bientôt.</string>
     <string name="home_open_settings">Réglages</string>
     <string name="deck_title">Souvenirs du %1$s</string>
     <string name="deck_finish">Terminer</string>
@@ -46,6 +45,12 @@
     <string name="summary_error">Le résumé n\'a pas pu être chargé.</string>
     <string name="summary_retry">Réessayer</string>
     <string name="settings_title">Réglages</string>
+    <string name="settings_reminder_section">Rappel quotidien</string>
+    <string name="settings_reminder_enabled">Me le rappeler chaque jour</string>
+    <string name="settings_reminder_enabled_summary">Une notification seulement s\'il reste des souvenirs à trier.</string>
+    <string name="settings_reminder_time">Heure du rappel</string>
+    <string name="settings_reminder_time_summary">Vers %1$s : Android peut l\'envoyer un peu plus tard.</string>
+    <string name="settings_reminder_time_picker">Choisir l\'heure du rappel</string>
     <string name="home_today">Aujourd\'hui</string>
     <string name="home_error">Impossible de charger vos souvenirs.</string>
     <string name="home_retry">Réessayer</string>
