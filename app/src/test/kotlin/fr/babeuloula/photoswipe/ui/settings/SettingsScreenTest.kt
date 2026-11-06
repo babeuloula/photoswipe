@@ -4,6 +4,9 @@ import android.text.format.DateFormat
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -15,6 +18,7 @@ import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -52,6 +56,9 @@ class SettingsScreenTest {
     }
 
     private fun text(id: Int): String = composeRule.activity.getString(id)
+
+    /** Nœud du dialogue ouvert qui porte [label]. */
+    private fun inDialog(label: String) = composeRule.onNode(hasText(label) and hasAnyAncestor(isDialog()))
 
     @Test
     fun `switches the reminder on from its whole row`() {
@@ -160,5 +167,37 @@ class SettingsScreenTest {
         composeRule.onNodeWithText(text(R.string.settings_developer_tools)).performScrollTo().performClick()
 
         assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenDeveloperTools), events)
+    }
+
+    @Test
+    fun `shows the chosen theme and opens the theme choice`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.SYSTEM))
+
+        composeRule.onNodeWithText(text(R.string.settings_theme_system)).performScrollTo().assertExists()
+        composeRule.onNodeWithText(text(R.string.settings_theme)).performScrollTo().performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.PickTheme), events)
+    }
+
+    @Test
+    fun `picks a theme among the phone one, light and dark`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.LIGHT, themeDialogOpen = true))
+
+        composeRule.onNode(isDialog()).assertExists()
+        inDialog(text(R.string.settings_theme_system)).assertExists()
+        inDialog(text(R.string.settings_theme_light)).assertIsSelected()
+        inDialog(text(R.string.settings_theme_dark)).performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.ThemePicked(ThemeMode.DARK)), events)
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `shows the theme choice in French`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.SYSTEM, themeDialogOpen = true))
+
+        inDialog("Celui du téléphone").assertExists()
+        inDialog("Clair").assertExists()
+        inDialog("Sombre").assertExists()
     }
 }

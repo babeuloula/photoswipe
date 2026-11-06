@@ -4,6 +4,7 @@ import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReminderScheduler
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -227,4 +228,33 @@ class SettingsViewModelTest {
 
             assertEquals(SettingsEffect.Close, viewModel.uiEffects.first())
         }
+
+    @Test
+    fun `follows the phone theme on a fresh install`() {
+        assertEquals(ThemeMode.SYSTEM, settingsViewModel().uiState.value.themeMode)
+    }
+
+    @Test
+    fun `opens the theme choice, saves the picked theme and shows it`() {
+        val viewModel = settingsViewModel()
+
+        viewModel.onEvent(SettingsEvent.PickTheme)
+        assertTrue(viewModel.uiState.value.themeDialogOpen)
+        viewModel.onEvent(SettingsEvent.ThemePicked(ThemeMode.DARK))
+
+        assertFalse(viewModel.uiState.value.themeDialogOpen)
+        assertEquals(ThemeMode.DARK, repository.themeMode)
+        assertEquals(ThemeMode.DARK, viewModel.uiState.value.themeMode)
+    }
+
+    @Test
+    fun `closes the theme choice without changing the theme`() {
+        val viewModel = settingsViewModel()
+
+        viewModel.onEvent(SettingsEvent.PickTheme)
+        viewModel.onEvent(SettingsEvent.ThemeDialogDismissed)
+
+        assertFalse(viewModel.uiState.value.themeDialogOpen)
+        assertEquals(ThemeMode.SYSTEM, repository.themeMode)
+    }
 }

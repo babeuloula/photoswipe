@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import java.time.LocalDate
@@ -51,7 +52,7 @@ import java.util.Date
  * Réglages (SPEC §4.5), en liste de préférences Material 3 : le rappel quotidien (SPEC §3.6),
  * activé ou non, et son heure, choisie dans le sélecteur d'heure Material 3 ; la langue de
  * l'application ([SettingsEnvironment.languageLabel]), choisie dans le réglage de langue par application d'Android ;
- * puis « À propos » : version de l'application et licences.
+ * le thème (celui du téléphone, clair ou sombre) ; puis « À propos » : version de l'application et licences.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,10 +94,13 @@ fun SettingsScreen(
                     Column(Modifier.verticalScroll(rememberScrollState())) {
                         ReminderSection(reminder, onEvent)
                         LanguageSection(environment.languageLabel, onEvent)
+                        state.themeMode?.let { AppearanceSection(it, onEvent) }
                         AboutSection(onEvent, environment.showDeveloperTools)
                     }
                 }
                 if (state.timePickerOpen) ReminderTimeDialog(reminder.time, onEvent)
+                val themeMode = state.themeMode
+                if (state.themeDialogOpen && themeMode != null) ThemeDialog(themeMode, onEvent)
             }
         }
     }
@@ -200,7 +204,7 @@ private fun appVersion(): String {
 
 /** Titre de section, annoncé comme tel par TalkBack. */
 @Composable
-private fun SectionTitle(text: String) {
+internal fun SectionTitle(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleSmall,
@@ -259,7 +263,11 @@ private fun timeLabel(time: LocalTime): String {
 private fun SettingsScreenPreview() {
     PhotoSwipeTheme {
         SettingsScreen(
-            state = SettingsUiState(reminder = ReminderSettings.DEFAULT.copy(enabled = true)),
+            state =
+                SettingsUiState(
+                    reminder = ReminderSettings.DEFAULT.copy(enabled = true),
+                    themeMode = ThemeMode.SYSTEM,
+                ),
             environment = SettingsEnvironment(languageLabel = "Français"),
             onEvent = {},
         )

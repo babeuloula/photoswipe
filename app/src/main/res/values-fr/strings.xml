@@ -56,6 +56,11 @@
     <string name="settings_language_section">Langue</string>
     <string name="settings_language">Langue de l\'application</string>
     <string name="settings_language_system">Langue du téléphone (%1$s)</string>
+    <string name="settings_appearance_section">Apparence</string>
+    <string name="settings_theme">Thème</string>
+    <string name="settings_theme_system">Celui du téléphone</string>
+    <string name="settings_theme_light">Clair</string>
+    <string name="settings_theme_dark">Sombre</string>
     <string name="settings_about_section">À propos</string>
     <string name="settings_about_version">Version</string>
     <string name="settings_about_licenses">Licences</string>
