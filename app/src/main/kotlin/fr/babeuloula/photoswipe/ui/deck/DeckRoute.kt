@@ -1,5 +1,9 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -16,8 +20,9 @@ import fr.babeuloula.photoswipe.R
 import kotlinx.coroutines.launch
 
 /**
- * Pile de swipe reliée à son ViewModel : elle exécute les navigations et ouvre la feuille de partage,
- * ou signale par un message qu'un média ne peut pas être partagé.
+ * Pile de swipe reliée à son ViewModel : elle exécute les navigations, lance la demande de favori
+ * de la galerie et ouvre la feuille de partage, ou signale par un message qu'un média ne peut pas
+ * être partagé.
  */
 @Composable
 fun DeckRoute(
@@ -32,6 +37,10 @@ fun DeckRoute(
     val shareFailed = stringResource(R.string.deck_share_failed)
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val favoriteRequest =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = result.resultCode == Activity.RESULT_OK))
+        }
     LaunchedEffect(viewModel) {
         viewModel.uiEffects.collect { effect ->
             when (effect) {
@@ -41,6 +50,10 @@ fun DeckRoute(
 
                 DeckEffect.Close -> {
                     onBack()
+                }
+
+                is DeckEffect.LaunchFavoriteRequest -> {
+                    favoriteRequest.launch(IntentSenderRequest.Builder(effect.intentSender).build())
                 }
 
                 is DeckEffect.Share -> {

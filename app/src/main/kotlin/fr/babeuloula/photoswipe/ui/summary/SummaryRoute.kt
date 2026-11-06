@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun SummaryRoute(
-    onGoHome: (trashedCount: Int, favoritedCount: Int) -> Unit,
+    onGoHome: (trashedCount: Int) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SummaryViewModel = hiltViewModel(),
@@ -44,7 +44,7 @@ fun SummaryRoute(
         viewModel.uiEffects.collect { effect ->
             when (effect) {
                 is SummaryEffect.GoHome -> {
-                    onGoHome(effect.trashedCount, effect.favoritedCount)
+                    onGoHome(effect.trashedCount)
                 }
 
                 SummaryEffect.Close -> {
@@ -66,9 +66,6 @@ fun SummaryRoute(
                             resources.getString(R.string.summary_nothing_applied),
                             effect.stillMarkedCount.takeIf { it > 0 }?.let {
                                 resources.getQuantityString(R.plurals.summary_still_marked, it, it)
-                            },
-                            effect.pendingFavoriteCount.takeIf { it > 0 }?.let {
-                                resources.getQuantityString(R.plurals.summary_still_favorite, it, it)
                             },
                         ).joinToString(" ")
                     val retry = resources.getString(R.string.summary_retry)

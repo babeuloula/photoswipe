@@ -32,10 +32,6 @@
         <item quantity="one">%d item marked for deletion</item>
         <item quantity="other">%d items marked for deletion</item>
     </plurals>
-    <plurals name="summary_favorites">
-        <item quantity="one">%d favorite</item>
-        <item quantity="other">%d favorites</item>
-    </plurals>
     <plurals name="summary_trashed">
         <item quantity="one">%d item moved to the trash. You can restore it from your gallery\'s trash for about 30 days.</item>
         <item quantity="other">%d items moved to the trash. You can restore them from your gallery\'s trash for about 30 days.</item>
@@ -43,14 +39,6 @@
     <plurals name="summary_still_marked">
         <item quantity="one">%d item stays marked for deletion.</item>
         <item quantity="other">%d items stay marked for deletion.</item>
-    </plurals>
-    <plurals name="summary_still_favorite">
-        <item quantity="one">%d favorite is still waiting.</item>
-        <item quantity="other">%d favorites are still waiting.</item>
-    </plurals>
-    <plurals name="summary_favorited">
-        <item quantity="one">%d item added to your gallery favorites.</item>
-        <item quantity="other">%d items added to your gallery favorites.</item>
     </plurals>
     <plurals name="reminder_title">
         <item quantity="one">%d memory to sort</item>

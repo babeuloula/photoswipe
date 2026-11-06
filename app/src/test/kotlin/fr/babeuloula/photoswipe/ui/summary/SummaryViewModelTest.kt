@@ -22,9 +22,7 @@ import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.usecase.CleanOrphanEntries
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
-import fr.babeuloula.photoswipe.domain.usecase.PrepareFavorites
 import fr.babeuloula.photoswipe.domain.usecase.PrepareTrash
-import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
 import fr.babeuloula.photoswipe.domain.usecase.RecordTrashResult
 import fr.babeuloula.photoswipe.permission.OrphanCleanup
 import kotlinx.coroutines.flow.first
@@ -81,8 +79,6 @@ class SummaryViewModelTest {
                 ConfirmationActions(
                     prepareTrash = PrepareTrash(reviews, gallery, factory),
                     recordTrashResult = RecordTrashResult(reviews, FakeDecisionJournal(repository)),
-                    prepareFavorites = PrepareFavorites(reviews, gallery, factory),
-                    recordFavoriteResult = RecordFavoriteResult(reviews),
                     orphanCleanup =
                         OrphanCleanup(
                             CleanOrphanEntries(reviews, gallery, FakeDecisionJournal(repository)),
@@ -106,16 +102,6 @@ class SummaryViewModelTest {
         ) { viewModel.uiEffects.collect { effects += it } }
         return effects
     }
-
-    private suspend fun favorite(vararg ids: Long) {
-        ids.forEach {
-            repository.save(
-                aReviewEntry(mediaId = it, decision = ReviewDecision.KEPT, favoritePending = true),
-            )
-        }
-    }
-
-    private suspend fun pendingFavorites() = repository.entriesWithPendingFavorite().map { it.mediaId.value }
 
     private fun decisions() = repository.entries.sortedBy { it.mediaId.value }.map { it.decision }
 
@@ -274,7 +260,7 @@ class SummaryViewModelTest {
             viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = false))
 
             assertEquals(List(3) { ReviewDecision.MARKED_FOR_DELETION }, decisions())
-            assertEquals(SummaryEffect.NothingApplied(stillMarkedCount = 3, pendingFavoriteCount = 0), effects.last())
+            assertEquals(SummaryEffect.NothingApplied(stillMarkedCount = 3), effects.last())
         }
 
     @Test
@@ -306,101 +292,8 @@ class SummaryViewModelTest {
 
             assertTrue(effects.none { it is SummaryEffect.LaunchSystemRequest })
             assertEquals(listOf(ReviewDecision.MARKED_FOR_DELETION), decisions())
-            assertEquals(SummaryEffect.NothingApplied(stillMarkedCount = 1, pendingFavoriteCount = 0), effects.last())
+            assertEquals(SummaryEffect.NothingApplied(stillMarkedCount = 1), effects.last())
             assertTrue((viewModel.uiState.value as SummaryUiState.Loaded).canConfirm)
-        }
-
-    @Test
-    fun `presents the favorite dialogs after the trash dialogs`() =
-        runTest {
-            mark(1)
-            favorite(2, 3, 4)
-            val viewModel = summaryViewModel()
-            val effects = collectEffects(viewModel)
-
-            viewModel.onEvent(SummaryEvent.Confirm)
-            assertEquals(1, effects.count { it is SummaryEffect.LaunchSystemRequest })
-            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
-            assertEquals(listOf(ReviewDecision.TRASHED), decisions().take(1))
-            assertEquals(2, effects.count { it is SummaryEffect.LaunchSystemRequest })
-            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
-            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
-
-            assertEquals(3, effects.count { it is SummaryEffect.LaunchSystemRequest })
-            assertEquals(emptyList<Long>(), pendingFavorites())
-            assertEquals(SummaryEffect.GoHome(trashedCount = 1, favoritedCount = 3), effects.last())
-        }
-
-    @Test
-    fun `applies the favorites alone when nothing is marked`() =
-        runTest {
-            favorite(1)
-            val viewModel = summaryViewModel()
-            val effects = collectEffects(viewModel)
-            val loaded = viewModel.uiState.value as SummaryUiState.Loaded
-            assertTrue(loaded.canConfirm)
-            assertFalse(loaded.confirmsDeletion)
-
-            viewModel.onEvent(SummaryEvent.Confirm)
-            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
-
-            assertEquals(emptyList<Long>(), pendingFavorites())
-            assertEquals(SummaryEffect.GoHome(trashedCount = 0, favoritedCount = 1), effects.last())
-        }
-
-    @Test
-    fun `keeps the favorites pending when their dialog is refused`() =
-        runTest {
-            mark(1)
-            favorite(2)
-            val viewModel = summaryViewModel()
-            val effects = collectEffects(viewModel)
-
-            viewModel.onEvent(SummaryEvent.Confirm)
-            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
-            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = false))
-
-            assertEquals(listOf(2L), pendingFavorites())
-            assertEquals(SummaryEffect.GoHome(trashedCount = 1, favoritedCount = 0), effects.last())
-        }
-
-    @Test
-    fun `says the marks and favorites are kept when every dialog is refused`() =
-        runTest {
-            mark(1)
-            favorite(2)
-            val viewModel = summaryViewModel()
-            val effects = collectEffects(viewModel)
-
-            viewModel.onEvent(SummaryEvent.Confirm)
-            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = false))
-            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = false))
-
-            assertEquals(listOf(ReviewDecision.MARKED_FOR_DELETION, ReviewDecision.KEPT), decisions())
-            assertEquals(listOf(2L), pendingFavorites())
-            assertEquals(SummaryEffect.NothingApplied(stillMarkedCount = 1, pendingFavoriteCount = 1), effects.last())
-        }
-
-    @Test
-    fun `does not ask to favorite a media just moved to the trash`() =
-        runTest {
-            repository.save(
-                aReviewEntry(mediaId = 1, reviewYear = 2025, decision = ReviewDecision.KEPT, favoritePending = true),
-            )
-            repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026, decision = ReviewDecision.MARKED_FOR_DELETION))
-            favorite(2)
-            val viewModel = summaryViewModel()
-            val effects = collectEffects(viewModel)
-
-            viewModel.onEvent(SummaryEvent.Confirm)
-            gallery.remove(MediaId(1))
-            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
-            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
-
-            assertEquals(SummaryEffect.GoHome(trashedCount = 1, favoritedCount = 1), effects.last())
-            // Le média 1 a quitté la galerie : le nettoyage des orphelins a oublié toutes ses entrées.
-            assertEquals(emptyList<Long>(), pendingFavorites())
-            assertEquals(listOf(2L), repository.entries.map { it.mediaId.value })
         }
 
     @Test

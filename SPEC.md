@@ -55,7 +55,7 @@ Détection de doublons, statistiques, widget, synchronisation cloud, édition de
 ### Décisions par défaut prises pour compléter (à valider, voir §16)
 - La « suppression » utilise la **corbeille système** (`MediaStore.createTrashRequest`), restaurable environ 30 jours. La suppression définitive n'est pas proposée en v1.
 - « Favori » dans le menu = favori système **+** marque la photo comme gardée, puis passe à la carte suivante. « Partager » ouvre la feuille de partage, la carte reste affichée.
-- Les favoris système sont eux aussi **mis en file et appliqués en fin de session** (la demande Android exige une confirmation, voir §3.5).
+- Le favori système est **demandé aussitôt** à la galerie (`createFavoriteRequest` pour ce seul média, PS-85) : sans rien demander avec l'accès « Gestion des médias », sinon par le dialogue d'Android. Accepté : le favori est appliqué ; refusé : le média reste gardé, favori en attente (`favorite_pending`) pour un nouvel essai.
 
 ---
 
@@ -89,9 +89,9 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
 - Les marquages non confirmés restent visibles sur l'accueil (« N médias en attente de suppression »).
 
 ### 3.5 Confirmation en fin de session
-1. Écran de résumé : nombre gardés / marqués / favoris, **espace libéré estimé**.
+1. Écran de résumé : nombre gardés / marqués, **espace libéré estimé** (les favoris sont appliqués dès la pile, §2).
 2. Bouton « Confirmer la suppression » : demande système `createTrashRequest` (par lots pour éviter les limites de taille des Intents, par exemple 500 URI).
-3. Si des favoris sont en attente : demande système `createFavoriteRequest` distincte.
+3. Le résumé ne demande plus les favoris : « Confirmer la suppression » ne concerne que la corbeille.
 4. Résultat refusé ou annulé : **les marquages restent en base**, rien n'est perdu ; message clair à l'utilisateur.
 
 > ⚠️ Android affiche un dialogue de confirmation pour chaque requête de ce type sur des médias dont l'app n'est pas propriétaire. C'est pourquoi tout est groupé en fin de session et non fait à chaque swipe.
@@ -173,7 +173,7 @@ Sens des dépendances (toujours vers le domaine) :
   - `SettingsRepository` : préférences ;
   - `MediaActionRequestFactory` : prépare les demandes de confirmation système (corbeille, favori) sous forme d'objet opaque pour le domaine ;
   - `ReminderScheduler` : planification de la notification.
-- **Use cases** (un par intention, `operator fun invoke`) : `GetReviewDays`, `GetDeckForDay`, `KeepMedia`, `MarkForDeletion`, `FavoriteMedia`, `UndoLastDecision`, `GetSessionSummary`, `PrepareTrash`, `RecordTrashResult`, `CleanOrphanEntries`, `ScheduleDailyReminder`.
+- **Use cases** (un par intention, `operator fun invoke`) : `GetReviewDays`, `GetDeckForDay`, `KeepMedia`, `MarkForDeletion`, `FavoriteMedia`, `UndoLastDecision`, `RequestFavorite`, `RecordFavoriteResult`, `GetSessionSummary`, `PrepareTrash`, `RecordTrashResult`, `CleanOrphanEntries`, `ScheduleDailyReminder`.
 - Toute dépendance temporelle ou de concurrence est **injectée** (`Clock`, `CoroutineDispatcher`), jamais appelée en statique.
 
 ### 5.3 Données (`:data`)

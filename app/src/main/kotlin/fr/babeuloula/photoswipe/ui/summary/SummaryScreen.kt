@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -48,8 +47,8 @@ import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
 
 /**
- * Résumé avant confirmation (SPEC §3.5) : l'espace libéré estimé en tête, puis les gardés, les
- * marqués pour suppression et les favoris. « Confirmer la suppression » présente les dialogues
+ * Résumé avant confirmation (SPEC §3.5) : l'espace libéré estimé en tête, puis les gardés et les
+ * marqués pour suppression (les favoris sont appliqués dès la pile). « Confirmer la suppression » présente les dialogues
  * système de corbeille ; « Plus tard » ramène à l'accueil sans rien changer.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -144,11 +143,6 @@ private fun SummaryContent(
                     summary.markedForDeletionCount,
                 ),
             )
-            SummaryLine(
-                Icons.Filled.Favorite,
-                colors.favorite,
-                pluralStringResource(R.plurals.summary_favorites, summary.favoriteCount, summary.favoriteCount),
-            )
         }
         Text(
             text = stringResource(R.string.summary_nothing_deleted_yet),
@@ -162,7 +156,7 @@ private fun SummaryContent(
     }
 }
 
-/** Bouton de confirmation : rouge pour une suppression ; sans marquage, il n'applique que les favoris. */
+/** Bouton de confirmation, rouge : il envoie les médias marqués à la corbeille ; sans marquage, il est inactif. */
 @Composable
 private fun ConfirmButton(
     state: SummaryUiState.Loaded,
@@ -172,21 +166,13 @@ private fun ConfirmButton(
         onClick = { onEvent(SummaryEvent.Confirm) },
         enabled = state.canConfirm,
         colors =
-            if (state.confirmsDeletion) {
-                ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError,
-                )
-            } else {
-                ButtonDefaults.buttonColors()
-            },
+            ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.onError,
+            ),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Text(
-            stringResource(
-                if (state.confirmsDeletion) R.string.summary_confirm else R.string.summary_apply_favorites,
-            ),
-        )
+        Text(stringResource(R.string.summary_confirm))
     }
 }
 

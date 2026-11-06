@@ -76,30 +76,19 @@ internal fun openManageMediaSettings(context: Context) {
     }
 }
 
-/** Message de l'annonce : la corbeille, puis les favoris, chacun s'il a eu lieu. */
+/** Message de l'annonce : les médias envoyés à la corbeille. */
 @Composable
 private fun confirmationMessage(announcement: ConfirmationAnnouncement): String =
-    listOfNotNull(
-        announcement.trashedCount.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.summary_trashed, it, it) },
-        announcement.favoritedCount.takeIf { it > 0 }?.let {
-            pluralStringResource(
-                R.plurals.summary_favorited,
-                it,
-                it,
-            )
-        },
-    ).joinToString(" ")
+    pluralStringResource(R.plurals.summary_trashed, announcement.trashedCount, announcement.trashedCount)
 
 /**
  * Ce que la confirmation du résumé vient de changer dans la galerie, que l'accueil annonce une fois.
  *
- * @property trashedCount médias envoyés à la corbeille.
- * @property favoritedCount médias ajoutés aux favoris de la galerie ; l'un des deux au moins est positif.
+ * @property trashedCount médias envoyés à la corbeille, au moins un.
  * @property markAnnounced appelé quand l'annonce part, pour ne pas la répéter.
  */
 class ConfirmationAnnouncement(
     val trashedCount: Int,
-    val favoritedCount: Int,
     val markAnnounced: () -> Unit,
 )
 

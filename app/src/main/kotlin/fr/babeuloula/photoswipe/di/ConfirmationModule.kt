@@ -12,10 +12,10 @@ import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.usecase.CleanOrphanEntries
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
-import fr.babeuloula.photoswipe.domain.usecase.PrepareFavorites
 import fr.babeuloula.photoswipe.domain.usecase.PrepareTrash
 import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
 import fr.babeuloula.photoswipe.domain.usecase.RecordTrashResult
+import fr.babeuloula.photoswipe.domain.usecase.RequestFavorite
 
 /**
  * Fournit les use cases du résumé et de la confirmation de fin de session (SPEC §3.5), à part de
@@ -42,11 +42,8 @@ object ConfirmationModule {
     ): RecordTrashResult = RecordTrashResult(reviewRepository, journal)
 
     @Provides
-    fun providePrepareFavorites(
-        reviewRepository: ReviewRepository,
-        mediaSource: MediaSource,
-        requestFactory: MediaActionRequestFactory,
-    ): PrepareFavorites = PrepareFavorites(reviewRepository, mediaSource, requestFactory)
+    fun provideRequestFavorite(requestFactory: MediaActionRequestFactory): RequestFavorite =
+        RequestFavorite(requestFactory)
 
     @Provides
     fun provideRecordFavoriteResult(reviewRepository: ReviewRepository): RecordFavoriteResult =

@@ -56,12 +56,10 @@ fun PhotoSwipeNavHost(
         }
         composable<SummaryRoute> {
             SummaryDestination(
-                onGoHome = { trashedCount, favoritedCount ->
+                onGoHome = { trashedCount ->
                     // L'accueil annonce ce que la confirmation a changé (option choisie par Jérémy).
-                    if (trashedCount > 0 || favoritedCount > 0) {
-                        val home = navController.getBackStackEntry(HomeRoute).savedStateHandle
-                        home[TRASHED_COUNT_KEY] = trashedCount
-                        home[FAVORITED_COUNT_KEY] = favoritedCount
+                    if (trashedCount > 0) {
+                        navController.getBackStackEntry(HomeRoute).savedStateHandle[TRASHED_COUNT_KEY] = trashedCount
                     }
                     navController.popBackStack(HomeRoute, inclusive = false)
                 },
@@ -83,9 +81,6 @@ fun PhotoSwipeNavHost(
 /** Clé du nombre de médias envoyés à la corbeille, transmis du résumé à l'accueil. */
 private const val TRASHED_COUNT_KEY = "trashed_count"
 
-/** Clé du nombre de médias ajoutés aux favoris de la galerie, transmis du résumé à l'accueil. */
-private const val FAVORITED_COUNT_KEY = "favorited_count"
-
 /** Notification du rappel : la pile [deckToOpen] s'ouvre au-dessus de l'accueil, que « Retour » retrouve. */
 @Composable
 private fun OpenRequestedDeck(
@@ -105,7 +100,6 @@ private fun OpenRequestedDeck(
 private fun NavGraphBuilder.homeDestination(navController: NavHostController) {
     composable<HomeRoute> { entry ->
         val trashedCount by entry.savedStateHandle.getStateFlow(TRASHED_COUNT_KEY, 0).collectAsState()
-        val favoritedCount by entry.savedStateHandle.getStateFlow(FAVORITED_COUNT_KEY, 0).collectAsState()
         HomeDestination(
             navigation =
                 HomeNavigation(
@@ -114,11 +108,8 @@ private fun NavGraphBuilder.homeDestination(navController: NavHostController) {
                     openSummary = { navController.navigate(SummaryRoute()) },
                 ),
             confirmed =
-                if (trashedCount > 0 || favoritedCount > 0) {
-                    ConfirmationAnnouncement(trashedCount, favoritedCount) {
-                        entry.savedStateHandle[TRASHED_COUNT_KEY] = 0
-                        entry.savedStateHandle[FAVORITED_COUNT_KEY] = 0
-                    }
+                if (trashedCount > 0) {
+                    ConfirmationAnnouncement(trashedCount) { entry.savedStateHandle[TRASHED_COUNT_KEY] = 0 }
                 } else {
                     null
                 },
