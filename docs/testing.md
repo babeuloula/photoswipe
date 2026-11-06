@@ -1,12 +1,12 @@
 # Tests
 
-> Document vivant : il décrit les tests **actuels** du dépôt et ce qui est prévu par la SPEC §11. Les éléments pas encore implémentés sont marqués *(prévu)*.
+> Document vivant : il décrit les tests **actuels** du dépôt et leur écart avec la SPEC §11. Il est mis à jour dans chaque PR qui ajoute un type de test, un outil ou une commande.
 
 ## 1. Principes
 
 - **Chaque ticket est livré avec ses tests.** Rien n'est terminé sans tests verts, en local comme en CI.
 - **Sur la JVM d'abord** : les tests unitaires tournent sans émulateur, y compris ceux qui ont besoin d'Android (Robolectric). Seuls les vrais chemins de données (MediaStore réel, migrations Room) passent par des tests instrumentés (`src/androidTest`, émulateur ou appareil).
-- **Noms en anglais, qui décrivent le comportement** : `` `moves leap day media to February 28 on non-leap years` ``. Commentaires et KDoc en français.
+- **Noms en anglais, qui décrivent le comportement** : `` `moves leap day media to February 28 on non-leap years` ``. Commentaires et KDoc en français ; detekt exige une KDoc sur toute l'API publique du code de production (`UndocumentedPublic*`, sauf fonctions des modules Hilt).
 - **Un test qui ne peut pas échouer ne sert à rien.** Quand un test s'appuie sur un outil maison (lecteur de ressources, règle Konsist), cet outil est lui-même testé sur des fixtures qui contiennent volontairement des erreurs.
 - Le temps (`Clock`) et la concurrence sont injectés, jamais appelés en statique, pour rester testables.
 
@@ -27,6 +27,10 @@ Prérequis : JDK 17 (`export JAVA_HOME=/opt/homebrew/opt/openjdk@17` sur la mach
 ~/Library/Android/sdk/emulator/emulator -avd Medium_Phone_API_37.0 &   # sur la machine de Jérémy
 ./gradlew connectedDebugAndroidTest              # tous les modules
 ./gradlew :data:connectedDebugAndroidTest        # un seul module
+
+# Script de l'émulateur (Python, bibliothèque standard)
+python3 -m unittest discover -s scripts
+shellcheck scripts/*.sh
 ```
 
 Rapports : `<module>/build/reports/tests/<tâche>/index.html` (HTML lisible) et `<module>/build/test-results/` (XML JUnit, repris par la CI). Tests instrumentés : `<module>/build/reports/androidTests/connected/` et `<module>/build/outputs/androidTest-results/connected/`.
@@ -100,16 +104,16 @@ Konsist lit les sources de `:app`, `:data` et `:domain` sans les compiler. Chaqu
   - `scripts/seed-emulator.sh` : une photo par année sur 5 ans pour aujourd'hui et les 6 jours précédents (35 photos) ; `--years N` et `--days N` changent la répartition ; `scripts/seed-emulator.sh --remove` retire le dossier et relance le scan.
   - Tests : `python3 -m unittest discover -s scripts` (plan des dates, 29 février, EXIF relu, couleurs) et `shellcheck scripts/*.sh`, lancés par le job obligatoire de la CI.
 
-## 5. Prévu par la SPEC (§11)
+## 5. Couverture de la SPEC (§11)
 
-| Type | Portée | Outils |
+| Type | Portée demandée | État |
 |---|---|---|
-| Unitaires domaine | `SameDayMatcher` (29 février, changement d'année, fenêtre de 7 jours), cycle de revue, use cases, annulation | JUnit, MockK, Turbine, kotlinx-coroutines-test |
-| ViewModels | `UiState`, `UiEvent`, `UiEffect` de chaque écran | Turbine, kotlinx-coroutines-test |
-| Intégration données | DAO Room en mémoire, migrations ; requêtes MediaStore (tests instrumentés) | AndroidX Test, Room testing |
-| UI / fonctionnels | Pile de swipe, boutons alternatifs, résumé, états vides, permissions | Compose UI Test + Hilt test |
+| Unitaires domaine | `SameDayMatcher` (29 février, changement d'année, fenêtre de 7 jours), cycle de revue, use cases, annulation | Couverts (JUnit 6, kotlinx-coroutines-test, fakes de `testFixtures`) ; MockK et Turbine non ajoutés (ADR 0008) |
+| ViewModels | `UiState`, `UiEvent`, `UiEffect` de chaque écran | Tous les ViewModels testés (`MainDispatcherRule`, collecte dans `backgroundScope`) |
+| Intégration données | DAO Room en mémoire, migrations ; requêtes MediaStore (tests instrumentés) | Couverts (Robolectric, `MigrationTestHelper`, MediaStore réel en instrumenté) |
+| UI / fonctionnels | Pile de swipe, boutons alternatifs, résumé, états vides, permissions | Couverts (Compose UI Test + Hilt sur Robolectric) |
 
-Objectifs : couverture du domaine **≥ 90 %**, tous les ViewModels testés, chaque cas limite de la SPEC §14 couvert par au moins un test.
+Objectifs de la SPEC : couverture du domaine **≥ 90 %** (pas encore mesurée automatiquement : aucun outil de couverture n'est branché), tous les ViewModels testés, chaque cas limite de la SPEC §14 couvert par au moins un test.
 
 ## 6. CI
 
@@ -117,5 +121,7 @@ Objectifs : couverture du domaine **≥ 90 %**, tous les ViewModels testés, cha
 
 - **Quality, unit tests and debug build** (check obligatoire du ruleset, ADR 0004) : `./gradlew test quality assembleDebug --continue` en une seule invocation parallèle ;
 - **Instrumented tests (emulator)** : `./gradlew connectedDebugAndroidTest` sur un émulateur API 34 (`reactivecircus/android-emulator-runner`, accélération KVM).
+
+Le job obligatoire lance aussi, avant Gradle, les tests Python de `scripts/` et `shellcheck scripts/*.sh`.
 
  Le résumé du run liste les tests passés et échoués ; en cas d'échec, les rapports sont publiés en artefact. Un nouveau type de test s'ajoute à la CI dans la PR qui l'introduit.

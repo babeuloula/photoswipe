@@ -12,6 +12,8 @@ import javax.inject.Inject
 
 /**
  * Demande système de MediaStore : l'`IntentSender` du dialogue à afficher et les médias qu'il couvre.
+ *
+ * @property intentSender dialogue système de corbeille ou de favoris.
  */
 class IntentSenderMediaActionRequest(
     override val mediaIds: Set<MediaId>,

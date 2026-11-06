@@ -15,6 +15,7 @@ import javax.inject.Inject
 class PhotoSwipeApplication :
     Application(),
     Configuration.Provider {
+    /** Fabrique des tâches WorkManager injectées par Hilt (`@HiltWorker`). */
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 

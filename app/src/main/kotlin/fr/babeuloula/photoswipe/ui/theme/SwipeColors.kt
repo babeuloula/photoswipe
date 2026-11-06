@@ -16,6 +16,13 @@ import androidx.compose.ui.graphics.Color
  * avec Material Theme Builder (source #4CAF50) pour le clair et le sombre. Le bleu l'est aussi
  * (source #2196F3) : le rôle `primary` suivrait le fond d'écran et ne serait pas toujours bleu. Le
  * rouge reprend le rôle `error` du schéma, couleurs dynamiques comprises.
+ *
+ * @property keep voile et bouton « Garder ».
+ * @property onKeep contenu (icône, texte) posé sur [keep].
+ * @property delete voile et bouton « Supprimer ».
+ * @property onDelete contenu posé sur [delete].
+ * @property favorite voile du menu favori.
+ * @property onFavorite contenu posé sur [favorite].
  */
 @Immutable
 data class SwipeColors(

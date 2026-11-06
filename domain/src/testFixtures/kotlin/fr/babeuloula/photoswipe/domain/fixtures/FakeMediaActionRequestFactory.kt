@@ -29,9 +29,19 @@ class FakeMediaActionRequestFactory(
         media.chunked(batchSize) { batch -> FakeMediaActionRequest(kind, batch.mapTo(LinkedHashSet()) { it.id }) }
 
     /** Nature d'une demande : corbeille ou favori. */
-    enum class Kind { TRASH, FAVORITE }
+    enum class Kind {
+        /** Mise à la corbeille. */
+        TRASH,
 
-    /** Demande factice : sa nature et les médias qu'elle couvre, dans l'ordre reçu. */
+        /** Ajout aux favoris. */
+        FAVORITE,
+    }
+
+    /**
+     * Demande factice : sa nature et les médias qu'elle couvre, dans l'ordre reçu.
+     *
+     * @property kind corbeille ou favori.
+     */
     data class FakeMediaActionRequest(
         val kind: Kind,
         override val mediaIds: Set<MediaId>,

@@ -10,6 +10,9 @@ import java.time.ZoneId
 /**
  * Ce qu'affiche la carte d'un média dans la pile (SPEC §4.3).
  *
+ * @property id identifiant MediaStore du média.
+ * @property uri URI `content://` du média, lue par Coil et le lecteur vidéo.
+ * @property type photo ou vidéo.
  * @property takenOn jour local de la prise de vue, dans le fuseau de l'appareil (ADR 0006) : une
  * photo du 29 février 2024 reste datée du 29 février, même montrée un 28 février.
  * @property yearsAgo années écoulées depuis la prise de vue, comptées depuis le jour cible de la

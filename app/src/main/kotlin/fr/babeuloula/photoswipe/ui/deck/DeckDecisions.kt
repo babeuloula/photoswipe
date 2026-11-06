@@ -9,6 +9,11 @@ import javax.inject.Inject
 /**
  * Use cases de décision de la pile, regroupés pour son ViewModel : garder, marquer pour suppression,
  * mettre en favori, annuler la dernière décision (SPEC §2, §3.4).
+ *
+ * @property keepMedia garde la carte.
+ * @property markForDeletion marque la carte pour suppression.
+ * @property favoriteMedia garde la carte en favori.
+ * @property undoLastDecision annule la dernière décision de la session.
  */
 class DeckDecisions
     @Inject

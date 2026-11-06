@@ -82,7 +82,13 @@ class ConfirmationAnnouncement(
     val markAnnounced: () -> Unit,
 )
 
-/** Navigations demandées par l'accueil, exécutées par le graphe de navigation. */
+/**
+ * Navigations demandées par l'accueil, exécutées par le graphe de navigation.
+ *
+ * @property openDeck ouvre la pile d'un jour.
+ * @property openSettings ouvre les réglages.
+ * @property openSummary ouvre le résumé des décisions en attente.
+ */
 class HomeNavigation(
     val openDeck: (LocalDate) -> Unit,
     val openSettings: () -> Unit,
