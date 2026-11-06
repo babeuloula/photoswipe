@@ -69,6 +69,8 @@ La configuration commune est portée par des plugins de convention, dans le buil
 
 ### Thème et interface (Compose, Material 3)
 
+- **Grands écrans (SPEC §8)** : `currentWindowLayout()` (`ui/common/WindowLayout.kt`) lit la classe de taille de fenêtre de Material 3 Adaptive : `COMPACT` (téléphone, portrait verrouillé), `MEDIUM` (contenu centré, `CenteredContent`, 640 dp au plus), `EXPANDED` et `SHORT` (deux volets : accueil « Aujourd'hui » / jours à rattraper, pile avec boutons en colonne à côté de la carte). Android 16+ ignore le verrou de portrait sur les grands écrans pour notre cible SDK.
+
 - `MainActivity` appelle `enableEdgeToEdge()` puis affiche `PhotoSwipeTheme { PhotoSwipeApp() }`. L'application est dessinée sous les barres système, rendues transparentes.
 - `ui/theme/PhotoSwipeTheme` fournit à `MaterialTheme` les couleurs, la typographie (`Type.kt`) et les formes (`Shape.kt`) : aucune valeur de style n'est écrite en dur dans les écrans (SPEC §8).
 - Couleurs : dynamiques (Material You) par défaut. Avec `minSdk` 33, elles existent sur tous les appareils visés (API 31+). La palette de repli (`Color.kt`, générée par Material Theme Builder) sert quand on les désactive : aperçus, tests et futur réglage éventuel.
@@ -131,6 +133,7 @@ Relevées le 2026-11-03 sur les sources officielles (Google Maven, Maven Central
 | Robolectric | 4.17 | Tests sur l'API 34 (ADR 0002) |
 | Room (runtime, compiler, testing, plugin Gradle) | 2.8.5 | Relevée le 2026-11-04 sur Google Maven, dernière stable |
 | DataStore Preferences | 1.3.0 | Relevée le 2026-11-04 sur Google Maven, dernière stable |
+| Material 3 Adaptive | 1.3.0 | Relevée le 2026-11-06 sur Google Maven, dernière stable |
 | WorkManager (runtime, testing) | 2.12.0 | Relevée le 2026-11-06 sur Google Maven, dernière stable |
 | AndroidX Hilt (hilt-work, hilt-compiler) | 1.4.0 | Même version que `hilt-lifecycle-viewmodel-compose`, relevée le 2026-11-06 sur Google Maven, dernière stable |
 | AndroidX Test (`runner`, `ext:junit`) | 1.7.0, 1.3.0 | Relevées le 2026-11-04 sur Google Maven |
@@ -155,6 +158,7 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Room | `:data` | Base SQLite locale des décisions imposée par la SPEC §6 ; requêtes vérifiées à la compilation, `Flow` observable, schéma exporté pour tester les migrations |
 | DataStore Preferences | `:data` | Préférences clé-valeur imposées par la SPEC §5.3 (réglages du rappel) : écritures atomiques et asynchrones, lecture en `Flow`, à la place de `SharedPreferences` |
 | AndroidX Test (`runner`, `ext:junit`) | `:data` (tests instrumentés) | `AndroidJUnitRunner` et `AndroidJUnit4` pour lancer JUnit 4 sur un appareil ou un émulateur |
+| Material 3 Adaptive | `:app` | `currentWindowAdaptiveInfo()` : classes de taille de fenêtre (`WindowSizeClass`) recommandées par Google pour adapter les écrans aux tablettes et pliables (SPEC §8) |
 | WorkManager | `:data` | Tâche quotidienne du rappel imposée par la SPEC §3.6 : survit au redémarrage et respecte Doze, sans alarme exacte ni service à maintenir |
 | AndroidX Hilt Work | `:data`, `:app` | `@HiltWorker` et `HiltWorkerFactory` : la tâche du rappel reçoit ses use cases par injection, comme le reste de l'application |
 | WorkManager Testing | `:data` (tests) | `WorkManagerTestInitHelper` : WorkManager synchrone sur Robolectric, pour vérifier la tâche planifiée et son délai initial |

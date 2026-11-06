@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 
 /**
@@ -59,32 +60,28 @@ fun LicensesScreen(
             )
         },
     ) { innerPadding ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState()),
-        ) {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.app_name)) },
-                supportingContent = { Text(stringResource(R.string.licenses_app_notice)) },
-            )
-            SectionTitle(stringResource(R.string.licenses_libraries))
-            OPEN_SOURCE_LIBRARIES.forEach { library ->
+        CenteredContent(Modifier.padding(innerPadding)) {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
                 ListItem(
-                    headlineContent = { Text(library.name) },
-                    supportingContent = { Text(stringResource(R.string.licenses_library_notice, library.author)) },
+                    headlineContent = { Text(stringResource(R.string.app_name)) },
+                    supportingContent = { Text(stringResource(R.string.licenses_app_notice)) },
+                )
+                SectionTitle(stringResource(R.string.licenses_libraries))
+                OPEN_SOURCE_LIBRARIES.forEach { library ->
+                    ListItem(
+                        headlineContent = { Text(library.name) },
+                        supportingContent = { Text(stringResource(R.string.licenses_library_notice, library.author)) },
+                    )
+                }
+                HorizontalDivider()
+                SectionTitle(stringResource(R.string.licenses_apache_text))
+                Text(
+                    text = licenseText,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.padding(16.dp),
                 )
             }
-            HorizontalDivider()
-            SectionTitle(stringResource(R.string.licenses_apache_text))
-            Text(
-                text = licenseText,
-                style = MaterialTheme.typography.bodySmall,
-                fontFamily = FontFamily.Monospace,
-                modifier = Modifier.padding(16.dp),
-            )
         }
     }
 }

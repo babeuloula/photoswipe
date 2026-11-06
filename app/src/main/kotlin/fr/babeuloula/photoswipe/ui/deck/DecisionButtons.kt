@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -28,39 +29,57 @@ import fr.babeuloula.photoswipe.ui.theme.swipeColors
  * glissement à gauche, « Garder » à droite comme le glissement à droite, et entre les deux
  * « Annuler » et « Menu » (comme le glissement vers le haut). Ils déclenchent les mêmes actions que
  * les gestes, pour TalkBack, la navigation au clavier ou par préférence ; l'appelant fait sortir la
- * carte comme un geste avant d'enregistrer la décision.
+ * carte comme un geste avant d'enregistrer la décision. Sur grand écran ou en paysage, ils se
+ * placent en colonne à côté de la carte ([vertical]).
  */
 @Composable
 fun DecisionButtons(
     canUndo: Boolean,
     onClick: (DeckButton) -> Unit,
     modifier: Modifier = Modifier,
+    vertical: Boolean = false,
+) {
+    if (vertical) {
+        // À côté de la carte, sur grand écran ou en paysage : même ordre de haut en bas.
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) { Buttons(canUndo, onClick) }
+    } else {
+        Row(
+            modifier = modifier,
+            horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) { Buttons(canUndo, onClick) }
+    }
+}
+
+/** Les quatre boutons, dans l'ordre de lecture : « Supprimer », « Annuler », « Menu », « Garder ». */
+@Composable
+private fun Buttons(
+    canUndo: Boolean,
+    onClick: (DeckButton) -> Unit,
 ) {
     val colors = MaterialTheme.swipeColors
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        DecisionButton(
-            icon = Icons.Filled.Delete,
-            label = stringResource(R.string.deck_mark_for_deletion),
-            container = colors.delete,
-            content = colors.onDelete,
-            onClick = { onClick(DeckButton.MARK_FOR_DELETION) },
-        )
-        UndoButton(enabled = canUndo, onClick = { onClick(DeckButton.UNDO) })
-        OutlinedIconButton(onClick = { onClick(DeckButton.MENU) }, modifier = Modifier.size(48.dp)) {
-            Icon(imageVector = Icons.Filled.MoreVert, contentDescription = stringResource(R.string.deck_menu))
-        }
-        DecisionButton(
-            icon = Icons.Filled.Check,
-            label = stringResource(R.string.deck_keep),
-            container = colors.keep,
-            content = colors.onKeep,
-            onClick = { onClick(DeckButton.KEEP) },
-        )
+    DecisionButton(
+        icon = Icons.Filled.Delete,
+        label = stringResource(R.string.deck_mark_for_deletion),
+        container = colors.delete,
+        content = colors.onDelete,
+        onClick = { onClick(DeckButton.MARK_FOR_DELETION) },
+    )
+    UndoButton(enabled = canUndo, onClick = { onClick(DeckButton.UNDO) })
+    OutlinedIconButton(onClick = { onClick(DeckButton.MENU) }, modifier = Modifier.size(48.dp)) {
+        Icon(imageVector = Icons.Filled.MoreVert, contentDescription = stringResource(R.string.deck_menu))
     }
+    DecisionButton(
+        icon = Icons.Filled.Check,
+        label = stringResource(R.string.deck_keep),
+        container = colors.keep,
+        content = colors.onKeep,
+        onClick = { onClick(DeckButton.KEEP) },
+    )
 }
 
 /**
