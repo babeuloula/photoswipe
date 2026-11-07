@@ -18,6 +18,7 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
+import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
@@ -25,8 +26,10 @@ import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.deck.DeckScreen
 import fr.babeuloula.photoswipe.ui.deck.DeckUiState
+import fr.babeuloula.photoswipe.ui.deck.FullscreenVideoContent
 import fr.babeuloula.photoswipe.ui.deck.PREVIEW_CARD
 import fr.babeuloula.photoswipe.ui.deck.PhotoViewerContent
+import fr.babeuloula.photoswipe.ui.deck.RecordingVideoPlayer
 import fr.babeuloula.photoswipe.ui.deck.VideoProgressBar
 import fr.babeuloula.photoswipe.ui.home.HomeScreen
 import fr.babeuloula.photoswipe.ui.home.HomeUiState
@@ -105,10 +108,19 @@ class AccessibilityTest {
         assertTrue(problems.joinToString("\n"), problems.isEmpty())
     }
 
-    /** Ce qui s'ouvre ou se pose sur la carte de la pile : photo en grand, barre de progression. */
+    /** Ce qui s'ouvre ou se pose sur la carte de la pile : photo en grand, barre de progression, plein écran vidéo. */
     private fun deckOverlays() {
         check { PhotoViewerContent(card = PREVIEW_CARD, onClose = {}) }
         check { VideoProgressBar(position = Duration.ofSeconds(12), duration = Duration.ofSeconds(45), onSeek = {}) }
+        val videoPlayer = RecordingVideoPlayer(composeRule.activity)
+        check {
+            FullscreenVideoContent(
+                card = PREVIEW_CARD.copy(type = MediaType.VIDEO, duration = Duration.ofSeconds(45)),
+                videoPlayer = videoPlayer,
+                onExit = {},
+            )
+        }
+        videoPlayer.release()
     }
 
     private fun everyScreen() {
