@@ -1,0 +1,1 @@
+• Write the F-Droid changelog from the GitHub release notes
