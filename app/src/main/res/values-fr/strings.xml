@@ -82,6 +82,12 @@
     <string name="settings_about_version">Version</string>
     <string name="settings_about_licenses">Licences</string>
     <string name="settings_about_licenses_summary">PhotoSwipe, ses bibliothèques et ses polices open source</string>
+    <string name="settings_support_section">Soutenir PhotoSwipe</string>
+    <string name="settings_support_rate">Noter PhotoSwipe</string>
+    <string name="settings_support_rate_summary">Sur le Play Store</string>
+    <string name="settings_support_donate">Soutenir le développeur</string>
+    <string name="settings_support_donate_summary">Faire un don avec PayPal</string>
+    <string name="link_unavailable">Aucune application de ce téléphone ne peut ouvrir ce lien.</string>
     <string name="settings_developer_tools">Outils développeur</string>
     <!-- Licences (« À propos » des réglages). -->
     <string name="licenses_title">Licences</string>
