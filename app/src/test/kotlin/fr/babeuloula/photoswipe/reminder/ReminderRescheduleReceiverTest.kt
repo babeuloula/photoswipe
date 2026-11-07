@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.reminder
 
+import android.app.AlarmManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import org.junit.Assert.assertEquals
@@ -26,5 +27,33 @@ class ReminderRescheduleReceiverTest {
 
         assertEquals(listOf(receiver), receiversFor(Intent.ACTION_TIME_CHANGED))
         assertEquals(listOf(receiver), receiversFor(Intent.ACTION_TIMEZONE_CHANGED))
+    }
+
+    @Test
+    fun `reschedules after a reboot and when the exact alarm permission changes`() {
+        val receiver = ReminderRescheduleReceiver::class.java.name
+
+        assertEquals(listOf(receiver), receiversFor(Intent.ACTION_BOOT_COMPLETED))
+        assertEquals(
+            listOf(receiver),
+            receiversFor(AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED),
+        )
+    }
+
+    @Test
+    fun `receives the exact reminder alarms`() {
+        val names =
+            application.packageManager
+                .queryBroadcastReceivers(
+                    Intent().setClassName(application, ALARM_RECEIVER),
+                    PackageManager.ResolveInfoFlags.of(0),
+                ).map { it.activityInfo.name }
+
+        assertEquals(listOf(ALARM_RECEIVER), names)
+    }
+
+    private companion object {
+        /** Récepteur des alarmes, dans `:data` (`:app` n'importe `:data` que depuis `di`). */
+        const val ALARM_RECEIVER = "fr.babeuloula.photoswipe.data.reminder.ReminderAlarmReceiver"
     }
 }

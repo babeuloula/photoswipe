@@ -13,18 +13,26 @@ import java.time.ZonedDateTime
 internal fun delayUntilNext(
     time: LocalTime,
     clock: Clock,
-): Duration {
+): Duration = Duration.between(ZonedDateTime.now(clock), nextOccurrence(time, clock))
+
+/**
+ * Prochaine occurrence de [time] dans le fuseau de [clock] : aujourd'hui si elle est encore à
+ * venir, sinon demain. Heure absolue, à la milliseconde près : une alarme exacte réglée dessus ne
+ * sonne pas une milliseconde avant, ce qui replanifierait le même jour (PS-125).
+ */
+internal fun nextOccurrence(
+    time: LocalTime,
+    clock: Clock,
+): ZonedDateTime {
     val now = ZonedDateTime.now(clock)
     val today = now.with(time)
-    val next =
-        if (today.isAfter(now)) {
-            today
-        } else {
-            now
-                .toLocalDate()
-                .plusDays(1)
-                .atTime(time)
-                .atZone(clock.zone)
-        }
-    return Duration.between(now, next)
+    return if (today.isAfter(now)) {
+        today
+    } else {
+        now
+            .toLocalDate()
+            .plusDays(1)
+            .atTime(time)
+            .atZone(clock.zone)
+    }
 }

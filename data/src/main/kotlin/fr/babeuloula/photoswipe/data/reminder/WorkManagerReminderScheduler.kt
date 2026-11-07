@@ -15,7 +15,8 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
- * [ReminderScheduler] sur WorkManager (SPEC §3.6) : une tâche périodique unique de 24 heures, dont
+ * [ReminderScheduler] sur WorkManager (SPEC §3.6), utilisé sans l'autorisation des alarmes exactes
+ * (`AlarmManagerReminderScheduler`, PS-125) : une tâche périodique unique de 24 heures, dont
  * la première exécution tombe à l'heure choisie. L'heure reste approximative : Android peut
  * décaler la tâche (Doze), ce que la SPEC accepte.
  *
@@ -55,7 +56,17 @@ class WorkManagerReminderScheduler
         }
 
         override fun cancel() {
+            cancelDaily()
+            cancelOnce()
+        }
+
+        /** Annule la tâche du rappel quotidien seule (passage aux alarmes exactes, PS-125). */
+        fun cancelDaily() {
             workManager.get().cancelUniqueWork(WORK_NAME)
+        }
+
+        /** Annule la tâche du rappel reprogrammé seule. */
+        fun cancelOnce() {
             workManager.get().cancelUniqueWork(SNOOZE_WORK_NAME)
         }
 

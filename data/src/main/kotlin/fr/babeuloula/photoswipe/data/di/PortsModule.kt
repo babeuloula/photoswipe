@@ -5,7 +5,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.data.media.MediaStoreActionRequestFactory
-import fr.babeuloula.photoswipe.data.reminder.WorkManagerReminderScheduler
+import fr.babeuloula.photoswipe.data.reminder.AlarmManagerReminderScheduler
 import fr.babeuloula.photoswipe.data.review.RoomDecisionJournal
 import fr.babeuloula.photoswipe.data.review.RoomReviewRepository
 import fr.babeuloula.photoswipe.data.settings.DataStoreSettingsRepository
@@ -45,7 +45,7 @@ abstract class PortsModule {
     ): UsageStatisticsRepository
 
     @Binds
-    abstract fun bindReminderScheduler(implementation: WorkManagerReminderScheduler): ReminderScheduler
+    abstract fun bindReminderScheduler(implementation: AlarmManagerReminderScheduler): ReminderScheduler
 
     @Binds
     abstract fun bindMediaActionRequestFactory(

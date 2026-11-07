@@ -98,7 +98,7 @@ fun SettingsScreen(
                         modifier = Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        ReminderSection(reminder, onEvent)
+                        ReminderSection(reminder, environment.exactAlarmAllowed, onEvent)
                         LanguageSection(environment.languageLabel, onEvent)
                         state.themeMode?.let { AppearanceSection(it, onEvent) }
                         state.statistics?.let { StatisticsSection(it) }
@@ -112,17 +112,24 @@ fun SettingsScreen(
     }
 }
 
-/** Section du rappel quotidien : interrupteur, puis heure. */
+/**
+ * Section du rappel quotidien : interrupteur, puis heure. Rappel activé sans l'autorisation des
+ * alarmes exactes : une ligne de plus explique qu'il peut arriver un peu en retard et ouvre
+ * « Alarmes et rappels » d'Android (PS-125).
+ */
 @Composable
 private fun ReminderSection(
     reminder: ReminderSettings,
+    exactAlarmAllowed: Boolean,
     onEvent: (SettingsEvent) -> Unit,
 ) {
+    val askExactAlarm = reminder.enabled && !exactAlarmAllowed
+    val rows = if (askExactAlarm) REMINDER_ROWS + 1 else REMINDER_ROWS
     PreferenceSection(stringResource(R.string.settings_reminder_section)) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             // Toute la ligne bascule l'interrupteur, et TalkBack l'annonce comme un interrupteur.
             PreferenceRow(
-                shape = segmentShape(0, 2),
+                shape = segmentShape(0, rows),
                 title = stringResource(R.string.settings_reminder_enabled),
                 summary = stringResource(R.string.settings_reminder_enabled_summary),
                 trailing = { Switch(checked = reminder.enabled, onCheckedChange = null) },
@@ -134,24 +141,48 @@ private fun ReminderSection(
                     ),
             )
             PreferenceRow(
-                shape = segmentShape(1, 2),
+                shape = segmentShape(1, rows),
                 title = stringResource(R.string.settings_reminder_time),
-                summary = stringResource(R.string.settings_reminder_time_summary, timeLabel(reminder.time)),
+                // Avec les alarmes exactes, « À 18:00 pile » ; sinon « Vers 18:00 » (PS-125).
+                summary =
+                    stringResource(
+                        if (exactAlarmAllowed) {
+                            R.string.settings_reminder_time_exact
+                        } else {
+                            R.string.settings_reminder_time_summary
+                        },
+                        timeLabel(reminder.time),
+                    ),
                 modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.PickReminderTime) },
             )
+            if (askExactAlarm) {
+                PreferenceRow(
+                    shape = segmentShape(REMINDER_ROWS, rows),
+                    title = stringResource(R.string.settings_reminder_exact),
+                    summary = stringResource(R.string.settings_reminder_exact_summary),
+                    trailing = { TrailingIcon(R.drawable.ic_open_in_new) },
+                    modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenExactAlarmSettings) },
+                )
+            }
         }
     }
 }
+
+/** Lignes du rappel toujours affichées : interrupteur et heure. */
+private const val REMINDER_ROWS = 2
 
 /**
  * Ce que les réglages lisent hors de leur ViewModel.
  *
  * @property languageLabel langue de l'application, lue dans le système (SPEC §9).
  * @property showDeveloperTools vrai si la variante a des outils développeur (debug, SPEC §10).
+ * @property exactAlarmAllowed vrai si les alarmes exactes sont autorisées : le rappel arrive à
+ * l'heure pile (PS-125).
  */
 data class SettingsEnvironment(
     val languageLabel: String = "",
     val showDeveloperTools: Boolean = false,
+    val exactAlarmAllowed: Boolean = true,
 )
 
 /** Section « Langue » : la langue de l'application, choisie dans les réglages d'Android (SPEC §9). */

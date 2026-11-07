@@ -9,6 +9,7 @@ import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.usecase.GetUsageStatistics
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
+import fr.babeuloula.photoswipe.permission.ExactAlarmPermissionReader
 import fr.babeuloula.photoswipe.permission.NotificationPermissionReader
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -119,6 +120,11 @@ sealed interface SettingsEvent {
         override val effect: SettingsEffect get() = SettingsEffect.OpenLicenses
     }
 
+    /** « Rappel à l'heure pile » : ouvrir « Alarmes et rappels » d'Android (PS-125). */
+    data object OpenExactAlarmSettings : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.OpenExactAlarmSettings
+    }
+
     /** « Noter PhotoSwipe » : la fiche de l'application sur le Play Store (PS-120). */
     data object RateApp : OpensScreen {
         override val effect: SettingsEffect get() = SettingsEffect.OpenRating
@@ -139,6 +145,9 @@ sealed interface SettingsEvent {
 sealed interface SettingsEffect {
     /** Revenir à l'écran précédent. */
     data object Close : SettingsEffect
+
+    /** Ouvrir « Alarmes et rappels » d'Android pour PhotoSwipe (PS-125). */
+    data object OpenExactAlarmSettings : SettingsEffect
 
     /** Ouvrir le réglage de langue par application d'Android 13+ (SPEC §9). */
     data object OpenLanguageSettings : SettingsEffect
@@ -194,6 +203,8 @@ class SettingsViewModel
         /** Entrée des outils développeur : présente en debug seulement (SPEC §10). */
         val developerTools: DeveloperToolsEntry,
         private val getUsageStatistics: GetUsageStatistics,
+        /** Autorisation des alarmes exactes, relue par l'écran à chaque retour au premier plan (PS-125). */
+        val exactAlarms: ExactAlarmPermissionReader,
     ) : ViewModel() {
         private val state = MutableStateFlow(SettingsUiState())
         private val effects = Channel<SettingsEffect>(Channel.BUFFERED)
