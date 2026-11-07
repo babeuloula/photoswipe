@@ -1,8 +1,8 @@
-# 0028 — Le plein écran vidéo, seule exception au portrait
+# 0028 — Plein écran vidéo et photo en grand, seules exceptions au portrait
 
 - **Statut** : accepté
 - **Date** : 2026-11-07
-- **Ticket** : PS-119
+- **Tickets** : PS-119, PS-123, PS-126
 
 ## Contexte
 L'application est verrouillée en portrait (`screenOrientation="portrait"` dans le manifeste, décision de Jérémy, PS-32). Jérémy veut un plein écran vidéo, ouvert par un bouton sous celui du son, « seul écran où on pourra orienter le téléphone », sans zoom.
@@ -17,6 +17,8 @@ L'application est verrouillée en portrait (`screenOrientation="portrait"` dans 
 - **Activité dédiée sans verrou d'orientation** : orientation libre par le manifeste, mais il faudrait passer le lecteur (ou sa position) d'une activité à l'autre et en recréer un.
 - **`configChanges="orientation|screenSize"` sur `MainActivity`** : évite la recréation à la rotation, mais toute l'application devrait gérer elle-même ses changements de configuration.
 - **`SCREEN_ORIENTATION_SENSOR`** : pivoterait même avec la rotation automatique désactivée, contre le choix de l'utilisateur.
+
+- **La photo en grand (PS-123) suit la même règle** : `PhotoViewer` appelle `AllowRotation` ; la photo ouverte est enregistrée par la pile (`LocalOpenPhoto`), car en paysage la pile passe en deux volets et la carte change de place. Une rotation repart de la photo entière (zoom remis à 1).
 
 ## Conséquences
 - Une rotation pendant le plein écran recrée l'activité et le lecteur ; la lecture reprend à sa position.
