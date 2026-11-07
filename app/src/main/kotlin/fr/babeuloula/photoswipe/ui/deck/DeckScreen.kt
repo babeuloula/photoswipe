@@ -233,28 +233,33 @@ internal fun LoadedDeck(
             }
         }
     }
-    DeckLayout(
-        twoPane = currentWindowLayout().isTwoPane,
-        cards = { cardModifier ->
-            CardStack(
-                state = state,
-                requestedExit = requestedExit,
-                onEvent = onEvent,
-                onIndicationChange = { indication = it },
-                nextCardProgress = { indication?.progress ?: 0f },
-                modifier = cardModifier,
-            )
-        },
-        buttons = { vertical, buttonsModifier ->
-            DecisionButtons(
-                canUndo = state.canUndo,
-                onClick = onButton,
-                vertical = vertical,
-                highlighted = indication?.side?.takeIf { (indication?.progress ?: 0f) > 0f },
-                modifier = buttonsModifier,
-            )
-        },
-    )
+    // Vidéo en plein écran, enregistrée ici, hors de la carte : elle reste ouverte quand une
+    // rotation recrée l'activité (PS-126).
+    val fullscreenVideo = rememberSaveable { mutableStateOf<String?>(null) }
+    CompositionLocalProvider(LocalFullscreenVideo provides fullscreenVideo) {
+        DeckLayout(
+            twoPane = currentWindowLayout().isTwoPane,
+            cards = { cardModifier ->
+                CardStack(
+                    state = state,
+                    requestedExit = requestedExit,
+                    onEvent = onEvent,
+                    onIndicationChange = { indication = it },
+                    nextCardProgress = { indication?.progress ?: 0f },
+                    modifier = cardModifier,
+                )
+            },
+            buttons = { vertical, buttonsModifier ->
+                DecisionButtons(
+                    canUndo = state.canUndo,
+                    onClick = onButton,
+                    vertical = vertical,
+                    highlighted = indication?.side?.takeIf { (indication?.progress ?: 0f) > 0f },
+                    modifier = buttonsModifier,
+                )
+            },
+        )
+    }
     if (state.menuOpen) {
         CardMenu(
             card = state.current,

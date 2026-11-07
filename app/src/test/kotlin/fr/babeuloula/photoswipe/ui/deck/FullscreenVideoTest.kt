@@ -21,6 +21,7 @@ import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.RotationPolicy
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -80,11 +81,13 @@ class FullscreenVideoTest {
                 LocalAccessibilityManager provides accessibility,
             ) {
                 PhotoSwipeTheme {
-                    DeckScreen(
-                        day = LocalDate.of(2026, 5, 14),
-                        state = DeckUiState.Loaded(listOf(video)),
-                        onEvent = { events += it },
-                    )
+                    RotationPolicy {
+                        DeckScreen(
+                            day = LocalDate.of(2026, 5, 14),
+                            state = DeckUiState.Loaded(listOf(video)),
+                            onEvent = { events += it },
+                        )
+                    }
                 }
             }
         }
@@ -162,5 +165,39 @@ class FullscreenVideoTest {
         composeRule.mainClock.advanceTimeBy(10_000)
 
         composeRule.onNodeWithContentDescription("Exit full screen").assertIsDisplayed()
+    }
+
+    @Test
+    fun `stays full screen when the screen is recreated by a rotation`() {
+        val restorer = SavedStateRestorer()
+        composeRule.activity.setContent {
+            restorer.Restorable {
+                RotationPolicy {
+                    CompositionLocalProvider(
+                        LocalImageLoader provides ImageLoader(composeRule.activity),
+                        LocalCardVideoPlayer provides videoPlayer,
+                    ) {
+                        PhotoSwipeTheme {
+                            DeckScreen(
+                                day = LocalDate.of(2026, 5, 14),
+                                state = DeckUiState.Loaded(listOf(video)),
+                                onEvent = { events += it },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        composeRule.onNodeWithContentDescription("Full screen").performClick()
+        composeRule.onNodeWithTag(FULLSCREEN_VIDEO_TAG).assertIsDisplayed()
+
+        restorer.saveAndRestore(composeRule)
+
+        composeRule.onNodeWithTag(FULLSCREEN_VIDEO_TAG).assertIsDisplayed()
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_FULL_USER, composeRule.activity.requestedOrientation)
+        composeRule.onNodeWithContentDescription("Exit full screen").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(FULLSCREEN_VIDEO_TAG).assertDoesNotExist()
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, composeRule.activity.requestedOrientation)
     }
 }

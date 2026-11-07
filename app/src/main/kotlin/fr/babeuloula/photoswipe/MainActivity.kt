@@ -22,6 +22,7 @@ import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.ui.PhotoSwipeApp
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.RotationPolicy
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.isDark
 import kotlinx.coroutines.flow.catch
@@ -75,7 +76,10 @@ class MainActivity : ComponentActivity() {
             }
             CompositionLocalProvider(LocalImageLoader provides imageLoader) {
                 PhotoSwipeTheme(darkTheme = darkTheme) {
-                    PhotoSwipeApp(deckToOpen = deckToOpen, onDeckOpened = { deckToOpen = null })
+                    // Portrait, sauf le plein écran vidéo et la photo en grand (ADR 0028).
+                    RotationPolicy {
+                        PhotoSwipeApp(deckToOpen = deckToOpen, onDeckOpened = { deckToOpen = null })
+                    }
                 }
             }
         }
