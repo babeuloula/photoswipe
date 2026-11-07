@@ -236,7 +236,10 @@ internal fun LoadedDeck(
     // Vidéo en plein écran, enregistrée ici, hors de la carte : elle reste ouverte quand une
     // rotation recrée l'activité (PS-126).
     val fullscreenVideo = rememberSaveable { mutableStateOf<String?>(null) }
-    CompositionLocalProvider(LocalFullscreenVideo provides fullscreenVideo) {
+    // Photo ouverte en grand (identifiant du média), enregistrée ici pour la même raison : en
+    // paysage, la pile passe en deux volets et la carte change de place (PS-123).
+    val openPhoto = rememberSaveable { mutableStateOf<Long?>(null) }
+    CompositionLocalProvider(LocalFullscreenVideo provides fullscreenVideo, LocalOpenPhoto provides openPhoto) {
         DeckLayout(
             twoPane = currentWindowLayout().isTwoPane,
             cards = { cardModifier ->
@@ -287,10 +290,12 @@ private fun CardStack(
     nextCardProgress: () -> Float,
     modifier: Modifier = Modifier,
 ) {
-    // Photo du dessus ouverte en grand (PS-117) ; gardée à la recréation de l'activité.
-    var viewerOpen by rememberSaveable(state.current.id.value) { mutableStateOf(false) }
-    if (viewerOpen) {
-        PhotoViewer(card = state.current, onClose = { viewerOpen = false })
+    // Photo du dessus ouverte en grand (PS-117), tenue par la pile : gardée quand une rotation
+    // recrée l'activité (PS-123) ; à défaut, par la pile de cartes elle-même.
+    val ownOpenPhoto = rememberSaveable { mutableStateOf<Long?>(null) }
+    val openPhoto = LocalOpenPhoto.current ?: ownOpenPhoto
+    if (openPhoto.value == state.current.id.value) {
+        PhotoViewer(card = state.current, onClose = { openPhoto.value = null })
     }
     Box(modifier = modifier) {
         state.next?.let { next ->
@@ -319,7 +324,7 @@ private fun CardStack(
                 requestedExit = requestedExit,
                 returningFrom = state.returningFrom,
                 onIndicationChange = onIndicationChange,
-                onOpen = { viewerOpen = true },
+                onOpen = { openPhoto.value = state.current.id.value },
                 modifier = Modifier.fillMaxSize(),
             )
         }

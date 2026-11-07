@@ -22,8 +22,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -44,6 +46,7 @@ import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.ui.common.AllowRotation
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import kotlinx.coroutines.CoroutineScope
@@ -56,7 +59,8 @@ import kotlin.math.abs
  * zoomée, double appui pour zoomer ou revenir à la photo entière. À la taille d'origine, un
  * glissement vers le bas, le retour ou « Fermer » referme la vue, sans décision sur la carte.
  *
- * L'écran reste en portrait : seul le plein écran vidéo suit l'orientation du téléphone.
+ * Comme le plein écran vidéo, elle suit l'orientation du téléphone (PS-123, ADR 0028) ; le reste
+ * de l'application reste en portrait. Une rotation repart de la photo entière.
  */
 @Composable
 fun PhotoViewer(
@@ -67,9 +71,17 @@ fun PhotoViewer(
         onDismissRequest = onClose,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
+        AllowRotation()
         PhotoViewerContent(card = card, onClose = onClose)
     }
 }
+
+/**
+ * Photo ouverte en grand (identifiant du média, `null` sinon), tenue par la pile (`LoadedDeck`)
+ * et enregistrée avec l'état de l'écran : une rotation recrée l'activité, la photo reste ouverte
+ * (PS-123). `null` hors d'une pile.
+ */
+val LocalOpenPhoto = staticCompositionLocalOf<MutableState<Long?>?> { null }
 
 /** Contenu de [PhotoViewer], sans sa fenêtre. */
 @Composable

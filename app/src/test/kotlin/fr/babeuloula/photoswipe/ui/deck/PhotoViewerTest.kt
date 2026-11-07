@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import android.content.pm.ActivityInfo
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.SemanticsActions
@@ -17,7 +18,9 @@ import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.RotationPolicy
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -40,19 +43,27 @@ class PhotoViewerTest {
 
     private val events = mutableListOf<DeckEvent>()
 
+    private val restorer = SavedStateRestorer()
+
     private fun show(card: MediaCardUiState) {
         composeRule.activity.setContent {
-            CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
-                PhotoSwipeTheme {
-                    DeckScreen(
-                        day = LocalDate.of(2026, 5, 14),
-                        state = DeckUiState.Loaded(listOf(card)),
-                        onEvent = { events += it },
-                    )
+            restorer.Restorable {
+                RotationPolicy {
+                    CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
+                        PhotoSwipeTheme {
+                            DeckScreen(
+                                day = LocalDate.of(2026, 5, 14),
+                                state = DeckUiState.Loaded(listOf(card)),
+                                onEvent = { events += it },
+                            )
+                        }
+                    }
                 }
             }
         }
     }
+
+    private val orientation get() = composeRule.activity.requestedOrientation
 
     /** Nœud dont l'action d'appui porte le libellé [label]. */
     private fun hasClickLabel(label: String) =
@@ -68,6 +79,32 @@ class PhotoViewerTest {
         composeRule.onNodeWithContentDescription("Close").performClick()
         composeRule.onNodeWithTag(PHOTO_VIEWER_TAG).assertDoesNotExist()
         assertTrue(events.isEmpty())
+    }
+
+    @Test
+    fun `lets the phone rotate only while the photo is open`() {
+        show(PREVIEW_CARD)
+        composeRule.waitForIdle()
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, orientation)
+
+        composeRule.onNode(hasClickLabel("View full screen")).performClick()
+        composeRule.waitForIdle()
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_FULL_USER, orientation)
+
+        composeRule.onNodeWithContentDescription("Close").performClick()
+        composeRule.waitForIdle()
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, orientation)
+    }
+
+    @Test
+    fun `keeps the photo open when a rotation recreates the screen`() {
+        show(PREVIEW_CARD)
+        composeRule.onNode(hasClickLabel("View full screen")).performClick()
+
+        restorer.saveAndRestore(composeRule)
+
+        composeRule.onNodeWithTag(PHOTO_VIEWER_TAG).assertIsDisplayed()
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_FULL_USER, orientation)
     }
 
     @Test
