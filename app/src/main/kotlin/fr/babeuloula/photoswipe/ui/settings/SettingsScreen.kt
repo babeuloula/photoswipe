@@ -54,7 +54,8 @@ import java.util.Date
  * Réglages (SPEC §4.5), en liste de préférences Material 3 : le rappel quotidien (SPEC §3.6),
  * activé ou non, et son heure, choisie dans le sélecteur d'heure Material 3 ; la langue de
  * l'application ([SettingsEnvironment.languageLabel]), choisie dans le réglage de langue par application d'Android ;
- * le thème (celui du téléphone, clair ou sombre) ; puis « À propos » : version de l'application et licences.
+ * le thème (celui du téléphone, clair ou sombre) ; « Soutenir PhotoSwipe » (noter l'application, faire un don) ;
+ * puis « À propos » : version de l'application et licences.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,6 +101,7 @@ fun SettingsScreen(
                         ReminderSection(reminder, onEvent)
                         LanguageSection(environment.languageLabel, onEvent)
                         state.themeMode?.let { AppearanceSection(it, onEvent) }
+                        SupportSection(onEvent)
                         AboutSection(onEvent, environment.showDeveloperTools)
                     }
                 }
@@ -242,7 +244,7 @@ internal fun SectionTitle(text: String) {
 
 /** Icône de fin de ligne, décorative : chevron ou « ouvrir ailleurs ». */
 @Composable
-private fun TrailingIcon(
+internal fun TrailingIcon(
     @DrawableRes icon: Int,
 ) {
     Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)

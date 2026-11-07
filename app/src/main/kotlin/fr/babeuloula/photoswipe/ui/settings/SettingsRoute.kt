@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.ui.settings
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +26,7 @@ import fr.babeuloula.photoswipe.locale.appLanguage
 import fr.babeuloula.photoswipe.locale.appLanguageSettingsIntent
 import fr.babeuloula.photoswipe.locale.nativeName
 import fr.babeuloula.photoswipe.permission.NOTIFICATION_PERMISSION
+import fr.babeuloula.photoswipe.ui.common.SupportLinks
 import kotlinx.coroutines.launch
 
 /**
@@ -62,8 +64,12 @@ fun SettingsRoute(
                 SettingsEffect.OpenLanguageSettings,
                 SettingsEffect.OpenDeveloperTools,
                 SettingsEffect.OpenNotificationSettings,
+                SettingsEffect.OpenRating,
+                SettingsEffect.OpenDonation,
                 -> {
-                    otherScreenIntent(context, effect, viewModel.developerTools)?.let(context::startActivity)
+                    if (!openOutside(context, effect, viewModel.developerTools)) {
+                        scope.launch { snackbarHostState.showSnackbar(resources.getString(R.string.link_unavailable)) }
+                    }
                 }
 
                 SettingsEffect.OpenLicenses -> {
@@ -79,10 +85,8 @@ fun SettingsRoute(
                 }
 
                 is SettingsEffect.NotificationPermissionDenied -> {
-                    val message = resources.getString(R.string.settings_reminder_permission_denied)
-                    val action = resources.getString(R.string.settings_reminder_open_settings)
                     scope.launch {
-                        if (snackbarHostState.showDenied(message, action.takeUnless { effect.canAskAgain })) {
+                        if (snackbarHostState.showDenied(resources, effect.canAskAgain)) {
                             viewModel.onEvent(SettingsEvent.OpenNotificationSettings)
                         }
                     }
@@ -103,12 +107,43 @@ fun SettingsRoute(
     )
 }
 
-/** Affiche le refus des notifications ; renvoie vrai si l'utilisateur a choisi [action] (les réglages). */
+/**
+ * Affiche le refus des notifications, avec « Réglages » quand Android ne redemandera plus
+ * ([canAskAgain] faux) ; renvoie vrai si l'utilisateur a choisi les réglages.
+ */
 private suspend fun SnackbarHostState.showDenied(
-    message: String,
-    action: String?,
+    resources: Resources,
+    canAskAgain: Boolean,
 ): Boolean =
-    showSnackbar(message, actionLabel = action, duration = SnackbarDuration.Long) == SnackbarResult.ActionPerformed
+    showSnackbar(
+        resources.getString(R.string.settings_reminder_permission_denied),
+        actionLabel = resources.getString(R.string.settings_reminder_open_settings).takeUnless { canAskAgain },
+        duration = SnackbarDuration.Long,
+    ) == SnackbarResult.ActionPerformed
+
+/**
+ * Ouvre l'écran hors de l'application demandé par [effect] : réglage d'Android, outils
+ * développeur, fiche du Play Store ou page de don (ADR 0029). Renvoie `false` si rien ne peut
+ * l'ouvrir.
+ */
+private fun openOutside(
+    context: Context,
+    effect: SettingsEffect,
+    developerTools: DeveloperToolsEntry,
+): Boolean =
+    when (effect) {
+        SettingsEffect.OpenRating -> {
+            SupportLinks.openRating(context)
+        }
+
+        SettingsEffect.OpenDonation -> {
+            SupportLinks.openDonation(context)
+        }
+
+        else -> {
+            otherScreenIntent(context, effect, developerTools)?.let(context::startActivity) != null
+        }
+    }
 
 /** Écran hors de l'application à ouvrir pour [effect] : réglage d'Android ou outils développeur. */
 private fun otherScreenIntent(

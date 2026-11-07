@@ -133,6 +133,17 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `offers to rate the app and to support the developer`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
+
+        composeRule.onNodeWithText(text(R.string.settings_support_section)).performScrollTo().assertExists()
+        composeRule.onNodeWithText(text(R.string.settings_support_rate)).performScrollTo().performClick()
+        composeRule.onNodeWithText(text(R.string.settings_support_donate)).performScrollTo().performClick()
+
+        assertEquals(listOf(SettingsEvent.RateApp, SettingsEvent.Donate), events)
+    }
+
+    @Test
     fun `offers to watch the tutorial again from the about section`() {
         show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
 

@@ -35,6 +35,12 @@ data class SettingsUiState(
 
 /** Action de l'utilisateur sur les réglages. */
 sealed interface SettingsEvent {
+    /** Action qui ne fait qu'ouvrir un autre écran : elle se traduit telle quelle en [effect]. */
+    sealed interface OpensScreen : SettingsEvent {
+        /** Écran à ouvrir. */
+        val effect: SettingsEffect
+    }
+
     /**
      * Interrupteur du rappel quotidien.
      *
@@ -72,7 +78,9 @@ sealed interface SettingsEvent {
     ) : SettingsEvent
 
     /** « Réglages » du message de refus : ouvrir les réglages de notification de l'application. */
-    data object OpenNotificationSettings : SettingsEvent
+    data object OpenNotificationSettings : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.OpenNotificationSettings
+    }
 
     /** Action sur le thème de l'application. */
     sealed interface ThemeEvent : SettingsEvent
@@ -87,19 +95,39 @@ sealed interface SettingsEvent {
     ) : ThemeEvent
 
     /** « Langue » : ouvrir le réglage de langue par application d'Android. */
-    data object OpenLanguageSettings : SettingsEvent
+    data object OpenLanguageSettings : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.OpenLanguageSettings
+    }
 
     /** « Outils développeur », en debug seulement. */
-    data object OpenDeveloperTools : SettingsEvent
+    data object OpenDeveloperTools : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.OpenDeveloperTools
+    }
 
     /** « Revoir le tutoriel » de la section « À propos ». */
-    data object OpenTutorial : SettingsEvent
+    data object OpenTutorial : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.OpenTutorial
+    }
 
     /** « Licences » de la section « À propos ». */
-    data object OpenLicenses : SettingsEvent
+    data object OpenLicenses : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.OpenLicenses
+    }
+
+    /** « Noter PhotoSwipe » : la fiche de l'application sur le Play Store (PS-120). */
+    data object RateApp : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.OpenRating
+    }
+
+    /** « Soutenir le développeur » : la page de don PayPal (PS-120). */
+    data object Donate : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.OpenDonation
+    }
 
     /** Flèche de retour. */
-    data object Back : SettingsEvent
+    data object Back : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.Close
+    }
 }
 
 /** Navigation demandée par les réglages. */
@@ -133,6 +161,12 @@ sealed interface SettingsEffect {
 
     /** Ouvrir les réglages de notification de l'application. */
     data object OpenNotificationSettings : SettingsEffect
+
+    /** Ouvrir la fiche de l'application sur le Play Store, pour la noter. */
+    data object OpenRating : SettingsEffect
+
+    /** Ouvrir la page de don PayPal. */
+    data object OpenDonation : SettingsEffect
 }
 
 /**
@@ -194,10 +228,6 @@ class SettingsViewModel
                     }
                 }
 
-                SettingsEvent.OpenNotificationSettings -> {
-                    effects.trySend(SettingsEffect.OpenNotificationSettings)
-                }
-
                 SettingsEvent.PickReminderTime -> {
                     state.update { it.copy(timePickerOpen = it.reminder != null) }
                 }
@@ -215,24 +245,8 @@ class SettingsViewModel
                     onThemeEvent(event)
                 }
 
-                SettingsEvent.OpenLanguageSettings -> {
-                    effects.trySend(SettingsEffect.OpenLanguageSettings)
-                }
-
-                SettingsEvent.OpenDeveloperTools -> {
-                    effects.trySend(SettingsEffect.OpenDeveloperTools)
-                }
-
-                SettingsEvent.OpenTutorial -> {
-                    effects.trySend(SettingsEffect.OpenTutorial)
-                }
-
-                SettingsEvent.OpenLicenses -> {
-                    effects.trySend(SettingsEffect.OpenLicenses)
-                }
-
-                SettingsEvent.Back -> {
-                    effects.trySend(SettingsEffect.Close)
+                is SettingsEvent.OpensScreen -> {
+                    effects.trySend(event.effect)
                 }
             }
         }
