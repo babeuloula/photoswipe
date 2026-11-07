@@ -141,6 +141,8 @@
     <string name="reminder_snooze_title">Remind me later today</string>
     <string name="reminder_snooze_time_passed">This time has already passed: choose a later time today.</string>
     <string name="reminder_snooze_done">Reminder rescheduled for %1$s today.</string>
+    <string name="photo_viewer_open">View full screen</string>
+    <string name="photo_viewer_close">Close</string>
     <string name="home_detail_subtitle">%1$s · %2$s</string>
     <!-- Tutoriel de première utilisation (SPEC §4). -->
     <string name="tutorial_skip">Skip</string>

@@ -26,6 +26,7 @@ import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.deck.DeckScreen
 import fr.babeuloula.photoswipe.ui.deck.DeckUiState
 import fr.babeuloula.photoswipe.ui.deck.PREVIEW_CARD
+import fr.babeuloula.photoswipe.ui.deck.PhotoViewerContent
 import fr.babeuloula.photoswipe.ui.home.HomeScreen
 import fr.babeuloula.photoswipe.ui.home.HomeUiState
 import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
@@ -138,6 +139,7 @@ class AccessibilityTest {
             )
         }
         check { DeckScreen(day = today, state = DeckUiState.Empty(canUndo = true), onEvent = {}) }
+        check { PhotoViewerContent(card = PREVIEW_CARD, onClose = {}) }
         check {
             SummaryScreen(
                 state =
