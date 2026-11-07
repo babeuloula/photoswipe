@@ -100,7 +100,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
 5. **Accès « Gestion des médias »** (`MANAGE_MEDIA`, ADR 0023) : donné par l'utilisateur dans les réglages d'Android, il fait appliquer les demandes de corbeille et de favori **sans dialogue d'Android** (vérifié sur émulateur, `ManageMediaInstrumentedTest`). Après le premier dialogue d'Android validé, l'accueil propose : « Marre des confirmations ? Activez la gestion des médias dans les paramètres », le mot « paramètres » ouvrant le réglage ; le conseil se ferme pour de bon, et disparaît une fois l'accès donné. Avec l'accès, PhotoSwipe affiche **sa propre confirmation** (dialogue Material 3) avant l'envoi à la corbeille, puisque celle d'Android disparaît.
 
 ### 3.6 Notification
-- Tâche périodique quotidienne (WorkManager). L'heure est approximative (Doze), c'est acceptable.
+- À l'heure pile, téléphone en veille compris : alarme exacte d'Android, avec l'autorisation « Alarmes et rappels » (Android 14+) ; sans elle, tâche WorkManager à l'heure approximative, et les réglages expliquent comment l'autoriser (PS-125, ADR 0031).
 - Envoyée **seulement si** le nombre de médias à trier sur la fenêtre est > 0.
 - Réglages : activée/désactivée, heure souhaitée (défaut 18:00).
 - Demande de `POST_NOTIFICATIONS` au moment du réglage, pas au premier lancement.

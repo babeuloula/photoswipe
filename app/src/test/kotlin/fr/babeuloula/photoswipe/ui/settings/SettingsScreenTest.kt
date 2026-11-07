@@ -47,10 +47,15 @@ class SettingsScreenTest {
 
     private val events = mutableListOf<SettingsEvent>()
 
-    private fun show(state: SettingsUiState) {
+    private fun show(
+        state: SettingsUiState,
+        // Sans l'autorisation par défaut : l'heure du rappel garde son texte « Vers 18:00 ».
+        exactAlarmAllowed: Boolean = false,
+    ) {
         composeRule.activity.setContent {
             PhotoSwipeTheme {
                 SettingsScreen(
+                    environment = SettingsEnvironment(exactAlarmAllowed = exactAlarmAllowed),
                     state = state,
                     onEvent = { events += it },
                 )
@@ -161,6 +166,29 @@ class SettingsScreenTest {
         composeRule.onNodeWithText("2 mars 2026").performScrollTo().assertExists()
         composeRule.onNodeWithText("Aucun média supprimé pour l'instant").performScrollTo().assertExists()
         composeRule.onNodeWithText(text(R.string.settings_statistics_freed)).assertDoesNotExist()
+    }
+
+    @Test
+    fun `explains how to get the reminder right on time without the exact alarm permission`() {
+        show(
+            SettingsUiState(reminder = ReminderSettings(enabled = true, time = LocalTime.of(18, 0))),
+            exactAlarmAllowed = false,
+        )
+
+        composeRule.onNodeWithText(text(R.string.settings_reminder_exact)).performScrollTo().performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenExactAlarmSettings), events)
+    }
+
+    @Test
+    fun `promises the reminder right on time with the exact alarm permission`() {
+        show(
+            SettingsUiState(reminder = ReminderSettings(enabled = true, time = LocalTime.of(18, 0))),
+            exactAlarmAllowed = true,
+        )
+
+        composeRule.onNodeWithText(text(R.string.settings_reminder_exact)).assertDoesNotExist()
+        composeRule.onNodeWithText("sharp", substring = true).assertExists()
     }
 
     @Test

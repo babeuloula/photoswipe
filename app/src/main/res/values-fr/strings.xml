@@ -68,6 +68,9 @@
     <string name="settings_reminder_enabled_summary">Une notification seulement s\'il reste des souvenirs à trier.</string>
     <string name="settings_reminder_time">Heure du rappel</string>
     <string name="settings_reminder_time_summary">Vers %1$s : Android peut l\'envoyer un peu plus tard.</string>
+    <string name="settings_reminder_time_exact">À %1$s pile</string>
+    <string name="settings_reminder_exact">Rappel à l\'heure pile</string>
+    <string name="settings_reminder_exact_summary">Sans l\'autorisation « Alarmes et rappels », Android peut l\'envoyer avec quelques minutes de retard. Autorisez-la dans les réglages d\'Android.</string>
     <string name="settings_reminder_time_picker">Choisir l\'heure du rappel</string>
     <string name="settings_reminder_permission_denied">Sans autorisation de notification, PhotoSwipe ne peut pas vous le rappeler : le rappel reste désactivé.</string>
     <string name="settings_reminder_open_settings">Réglages</string>

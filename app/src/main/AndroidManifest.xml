@@ -11,6 +11,11 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
     <!-- Rappel quotidien : demandée seulement quand l'utilisateur l'active (SPEC §3.6). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Rappel à l'heure pile : alarmes exactes, autorisées par l'utilisateur dans « Alarmes et
+         rappels » (Android 14+) ; sans elles, WorkManager et une heure approximative (PS-125, ADR 0031). -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Les alarmes ne survivent pas à un redémarrage : le rappel est replanifié au démarrage. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Accès « Gestion des médias », donné par l'utilisateur dans les réglages d'Android : la
          corbeille et les favoris s'appliquent sans dialogue système (SPEC §3.5, ADR 0023). -->
     <uses-permission
@@ -50,15 +55,23 @@
             android:theme="@style/Theme.PhotoSwipe.Translucent"
             tools:ignore="LockedOrientationActivity" />
 
-        <!-- Replanifie le rappel quotidien après un changement d'heure ou de fuseau (SPEC §3.6). -->
+        <!-- Replanifie le rappel quotidien après un changement d'heure ou de fuseau, un redémarrage,
+             ou un changement de l'autorisation des alarmes exactes (SPEC §3.6, PS-125). -->
         <receiver
             android:name=".reminder.ReminderRescheduleReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.TIME_SET" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
             </intent-filter>
         </receiver>
+
+        <!-- Alarmes exactes du rappel (PS-125), reçues de l'AlarmManager. -->
+        <receiver
+            android:name="fr.babeuloula.photoswipe.data.reminder.ReminderAlarmReceiver"
+            android:exported="false" />
 
         <!-- WorkManager est configuré par PhotoSwipeApplication (fabrique Hilt des tâches) : son initialisation automatique est retirée. -->
         <provider

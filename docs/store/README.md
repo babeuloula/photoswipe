@@ -55,6 +55,9 @@ Secrets du dépôt (Settings → Secrets and variables → Actions) :
 
 Sans ces secrets, le workflow s'arrête avant le build : aucune release non signée n'est publiée.
 
+## Autorisations à déclarer dans la Play Console
+- `SCHEDULE_EXACT_ALARM` (PS-125, ADR 0031) : le rappel quotidien et sa reprogrammation arrivent à l'heure choisie par l'utilisateur. Déclarer cet usage (« rappel choisi par l'utilisateur ») dans le formulaire des autorisations ; l'autorisation est demandée à l'utilisateur dans « Alarmes et rappels », pas `USE_EXACT_ALARM`.
+
 ## Captures d'écran
 
 Prises sur l'émulateur `Medium_Phone_API_37.0` (1080 × 2400) avec des photos Unsplash datées par leur EXIF d'un 6 novembre de plusieurs années, barre d'état en mode démo (09:41, batterie pleine). Les visuels mis en scène (1080 × 1920) ajoutent un titre, le téléphone et les crédits des photos visibles.

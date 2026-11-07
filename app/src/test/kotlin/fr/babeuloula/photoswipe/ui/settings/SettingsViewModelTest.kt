@@ -42,6 +42,7 @@ class SettingsViewModelTest {
             notificationPermission = { notificationsAllowed },
             developerTools = { null },
             getUsageStatistics = GetUsageStatistics(statistics),
+            exactAlarms = { true },
         )
 
     private fun TestScope.collectEffects(viewModel: SettingsViewModel): List<SettingsEffect> {
