@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.port
 
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 /**
@@ -12,6 +13,12 @@ interface ReminderScheduler {
     /** Planifie le rappel chaque jour vers [time], en remplaçant toute planification existante. */
     fun schedule(time: LocalTime)
 
-    /** Annule le rappel ; sans effet s'il n'était pas planifié. */
+    /**
+     * Planifie un rappel unique à [at], à côté du rappel quotidien qui reste inchangé ; remplace
+     * le rappel unique précédent (reprogrammation du rappel d'aujourd'hui).
+     */
+    fun scheduleOnce(at: LocalDateTime)
+
+    /** Annule le rappel quotidien et le rappel unique ; sans effet s'ils n'étaient pas planifiés. */
     fun cancel()
 }

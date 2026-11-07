@@ -49,6 +49,16 @@ class AndroidReminderNotifierTest {
     }
 
     @Test
+    fun `offers to reschedule today's reminder from the notification`() {
+        notifier.notify(3, day)
+
+        val action = posted().single().actions.single()
+        assertEquals("Reschedule", action.title.toString())
+        val snooze = shadowOf(action.actionIntent).savedIntent
+        assertEquals(SnoozeReminderActivity::class.java.name, snooze.component?.className)
+    }
+
+    @Test
     @Config(qualifiers = "fr")
     fun `writes the reminder in French with its plural`() {
         notifier.notify(1, day)

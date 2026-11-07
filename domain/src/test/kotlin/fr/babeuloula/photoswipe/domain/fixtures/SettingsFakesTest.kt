@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 /** `FakeSettingsRepository`, `FakeReminderScheduler` et `FakeReminderNotifier` respectent le contrat de leurs ports. */
@@ -73,6 +74,21 @@ class SettingsFakesTest {
         scheduler.cancel()
 
         assertNull(scheduler.scheduledTime)
+    }
+
+    @Test
+    fun `keeps the one-off reminder beside the daily one and cancels both`() {
+        val scheduler = FakeReminderScheduler()
+        scheduler.schedule(LocalTime.of(18, 0))
+        scheduler.scheduleOnce(LocalDateTime.of(2026, 11, 7, 20, 0))
+        scheduler.scheduleOnce(LocalDateTime.of(2026, 11, 7, 21, 30))
+
+        assertEquals(LocalTime.of(18, 0), scheduler.scheduledTime)
+        assertEquals(LocalDateTime.of(2026, 11, 7, 21, 30), scheduler.onceAt)
+
+        scheduler.cancel()
+
+        assertNull(scheduler.onceAt)
     }
 
     @Test

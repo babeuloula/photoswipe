@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 class UpdateReminderSettingsTest {
@@ -44,5 +45,15 @@ class UpdateReminderSettingsTest {
 
             assertNull(scheduler.scheduledTime)
             assertEquals(ReminderSettings(enabled = false, time = LocalTime.of(21, 0)), repository.reminder)
+        }
+
+    @Test
+    fun `cancels today's snoozed reminder too when the reminder is disabled`() =
+        runTest {
+            scheduler.scheduleOnce(LocalDateTime.of(2026, 11, 7, 21, 0))
+
+            update(ReminderSettings(enabled = false, time = LocalTime.of(18, 0)))
+
+            assertNull(scheduler.onceAt)
         }
 }

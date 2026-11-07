@@ -10,8 +10,10 @@ import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.RescheduleReminder
 import fr.babeuloula.photoswipe.domain.usecase.SendDailyReminder
+import fr.babeuloula.photoswipe.domain.usecase.SnoozeReminderToday
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
 import fr.babeuloula.photoswipe.reminder.AndroidReminderNotifier
+import java.time.Clock
 
 /** Fournit les use cases des réglages et du rappel quotidien (SPEC §3.6), à part de ceux du tri (`DomainModule`). */
 @Module
@@ -28,6 +30,12 @@ object SettingsModule {
         settingsRepository: SettingsRepository,
         reminderScheduler: ReminderScheduler,
     ): RescheduleReminder = RescheduleReminder(settingsRepository, reminderScheduler)
+
+    @Provides
+    fun provideSnoozeReminderToday(
+        reminderScheduler: ReminderScheduler,
+        clock: Clock,
+    ): SnoozeReminderToday = SnoozeReminderToday(reminderScheduler, clock)
 
     @Provides
     fun provideSendDailyReminder(

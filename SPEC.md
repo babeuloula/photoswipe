@@ -104,6 +104,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
 - Envoyée **seulement si** le nombre de médias à trier sur la fenêtre est > 0.
 - Réglages : activée/désactivée, heure souhaitée (défaut 18:00).
 - Demande de `POST_NOTIFICATIONS` au moment du réglage, pas au premier lancement.
+- Action « Reprogrammer » sur la notification : un sélecteur d'heure seul, par-dessus l'écran ; l'heure choisie (plus tard aujourd'hui) planifie un rappel unique, soumis à la même règle, sans changer le rappel quotidien (PS-116).
 
 ---
 
