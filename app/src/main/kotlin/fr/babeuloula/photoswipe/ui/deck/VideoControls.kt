@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FilledIconButton
@@ -176,8 +175,7 @@ internal fun SoundButton(
                 containerColor = MaterialTheme.colorScheme.onPrimaryFixed,
                 contentColor = MaterialTheme.colorScheme.primaryFixed,
             ),
-        // Cible de 48 dp, dans le coin de la carte : déborde de la marge du repère.
-        modifier = modifier.offset(x = 8.dp, y = (-8).dp).size(48.dp),
+        modifier = modifier.size(48.dp),
     ) {
         Icon(
             painter = painterResource(if (muted) R.drawable.ic_volume_off else R.drawable.ic_volume_up),

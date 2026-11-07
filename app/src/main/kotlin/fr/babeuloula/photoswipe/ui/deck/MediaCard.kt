@@ -29,9 +29,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -135,9 +137,7 @@ fun MediaCard(
                 card = card,
                 modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(CARD_PADDING),
             ) {
-                if (video != null && !video.ended) {
-                    SoundButton(muted = video.muted, onToggle = video.toggleSound)
-                }
+                if (video != null) VideoCornerButtons(video)
             }
             CardBottom(
                 card = card,
@@ -171,8 +171,11 @@ private fun BoxScope.activeVideo(
     }
     DisposableEffect(card.uri, videoPlayer) { onDispose { videoPlayer.stop(card.uri) } }
     val playing = videoPlayer.playingUri == card.uri
-    val ended = videoPlayer.endedUri == card.uri
-    var position by remember(card.uri) { mutableStateOf(Duration.ZERO) }
+    val positionState = remember(card.uri) { mutableStateOf(Duration.ZERO) }
+    var position by positionState
+    // Plein écran (PS-119), gardé quand une rotation recrée l'activité.
+    var fullscreen by rememberSaveable(card.uri) { mutableStateOf(false) }
+    if (fullscreen) FullscreenVideo(card = card, videoPlayer = videoPlayer, onExit = { fullscreen = false })
     // Le temps restant n'avance que pendant la lecture ; en pause ou à la fin, il est lu une fois.
     LaunchedEffect(card.uri, playing) {
         position = videoPlayer.position(card.uri) ?: Duration.ZERO
@@ -186,11 +189,14 @@ private fun BoxScope.activeVideo(
         modifier = Modifier.matchParentSize().alpha(if (presentation.coverSurface) 0f else 1f),
         contentAlignment = Alignment.Center,
     ) {
-        PlayerSurface(
-            player = videoPlayer.player,
-            surfaceType = SURFACE_TYPE_TEXTURE_VIEW,
-            modifier = Modifier.resizeWithContentScale(ContentScale.Fit, presentation.videoSizeDp),
-        )
+        // En plein écran, la vidéo est affichée par sa fenêtre : un lecteur n'a qu'une surface à la fois.
+        if (!fullscreen) {
+            PlayerSurface(
+                player = videoPlayer.player,
+                surfaceType = SURFACE_TYPE_TEXTURE_VIEW,
+                modifier = Modifier.resizeWithContentScale(ContentScale.Fit, presentation.videoSizeDp),
+            )
+        }
     }
     PlayPauseOverlay(
         playing = playing,
@@ -198,16 +204,25 @@ private fun BoxScope.activeVideo(
         modifier = Modifier.matchParentSize(),
     )
     return ActiveVideoState(
-        playing = playing,
-        ended = ended,
-        position = position,
+        uri = card.uri,
+        positionState = positionState,
         duration = card.duration,
         player = videoPlayer,
-        seek = { target ->
-            videoPlayer.seekTo(card.uri, target)
-            position = target
-        },
+        openFullscreen = { fullscreen = true },
     )
+}
+
+/** Boutons du son et du plein écran (PS-119), l'un sous l'autre dans le coin de la vidéo du dessus. */
+@Composable
+private fun VideoCornerButtons(video: ActiveVideoState) {
+    // Cibles de 48 dp, dans le coin de la carte : elles débordent de la marge du repère.
+    Column(
+        modifier = Modifier.offset(x = 8.dp, y = (-8).dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (!video.ended) SoundButton(muted = video.muted, onToggle = video::toggleSound)
+        FullscreenButton(onClick = video.openFullscreen)
+    }
 }
 
 /** Bas de la carte : la barre de progression de la vidéo du dessus (PS-118), puis les pastilles. */
@@ -220,7 +235,7 @@ private fun CardBottom(
     Column(modifier = modifier) {
         val total = card.duration?.takeIf { !it.isZero && !it.isNegative }
         if (video != null && total != null) {
-            VideoProgressBar(position = video.position, duration = total, onSeek = video.seek)
+            VideoProgressBar(position = video.position, duration = total, onSeek = video::seek)
         }
         BottomChips(
             sizeBytes = card.sizeBytes,
@@ -244,23 +259,29 @@ private fun shownDuration(
     }
 
 /**
- * État de la vidéo de la carte du dessus, lu par les pastilles et le bouton du son.
+ * État de la vidéo de la carte du dessus, lu par les pastilles, la barre de progression et les
+ * boutons du son et du plein écran.
  *
- * @property playing vidéo en cours de lecture.
- * @property ended vidéo lue jusqu'au bout.
- * @property position position de lecture.
+ * @property uri vidéo de la carte.
  * @property duration durée totale, si elle est connue.
- * @property player lecteur de la pile, pour le son.
- * @property seek déplace la lecture (barre de progression, PS-118).
+ * @property openFullscreen ouvre la vidéo en plein écran (PS-119).
  */
 private class ActiveVideoState(
-    val playing: Boolean,
-    val ended: Boolean,
-    val position: Duration,
+    val uri: String,
+    private val positionState: MutableState<Duration>,
     val duration: Duration?,
     private val player: CardVideoPlayer,
-    val seek: (Duration) -> Unit,
+    val openFullscreen: () -> Unit,
 ) {
+    /** Vidéo en cours de lecture. */
+    val playing: Boolean get() = player.playingUri == uri
+
+    /** Vidéo lue jusqu'au bout. */
+    val ended: Boolean get() = player.endedUri == uri
+
+    /** Position de lecture. */
+    val position: Duration get() = positionState.value
+
     /** Temps restant, si la durée est connue. */
     val remaining: Duration? get() = duration?.let { (it - position).coerceAtLeast(Duration.ZERO) }
 
@@ -268,7 +289,13 @@ private class ActiveVideoState(
     val muted: Boolean get() = player.muted
 
     /** Active ou coupe le son. */
-    val toggleSound: () -> Unit = player::toggleSound
+    fun toggleSound() = player.toggleSound()
+
+    /** Déplace la lecture (barre de progression, PS-118). */
+    fun seek(target: Duration) {
+        player.seekTo(uri, target)
+        positionState.value = target
+    }
 }
 
 /** Attente avant la lecture automatique d'une vidéo, en millisecondes. */
