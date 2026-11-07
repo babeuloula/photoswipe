@@ -103,7 +103,7 @@ Konsist lit les sources de `:app`, `:data` et `:domain` sans les compiler. Chaqu
 - **Script `scripts/seed-emulator.sh`** (SPEC §10) : génère des photos JPEG datées par leur EXIF (`DateTimeOriginal` et décalage horaire du fuseau de l'ordinateur, heure d'été comprise ; une couleur par année), les pousse par `adb` dans `/sdcard/Pictures/PhotoSwipeAdb` puis lance un scan de MediaStore (`content call --method scan_volume`). Ces photos appartiennent au shell (`com.android.shell`), pas à PhotoSwipe : les dialogues système de corbeille et de favori s'affichent bien.
   - Prérequis : `adb` (dans le `PATH`, par exemple `export PATH="$PATH:$HOME/Library/Android/sdk/platform-tools"`), `python3` et `ffmpeg` (`brew install ffmpeg`). Avec plusieurs appareils : `ANDROID_SERIAL=emulator-5554`.
   - `scripts/seed-emulator.sh` : une photo par année sur 5 ans pour aujourd'hui et les 6 jours précédents (35 photos) ; `--years N` et `--days N` changent la répartition ; `scripts/seed-emulator.sh --remove` retire le dossier et relance le scan.
-  - Tests : `python3 -m unittest discover -s scripts` (plan des dates, 29 février, EXIF relu, couleurs) et `shellcheck scripts/*.sh`, lancés par le job obligatoire de la CI.
+  - Tests : `python3 -m unittest discover -s scripts` (plan des dates, 29 février, EXIF relu, couleurs ; notes F-Droid `test_fdroid_changelog.py` ; rapport des dépréciations `test_deprecation_report.py` : deux formats du compilateur Kotlin, dépréciations Gradle sans doublon, opt-in ignorés, commentaire et annotations) et `shellcheck scripts/*.sh`, lancés par le job obligatoire de la CI.
 
 ## 5. Couverture de la SPEC (§11)
 
@@ -124,6 +124,8 @@ Objectifs de la SPEC : couverture du domaine **≥ 90 %** (pas encore mesurée a
 - **Instrumented tests (emulator)** : `./gradlew connectedDebugAndroidTest` sur un émulateur API 34 (`reactivecircus/android-emulator-runner`, accélération KVM).
 
 Le job obligatoire lance aussi, avant Gradle, les tests Python de `scripts/` et `shellcheck scripts/*.sh`.
+
+**Dépréciations** (PS-132) : le build tourne avec `--warning-mode all` et le script d'init `.github/ci/kotlin-warnings.init.gradle.kts`, qui sort la compilation Kotlin du build cache (une tâche restaurée du cache ne réaffiche pas ses avertissements). `scripts/deprecation_report.py` relit le journal et relève les dépréciations Kotlin (fichier, ligne) et Gradle : avertissements jaunes sur les lignes et le run, résumé du job, et un seul commentaire sur la PR, mis à jour à chaque push (« Plus aucune dépréciation » une fois tout corrigé). Jamais bloquant : l'étape est en `continue-on-error`, la CI reste verte. Les avertissements qui ne sont pas des dépréciations (opt-in des tests…) ne sont pas relevés.
 
  Le résumé du run liste les tests passés et échoués ; en cas d'échec, les rapports sont publiés en artefact. Un nouveau type de test s'ajoute à la CI dans la PR qui l'introduit.
 - **Tutoriel au premier lancement** : les réglages DataStore sont vides au début de chaque test Robolectric, donc `MainActivity` montre d'abord le tutoriel (`FirstLaunchTest`). Un test qui démarre `MainActivity` et attend l'explication d'accès ou l'accueil désinstalle `TutorialModule` et lie `ShouldShowTutorial` et `MarkTutorialSeen` construits sur `FakeSettingsRepository(tutorialVersionSeen = Tutorial.CURRENT_VERSION)` (`@UninstallModules`, `@BindValue`), comme `MainActivityTest` (ADR 0027).
