@@ -15,10 +15,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.common.SupportLinks
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -38,6 +40,7 @@ fun HomeRoute(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val confirmedMessage = confirmed?.let { confirmationMessage(it) }
+    val linkUnavailable = stringResource(R.string.link_unavailable)
     // Résultat de la confirmation du résumé : annoncé une fois, puis oublié. Le message part dans sa
     // propre coroutine : l'oubli fait disparaître [confirmed], ce qui relance cet effet sans l'annuler.
     LaunchedEffect(confirmedMessage) {
@@ -53,14 +56,38 @@ fun HomeRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEffects.collect { effect ->
             when (effect) {
-                is HomeEffect.OpenDeck -> navigation.openDeck(effect.date)
-                HomeEffect.OpenSettings -> navigation.openSettings()
-                HomeEffect.OpenSummary -> navigation.openSummary()
-                HomeEffect.OpenManageMediaSettings -> openManageMediaSettings(context)
+                is HomeEffect.OpenDeck -> {
+                    navigation.openDeck(effect.date)
+                }
+
+                HomeEffect.OpenSettings -> {
+                    navigation.openSettings()
+                }
+
+                HomeEffect.OpenSummary -> {
+                    navigation.openSummary()
+                }
+
+                HomeEffect.OpenManageMediaSettings -> {
+                    openManageMediaSettings(context)
+                }
+
+                HomeEffect.OpenRating, HomeEffect.OpenDonation -> {
+                    if (!openSupportLink(
+                            context,
+                            effect,
+                        )
+                    ) {
+                        scope.launch { snackbarHostState.showSnackbar(linkUnavailable) }
+                    }
+                }
             }
         }
     }
-    HomeScreen(state = state, onEvent = viewModel::onEvent, modifier = modifier, snackbarHostState = snackbarHostState)
+    // L'invitation à noter l'application attend la fin de l'annonce de la confirmation (PS-121).
+    val announcing = confirmed != null || snackbarHostState.currentSnackbarData != null
+    val shown = state.let { if (announcing && it is HomeUiState.Loaded) it.copy(showRatingInvitation = false) else it }
+    HomeScreen(state = shown, onEvent = viewModel::onEvent, modifier = modifier, snackbarHostState = snackbarHostState)
 }
 
 /**
@@ -75,6 +102,13 @@ internal fun openManageMediaSettings(context: Context) {
         context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageUri))
     }
 }
+
+/** Ouvre la fiche Play Store ou la page de don (ADR 0029) ; renvoie `false` si rien ne peut l'ouvrir. */
+private fun openSupportLink(
+    context: Context,
+    effect: HomeEffect,
+): Boolean =
+    if (effect == HomeEffect.OpenRating) SupportLinks.openRating(context) else SupportLinks.openDonation(context)
 
 /** Message de l'annonce : les médias envoyés à la corbeille. */
 @Composable

@@ -8,6 +8,8 @@ import fr.babeuloula.photoswipe.domain.port.ReminderNotifier
 import fr.babeuloula.photoswipe.domain.port.ReminderScheduler
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
+import fr.babeuloula.photoswipe.domain.usecase.MarkRatingAsked
+import fr.babeuloula.photoswipe.domain.usecase.RecordTodaySorted
 import fr.babeuloula.photoswipe.domain.usecase.RescheduleReminder
 import fr.babeuloula.photoswipe.domain.usecase.SendDailyReminder
 import fr.babeuloula.photoswipe.domain.usecase.SnoozeReminderToday
@@ -36,6 +38,16 @@ object SettingsModule {
         reminderScheduler: ReminderScheduler,
         clock: Clock,
     ): SnoozeReminderToday = SnoozeReminderToday(reminderScheduler, clock)
+
+    @Provides
+    fun provideRecordTodaySorted(
+        settingsRepository: SettingsRepository,
+        clock: Clock,
+    ): RecordTodaySorted = RecordTodaySorted(settingsRepository, clock)
+
+    @Provides
+    fun provideMarkRatingAsked(settingsRepository: SettingsRepository): MarkRatingAsked =
+        MarkRatingAsked(settingsRepository)
 
     @Provides
     fun provideSendDailyReminder(

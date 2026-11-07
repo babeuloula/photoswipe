@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
+import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.model.Tutorial
@@ -61,6 +62,18 @@ class SettingsFakesTest {
             repository.saveTutorialVersionSeen(2)
 
             assertEquals(2, repository.tutorialVersionSeen())
+        }
+
+    @Test
+    fun `stores the rating invitation, nothing sorted by default`() =
+        runTest {
+            val repository = FakeSettingsRepository()
+            assertEquals(RatingInvitation.DEFAULT, repository.ratingInvitation())
+
+            val saved = RatingInvitation(sortedDays = 1, lastSortedDay = LocalDate.of(2026, 11, 7))
+            repository.saveRatingInvitation(saved)
+
+            assertEquals(saved, repository.ratingInvitation())
         }
 
     @Test

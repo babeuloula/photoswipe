@@ -11,6 +11,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
+import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
@@ -19,12 +20,16 @@ import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
+import fr.babeuloula.photoswipe.domain.usecase.MarkRatingAsked
+import fr.babeuloula.photoswipe.domain.usecase.RecordTodaySorted
 import fr.babeuloula.photoswipe.domain.usecase.ReopenDay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
@@ -227,7 +232,84 @@ class HomeViewModelTest {
             assertEquals(2019..2025, state.today.years)
         }
 
-    private val settings = FakeSettingsRepository()
+    /** Pile d'aujourd'hui entièrement triée, deux jours triés déjà comptés avant aujourd'hui. */
+    private suspend fun sortedTodayAfterTwoDays(): HomeViewModel {
+        settings =
+            FakeSettingsRepository(
+                ratingInvitation = RatingInvitation(sortedDays = 2, lastSortedDay = today.minusDays(1)),
+            )
+        repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
+        return homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
+    }
+
+    @Test
+    fun `invites to rate the app once today is sorted on the third different day`() =
+        runTest {
+            val viewModel = sortedTodayAfterTwoDays()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+            val state = viewModel.uiState.first { it is HomeUiState.Loaded && it.showRatingInvitation }
+
+            assertTrue((state as HomeUiState.Loaded).showRatingInvitation)
+            assertEquals(3, settings.ratingInvitation.sortedDays)
+        }
+
+    @Test
+    fun `does not count today while memories are left to sort`() =
+        runTest {
+            settings =
+                FakeSettingsRepository(
+                    ratingInvitation = RatingInvitation(sortedDays = 2, lastSortedDay = today.minusDays(1)),
+                )
+            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
+
+            val state = loaded(viewModel) as HomeUiState.Loaded
+
+            assertFalse(state.showRatingInvitation)
+            assertEquals(2, settings.ratingInvitation.sortedDays)
+        }
+
+    @Test
+    fun `opens the Play Store from the invitation, which never comes back`() =
+        runTest {
+            val viewModel = sortedTodayAfterTwoDays()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+            viewModel.uiState.first { it is HomeUiState.Loaded && it.showRatingInvitation }
+
+            viewModel.onEvent(HomeEvent.RateApp)
+
+            assertEquals(HomeEffect.OpenRating, viewModel.uiEffects.first())
+            assertFalse((viewModel.uiState.value as HomeUiState.Loaded).showRatingInvitation)
+            assertTrue(settings.ratingInvitation.asked)
+        }
+
+    @Test
+    fun `opens the donation page from the invitation`() =
+        runTest {
+            val viewModel = sortedTodayAfterTwoDays()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+            viewModel.uiState.first { it is HomeUiState.Loaded && it.showRatingInvitation }
+
+            viewModel.onEvent(HomeEvent.SupportDeveloper)
+
+            assertEquals(HomeEffect.OpenDonation, viewModel.uiEffects.first())
+            assertTrue(settings.ratingInvitation.asked)
+        }
+
+    @Test
+    fun `closes the invitation for good when dismissed`() =
+        runTest {
+            val viewModel = sortedTodayAfterTwoDays()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+            viewModel.uiState.first { it is HomeUiState.Loaded && it.showRatingInvitation }
+
+            viewModel.onEvent(HomeEvent.DismissRatingInvitation)
+
+            assertFalse((viewModel.uiState.value as HomeUiState.Loaded).showRatingInvitation)
+            assertTrue(settings.ratingInvitation.asked)
+        }
+
+    private var settings = FakeSettingsRepository()
 
     /** Accès « Gestion des médias » simulé, refusé par défaut. */
     private var mediaManagementGranted = false
@@ -239,6 +321,7 @@ class HomeViewModelTest {
             settings,
             mediaManagement = { mediaManagementGranted },
             reopenDay = ReopenDay(SameDayMatcher(), source, repository, FakeDecisionJournal(repository), clock),
+            rating = RatingInvitationActions(RecordTodaySorted(settings, clock), MarkRatingAsked(settings)),
         )
 
     private suspend fun loaded(viewModel: HomeViewModel): HomeUiState =

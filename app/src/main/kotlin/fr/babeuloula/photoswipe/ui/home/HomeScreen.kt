@@ -134,6 +134,13 @@ fun HomeScreen(
 
                 is HomeUiState.Loaded -> {
                     HomeDays(state = state, onEvent = onEvent)
+                    if (state.showRatingInvitation) {
+                        RatingInvitationDialog(
+                            onRate = { onEvent(HomeEvent.RateApp) },
+                            onSupport = { onEvent(HomeEvent.SupportDeveloper) },
+                            onDismiss = { onEvent(HomeEvent.DismissRatingInvitation) },
+                        )
+                    }
                 }
             }
         }
