@@ -126,6 +126,10 @@
     <string name="summary_more_marked_description">et %1$d autres</string>
     <string name="reminder_text_years">Des photos et vidéos prises un %1$s, de %2$d à %3$d</string>
     <string name="reminder_text_year">Des photos et vidéos prises un %1$s, en %2$d</string>
+    <string name="reminder_action_snooze">Reprogrammer</string>
+    <string name="reminder_snooze_title">Me le rappeler plus tard aujourd\'hui</string>
+    <string name="reminder_snooze_time_passed">Cette heure est déjà passée : choisissez une heure plus tard aujourd\'hui.</string>
+    <string name="reminder_snooze_done">Rappel reprogrammé à %1$s aujourd\'hui.</string>
     <string name="home_detail_subtitle">%1$s · %2$s</string>
     <!-- Tutoriel de première utilisation (SPEC §4). -->
     <string name="tutorial_skip">Passer</string>

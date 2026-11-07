@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.drawable.Icon
 import android.net.Uri
 import android.text.format.DateFormat
 import android.util.Size
@@ -22,7 +23,8 @@ import javax.inject.Inject
 /**
  * [ReminderNotifier] sur les notifications Android (SPEC §3.6) : un canal dédié « Rappel
  * quotidien », un titre au pluriel (« 3 souvenirs à trier »), et un appui qui ouvre directement
- * la pile du jour à trier, au-dessus de l'accueil.
+ * la pile du jour à trier, au-dessus de l'accueil. L'action « Reprogrammer » ouvre le sélecteur
+ * d'heure du rappel d'aujourd'hui ([SnoozeReminderActivity]).
  * Sans permission de notification, rien n'est affiché.
  */
 class AndroidReminderNotifier
@@ -58,6 +60,7 @@ class AndroidReminderNotifier
                     ).setContentText(text(dayToSort, years))
                     .setContentIntent(openHome)
                     .setAutoCancel(true)
+                    .addAction(snoozeAction())
             preview?.let { thumbnail(it) }?.let { builder.setLargeIcon(it) }
             notificationManager.notify(NOTIFICATION_ID, builder.build())
         }
@@ -83,6 +86,23 @@ class AndroidReminderNotifier
             }
         }
 
+        /** Action « Reprogrammer » : le sélecteur d'heure du rappel d'aujourd'hui. */
+        private fun snoozeAction(): Notification.Action {
+            val snooze =
+                PendingIntent.getActivity(
+                    context,
+                    SNOOZE_REQUEST_CODE,
+                    SnoozeReminderActivity.intent(context),
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+                )
+            return Notification.Action
+                .Builder(
+                    Icon.createWithResource(context, R.drawable.ic_notification),
+                    context.getString(R.string.reminder_action_snooze),
+                    snooze,
+                ).build()
+        }
+
         /** Vignette d'un souvenir pour la grande icône, ou `null` si Android ne peut pas la produire. */
         private fun thumbnail(media: MediaItem): Bitmap? =
             runCatching {
@@ -106,6 +126,9 @@ class AndroidReminderNotifier
 
             /** Une seule notification de rappel à la fois : la suivante remplace la précédente. */
             const val NOTIFICATION_ID: Int = 1
+
+            /** Code de requête de l'action « Reprogrammer », distinct de l'appui sur la notification. */
+            private const val SNOOZE_REQUEST_CODE = 1
 
             /** Taille de la vignette de la grande icône, en pixels. */
             private const val THUMBNAIL_SIZE = 256

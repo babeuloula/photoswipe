@@ -39,6 +39,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Reprogrammation du rappel d'aujourd'hui, ouverte par l'action de la notification : un
+             sélecteur d'heure par-dessus l'écran, hors de la tâche de l'application (SPEC §3.6). -->
+        <activity
+            android:name=".reminder.SnoozeReminderActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:taskAffinity=""
+            android:theme="@style/Theme.PhotoSwipe.Translucent"
+            tools:ignore="LockedOrientationActivity" />
+
         <!-- Replanifie le rappel quotidien après un changement d'heure ou de fuseau (SPEC §3.6). -->
         <receiver
             android:name=".reminder.ReminderRescheduleReceiver"

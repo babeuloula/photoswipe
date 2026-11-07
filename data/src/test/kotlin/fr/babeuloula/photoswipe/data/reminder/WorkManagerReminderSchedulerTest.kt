@@ -63,4 +63,41 @@ class WorkManagerReminderSchedulerTest {
 
         assertTrue(reminderWork().all { it.state == WorkInfo.State.CANCELLED })
     }
+
+    private fun snoozeWork(): List<WorkInfo> =
+        workManager.getWorkInfosForUniqueWork(WorkManagerReminderScheduler.SNOOZE_WORK_NAME).get()
+
+    @Test
+    fun `schedules today's snoozed reminder as a separate one-off task`() {
+        scheduler.schedule(LocalTime.of(18, 0))
+
+        scheduler.scheduleOnce(LocalDateTime.of(2026, 7, 15, 11, 30))
+
+        val snoozed = snoozeWork().single()
+        assertEquals(WorkInfo.State.ENQUEUED, snoozed.state)
+        assertEquals(null, snoozed.periodicityInfo)
+        assertEquals(Duration.ofMinutes(150).toMillis(), snoozed.initialDelayMillis)
+        assertEquals(WorkInfo.State.ENQUEUED, reminderWork().single().state)
+    }
+
+    @Test
+    fun `replaces the previous snooze`() {
+        scheduler.scheduleOnce(LocalDateTime.of(2026, 7, 15, 11, 30))
+
+        scheduler.scheduleOnce(LocalDateTime.of(2026, 7, 15, 10, 0))
+
+        val active = snoozeWork().filter { it.state == WorkInfo.State.ENQUEUED }
+        assertEquals(Duration.ofHours(1).toMillis(), active.single().initialDelayMillis)
+    }
+
+    @Test
+    fun `cancels the snoozed reminder with the daily one`() {
+        scheduler.schedule(LocalTime.of(18, 0))
+        scheduler.scheduleOnce(LocalDateTime.of(2026, 7, 15, 11, 30))
+
+        scheduler.cancel()
+
+        assertTrue(snoozeWork().all { it.state == WorkInfo.State.CANCELLED })
+        assertTrue(reminderWork().all { it.state == WorkInfo.State.CANCELLED })
+    }
 }
