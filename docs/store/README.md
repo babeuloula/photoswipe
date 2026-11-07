@@ -50,6 +50,8 @@ Ensuite, **merger la PR en merge commit** (ni squash ni rebase), avec le contour
 
 Réglage du dépôt requis : Settings → Actions → General → « Allow GitHub Actions to create and approve pull requests ».
 
+Les branches `release/v*` ne peuvent pas être supprimées, admins compris (ruleset « release branches: no deletion », Settings → Rules → Rulesets) : elles gardent la trace de chaque release. Après le merge de la PR, GitHub ne supprime donc pas la branche malgré « Automatically delete head branches ».
+
 **Tag ou release créé à la main** (interface de GitHub ou `git push` d'un tag) : seul un tag de pré-version `vX.Y.Z-dev.N` est accepté, par exemple `v1.2.0-dev.3` (le nom affiché par l'application, préfixé de `v`). Le workflow construit alors la version **debug** (outils développeur compris, clé de debug partagée) et joint seulement `photoswipe-vX.Y.Z-dev.N-debug.apk` à une **pré-version**, jamais « latest » : F-Droid continue de lire la dernière release officielle. Tout autre tag poussé à la main (`v1.2.0`, `v1.2`…) est supprimé avec sa release, et le workflow échoue. Les tags `-dev` ne comptent pas dans le nom de version (`git describe --exclude "v*-dev*"`).
 
 Secrets du dépôt (Settings → Secrets and variables → Actions) :
