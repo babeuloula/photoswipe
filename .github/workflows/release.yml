@@ -1,12 +1,13 @@
-# Releases (PS-115, PS-128, PS-130, ADR 0032).
+# Releases (PS-115, PS-128, PS-130, PS-133, ADR 0032).
 #
 # Release officielle : lancer ce workflow à la main (Actions → Release → Run workflow) depuis main,
-# avec la version vX.Y.Z. Il crée la branche release/vX.Y.Z, y commite les notes de version F-Droid
-# (scripts/fdroid-changelog.sh), ouvre la PR vers main, lance tests et qualité, construit l'AAB et
-# l'APK signés par la clé d'upload, pose le tag vX.Y.Z sur ce commit et crée la release GitHub
-# (notes générées, AAB, APK, version.properties pour F-Droid). Si une étape échoue, rien n'est
-# tagué ni publié. Ensuite, merger la PR en merge commit (pas de squash ni de rebase) pour garder
-# le commit tagué dans l'historique de main.
+# avec la version vX.Y.Z. Il ne part que si le run « CI » de ce commit de main est terminé et vert :
+# tests et qualité n'y sont donc pas relancés. Il crée la branche release/vX.Y.Z, y commite les
+# notes de version F-Droid (scripts/fdroid-changelog.sh), construit l'AAB et l'APK signés par la clé
+# d'upload, pose le tag vX.Y.Z sur ce commit et crée la release GitHub (notes générées, AAB, APK,
+# version.properties pour F-Droid). Si une étape échoue, rien n'est tagué ni publié. Enfin, il ouvre
+# la PR vers main avec le jeton PHOTOSWIPE_RELEASE_TOKEN : la vraie CI y tourne, et l'auto-merge la
+# merge en merge commit (pour garder le commit tagué dans l'historique de main) une fois verte.
 #
 # Tag ou release créé à la main : seulement vX.Y.Z-dev.N. Build debug (outils développeur compris),
 # APK seul joint à une pré-version, jamais « latest » : F-Droid ne la lit pas. Un tag d'une autre
@@ -21,8 +22,12 @@
 #   PHOTOSWIPE_UPLOAD_KEYSTORE_BASE64   clé d'upload (~/.android/photoswipe-upload.jks) encodée en base64
 #   PHOTOSWIPE_UPLOAD_KEYSTORE_PASSWORD mot de passe du magasin de clés
 #   PHOTOSWIPE_UPLOAD_KEY_PASSWORD      mot de passe de la clé (alias « upload »)
-# Réglage du dépôt : Settings → Actions → General → « Allow GitHub Actions to create and approve
-# pull requests », pour que le workflow ouvre la PR de release.
+#   PHOTOSWIPE_RELEASE_TOKEN            jeton personnel à grain fin (dépôt photoswipe seul : Contents et
+#                                       Pull requests en écriture) : une PR ouverte par GITHUB_TOKEN ne
+#                                       lance pas la CI. Sans lui, la PR est ouverte par le workflow,
+#                                       sans auto-merge, et se merge à la main (contournement admin).
+# Réglages du dépôt : « Allow auto-merge » (Settings → General) et, pour le cas sans jeton,
+# « Allow GitHub Actions to create and approve pull requests » (Settings → Actions → General).
 name: Release
 
 on:
@@ -43,6 +48,8 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
+  # Lecture des runs de la CI de main, pour la garde de la release.
+  actions: read
 
 jobs:
   release:
@@ -64,6 +71,20 @@ jobs:
             echo "::error::Version must look like v1.2.0, got '$TAG'."
             exit 1
           fi
+
+      # Tests et qualité ont déjà tourné sur ce commit dans la CI de main : on exige qu'elle soit verte
+      # au lieu de les relancer (le commit de release n'ajoute qu'un fichier texte).
+      - name: Check that the CI of main is green
+        run: |
+          run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --branch main --event push \
+            --commit "$GITHUB_SHA" --limit 1 --json status,conclusion,url \
+            --jq '.[0] // empty | "\(.status) \(if (.conclusion // "") == "" then "none" else .conclusion end) \(.url)"')
+          read -r status conclusion url <<<"${run:-none none none}"
+          if [ "$status" != "completed" ] || [ "$conclusion" != "success" ]; then
+            echo "::error::The CI of main ($GITHUB_SHA) must be green before a release (status: $status, conclusion: $conclusion, run: $url)."
+            exit 1
+          fi
+          echo "CI of main is green: $url"
 
       - name: Checkout
         uses: actions/checkout@v7
@@ -124,8 +145,8 @@ jobs:
       - name: Tag the release commit
         run: git tag -a "$TAG" -m "PhotoSwipe ${TAG#v}"
 
-      - name: Unit tests, quality and signed release build
-        run: ./gradlew test quality bundleRelease assembleRelease --continue --console=plain
+      - name: Signed release build
+        run: ./gradlew bundleRelease assembleRelease --console=plain
 
       # Vérifie la signature des deux fichiers avant de les publier.
       - name: Check signatures
@@ -153,14 +174,27 @@ jobs:
           gh release create "$TAG" dist/* --title "PhotoSwipe ${TAG#v}" --generate-notes \
             ${previous:+--notes-start-tag "$previous"} --verify-tag --latest
 
-      # La release est publiée : une PR impossible à ouvrir (réglage du dépôt) ne la fait pas échouer.
+      # La release est publiée : une PR impossible à ouvrir ne la fait pas échouer. Ouverte par le
+      # jeton personnel, la PR lance la vraie CI et se merge seule (auto-merge, merge commit).
       - name: Open the release pull request
         continue-on-error: true
+        env:
+          RELEASE_TOKEN: ${{ secrets.PHOTOSWIPE_RELEASE_TOKEN }}
         run: |
           git push origin "release/$TAG"
-          gh pr create --base main --head "release/$TAG" --title "chore(release): $TAG" --body \
-            "Release $TAG : notes de version F-Droid. Le tag $TAG pointe sur le commit de cette PR. À merger en **merge commit** (pas de squash ni de rebase) pour garder ce commit dans l'historique de main." \
-            || { echo "::warning::Could not open the pull request: open release/$TAG → main by hand (merge commit)."; exit 1; }
+          body="Release $TAG : notes de version F-Droid. Le tag $TAG pointe sur le commit de cette PR. Merge en **merge commit** (pas de squash ni de rebase) pour garder ce commit dans l'historique de main."
+          if [ -n "$RELEASE_TOKEN" ]; then
+            url=$(GH_TOKEN="$RELEASE_TOKEN" gh pr create --base main --head "release/$TAG" \
+              --title "chore(release): $TAG" --body "$body") \
+              || { echo "::warning::Could not open the pull request: open release/$TAG → main by hand (merge commit)."; exit 1; }
+            GH_TOKEN="$RELEASE_TOKEN" gh pr merge "$url" --auto --merge \
+              || { echo "::warning::Could not enable auto-merge on $url: merge it by hand (merge commit) once green."; exit 1; }
+            echo "Auto-merge enabled on $url"
+          else
+            echo "::warning::PHOTOSWIPE_RELEASE_TOKEN is missing: the pull request will not run the CI nor merge by itself (see release.yml)."
+            gh pr create --base main --head "release/$TAG" --title "chore(release): $TAG" --body "$body" \
+              || { echo "::warning::Could not open the pull request: open release/$TAG → main by hand (merge commit)."; exit 1; }
+          fi
 
       - name: Remove the upload key
         if: ${{ always() }}

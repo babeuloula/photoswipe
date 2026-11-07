@@ -39,16 +39,18 @@ Restent dans le dépôt :
 
 Une release officielle se publie **uniquement** par le workflow `.github/workflows/release.yml` lancé à la main (PS-130, ADR [0032](../decisions/0032-release-workflow.md)) : Actions → Release → Run workflow, sur `main`, avec la version `vX.Y.Z`.
 
-1. la version doit avoir la forme `vX.Y.Z` et ne pas exister (ni tag, ni branche `release/vX.Y.Z`) ;
+1. la version doit avoir la forme `vX.Y.Z` et ne pas exister (ni tag, ni branche `release/vX.Y.Z`), et le run « CI » du commit de `main` doit être terminé et vert (PS-133) : tests et qualité ne sont pas relancés, le commit de release n'ajoutant qu'un fichier texte ;
 2. branche `release/vX.Y.Z` depuis `main`, avec un commit des notes de version F-Droid (`scripts/fdroid-changelog.sh`, depuis le dernier tag officiel) ;
 3. clé d'upload reconstituée depuis les secrets dans le dossier temporaire du runner, et `keystore.properties` qui la désigne ; tag `vX.Y.Z` posé en local sur ce commit (`versionName` = `X.Y.Z`, `versionCode` = nombre de commits) ;
-4. `./gradlew test quality bundleRelease assembleRelease`, puis vérification des signatures (`jarsigner`, `apksigner`) ;
+4. `./gradlew bundleRelease assembleRelease`, puis vérification des signatures (`jarsigner`, `apksigner`) ;
 5. seulement si tout est passé : branche poussée, PR « chore(release): vX.Y.Z » vers `main`, tag poussé, release GitHub créée (notes générées depuis le dernier tag officiel, marquée « latest ») avec `photoswipe-vX.Y.Z.aab` (Play Store), `photoswipe-vX.Y.Z.apk` (installation directe) et `version.properties` (`versionCode` et `versionName` lus dans l'APK par `aapt2`, pour F-Droid) ;
 6. clé et `keystore.properties` effacés, même en cas d'échec.
 
-Ensuite, **merger la PR en merge commit** (ni squash ni rebase), avec le contournement admin : une PR ouverte par le jeton du workflow ne lance pas la CI, mais le workflow a déjà passé tests et qualité sur ce commit. Le merge commit garde le commit tagué dans l'historique de `main`, pour que les builds suivants s'appellent `X.Y.Z-dev.N`. Sans merge, la release reste valable (Play Store, F-Droid) ; seuls les noms des builds debug suivants restent sur l'ancienne version.
+La PR est ouverte avec le jeton `PHOTOSWIPE_RELEASE_TOKEN` : la vraie CI y tourne, et l'**auto-merge** la merge toute seule en **merge commit** une fois verte. Rien à faire après avoir lancé le workflow. Le merge commit garde le commit tagué dans l'historique de `main`, pour que les builds suivants s'appellent `X.Y.Z-dev.N`. Sans le jeton, la PR est ouverte par le workflow, ne lance pas la CI et se merge à la main en merge commit (contournement admin). Sans merge, la release reste valable (Play Store, F-Droid) ; seuls les noms des builds debug suivants restent sur l'ancienne version.
 
-Réglage du dépôt requis : Settings → Actions → General → « Allow GitHub Actions to create and approve pull requests ».
+Créer le jeton (PS-133) : GitHub → Settings (du compte) → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token ; « Repository access » : seulement `babeuloula/photoswipe` ; permissions du dépôt : **Contents** et **Pull requests** en « Read and write » ; durée au choix (le renouveler avant son expiration). Puis, dans le dépôt : Settings → Secrets and variables → Actions → New repository secret `PHOTOSWIPE_RELEASE_TOKEN`.
+
+Réglages du dépôt requis : « Allow auto-merge » (Settings → General) et, pour le cas sans jeton, « Allow GitHub Actions to create and approve pull requests » (Settings → Actions → General).
 
 Les branches `release/v*` ne peuvent pas être supprimées, admins compris (ruleset « release branches: no deletion », Settings → Rules → Rulesets) : elles gardent la trace de chaque release. Après le merge de la PR, GitHub ne supprime donc pas la branche malgré « Automatically delete head branches ».
 
@@ -61,6 +63,7 @@ Secrets du dépôt (Settings → Secrets and variables → Actions) :
 | `PHOTOSWIPE_UPLOAD_KEYSTORE_BASE64` | `base64 -i ~/.android/photoswipe-upload.jks` |
 | `PHOTOSWIPE_UPLOAD_KEYSTORE_PASSWORD` | `storePassword` de `keystore.properties` |
 | `PHOTOSWIPE_UPLOAD_KEY_PASSWORD` | `keyPassword` de `keystore.properties` |
+| `PHOTOSWIPE_RELEASE_TOKEN` | jeton personnel à grain fin (voir plus haut) : ouvre la PR de release et active son auto-merge |
 
 Sans ces secrets, le workflow s'arrête avant le build : aucune release non signée n'est publiée.
 
