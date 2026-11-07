@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
+import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.model.Tutorial
@@ -24,6 +25,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.time.LocalDate
 import java.time.LocalTime
 
 /** DataStore réel, sur un fichier temporaire : aucune dépendance au framework Android. */
@@ -134,6 +136,18 @@ class DataStoreSettingsRepositoryTest {
             repository.saveManageMediaTip(ManageMediaTip.DISMISSED)
 
             assertEquals(ManageMediaTip.DISMISSED, repository.observeManageMediaTip().first())
+        }
+
+    @Test
+    fun `stores the rating invitation, nothing sorted nor asked by default`() =
+        runTest {
+            val repository = DataStoreSettingsRepository(dataStore())
+            assertEquals(RatingInvitation.DEFAULT, repository.ratingInvitation())
+
+            val saved = RatingInvitation(sortedDays = 2, lastSortedDay = LocalDate.of(2026, 11, 7), asked = true)
+            repository.saveRatingInvitation(saved)
+
+            assertEquals(saved, repository.ratingInvitation())
         }
 
     @Test

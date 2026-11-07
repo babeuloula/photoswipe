@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
+import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.model.Tutorial
@@ -20,13 +21,19 @@ import kotlinx.coroutines.flow.asStateFlow
  * @param themeMode thème présent au départ.
  * @param manageMediaTip état du conseil « Gestion des médias » au départ.
  * @param tutorialVersionSeen version du tutoriel vue au départ.
+ * @param ratingInvitation invitation à noter l'application au départ.
  */
 class FakeSettingsRepository(
     reminder: ReminderSettings = ReminderSettings.DEFAULT,
     themeMode: ThemeMode = ThemeMode.DEFAULT,
     manageMediaTip: ManageMediaTip = ManageMediaTip.DEFAULT,
     tutorialVersionSeen: Int = Tutorial.NEVER_SEEN,
+    ratingInvitation: RatingInvitation = RatingInvitation.DEFAULT,
 ) : SettingsRepository {
+    /** Invitation à noter l'application enregistrée, pour les vérifications du test. */
+    var ratingInvitation: RatingInvitation = ratingInvitation
+        private set
+
     /** Version du tutoriel vue, pour les vérifications du test. */
     var tutorialVersionSeen: Int = tutorialVersionSeen
         private set
@@ -69,5 +76,11 @@ class FakeSettingsRepository(
 
     override suspend fun saveTutorialVersionSeen(version: Int) {
         tutorialVersionSeen = version
+    }
+
+    override suspend fun ratingInvitation(): RatingInvitation = ratingInvitation
+
+    override suspend fun saveRatingInvitation(invitation: RatingInvitation) {
+        ratingInvitation = invitation
     }
 }

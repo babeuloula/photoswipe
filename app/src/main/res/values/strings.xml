@@ -97,6 +97,11 @@
     <string name="settings_support_donate">Support the developer</string>
     <string name="settings_support_donate_summary">Make a donation with PayPal</string>
     <string name="link_unavailable">No app on this phone can open this link.</string>
+    <string name="rating_title">Enjoying PhotoSwipe?</string>
+    <string name="rating_text">Three days of memories sorted, thank you! A rating on the Play Store helps other people find the app. And if you like, you can support its development.</string>
+    <string name="rating_rate">Rate the app</string>
+    <string name="rating_support">Support the developer</string>
+    <string name="rating_close">Close</string>
     <string name="settings_developer_tools">Developer tools</string>
     <!-- Licences (« À propos » des réglages). -->
     <string name="licenses_title">Licenses</string>

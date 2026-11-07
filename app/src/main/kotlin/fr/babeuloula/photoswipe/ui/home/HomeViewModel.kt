@@ -15,6 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -46,12 +48,15 @@ sealed interface HomeUiState {
      * sessions confondues (SPEC §3.4) ; 0 masque la bannière.
      * @property showManageMediaTip vrai pour proposer l'accès « Gestion des médias » : un dialogue
      * d'Android a déjà été validé, le conseil n'a pas été fermé et l'accès n'est pas donné (ADR 0023).
+     * @property showRatingInvitation vrai pour inviter, une seule fois, à noter l'application et à
+     * soutenir son développeur, au troisième jour où la pile du jour est entièrement triée (PS-121).
      */
     data class Loaded(
         val today: ReviewDay,
         val previousDays: List<ReviewDay>,
         val pendingDeletionCount: Int = 0,
         val showManageMediaTip: Boolean = false,
+        val showRatingInvitation: Boolean = false,
     ) : HomeUiState {
         /** Vrai si au moins un souvenir existe sur la fenêtre, trié ou non (SPEC §4, états vides). */
         val hasMemories: Boolean get() = today.memoryCount > 0 || previousDays.any { it.memoryCount > 0 }
@@ -95,6 +100,15 @@ sealed interface HomeEvent {
 
     /** Croix du conseil « Gestion des médias » : ne plus le proposer. */
     data object DismissManageMediaTip : HomeEvent
+
+    /** « Noter l'application » de l'invitation (PS-121). */
+    data object RateApp : HomeEvent
+
+    /** « Soutenir » de l'invitation : la page de don (PS-121). */
+    data object SupportDeveloper : HomeEvent
+
+    /** Invitation fermée sans choisir : elle ne reviendra pas. */
+    data object DismissRatingInvitation : HomeEvent
 }
 
 /** Navigation demandée par l'accueil. */
@@ -112,6 +126,12 @@ sealed interface HomeEffect {
 
     /** Ouvrir le réglage « Gestion des médias » d'Android pour PhotoSwipe. */
     data object OpenManageMediaSettings : HomeEffect
+
+    /** Ouvrir la fiche de l'application sur le Play Store, pour la noter (ADR 0029). */
+    data object OpenRating : HomeEffect
+
+    /** Ouvrir la page de don (ADR 0029). */
+    data object OpenDonation : HomeEffect
 }
 
 /**
@@ -132,7 +152,14 @@ class HomeViewModel
         private val settingsRepository: SettingsRepository,
         private val mediaManagement: MediaManagementReader,
         private val reopenDay: ReopenDay,
+        private val rating: RatingInvitationActions,
     ) : ViewModel() {
+        /** Invitation à noter l'application à montrer (PS-121). */
+        private val ratingInvitation = MutableStateFlow(false)
+
+        /** Dernier jour dont le tri complet a été compté, pour ne le compter qu'une fois par process. */
+        private var countedDay: LocalDate? = null
+
         /** Demandes de calcul ; la valeur dit s'il faut repasser par l'état de chargement. */
         private val reloads = MutableSharedFlow<Boolean>(replay = 1).apply { tryEmit(false) }
         private val effects = Channel<HomeEffect>(Channel.BUFFERED)
@@ -141,7 +168,10 @@ class HomeViewModel
         val uiState: StateFlow<HomeUiState> =
             reloads
                 .flatMapLatest { showLoading -> loadDays(showLoading) }
-                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), HomeUiState.Loading)
+                .onEach { state -> if (state is HomeUiState.Loaded) countTodaySorted(state.today) }
+                .combine(ratingInvitation) { state, invite ->
+                    if (state is HomeUiState.Loaded) state.copy(showRatingInvitation = invite) else state
+                }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), HomeUiState.Loading)
 
         /** Navigations à exécuter, chacune livrée une seule fois. */
         val uiEffects: Flow<HomeEffect> = effects.receiveAsFlow()
@@ -179,6 +209,20 @@ class HomeViewModel
 
                 HomeEvent.OpenManageMediaSettings -> {
                     effects.trySend(HomeEffect.OpenManageMediaSettings)
+                }
+
+                HomeEvent.RateApp -> {
+                    closeRatingInvitation()
+                    effects.trySend(HomeEffect.OpenRating)
+                }
+
+                HomeEvent.SupportDeveloper -> {
+                    closeRatingInvitation()
+                    effects.trySend(HomeEffect.OpenDonation)
+                }
+
+                HomeEvent.DismissRatingInvitation -> {
+                    closeRatingInvitation()
                 }
 
                 HomeEvent.DismissManageMediaTip -> {
@@ -224,6 +268,25 @@ class HomeViewModel
                 .observeManageMediaTip()
                 .map { it == ManageMediaTip.OFFERED && !mediaManagement.isGranted() }
                 .catch { emit(false) }
+
+        /**
+         * Pile d'aujourd'hui entièrement triée : un jour de plus vers l'invitation à noter
+         * l'application (PS-121), qui s'affiche au troisième jour différent. Un échec de lecture
+         * ou d'écriture des réglages ne montre rien.
+         */
+        private fun countTodaySorted(today: ReviewDay) {
+            if (today.memoryCount == 0 || today.remainingCount > 0 || countedDay == today.date) return
+            countedDay = today.date
+            viewModelScope.launch {
+                if (runCatching { rating.recordTodaySorted() }.getOrDefault(false)) ratingInvitation.value = true
+            }
+        }
+
+        /** Ferme l'invitation pour de bon, quel que soit le choix. */
+        private fun closeRatingInvitation() {
+            ratingInvitation.value = false
+            viewModelScope.launch { runCatching { rating.markRatingAsked() } }
+        }
 
         /** Marquages à confirmer : le même nombre que le résumé annoncera (ADR 0011). */
         private suspend fun pendingDeletionCount(): Int = getSessionSummary().markedForDeletionCount

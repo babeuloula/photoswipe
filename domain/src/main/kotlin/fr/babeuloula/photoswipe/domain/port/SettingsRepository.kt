@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.domain.port
 
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
+import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
  * La langue n'y figure pas : elle passe par le réglage de langue par application d'Android
  * (SPEC §4).
  */
+@Suppress("TooManyFunctions") // Une lecture et une écriture par réglage enregistré.
 interface SettingsRepository {
     /** Réglages du rappel quotidien, [ReminderSettings.DEFAULT] tant que rien n'a été enregistré. */
     suspend fun reminderSettings(): ReminderSettings
@@ -52,4 +54,10 @@ interface SettingsRepository {
 
     /** Enregistre la version du tutoriel vue. */
     suspend fun saveTutorialVersionSeen(version: Int)
+
+    /** Invitation à noter l'application (PS-121), [RatingInvitation.DEFAULT] tant que rien n'est enregistré. */
+    suspend fun ratingInvitation(): RatingInvitation
+
+    /** Enregistre l'invitation à noter l'application. */
+    suspend fun saveRatingInvitation(invitation: RatingInvitation)
 }

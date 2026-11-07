@@ -116,6 +116,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
    - jour tout trié : « Retrier » sur la carte « Aujourd'hui », et un appui sur un jour précédent tout trié le rouvre (§3.3, ADR 0026) ;
    - liste des 6 jours précédents avec leur nombre en attente et une vignette ;
    - bannière « N médias en attente de suppression » ;
+   - invitation unique (dialogue) à noter l'application et à soutenir son développeur, au troisième jour différent où la pile du jour est entièrement triée ; « Noter l'application », « Soutenir le développeur », « Fermer » ; jamais pendant l'annonce d'une suppression (PS-121, ADR 0029) ;
    - accès aux réglages.
 3. **Pile de swipe** :
    - carte plein écran (image ou vidéo) avec le repère de bord de film « Il y a 3 ans · 14 mai 2023 » et le poids du fichier, et la progression du jour (« 4 sur 23 ») ;
