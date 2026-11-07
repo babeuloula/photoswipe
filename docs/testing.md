@@ -28,7 +28,7 @@ Prérequis : JDK 17 (`export JAVA_HOME=/opt/homebrew/opt/openjdk@17` sur la mach
 ./gradlew connectedDebugAndroidTest              # tous les modules
 ./gradlew :data:connectedDebugAndroidTest        # un seul module
 
-# Script de l'émulateur (Python, bibliothèque standard)
+# Scripts : émulateur et notes de version F-Droid (Python, bibliothèque standard)
 python3 -m unittest discover -s scripts
 shellcheck scripts/*.sh
 ```
