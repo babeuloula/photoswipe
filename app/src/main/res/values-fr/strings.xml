@@ -86,6 +86,8 @@
     <string name="settings_about_version">Version</string>
     <string name="settings_about_licenses">Licences</string>
     <string name="settings_about_licenses_summary">PhotoSwipe, ses bibliothèques et ses polices open source</string>
+    <string name="settings_about_source_code">Code source</string>
+    <string name="settings_about_source_code_summary">Libre et ouvert, sur GitHub</string>
     <string name="settings_support_section">Soutenir PhotoSwipe</string>
     <string name="settings_support_rate">Noter PhotoSwipe</string>
     <string name="settings_support_rate_summary">Sur le Play Store</string>

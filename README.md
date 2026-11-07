@@ -56,3 +56,7 @@ Détails : [docs/testing.md](docs/testing.md#4-fixtures).
 ## Licence
 
 PhotoSwipe est distribué sous [licence Apache 2.0](LICENSE). Les bibliothèques embarquées, toutes sous licence Apache 2.0, sont listées dans l'application (Réglages › À propos › Licences).
+
+## Confidentialité
+
+PhotoSwipe ne collecte aucune donnée et n'a pas accès à Internet : voir la [politique de confidentialité](PRIVACY.md).

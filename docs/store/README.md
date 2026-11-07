@@ -4,7 +4,7 @@ Préparation de la publication (PS-72, SPEC §13).
 
 Les textes à recopier dans la Play Console vivent dans Notion, page [Publication Play Store](https://app.notion.com/p/410f693cd865816bb181c61e401762d7) (sous PhotoSwipe) :
 
-- **Politique de confidentialité** : la page à publier sur le site de Jérémy, dont l'URL publique se renseigne dans la Play Console et dans la fiche ;
+- **Politique de confidentialité** : la page à publier sur le site de Jérémy, dont l'URL publique se renseigne dans la Play Console et dans la fiche ; sa version de référence, en français et en anglais, est [`PRIVACY.md`](../../PRIVACY.md) à la racine du dépôt (PS-127), à tenir à jour à chaque nouvelle autorisation ou donnée enregistrée ;
 - **Déclaration d'usage des autorisations photos et vidéos** ;
 - **Sécurité des données** ;
 - **Fiche du Play Store** (FR et EN).

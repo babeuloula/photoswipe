@@ -203,13 +203,13 @@ private fun LanguageSection(
     }
 }
 
-/** Section « À propos » : version de l'application, tutoriel à revoir et licences. */
+/** Section « À propos » : version de l'application, tutoriel à revoir, licences et code source. */
 @Composable
 private fun AboutSection(
     onEvent: (SettingsEvent) -> Unit,
     showDeveloperTools: Boolean,
 ) {
-    // Version, tutoriel, licences et, en debug, les outils développeur.
+    // Version, tutoriel, licences, code source et, en debug, les outils développeur.
     val count = if (showDeveloperTools) ABOUT_ROWS + 1 else ABOUT_ROWS
     PreferenceSection(stringResource(R.string.settings_about_section)) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -232,6 +232,13 @@ private fun AboutSection(
                 trailing = { TrailingIcon(R.drawable.ic_chevron_right) },
                 modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenLicenses) },
             )
+            PreferenceRow(
+                shape = segmentShape(ABOUT_ROWS - 1, count),
+                title = stringResource(R.string.settings_about_source_code),
+                summary = stringResource(R.string.settings_about_source_code_summary),
+                trailing = { TrailingIcon(R.drawable.ic_open_in_new) },
+                modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenSourceCode) },
+            )
             // Variante debug seulement (SPEC §10).
             if (showDeveloperTools) {
                 PreferenceRow(
@@ -246,7 +253,7 @@ private fun AboutSection(
 }
 
 /** Lignes de « À propos » dans toutes les variantes : version et licences. */
-private const val ABOUT_ROWS = 3
+private const val ABOUT_ROWS = 4
 
 /** Version de l'application installée (`versionName`). */
 @Composable
