@@ -139,12 +139,10 @@ fun MediaCard(
                     SoundButton(muted = video.muted, onToggle = video.toggleSound)
                 }
             }
-            BottomChips(
-                sizeBytes = card.sizeBytes,
-                duration = shownDuration(card, video),
-                isVideo = card.type == MediaType.VIDEO && video?.ended != true,
-                playing = video?.playing == true,
-                modifier = Modifier.align(Alignment.BottomStart).padding(CARD_PADDING),
+            CardBottom(
+                card = card,
+                video = video,
+                modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(CARD_PADDING),
             )
         }
     }
@@ -202,10 +200,35 @@ private fun BoxScope.activeVideo(
     return ActiveVideoState(
         playing = playing,
         ended = ended,
-        remaining = card.duration?.let { (it - position).coerceAtLeast(Duration.ZERO) },
-        muted = videoPlayer.muted,
-        toggleSound = videoPlayer::toggleSound,
+        position = position,
+        duration = card.duration,
+        player = videoPlayer,
+        seek = { target ->
+            videoPlayer.seekTo(card.uri, target)
+            position = target
+        },
     )
+}
+
+/** Bas de la carte : la barre de progression de la vidéo du dessus (PS-118), puis les pastilles. */
+@Composable
+private fun CardBottom(
+    card: MediaCardUiState,
+    video: ActiveVideoState?,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        val total = card.duration?.takeIf { !it.isZero && !it.isNegative }
+        if (video != null && total != null) {
+            VideoProgressBar(position = video.position, duration = total, onSeek = video.seek)
+        }
+        BottomChips(
+            sizeBytes = card.sizeBytes,
+            duration = shownDuration(card, video),
+            isVideo = card.type == MediaType.VIDEO && video?.ended != true,
+            playing = video?.playing == true,
+        )
+    }
 }
 
 /** Durée affichée d'une vidéo : totale au repos, restante pendant la lecture, rien à la fin. */
@@ -225,126 +248,31 @@ private fun shownDuration(
  *
  * @property playing vidéo en cours de lecture.
  * @property ended vidéo lue jusqu'au bout.
- * @property remaining temps restant, si la durée est connue.
- * @property muted son coupé.
- * @property toggleSound active ou coupe le son.
+ * @property position position de lecture.
+ * @property duration durée totale, si elle est connue.
+ * @property player lecteur de la pile, pour le son.
+ * @property seek déplace la lecture (barre de progression, PS-118).
  */
 private class ActiveVideoState(
     val playing: Boolean,
     val ended: Boolean,
-    val remaining: Duration?,
-    val muted: Boolean,
-    val toggleSound: () -> Unit,
-)
-
-/**
- * Zone de tap de la vidéo et son gros bouton central : ▶ tant qu'elle ne joue pas ; au démarrage,
- * ⏸ qui s'efface en fondu. Toute la carte réagit au tap, sans ondulation ; un glissement reste un
- * geste de tri. TalkBack lit l'action : « Lire la vidéo » ou « Mettre la vidéo en pause ».
- */
-@Composable
-private fun PlayPauseOverlay(
-    playing: Boolean,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier,
+    val position: Duration,
+    val duration: Duration?,
+    private val player: CardVideoPlayer,
+    val seek: (Duration) -> Unit,
 ) {
-    val buttonAlpha = remember { Animatable(1f) }
-    // Fondu du thème (SPEC §8) : effet lent, sans rebond.
-    val fadeOut = MaterialTheme.motion.slowEffects<Float>()
-    LaunchedEffect(playing) {
-        if (playing) {
-            delay(PAUSE_ICON_VISIBLE.toMillis())
-            buttonAlpha.animateTo(0f, fadeOut)
-        } else {
-            buttonAlpha.snapTo(1f)
-        }
-    }
-    val action = stringResource(if (playing) R.string.deck_video_pause else R.string.deck_video_play)
-    Box(
-        modifier =
-            modifier
-                .clickable(interactionSource = null, indication = null, onClick = onToggle)
-                .semantics {
-                    contentDescription = action
-                    role = Role.Button
-                },
-        contentAlignment = Alignment.Center,
-    ) {
-        Surface(
-            color = MaterialTheme.colorScheme.onPrimaryFixed,
-            contentColor = MaterialTheme.colorScheme.primaryFixed,
-            shape = CircleShape,
-            modifier =
-                Modifier
-                    .size(BIG_BUTTON_SIZE)
-                    .graphicsLayer { alpha = buttonAlpha.value }
-                    .testTag(PLAY_PAUSE_BUTTON_TAG),
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter =
-                        if (playing) {
-                            painterResource(
-                                R.drawable.ic_pause_filled,
-                            )
-                        } else {
-                            painterResource(R.drawable.ic_play_arrow_filled)
-                        },
-                    contentDescription = null,
-                    modifier = Modifier.size(BIG_ICON_SIZE),
-                )
-            }
-        }
-    }
+    /** Temps restant, si la durée est connue. */
+    val remaining: Duration? get() = duration?.let { (it - position).coerceAtLeast(Duration.ZERO) }
+
+    /** Son coupé. */
+    val muted: Boolean get() = player.muted
+
+    /** Active ou coupe le son. */
+    val toggleSound: () -> Unit = player::toggleSound
 }
-
-/**
- * Bouton du son de la vidéo (SPEC §4.3) : coupé au départ, un tap l'active ou le coupe. Le réglage
- * suit l'utilisateur sur les vidéos suivantes de la pile.
- */
-@Composable
-private fun SoundButton(
-    muted: Boolean,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    FilledIconButton(
-        onClick = onToggle,
-        colors =
-            IconButtonDefaults.filledIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.onPrimaryFixed,
-                contentColor = MaterialTheme.colorScheme.primaryFixed,
-            ),
-        // Cible de 48 dp, dans le coin de la carte : déborde de la marge du repère.
-        modifier = modifier.offset(x = 8.dp, y = (-8).dp).size(48.dp),
-    ) {
-        Icon(
-            painter = painterResource(if (muted) R.drawable.ic_volume_off else R.drawable.ic_volume_up),
-            contentDescription =
-                stringResource(
-                    if (muted) R.string.deck_video_sound_on else R.string.deck_video_sound_off,
-                ),
-        )
-    }
-}
-
-/** Taille du gros bouton central d'une vidéo. */
-private val BIG_BUTTON_SIZE = 64.dp
-
-/** Taille de son icône. */
-private val BIG_ICON_SIZE = 32.dp
-
-/** Temps pendant lequel ⏸ reste visible au démarrage, avant de s'effacer. */
-private val PAUSE_ICON_VISIBLE: Duration = Duration.ofMillis(PAUSE_ICON_VISIBLE_MILLIS)
-
-/** Étiquette de test du gros bouton central d'une vidéo. */
-internal const val PLAY_PAUSE_BUTTON_TAG = "play_pause_button"
 
 /** Attente avant la lecture automatique d'une vidéo, en millisecondes. */
 private const val AUTOPLAY_DELAY_MILLIS = 2_500L
-
-/** Temps pendant lequel ⏸ reste visible au démarrage, en millisecondes. */
-private const val PAUSE_ICON_VISIBLE_MILLIS = 600L
 
 /** Rafraîchissement du temps restant pendant la lecture, en millisecondes. */
 private const val PROGRESS_TICK_MILLIS = 250L

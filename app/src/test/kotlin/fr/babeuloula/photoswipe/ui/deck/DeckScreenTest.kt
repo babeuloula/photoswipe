@@ -51,10 +51,14 @@ import org.robolectric.annotation.Config
 import java.time.Duration
 import java.time.LocalDate
 
-/** Pile composée seule dans `MainActivity`, avec des états fixés (langue anglaise de Robolectric). */
+/**
+ * Pile composée seule dans `MainActivity`, avec des états fixés (langue anglaise de Robolectric),
+ * sur un écran de téléphone courant : sur le petit écran par défaut de Robolectric, la barre de
+ * progression d'une vidéo recouvrirait le bouton de lecture au centre de la carte.
+ */
 @HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)
-@Config(application = HiltTestApplication::class)
+@Config(application = HiltTestApplication::class, qualifiers = "w411dp-h891dp")
 class DeckScreenTest {
     @get:Rule(order = 0)
     val hiltRule = HiltAndroidRule(this)

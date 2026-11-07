@@ -124,6 +124,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
    - jour retrié : pastille de la décision d'avant en haut de la carte (coche « Gardé la dernière fois », corbeille « Marqué pour suppression la dernière fois », le cœur pour un favori) ;
    - pile vidée : « Voir le résumé » et « Retour à l'accueil » ;
    - appui sur une photo : elle s'ouvre en grand sur fond noir, avec zoom (pincement jusqu'à ×5, double appui) ; glisser vers le bas, retour ou « Fermer » la referme sans décision ; l'écran reste en portrait (PS-117) ;
+   - vidéo : barre de progression en bas de la carte, glisser ou toucher pour aller à un moment précis ; elle a la priorité sur le geste de tri (PS-118) ;
    - retour haptique, animations à ressort, seuil de déclenchement et retour au centre si geste incomplet ;
    - vidéos : lecture automatique muette, écran gardé allumé pendant la lecture ; un appui sur le bouton ▶ lance la vidéo avec le son, que le bouton du son peut couper ; le choix du son vaut pour les vidéos suivantes.
 4. **Résumé / confirmation** : voir §3.5 ; vignettes des derniers médias marqués. Toucher une vignette (ou le groupe des marqués) ouvre la **pile des marqués** : même pile qu'un jour, chaque carte avec la pastille « marqué », le média touché en premier ; garder retire le média des suppressions pour toutes ses années de marquage, l'undo le remarque ; pile vidée ou retour : le résumé, relu.

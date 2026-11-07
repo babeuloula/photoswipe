@@ -72,6 +72,45 @@ class ExoCardVideoPlayerTest {
     }
 
     @Test
+    fun `seeks within the playing video and keeps playing`() {
+        videoPlayer.play(first)
+
+        videoPlayer.seekTo(first, Duration.ofSeconds(12))
+
+        assertEquals(12_000L, player.currentPosition)
+        assertTrue(player.playWhenReady)
+        assertEquals(first, videoPlayer.playingUri)
+    }
+
+    @Test
+    fun `seeks within an ended video, which waits there to be played again`() {
+        videoPlayer.play(first)
+        videoPlayer.events.onPlaybackStateChanged(Player.STATE_ENDED)
+
+        videoPlayer.seekTo(first, Duration.ofSeconds(3))
+
+        assertNull(videoPlayer.endedUri)
+        assertFalse(player.playWhenReady)
+        assertEquals(Duration.ofSeconds(3), videoPlayer.position(first))
+    }
+
+    @Test
+    fun `loads a video not yet played, paused at the chosen position`() {
+        videoPlayer.seekTo(first, Duration.ofSeconds(7))
+
+        assertEquals(
+            first,
+            player.currentMediaItem
+                ?.localConfiguration
+                ?.uri
+                .toString(),
+        )
+        assertEquals(7_000L, player.currentPosition)
+        assertFalse(player.playWhenReady)
+        assertNull(videoPlayer.playingUri)
+    }
+
+    @Test
     fun `plays the video of the top card`() {
         videoPlayer.play(first)
 

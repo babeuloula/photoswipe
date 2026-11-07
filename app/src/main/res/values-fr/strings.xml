@@ -27,6 +27,8 @@
     <string name="deck_video_pause">Mettre la vidéo en pause</string>
     <string name="deck_video_sound_on">Activer le son</string>
     <string name="deck_video_sound_off">Couper le son</string>
+    <string name="deck_video_position">Position dans la vidéo</string>
+    <string name="deck_video_position_state">%1$s sur %2$s</string>
     <string name="deck_media_unavailable">Aperçu indisponible</string>
     <string name="deck_error">Les souvenirs de ce jour n\'ont pas pu être chargés.</string>
     <string name="deck_retry">Réessayer</string>

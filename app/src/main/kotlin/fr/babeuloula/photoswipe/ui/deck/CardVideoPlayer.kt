@@ -29,6 +29,7 @@ import java.time.Duration
  * Lecteur vidéo de la pile (SPEC §4.3, §7) : une seule instance, passée de carte en carte. La
  * carte du dessus d'une vidéo le démarre après un court délai ; elle l'arrête en quittant la pile.
  */
+@Suppress("TooManyFunctions") // Une fonction par action de l'utilisateur ou du cycle de vie de l'écran.
 interface CardVideoPlayer {
     /** Lecteur à afficher dans la surface vidéo de la carte. */
     val player: Player
@@ -72,6 +73,16 @@ interface CardVideoPlayer {
 
     /** Pause demandée par l'utilisateur : la vidéo ne reprend pas seule au retour au premier plan. */
     fun pauseByUser(uri: String)
+
+    /**
+     * Déplace la lecture de [uri] à [position] (barre de progression) : une vidéo en lecture
+     * continue de là ; en pause ou terminée, elle y attend que l'utilisateur la relance. Une vidéo
+     * pas encore chargée l'est, en pause, à cette position.
+     */
+    fun seekTo(
+        uri: String,
+        position: Duration,
+    )
 
     /** Arrête la lecture si c'est [uri] qui est en cours : la carte suivante a pu déjà démarrer. */
     fun stop(uri: String)
@@ -207,6 +218,22 @@ class ExoCardVideoPlayer(
         pausedByUser = true
         exoPlayer.playWhenReady = false
         playingUri = null
+    }
+
+    override fun seekTo(
+        uri: String,
+        position: Duration,
+    ) {
+        if (uri != currentUri) {
+            currentUri = uri
+            pendingResume = null
+            exoPlayer.setMediaItem(MediaItem.fromUri(uri), position.toMillis())
+            exoPlayer.prepare()
+            exoPlayer.playWhenReady = false
+        } else {
+            exoPlayer.seekTo(position.toMillis())
+        }
+        endedUri = null
     }
 
     override fun stop(uri: String) {
