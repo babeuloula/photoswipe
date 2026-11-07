@@ -71,6 +71,13 @@ android {
         }
     }
 
+    // Pas de bloc chiffré des dépendances dans l'APK ni l'AAB (PS-128) : F-Droid le refuse, car seul
+    // Google peut le lire. La liste des bibliothèques reste lisible dans gradle/libs.versions.toml.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true

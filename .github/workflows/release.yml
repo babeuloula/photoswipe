@@ -1,6 +1,7 @@
 # Release (PS-115) : pousser un tag vX.Y.Z construit l'application signée et la joint à la version
 # GitHub du tag. versionName vient du tag (AppVersion de build-logic), versionCode du nombre de
-# commits : le checkout récupère donc tout l'historique et les tags.
+# commits : le checkout récupère donc tout l'historique et les tags. version.properties, joint à la
+# version, donne ces deux numéros à F-Droid, qui ne sait pas les lire dans le code (PS-128).
 #
 # Secrets du dépôt (Settings → Secrets and variables → Actions), jamais dans le dépôt ni les journaux :
 #   PHOTOSWIPE_UPLOAD_KEYSTORE_BASE64   clé d'upload (~/.android/photoswipe-upload.jks) encodée en base64
@@ -81,6 +82,14 @@ jobs:
           mkdir -p dist
           cp app/build/outputs/bundle/release/app-release.aab "dist/photoswipe-$TAG.aab"
           cp app/build/outputs/apk/release/app-release.apk "dist/photoswipe-$TAG.apk"
+          # Numéros lus dans l'APK construit, pour la vérification des mises à jour de F-Droid.
+          aapt2="$ANDROID_HOME"/build-tools/"$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"/aapt2
+          badging=$("$aapt2" dump badging app/build/outputs/apk/release/app-release.apk | head -1)
+          {
+            echo "versionCode=$(echo "$badging" | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p")"
+            echo "versionName=$(echo "$badging" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")"
+          } > dist/version.properties
+          cat dist/version.properties
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/* --clobber
           else
