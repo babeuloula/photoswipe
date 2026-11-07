@@ -42,7 +42,7 @@ Pousser un tag `vX.Y.Z` lance le workflow `.github/workflows/release.yml` (PS-11
 1. checkout de tout l'historique et des tags (`versionCode` = nombre de commits, `versionName` = version du tag) ;
 2. clé d'upload reconstituée depuis les secrets dans le dossier temporaire du runner, et `keystore.properties` qui la désigne ;
 3. `./gradlew test quality bundleRelease assembleRelease`, puis vérification des signatures (`jarsigner`, `apksigner`) ;
-4. version GitHub du tag créée (notes générées depuis les PR) avec `photoswipe-vX.Y.Z.aab` (pour le Play Store) et `photoswipe-vX.Y.Z.apk` (installation directe) ; si elle existe déjà, ses fichiers sont remplacés ;
+4. version GitHub du tag créée (notes générées depuis les PR) avec `photoswipe-vX.Y.Z.aab` (pour le Play Store), `photoswipe-vX.Y.Z.apk` (installation directe) et `version.properties` (`versionCode` et `versionName` lus dans l'APK par `aapt2`, pour F-Droid) ; si elle existe déjà, ses fichiers sont remplacés ;
 5. clé et `keystore.properties` effacés, même en cas d'échec.
 
 Secrets du dépôt (Settings → Secrets and variables → Actions) :
@@ -54,6 +54,18 @@ Secrets du dépôt (Settings → Secrets and variables → Actions) :
 | `PHOTOSWIPE_UPLOAD_KEY_PASSWORD` | `keyPassword` de `keystore.properties` |
 
 Sans ces secrets, le workflow s'arrête avant le build : aucune release non signée n'est publiée.
+
+Sans la CI (crédits GitHub Actions épuisés), joindre ces trois fichiers à la main : `./gradlew :app:bundleRelease :app:assembleRelease` sur le commit du tag, `version.properties` écrit comme dans le workflow, puis `gh release upload vX.Y.Z …`.
+
+## F-Droid (PS-128)
+
+F-Droid compile l'application depuis les sources et la signe avec sa propre clé : on ne passe pas d'une installation Play Store à une installation F-Droid sans désinstaller.
+
+- **Fiche** : `fastlane/metadata/android/en-US/` et `fr-FR/` (titre, descriptions courte et complète, icône 512 × 512, captures de `screenshots/`), lus par F-Droid dans le dépôt. Les textes reprennent la fiche du Play Store : la modifier ici aussi. L'icône est le rendu de l'icône adaptative (`ic_launcher_foreground` sur `launcher_background`), recadré sur ses 72 dp visibles.
+- **Recette** : `metadata/fr.babeuloula.photoswipe.yml` dans [fdroiddata](https://gitlab.com/fdroid/fdroiddata), avec `subdir: app`, `gradle: [yes]` (build `release` non signé, faute de `keystore.properties`) et le JDK 17 installé par `sudo` (toolchain JVM 17 du projet).
+- **Mises à jour automatiques** : le `versionCode` (nombre de commits) ne se lit pas dans le code, donc `UpdateCheckMode: HTTP` lit `https://github.com/babeuloula/photoswipe/releases/latest/download/version.properties`, et `AutoUpdateMode: Version v%v` compile le tag. Chaque release GitHub doit donc porter `version.properties`. F-Droid clone tout l'historique : il retrouve le même `versionCode` au même tag.
+- **Bloc des dépendances** : `dependenciesInfo` désactivé dans `app/build.gradle.kts`, F-Droid refusant ce bloc chiffré pour Google dans la signature de l'APK.
+- **Notes de version** (facultatif) : `fastlane/metadata/android/<langue>/changelogs/<versionCode>.txt`, 500 caractères au plus.
 
 ## Autorisations à déclarer dans la Play Console
 - `SCHEDULE_EXACT_ALARM` (PS-125, ADR 0031) : le rappel quotidien et sa reprogrammation arrivent à l'heure choisie par l'utilisateur. Déclarer cet usage (« rappel choisi par l'utilisateur ») dans le formulaire des autorisations ; l'autorisation est demandée à l'utilisateur dans « Alarmes et rappels », pas `USE_EXACT_ALARM`.
