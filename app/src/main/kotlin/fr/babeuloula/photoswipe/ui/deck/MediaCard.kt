@@ -173,9 +173,12 @@ private fun BoxScope.activeVideo(
     val playing = videoPlayer.playingUri == card.uri
     val positionState = remember(card.uri) { mutableStateOf(Duration.ZERO) }
     var position by positionState
-    // Plein écran (PS-119), gardé quand une rotation recrée l'activité.
-    var fullscreen by rememberSaveable(card.uri) { mutableStateOf(false) }
-    if (fullscreen) FullscreenVideo(card = card, videoPlayer = videoPlayer, onExit = { fullscreen = false })
+    // Plein écran (PS-119) : vidéo ouverte en plein écran, tenue par la pile pour survivre à la
+    // recréation de l'activité par une rotation (PS-126) ; à défaut, par la carte.
+    val ownFullscreen = rememberSaveable { mutableStateOf<String?>(null) }
+    val fullscreenUri = LocalFullscreenVideo.current ?: ownFullscreen
+    val fullscreen = fullscreenUri.value == card.uri
+    if (fullscreen) FullscreenVideo(card = card, videoPlayer = videoPlayer, onExit = { fullscreenUri.value = null })
     // Le temps restant n'avance que pendant la lecture ; en pause ou à la fin, il est lu une fois.
     LaunchedEffect(card.uri, playing) {
         position = videoPlayer.position(card.uri) ?: Duration.ZERO
@@ -208,7 +211,7 @@ private fun BoxScope.activeVideo(
         positionState = positionState,
         duration = card.duration,
         player = videoPlayer,
-        openFullscreen = { fullscreen = true },
+        openFullscreen = { fullscreenUri.value = card.uri },
     )
 }
 

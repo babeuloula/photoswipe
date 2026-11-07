@@ -1,9 +1,7 @@
 package fr.babeuloula.photoswipe.ui.deck
 
-import android.content.pm.ActivityInfo
 import android.view.WindowInsets
 import android.view.WindowInsetsController
-import androidx.activity.compose.LocalActivity
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -25,10 +23,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -52,6 +52,7 @@ import androidx.media3.ui.compose.SURFACE_TYPE_TEXTURE_VIEW
 import androidx.media3.ui.compose.modifiers.resizeWithContentScale
 import androidx.media3.ui.compose.state.rememberPresentationState
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.common.AllowRotation
 import kotlinx.coroutines.delay
 import java.time.Duration
 
@@ -237,22 +238,11 @@ private fun ImmersiveWindow() {
 }
 
 /**
- * Laisse l'écran suivre l'orientation du téléphone (selon sa rotation automatique) tant qu'il est
- * affiché, puis rend le portrait du manifeste (PS-119). Une rotation recrée l'activité : l'écran
- * n'est alors pas quitté et l'orientation reste libre.
+ * Vidéo ouverte en plein écran (son URI, `null` sinon), tenue par la pile (`LoadedDeck`) et
+ * enregistrée avec l'état de l'écran : une rotation recrée l'activité, le plein écran reste ouvert
+ * (PS-126). `null` hors d'une pile : la carte tient alors elle-même l'état.
  */
-@Composable
-internal fun AllowRotation() {
-    val activity = LocalActivity.current ?: return
-    DisposableEffect(activity) {
-        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
-        onDispose {
-            if (!activity.isChangingConfigurations) {
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            }
-        }
-    }
-}
+val LocalFullscreenVideo = staticCompositionLocalOf<MutableState<String?>?> { null }
 
 /** Bouton « Plein écran » de la carte vidéo, sous celui du son. */
 @Composable
