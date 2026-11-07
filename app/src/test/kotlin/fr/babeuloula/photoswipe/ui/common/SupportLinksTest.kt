@@ -44,9 +44,17 @@ class SupportLinksTest {
     }
 
     @Test
+    fun `opens the source code repository`() {
+        assertTrue(SupportLinks.openSourceCode(context, startingOnly("https")))
+
+        assertEquals(listOf("https://github.com/babeuloula/photoswipe"), started)
+    }
+
+    @Test
     fun `reports when no app can open the link`() {
         assertFalse(SupportLinks.openRating(context, startingOnly()))
         assertFalse(SupportLinks.openDonation(context, startingOnly()))
+        assertFalse(SupportLinks.openSourceCode(context, startingOnly()))
         assertTrue(started.isEmpty())
     }
 }

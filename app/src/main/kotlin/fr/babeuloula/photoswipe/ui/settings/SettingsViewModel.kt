@@ -120,6 +120,11 @@ sealed interface SettingsEvent {
         override val effect: SettingsEffect get() = SettingsEffect.OpenLicenses
     }
 
+    /** « Code source » de la section « À propos » : le dépôt GitHub (PS-127). */
+    data object OpenSourceCode : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.OpenSourceCode
+    }
+
     /** « Rappel à l'heure pile » : ouvrir « Alarmes et rappels » d'Android (PS-125). */
     data object OpenExactAlarmSettings : OpensScreen {
         override val effect: SettingsEffect get() = SettingsEffect.OpenExactAlarmSettings
@@ -181,6 +186,9 @@ sealed interface SettingsEffect {
 
     /** Ouvrir la page de don PayPal. */
     data object OpenDonation : SettingsEffect
+
+    /** Ouvrir le dépôt du code source dans le navigateur. */
+    data object OpenSourceCode : SettingsEffect
 }
 
 /**

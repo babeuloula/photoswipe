@@ -208,7 +208,7 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `opens the Play Store to rate the app and PayPal to donate`() =
+    fun `opens the Play Store to rate the app, PayPal to donate and the source code`() =
         runTest {
             val viewModel = settingsViewModel()
 
@@ -217,6 +217,9 @@ class SettingsViewModelTest {
 
             viewModel.onEvent(SettingsEvent.Donate)
             assertEquals(SettingsEffect.OpenDonation, viewModel.uiEffects.first())
+
+            viewModel.onEvent(SettingsEvent.OpenSourceCode)
+            assertEquals(SettingsEffect.OpenSourceCode, viewModel.uiEffects.first())
         }
 
     @Test

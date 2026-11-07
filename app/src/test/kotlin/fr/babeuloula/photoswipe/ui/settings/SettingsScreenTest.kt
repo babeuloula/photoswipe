@@ -212,6 +212,15 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `opens the source code from the about section`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
+
+        composeRule.onNodeWithText(text(R.string.settings_about_source_code)).performScrollTo().performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenSourceCode), events)
+    }
+
+    @Test
     fun `shows the app language and opens its system setting`() {
         composeRule.activity.setContent {
             PhotoSwipeTheme {

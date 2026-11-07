@@ -72,6 +72,7 @@ fun SettingsRoute(
                 SettingsEffect.OpenNotificationSettings,
                 SettingsEffect.OpenRating,
                 SettingsEffect.OpenDonation,
+                SettingsEffect.OpenSourceCode,
                 -> {
                     if (!openOutside(context, effect, viewModel.developerTools)) {
                         scope.launch { snackbarHostState.showSnackbar(resources.getString(R.string.link_unavailable)) }
@@ -125,7 +126,7 @@ private suspend fun SnackbarHostState.showDenied(
 
 /**
  * Ouvre l'écran hors de l'application demandé par [effect] : réglage d'Android, outils
- * développeur, fiche du Play Store ou page de don (ADR 0029). Renvoie `false` si rien ne peut
+ * développeur, fiche du Play Store, page de don ou code source (ADR 0029). Renvoie `false` si rien ne peut
  * l'ouvrir.
  */
 private fun openOutside(
@@ -140,6 +141,10 @@ private fun openOutside(
 
         SettingsEffect.OpenDonation -> {
             SupportLinks.openDonation(context)
+        }
+
+        SettingsEffect.OpenSourceCode -> {
+            SupportLinks.openSourceCode(context)
         }
 
         else -> {
