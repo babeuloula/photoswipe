@@ -3,6 +3,7 @@
 # Deux jobs indépendants : le build JVM (obligatoire) et les tests instrumentés sur émulateur (PS-30).
 # Les tests d'architecture Konsist (module :architecture-tests) tournent avec `test`.
 # Le nom du job est un check obligatoire du ruleset de main (ADR 0004) : le renommer impose de mettre à jour le ruleset.
+# Dépréciations (PS-132) : relevées dans le journal du build, en avertissements et en commentaire de PR, sans bloquer.
 name: CI
 
 on:
@@ -22,6 +23,10 @@ jobs:
     name: Quality, unit tests and debug build
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Écriture seulement pour le commentaire des dépréciations sur la PR (PS-132).
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -40,9 +45,9 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
-      # Script de seed de l'émulateur (PS-70) : tests Python (bibliothèque standard) et shellcheck,
-      # tous deux préinstallés sur le runner.
-      - name: Seed script tests and shellcheck
+      # Scripts (seed de l'émulateur PS-70, notes F-Droid PS-129, rapport des dépréciations PS-132) :
+      # tests Python (bibliothèque standard) et shellcheck, tous deux préinstallés sur le runner.
+      - name: Script tests and shellcheck
         run: |
           python3 -m unittest discover -s scripts -v
           shellcheck scripts/*.sh
@@ -50,8 +55,35 @@ jobs:
       # Une seule invocation Gradle : avec org.gradle.parallel, Gradle répartit tests, qualité et build
       # entre les cœurs du runner et ne compile chaque module qu'une fois.
       # --continue : un échec n'arrête pas les tâches indépendantes, toutes les erreurs remontent d'un coup.
+      # --warning-mode all et le script d'init (compilation Kotlin hors build cache) : toutes les
+      # dépréciations apparaissent dans build.log, relu par l'étape suivante.
       - name: Unit tests, quality (ktlint, detekt, Android Lint) and debug build
-        run: ./gradlew test quality assembleDebug --continue --console=plain
+        run: |
+          set -o pipefail
+          ./gradlew test quality assembleDebug --continue --console=plain --warning-mode all \
+            --init-script .github/ci/kotlin-warnings.init.gradle.kts 2>&1 | tee build.log
+
+      # Avertissements jaunes (lignes du code, run), résumé du job et commentaire unique sur la PR,
+      # mis à jour à chaque push. Jamais bloquant : la CI reste verte (continue-on-error).
+      - name: Deprecation report
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          python3 scripts/deprecation_report.py build.log --root "$GITHUB_WORKSPACE" --markdown deprecations.md
+          cat deprecations.md >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$PR" ]; then
+            exit 0
+          fi
+          existing=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.body | startswith("<!-- photoswipe-deprecations -->")) | .id' | head -1)
+          if [ -n "$existing" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$existing" -F body=@deprecations.md >/dev/null
+          elif grep -q "⚠️" deprecations.md; then
+            gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@deprecations.md >/dev/null
+          fi
 
       # Récapitulatif des tests JUnit dans le résumé du run, même en cas d'échec d'une étape.
       # annotate_only : annotations et résumé seulement, sans créer de check (aucune permission en écriture).
