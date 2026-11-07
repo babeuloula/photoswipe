@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -281,6 +282,11 @@ private fun CardStack(
     nextCardProgress: () -> Float,
     modifier: Modifier = Modifier,
 ) {
+    // Photo du dessus ouverte en grand (PS-117) ; gardée à la recréation de l'activité.
+    var viewerOpen by rememberSaveable(state.current.id.value) { mutableStateOf(false) }
+    if (viewerOpen) {
+        PhotoViewer(card = state.current, onClose = { viewerOpen = false })
+    }
     Box(modifier = modifier) {
         state.next?.let { next ->
             key(next.id) {
@@ -308,6 +314,7 @@ private fun CardStack(
                 requestedExit = requestedExit,
                 returningFrom = state.returningFrom,
                 onIndicationChange = onIndicationChange,
+                onOpen = { viewerOpen = true },
                 modifier = Modifier.fillMaxSize(),
             )
         }

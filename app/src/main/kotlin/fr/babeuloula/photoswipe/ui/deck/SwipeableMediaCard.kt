@@ -83,6 +83,8 @@ internal enum class SwipeTarget { LEFT, RIGHT, MENU }
  * le menu l'animent. [returningFrom] la fait entrer depuis ce côté jusqu'au centre : l'animation
  * inverse de sa sortie, quand sa décision est annulée.
  *
+ * [onOpen] est appelé par un appui sur une photo, pour l'ouvrir en grand (PS-117).
+ *
  * [onIndicationChange] reçoit l'indicateur du geste à chaque image : la pile en tire le bouton à
  * mettre en avant et la remontée de la carte suivante.
  *
@@ -97,6 +99,7 @@ fun SwipeableMediaCard(
     requestedExit: CardSide? = null,
     returningFrom: CardSide? = null,
     onIndicationChange: (SwipeIndication?) -> Unit = {},
+    onOpen: (() -> Unit)? = null,
 ) {
     BoxWithConstraints(modifier = modifier) {
         val size = with(LocalDensity.current) { Offset(maxWidth.toPx(), maxHeight.toPx()) }
@@ -169,7 +172,7 @@ fun SwipeableMediaCard(
         ) {
             val indication = swipeIndication(drag.value, size)
             SideEffect { onIndicationChange(indication) }
-            MediaCard(card = card, active = true, modifier = Modifier.matchParentSize())
+            MediaCard(card = card, active = true, onOpen = onOpen, modifier = Modifier.matchParentSize())
             SwipeIndicator(indication = indication, modifier = Modifier.matchParentSize())
         }
     }
