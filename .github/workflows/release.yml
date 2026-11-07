@@ -1,36 +1,82 @@
-# Release (PS-115) : pousser un tag vX.Y.Z construit l'application signée et la joint à la version
-# GitHub du tag. versionName vient du tag (AppVersion de build-logic), versionCode du nombre de
-# commits : le checkout récupère donc tout l'historique et les tags. version.properties, joint à la
-# version, donne ces deux numéros à F-Droid, qui ne sait pas les lire dans le code (PS-128).
+# Releases (PS-115, PS-128, PS-130, ADR 0032).
+#
+# Release officielle : lancer ce workflow à la main (Actions → Release → Run workflow) depuis main,
+# avec la version vX.Y.Z. Il crée la branche release/vX.Y.Z, y commite les notes de version F-Droid
+# (scripts/fdroid-changelog.sh), ouvre la PR vers main, lance tests et qualité, construit l'AAB et
+# l'APK signés par la clé d'upload, pose le tag vX.Y.Z sur ce commit et crée la release GitHub
+# (notes générées, AAB, APK, version.properties pour F-Droid). Si une étape échoue, rien n'est
+# tagué ni publié. Ensuite, merger la PR en merge commit (pas de squash ni de rebase) pour garder
+# le commit tagué dans l'historique de main.
+#
+# Tag ou release créé à la main : seulement vX.Y.Z-dev.N. Build debug (outils développeur compris),
+# APK seul joint à une pré-version, jamais « latest » : F-Droid ne la lit pas. Un tag d'une autre
+# forme (v1.2.0, 1.2.0-dev.3…) est supprimé, avec sa release, et le workflow échoue : aucune release
+# officielle à la main. Un tag posé sur un commit d'avant PS-130 lance l'ancien workflow de ce commit.
+# Les tags poussés par ce workflow (jeton GITHUB_TOKEN) ne relancent pas d'événement push.
+#
+# versionName vient du tag (AppVersion de build-logic), versionCode du nombre de commits : le
+# checkout récupère donc tout l'historique et les tags.
 #
 # Secrets du dépôt (Settings → Secrets and variables → Actions), jamais dans le dépôt ni les journaux :
 #   PHOTOSWIPE_UPLOAD_KEYSTORE_BASE64   clé d'upload (~/.android/photoswipe-upload.jks) encodée en base64
 #   PHOTOSWIPE_UPLOAD_KEYSTORE_PASSWORD mot de passe du magasin de clés
 #   PHOTOSWIPE_UPLOAD_KEY_PASSWORD      mot de passe de la clé (alias « upload »)
+# Réglage du dépôt : Settings → Actions → General → « Allow GitHub Actions to create and approve
+# pull requests », pour que le workflow ouvre la PR de release.
 name: Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version à publier, par exemple v1.2.0"
+        required: true
+        type: string
+  # Tous les tags, pour que le contrôle des tags poussés à la main voie aussi ceux sans « v ».
   push:
-    tags: ["v*"]
+    tags: ["**"]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ inputs.version || github.ref }}
   cancel-in-progress: false
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   release:
     name: Signed release build
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.version }}
     steps:
+      - name: Check the version
+        run: |
+          if [ "$GITHUB_REF_NAME" != "main" ]; then
+            echo "::error::Run this workflow from main."
+            exit 1
+          fi
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must look like v1.2.0, got '$TAG'."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
           fetch-tags: true
+
+      - name: Check that the version is new
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null || git ls-remote --exit-code origin "refs/heads/release/$TAG" >/dev/null; then
+            echo "::error::$TAG or release/$TAG already exists."
+            exit 1
+          fi
 
       - name: Set up JDK 17
         uses: actions/setup-java@v6
@@ -43,6 +89,16 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
+
+      # Notes F-Droid tirées des notes que GitHub générera pour la release, dans le commit tagué.
+      - name: Commit the F-Droid changelog on release/${{ inputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "release/$TAG"
+          scripts/fdroid-changelog.sh "$TAG" main
+          git add fastlane/metadata/android/en-US/changelogs/default.txt
+          git commit --allow-empty -m "docs(release): F-Droid changelog for $TAG"
 
       # Clé d'upload écrite dans le dossier temporaire du runner, hors du dépôt, et keystore.properties
       # qui la désigne (lu par app/build.gradle.kts). Sans secret, la release s'arrête : pas de build non signé.
@@ -64,6 +120,10 @@ jobs:
             echo "keyPassword=$KEY_PASSWORD"
           } > keystore.properties
 
+      # Tag local d'abord : versionName (git describe) vaut alors X.Y.Z dans le build.
+      - name: Tag the release commit
+        run: git tag -a "$TAG" -m "PhotoSwipe ${TAG#v}"
+
       - name: Unit tests, quality and signed release build
         run: ./gradlew test quality bundleRelease assembleRelease --continue --console=plain
 
@@ -74,10 +134,8 @@ jobs:
           "$ANDROID_HOME"/build-tools/"$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"/apksigner verify \
             app/build/outputs/apk/release/app-release.apk
 
-      - name: Publish the GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+      # Tout est publié à la fin, une fois le build vérifié : un échec plus tôt ne laisse rien.
+      - name: Publish the branch, the pull request, the tag and the GitHub release
         run: |
           mkdir -p dist
           cp app/build/outputs/bundle/release/app-release.aab "dist/photoswipe-$TAG.aab"
@@ -86,16 +144,81 @@ jobs:
           aapt2="$ANDROID_HOME"/build-tools/"$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"/aapt2
           badging=$("$aapt2" dump badging app/build/outputs/apk/release/app-release.apk | head -1)
           {
-            echo "versionCode=$(echo "$badging" | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p")"
-            echo "versionName=$(echo "$badging" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")"
+            echo "versionCode=$(echo "$badging" | sed -n "s/.*versionCode='\\([0-9]*\\)'.*/\\1/p")"
+            echo "versionName=$(echo "$badging" | sed -n "s/.*versionName='\\([^']*\\)'.*/\\1/p")"
           } > dist/version.properties
           cat dist/version.properties
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" dist/* --clobber
-          else
-            gh release create "$TAG" dist/* --title "PhotoSwipe ${TAG#v}" --generate-notes --verify-tag
-          fi
+          previous=$(git tag --list "v*" --sort=-v:refname | grep -v -- "-dev" | grep -vx "$TAG" | head -1)
+          git push origin "refs/tags/$TAG"
+          gh release create "$TAG" dist/* --title "PhotoSwipe ${TAG#v}" --generate-notes \
+            ${previous:+--notes-start-tag "$previous"} --verify-tag --latest
+
+      # La release est publiée : une PR impossible à ouvrir (réglage du dépôt) ne la fait pas échouer.
+      - name: Open the release pull request
+        continue-on-error: true
+        run: |
+          git push origin "release/$TAG"
+          gh pr create --base main --head "release/$TAG" --title "chore(release): $TAG" --body \
+            "Release $TAG : notes de version F-Droid. Le tag $TAG pointe sur le commit de cette PR. À merger en **merge commit** (pas de squash ni de rebase) pour garder ce commit dans l'historique de main." \
+            || { echo "::warning::Could not open the pull request: open release/$TAG → main by hand (merge commit)."; exit 1; }
 
       - name: Remove the upload key
         if: ${{ always() }}
         run: rm -f "$RUNNER_TEMP/upload.jks" keystore.properties
+
+  development:
+    name: Development build
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      # Une release officielle ne se crée que par le workflow : tout autre tag est retiré.
+      - name: Refuse anything but a development tag
+        run: |
+          if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-dev\.[0-9]+$ ]]; then
+            exit 0
+          fi
+          echo "::error::Manual tags must look like vX.Y.Z-dev.N (for example v1.2.0-dev.3). Official releases go through Actions → Release → Run workflow. Removing $TAG."
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes
+          else
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$TAG"
+          fi
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+
+      # Build debug : outils développeur compris, signé par la clé de debug partagée (PS-110).
+      - name: Debug build
+        run: ./gradlew assembleDebug --console=plain
+
+      # Pré-version, jamais « latest » : la release lue par F-Droid reste la dernière officielle.
+      - name: Publish the development APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk "dist/photoswipe-$TAG-debug.apk"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" --prerelease --latest=false
+          else
+            gh release create "$TAG" dist/* --title "PhotoSwipe ${TAG#v} (debug)" --generate-notes \
+              --verify-tag --prerelease --latest=false
+          fi

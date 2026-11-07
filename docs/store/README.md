@@ -20,7 +20,7 @@ Restent dans le dépôt :
 
 - `versionName` vient du dernier tag Git `vX.Y.Z` (`AppVersion` de `build-logic`) : `1.2.0` sur le commit du tag, `1.2.0-dev.5` cinq commits plus loin, `0.0.0-dev` sans tag.
 - `versionCode` est le nombre de commits (PS-110) : toujours croissant, donc accepté par le Play Store à chaque nouvelle version.
-- Publier une version : `git tag v1.0.0 && git push origin v1.0.0`. Le workflow `Release` (voir plus bas) construit et publie le reste.
+- Publier une version : Actions → Release → Run workflow avec `vX.Y.Z` (voir plus bas). Un tag poussé à la main ne peut être qu'une pré-version de debug `vX.Y.Z-dev.N`.
 
 ## Build release signé (AAB)
 
@@ -35,15 +35,22 @@ Restent dans le dépôt :
 3. `./gradlew :app:bundleRelease` produit `app/build/outputs/bundle/release/app-release.aab`, signé par cette clé. Sans `keystore.properties`, l'AAB n'est pas signé.
 4. Sauvegarder la clé et son mot de passe dans un gestionnaire de mots de passe : avec la signature d'application par Google Play, une clé d'upload perdue se remplace, mais il faut passer par le support Google.
 
-## Release par tag (CI)
+## Release par workflow (CI)
 
-Pousser un tag `vX.Y.Z` lance le workflow `.github/workflows/release.yml` (PS-115) :
+Une release officielle se publie **uniquement** par le workflow `.github/workflows/release.yml` lancé à la main (PS-130, ADR [0032](../decisions/0032-release-workflow.md)) : Actions → Release → Run workflow, sur `main`, avec la version `vX.Y.Z`.
 
-1. checkout de tout l'historique et des tags (`versionCode` = nombre de commits, `versionName` = version du tag) ;
-2. clé d'upload reconstituée depuis les secrets dans le dossier temporaire du runner, et `keystore.properties` qui la désigne ;
-3. `./gradlew test quality bundleRelease assembleRelease`, puis vérification des signatures (`jarsigner`, `apksigner`) ;
-4. version GitHub du tag créée (notes générées depuis les PR) avec `photoswipe-vX.Y.Z.aab` (pour le Play Store), `photoswipe-vX.Y.Z.apk` (installation directe) et `version.properties` (`versionCode` et `versionName` lus dans l'APK par `aapt2`, pour F-Droid) ; si elle existe déjà, ses fichiers sont remplacés ;
-5. clé et `keystore.properties` effacés, même en cas d'échec.
+1. la version doit avoir la forme `vX.Y.Z` et ne pas exister (ni tag, ni branche `release/vX.Y.Z`) ;
+2. branche `release/vX.Y.Z` depuis `main`, avec un commit des notes de version F-Droid (`scripts/fdroid-changelog.sh`, depuis le dernier tag officiel) ;
+3. clé d'upload reconstituée depuis les secrets dans le dossier temporaire du runner, et `keystore.properties` qui la désigne ; tag `vX.Y.Z` posé en local sur ce commit (`versionName` = `X.Y.Z`, `versionCode` = nombre de commits) ;
+4. `./gradlew test quality bundleRelease assembleRelease`, puis vérification des signatures (`jarsigner`, `apksigner`) ;
+5. seulement si tout est passé : branche poussée, PR « chore(release): vX.Y.Z » vers `main`, tag poussé, release GitHub créée (notes générées depuis le dernier tag officiel, marquée « latest ») avec `photoswipe-vX.Y.Z.aab` (Play Store), `photoswipe-vX.Y.Z.apk` (installation directe) et `version.properties` (`versionCode` et `versionName` lus dans l'APK par `aapt2`, pour F-Droid) ;
+6. clé et `keystore.properties` effacés, même en cas d'échec.
+
+Ensuite, **merger la PR en merge commit** (ni squash ni rebase), avec le contournement admin : une PR ouverte par le jeton du workflow ne lance pas la CI, mais le workflow a déjà passé tests et qualité sur ce commit. Le merge commit garde le commit tagué dans l'historique de `main`, pour que les builds suivants s'appellent `X.Y.Z-dev.N`. Sans merge, la release reste valable (Play Store, F-Droid) ; seuls les noms des builds debug suivants restent sur l'ancienne version.
+
+Réglage du dépôt requis : Settings → Actions → General → « Allow GitHub Actions to create and approve pull requests ».
+
+**Tag ou release créé à la main** (interface de GitHub ou `git push` d'un tag) : seul un tag de pré-version `vX.Y.Z-dev.N` est accepté, par exemple `v1.2.0-dev.3` (le nom affiché par l'application, préfixé de `v`). Le workflow construit alors la version **debug** (outils développeur compris, clé de debug partagée) et joint seulement `photoswipe-vX.Y.Z-dev.N-debug.apk` à une **pré-version**, jamais « latest » : F-Droid continue de lire la dernière release officielle. Tout autre tag poussé à la main (`v1.2.0`, `v1.2`…) est supprimé avec sa release, et le workflow échoue. Les tags `-dev` ne comptent pas dans le nom de version (`git describe --exclude "v*-dev*"`).
 
 Secrets du dépôt (Settings → Secrets and variables → Actions) :
 
@@ -55,7 +62,7 @@ Secrets du dépôt (Settings → Secrets and variables → Actions) :
 
 Sans ces secrets, le workflow s'arrête avant le build : aucune release non signée n'est publiée.
 
-Sans la CI (crédits GitHub Actions épuisés), joindre ces trois fichiers à la main : `./gradlew :app:bundleRelease :app:assembleRelease` sur le commit du tag, `version.properties` écrit comme dans le workflow, puis `gh release upload vX.Y.Z …`.
+**Seulement si les jobs GitHub Actions ne démarrent pas** (crédits épuisés : `gh run list` montre des échecs en quelques secondes ; sinon le contrôle des tags supprimerait le tag), faire à la main ce que fait le workflow : notes F-Droid (`scripts/fdroid-changelog.sh vX.Y.Z`) commitées par une PR sur `main`, tag `vX.Y.Z` sur ce commit, `./gradlew :app:bundleRelease :app:assembleRelease` sur ce commit, `version.properties` écrit comme dans le workflow, puis `gh release create vX.Y.Z …` avec les trois fichiers.
 
 ## F-Droid (PS-128)
 
@@ -65,7 +72,7 @@ F-Droid compile l'application depuis les sources et la signe avec sa propre clé
 - **Recette** : `metadata/fr.babeuloula.photoswipe.yml` dans [fdroiddata](https://gitlab.com/fdroid/fdroiddata), avec `subdir: app`, `gradle: [yes]` (build `release` non signé, faute de `keystore.properties`) et le JDK 17 installé par `sudo` (toolchain JVM 17 du projet).
 - **Mises à jour automatiques** : le `versionCode` (nombre de commits) ne se lit pas dans le code, donc `UpdateCheckMode: HTTP` lit `https://github.com/babeuloula/photoswipe/releases/latest/download/version.properties`, et `AutoUpdateMode: Version v%v` compile le tag. Chaque release GitHub doit donc porter `version.properties`. F-Droid clone tout l'historique : il retrouve le même `versionCode` au même tag.
 - **Bloc des dépendances** : `dependenciesInfo` désactivé dans `app/build.gradle.kts`, F-Droid refusant ce bloc chiffré pour Google dans la signature de l'APK.
-- **Notes de version** (PS-129) : `fastlane/metadata/android/en-US/changelogs/default.txt`, 500 caractères au plus, que F-Droid lit dans le commit qu'il compile (les autres langues reprennent l'anglais). Avant de créer la release vX.Y.Z, lancer `scripts/fdroid-changelog.sh vX.Y.Z` : il récupère les notes que GitHub générera pour elle (« Generate release notes ») et n'en garde que les PR `feat` et `fix`, sans préfixe ni ticket. Commiter le fichier sur `main`, puis créer la release sur ce commit.
+- **Notes de version** (PS-129) : `fastlane/metadata/android/en-US/changelogs/default.txt`, 500 caractères au plus, que F-Droid lit dans le commit qu'il compile (les autres langues reprennent l'anglais). Le workflow `Release` l'écrit dans le commit de la release (`scripts/fdroid-changelog.sh vX.Y.Z` : notes que GitHub génère depuis le dernier tag officiel, seulement les PR `feat` et `fix`, sans préfixe ni ticket).
 
 ## Autorisations à déclarer dans la Play Console
 - `SCHEDULE_EXACT_ALARM` (PS-125, ADR 0031) : le rappel quotidien et sa reprogrammation arrivent à l'heure choisie par l'utilisateur. Déclarer cet usage (« rappel choisi par l'utilisateur ») dans le formulaire des autorisations ; l'autorisation est demandée à l'utilisateur dans « Alarmes et rappels », pas `USE_EXACT_ALARM`.

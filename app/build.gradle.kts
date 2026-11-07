@@ -24,12 +24,13 @@ val commitCount: Int =
         .toIntOrNull() ?: 1
 
 // Nom de version : le dernier tag Git vX.Y.Z (1.2.0 sur le tag, 1.2.0-dev.5 après), 0.0.0-dev sans
-// tag (PS-72, `AppVersion` de build-logic).
+// tag (PS-72, `AppVersion` de build-logic). Les tags de pré-version vX.Y.Z-dev.N (PS-130) ne
+// comptent pas : ils nomment un build debug, pas une version.
 val versionFromTag: String =
     AppVersion.nameFrom(
         providers
             .exec {
-                commandLine("git", "describe", "--tags", "--long", "--match", "v[0-9]*")
+                commandLine("git", "describe", "--tags", "--long", "--match", "v[0-9]*", "--exclude", "v*-dev*")
                 isIgnoreExitValue = true
             }.standardOutput.asText
             .get(),
@@ -52,8 +53,9 @@ android {
         versionName = versionFromTag
     }
 
-    // Clé de debug partagée, versionnée dans le dépôt privé (PS-110) : tous les builds debug, de
-    // n'importe quelle machine, ont la même signature et se mettent à jour sans désinstaller l'app.
+    // Clé de debug partagée, versionnée dans le dépôt (PS-110), donc publique depuis qu'il l'est : tous
+    // les builds debug, de n'importe quelle machine, ont la même signature et se mettent à jour sans
+    // désinstaller l'app. Elle ne signe jamais une release.
     signingConfigs {
         getByName("debug") {
             storeFile = file("debug.keystore")

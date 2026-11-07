@@ -24,9 +24,16 @@ SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPTS
 readonly OUTPUT="$SCRIPTS/../fastlane/metadata/android/en-US/changelogs/default.txt"
 
+# Depuis le dernier tag officiel : les tags -dev (pré-versions de debug, PS-130) ne comptent pas.
+PREVIOUS="$(git -C "$SCRIPTS/.." tag --list "v*" --sort=-v:refname | grep -v -- "-dev" | grep -vx "$TAG" | head -1 || true)"
+readonly PREVIOUS
+args=(-f tag_name="$TAG" -f target_commitish="$TARGET")
+if [[ -n "$PREVIOUS" ]]; then
+    args+=(-f previous_tag_name="$PREVIOUS")
+fi
+
 mkdir -p "$(dirname "$OUTPUT")"
-gh api "repos/{owner}/{repo}/releases/generate-notes" \
-    -f tag_name="$TAG" -f target_commitish="$TARGET" --jq .body |
+gh api "repos/{owner}/{repo}/releases/generate-notes" "${args[@]}" --jq .body |
     python3 "$SCRIPTS/fdroid_changelog.py" >"$OUTPUT"
 
 echo "Wrote $OUTPUT:"
