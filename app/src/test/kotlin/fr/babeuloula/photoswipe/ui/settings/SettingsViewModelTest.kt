@@ -3,8 +3,11 @@ package fr.babeuloula.photoswipe.ui.settings
 import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReminderScheduler
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeUsageStatisticsRepository
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
+import fr.babeuloula.photoswipe.domain.model.UsageStatistics
+import fr.babeuloula.photoswipe.domain.usecase.GetUsageStatistics
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -17,6 +20,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import java.time.LocalDate
 import java.time.LocalTime
 
 class SettingsViewModelTest {
@@ -29,12 +33,15 @@ class SettingsViewModelTest {
     /** Permission de notification simulée, accordée par défaut. */
     private var notificationsAllowed = true
 
+    private val statistics = FakeUsageStatisticsRepository(LocalDate.of(2026, 3, 2))
+
     private fun settingsViewModel() =
         SettingsViewModel(
             settingsRepository = repository,
             updateReminderSettings = UpdateReminderSettings(repository, scheduler),
             notificationPermission = { notificationsAllowed },
             developerTools = { null },
+            getUsageStatistics = GetUsageStatistics(statistics),
         )
 
     private fun TestScope.collectEffects(viewModel: SettingsViewModel): List<SettingsEffect> {
@@ -187,6 +194,16 @@ class SettingsViewModelTest {
 
             assertTrue(effects.isEmpty())
             assertFalse(repository.reminder.enabled)
+        }
+
+    @Test
+    fun `shows the usage statistics`() =
+        runTest {
+            statistics.recordDeletion(12, 34_000_000)
+
+            val state = settingsViewModel().uiState.first { it.statistics != null }
+
+            assertEquals(UsageStatistics(LocalDate.of(2026, 3, 2), 12, 34_000_000), state.statistics)
         }
 
     @Test

@@ -10,6 +10,7 @@ import fr.babeuloula.photoswipe.data.seed.MediaStoreSeeder
 import fr.babeuloula.photoswipe.debug.DecisionsReset
 import fr.babeuloula.photoswipe.debug.DeveloperToolsActivity
 import fr.babeuloula.photoswipe.debug.GallerySeeder
+import fr.babeuloula.photoswipe.domain.port.UsageStatisticsRepository
 import fr.babeuloula.photoswipe.ui.settings.DeveloperToolsEntry
 
 /**
@@ -25,7 +26,14 @@ object DeveloperToolsModule {
         DeveloperToolsEntry { context -> Intent(context, DeveloperToolsActivity::class.java) }
 
     @Provides
-    fun provideDecisionsReset(cleaner: DatabaseCleaner): DecisionsReset = DecisionsReset(cleaner::clearAll)
+    fun provideDecisionsReset(
+        cleaner: DatabaseCleaner,
+        statistics: UsageStatisticsRepository,
+    ): DecisionsReset =
+        DecisionsReset {
+            cleaner.clearAll()
+            statistics.clear()
+        }
 
     @Provides
     fun provideGallerySeeder(seeder: MediaStoreSeeder): GallerySeeder =

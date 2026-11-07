@@ -9,11 +9,13 @@ import fr.babeuloula.photoswipe.data.reminder.WorkManagerReminderScheduler
 import fr.babeuloula.photoswipe.data.review.RoomDecisionJournal
 import fr.babeuloula.photoswipe.data.review.RoomReviewRepository
 import fr.babeuloula.photoswipe.data.settings.DataStoreSettingsRepository
+import fr.babeuloula.photoswipe.data.statistics.DataStoreUsageStatisticsRepository
 import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.port.ReminderScheduler
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
+import fr.babeuloula.photoswipe.domain.port.UsageStatisticsRepository
 import javax.inject.Singleton
 
 /**
@@ -35,6 +37,12 @@ abstract class PortsModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(implementation: DataStoreSettingsRepository): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUsageStatisticsRepository(
+        implementation: DataStoreUsageStatisticsRepository,
+    ): UsageStatisticsRepository
 
     @Binds
     abstract fun bindReminderScheduler(implementation: WorkManagerReminderScheduler): ReminderScheduler

@@ -4,6 +4,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeUsageStatisticsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
@@ -70,9 +71,49 @@ class TrashTest {
                 FakeReviewRepository(listOf(marked(1), marked(2), aReviewEntry(mediaId = 3, decision = KEPT)))
             val request = prepareTrash(repository)().single()
 
-            RecordTrashResult(repository, FakeDecisionJournal(repository))(request, confirmed = true)
+            RecordTrashResult(
+                repository,
+                FakeDecisionJournal(repository),
+                FakeUsageStatisticsRepository(),
+            )(request, confirmed = true)
 
             assertEquals(listOf(TRASHED, TRASHED, KEPT), repository.entries.map { it.decision })
+        }
+
+    @Test
+    fun `adds a confirmed deletion to the statistics, a media marked for two years counting once`() =
+        runTest {
+            val repository =
+                FakeReviewRepository(
+                    listOf(
+                        marked(1).copy(sizeBytes = 1_000),
+                        marked(1, reviewYear = 2025).copy(sizeBytes = 1_000),
+                        marked(2).copy(sizeBytes = 500),
+                    ),
+                )
+            val statistics = FakeUsageStatisticsRepository()
+
+            RecordTrashResult(repository, FakeDecisionJournal(repository), statistics)(
+                prepareTrash(repository)().single(),
+                confirmed = true,
+            )
+
+            assertEquals(2, statistics.current.deletedCount)
+            assertEquals(1_500L, statistics.current.freedBytes)
+        }
+
+    @Test
+    fun `does not count a refused deletion in the statistics`() =
+        runTest {
+            val repository = FakeReviewRepository(listOf(marked(1)))
+            val statistics = FakeUsageStatisticsRepository()
+
+            RecordTrashResult(repository, FakeDecisionJournal(repository), statistics)(
+                prepareTrash(repository)().single(),
+                confirmed = false,
+            )
+
+            assertEquals(0, statistics.current.deletedCount)
         }
 
     @Test
@@ -84,6 +125,7 @@ class TrashTest {
             RecordTrashResult(
                 repository,
                 FakeDecisionJournal(repository),
+                FakeUsageStatisticsRepository(),
             )(prepareTrash(repository)().single(), confirmed = false)
 
             assertEquals(entries, repository.entries)
@@ -96,7 +138,7 @@ class TrashTest {
             val requests = prepareTrash(repository, batchSize = 2)()
 
             requests.forEachIndexed { index, request ->
-                RecordTrashResult(repository, FakeDecisionJournal(repository))(
+                RecordTrashResult(repository, FakeDecisionJournal(repository), FakeUsageStatisticsRepository())(
                     request,
                     confirmed =
                         index != 1,

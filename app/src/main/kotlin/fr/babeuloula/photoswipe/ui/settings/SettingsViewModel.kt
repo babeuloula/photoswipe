@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
+import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
+import fr.babeuloula.photoswipe.domain.usecase.GetUsageStatistics
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
 import fr.babeuloula.photoswipe.permission.NotificationPermissionReader
 import kotlinx.coroutines.channels.Channel
@@ -26,11 +28,14 @@ import javax.inject.Inject
  * @property reminder réglages du rappel quotidien, `null` tant qu'ils ne sont pas lus.
  * @property timePickerOpen vrai pendant le choix de l'heure du rappel.
  * @property themeMode thème de l'application, `null` tant qu'il n'est pas lu.
+ * @property statistics statistiques d'utilisation (PS-122), `null` tant qu'elles ne sont pas lues
+ * ou si elles ne peuvent pas l'être.
  */
 data class SettingsUiState(
     val reminder: ReminderSettings? = null,
     val timePickerOpen: Boolean = false,
     val themeMode: ThemeMode? = null,
+    val statistics: UsageStatistics? = null,
 )
 
 /** Action de l'utilisateur sur les réglages. */
@@ -188,6 +193,7 @@ class SettingsViewModel
         private val notificationPermission: NotificationPermissionReader,
         /** Entrée des outils développeur : présente en debug seulement (SPEC §10). */
         val developerTools: DeveloperToolsEntry,
+        private val getUsageStatistics: GetUsageStatistics,
     ) : ViewModel() {
         private val state = MutableStateFlow(SettingsUiState())
         private val effects = Channel<SettingsEffect>(Channel.BUFFERED)
@@ -199,6 +205,9 @@ class SettingsViewModel
         val uiEffects: Flow<SettingsEffect> = effects.receiveAsFlow()
 
         init {
+            viewModelScope.launch {
+                runCatching { getUsageStatistics() }.onSuccess { stats -> state.update { it.copy(statistics = stats) } }
+            }
             viewModelScope.launch {
                 settingsRepository
                     .observeReminderSettings()

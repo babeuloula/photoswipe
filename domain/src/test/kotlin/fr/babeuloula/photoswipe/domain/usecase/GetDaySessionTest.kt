@@ -4,6 +4,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeUsageStatisticsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaAccess
@@ -79,7 +80,7 @@ class GetDaySessionTest {
             mark(2)
             val request = PrepareTrash(reviews, gallery, FakeMediaActionRequestFactory())().single()
 
-            RecordTrashResult(reviews, journal)(request, confirmed = true)
+            RecordTrashResult(reviews, journal, FakeUsageStatisticsRepository())(request, confirmed = true)
 
             assertEquals(listOf(1L), getDaySession()(today).decisions.map { it.media.id.value })
         }
