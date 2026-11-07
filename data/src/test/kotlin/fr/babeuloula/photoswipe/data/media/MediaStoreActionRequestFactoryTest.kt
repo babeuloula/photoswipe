@@ -24,14 +24,18 @@ class MediaStoreActionRequestFactoryTest {
     private val trashBatches = mutableListOf<List<Uri>>()
     private val favoriteBatches = mutableListOf<List<Uri>>()
 
+    /** Valeur demandée pour chaque lot de favoris : vrai pour un ajout, faux pour un retrait. */
+    private val favoriteValues = mutableListOf<Boolean>()
+
     private fun factory(batchSize: Int = MediaStoreActionRequestFactory.BATCH_SIZE) =
         MediaStoreActionRequestFactory(
             createTrash = {
                 trashBatches += it
                 intentSender
             },
-            createFavorite = {
-                favoriteBatches += it
+            createFavorite = { uris, favorite ->
+                favoriteBatches += uris
+                favoriteValues += favorite
                 intentSender
             },
             batchSize = batchSize,
@@ -69,6 +73,15 @@ class MediaStoreActionRequestFactoryTest {
 
         assertEquals(listOf(500, 500, 200), requests.map { it.mediaIds.size })
         assertTrue(trashBatches.isEmpty())
+    }
+
+    @Test
+    fun `adds to favorites, or removes from them`() {
+        factory().favoriteRequests(media.take(1))
+        val removal = factory().unfavoriteRequests(media.take(2))
+
+        assertEquals(listOf(true, false), favoriteValues)
+        assertEquals(setOf(MediaId(1), MediaId(2)), removal.single().mediaIds)
     }
 
     @Test

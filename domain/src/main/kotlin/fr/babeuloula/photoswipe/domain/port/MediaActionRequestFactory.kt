@@ -4,7 +4,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaItem
 
 /**
  * Prépare les demandes de confirmation système de fin de session (SPEC §3.5). Implémenté dans
- * `:data` avec `MediaStore.createTrashRequest` et `MediaStore.createFavoriteRequest`.
+ * `:data` avec `MediaStore.createTrashRequest` et `MediaStore.createFavoriteRequest` (ajout ou retrait).
  *
  * L'implémentation découpe les médias en lots (par exemple 500) pour rester sous la taille
  * maximale d'un Intent : chaque lot donne une demande. Une liste vide donne une liste vide.
@@ -15,4 +15,7 @@ interface MediaActionRequestFactory {
 
     /** Demandes d'ajout de [media] aux favoris système. */
     fun favoriteRequests(media: List<MediaItem>): List<MediaActionRequest>
+
+    /** Demandes de retrait de [media] des favoris système (PS-124). */
+    fun unfavoriteRequests(media: List<MediaItem>): List<MediaActionRequest>
 }
