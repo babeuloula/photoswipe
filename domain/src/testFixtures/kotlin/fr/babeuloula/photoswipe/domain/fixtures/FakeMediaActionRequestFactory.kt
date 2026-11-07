@@ -22,6 +22,8 @@ class FakeMediaActionRequestFactory(
 
     override fun favoriteRequests(media: List<MediaItem>): List<MediaActionRequest> = requests(Kind.FAVORITE, media)
 
+    override fun unfavoriteRequests(media: List<MediaItem>): List<MediaActionRequest> = requests(Kind.UNFAVORITE, media)
+
     private fun requests(
         kind: Kind,
         media: List<MediaItem>,
@@ -35,12 +37,15 @@ class FakeMediaActionRequestFactory(
 
         /** Ajout aux favoris. */
         FAVORITE,
+
+        /** Retrait des favoris. */
+        UNFAVORITE,
     }
 
     /**
      * Demande factice : sa nature et les médias qu'elle couvre, dans l'ordre reçu.
      *
-     * @property kind corbeille ou favori.
+     * @property kind corbeille, ajout ou retrait de favori.
      */
     data class FakeMediaActionRequest(
         val kind: Kind,

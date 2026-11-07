@@ -115,8 +115,11 @@ sealed interface DeckEvent {
     /** Menu fermé sans choix : la carte reste en place. */
     data object CloseMenu : DeckEvent
 
+    /** Action sur le favori de la carte du dessus : ajout ou retrait, et réponse de la galerie. */
+    sealed interface FavoriteEvent : DeckEvent
+
     /** « Favori » du menu : garder le média et demander aussitôt sa mise en favori à la galerie (SPEC §2). */
-    data object Favorite : DeckEvent
+    data object Favorite : FavoriteEvent
 
     /**
      * Réponse à la demande de favori de la galerie (dialogue d'Android, ou accord immédiat avec
@@ -126,7 +129,22 @@ sealed interface DeckEvent {
      */
     data class FavoriteRequestAnswered(
         val confirmed: Boolean,
-    ) : DeckEvent
+    ) : FavoriteEvent
+
+    /**
+     * « Retirer des favoris » du menu d'une carte en favori (PS-124) : sans décision de tri, la
+     * carte reste en place.
+     */
+    data object Unfavorite : FavoriteEvent
+
+    /**
+     * Réponse à la demande de retrait des favoris de la galerie.
+     *
+     * @property confirmed vrai si le retrait a été accepté.
+     */
+    data class UnfavoriteRequestAnswered(
+        val confirmed: Boolean,
+    ) : FavoriteEvent
 
     /** « Partager » du menu : envoyer le média du dessus ailleurs, sans changer son état (SPEC §2). */
     data object Share : DeckEvent
@@ -157,6 +175,16 @@ sealed interface DeckEffect {
      * @property intentSender demande système d'ajout aux favoris.
      */
     data class LaunchFavoriteRequest(
+        val intentSender: IntentSender,
+    ) : DeckEffect
+
+    /**
+     * Lancer la demande de retrait des favoris de la galerie (PS-124) ; la réponse revient par
+     * [DeckEvent.UnfavoriteRequestAnswered].
+     *
+     * @property intentSender demande système de retrait des favoris.
+     */
+    data class LaunchUnfavoriteRequest(
         val intentSender: IntentSender,
     ) : DeckEffect
 }
@@ -244,15 +272,8 @@ class DeckViewModel
                     )
                 }
 
-                DeckEvent.Favorite -> {
-                    decideTopCard(decisions.favoriteMedia::invoke, decisions.reviewMarkedMedia::favorite) { media ->
-                        // Le favori est demandé aussitôt à la galerie (SPEC §2) ; sinon, il reste en attente.
-                        galleryFavorite.request(media)?.let { effects.trySend(DeckEffect.LaunchFavoriteRequest(it)) }
-                    }
-                }
-
-                is DeckEvent.FavoriteRequestAnswered -> {
-                    viewModelScope.launch { if (galleryFavorite.answer(event.confirmed)) openSummaryWhenDone() }
+                is DeckEvent.FavoriteEvent -> {
+                    onFavoriteEvent(event)
                 }
 
                 DeckEvent.Undo -> {
@@ -268,7 +289,48 @@ class DeckViewModel
                 }
 
                 DeckEvent.Share -> {
-                    shareTopCard()
+                    // Partage du média du dessus, sans changer son état (SPEC §2).
+                    deck.firstOrNull()?.let { media ->
+                        setMenuOpen(false)
+                        effects.trySend(DeckEffect.Share(media.uri, media.type))
+                    }
+                }
+            }
+        }
+
+        /** Ajout ou retrait du favori de la carte du dessus, et réponses de la galerie. */
+        private fun onFavoriteEvent(event: DeckEvent.FavoriteEvent) {
+            when (event) {
+                DeckEvent.Favorite -> {
+                    decideTopCard(decisions.favoriteMedia::invoke, decisions.reviewMarkedMedia::favorite) { media ->
+                        // Le favori est demandé aussitôt à la galerie (SPEC §2) ; sinon, il reste en attente.
+                        galleryFavorite.request(media)?.let { effects.trySend(DeckEffect.LaunchFavoriteRequest(it)) }
+                    }
+                }
+
+                is DeckEvent.FavoriteRequestAnswered -> {
+                    viewModelScope.launch { if (galleryFavorite.answer(event.confirmed)) openSummaryWhenDone() }
+                }
+
+                DeckEvent.Unfavorite -> {
+                    // Retrait du favori de la carte du dessus (PS-124), sans décision de tri : un favori
+                    // seulement en attente est oublié aussitôt, un favori de la galerie passe par sa demande.
+                    val media = deck.firstOrNull() ?: return
+                    setMenuOpen(false)
+                    viewModelScope.launch {
+                        galleryFavorite
+                            .unfavorite(
+                                media,
+                            )?.let { effects.trySend(DeckEffect.LaunchUnfavoriteRequest(it)) }
+                        render()
+                    }
+                }
+
+                is DeckEvent.UnfavoriteRequestAnswered -> {
+                    viewModelScope.launch {
+                        galleryFavorite.answerRemoval(event.confirmed)
+                        render()
+                    }
                 }
             }
         }
@@ -382,13 +444,6 @@ class DeckViewModel
                 made.favoritePending -> CardSide.TOP
                 else -> CardSide.RIGHT
             }
-
-        /** Ferme le menu et demande le partage du média du dessus, qui reste en place. */
-        private fun shareTopCard() {
-            val media = deck.firstOrNull() ?: return
-            setMenuOpen(false)
-            effects.trySend(DeckEffect.Share(media.uri, media.type))
-        }
 
         /** Ouvre ou ferme le menu de la carte du dessus ; sans carte, il n'y a pas de menu. */
         private fun setMenuOpen(open: Boolean) {

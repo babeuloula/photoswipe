@@ -122,6 +122,7 @@ Une session = une revue de la pile d'un jour (ou « tout trier » sur la fenêtr
    - carte plein écran (image ou vidéo) avec le repère de bord de film « Il y a 3 ans · 14 mai 2023 » et le poids du fichier, et la progression du jour (« 4 sur 23 ») ;
    - glisser à gauche : indicateur rouge + icône corbeille ; à droite : indicateur vert + coche ; en haut : menu favori / partage (feuille avec un aperçu du média) ;
    - **boutons équivalents sous la carte** (supprimer / annuler / plus d'actions / garder), libellés, pour l'accessibilité et TalkBack ; celui du côté glissé se remplit pendant le geste ;
+   - carte déjà en favori (cœur) : le menu propose « Retirer des favoris » au lieu de « Ajouter aux favoris » ; favori de la galerie : demande système de retrait ; favori seulement en attente : oublié aussitôt ; la carte reste en place, sans décision de tri (PS-124) ;
    - jour retrié : pastille de la décision d'avant en haut de la carte (coche « Gardé la dernière fois », corbeille « Marqué pour suppression la dernière fois », le cœur pour un favori) ;
    - pile vidée : « Voir le résumé » et « Retour à l'accueil » ;
    - appui sur une photo : elle s'ouvre en grand sur fond noir, avec zoom (pincement jusqu'à ×5, double appui) ; glisser vers le bas, retour ou « Fermer » la referme sans décision ; comme le plein écran vidéo, elle suit l'orientation du téléphone, le reste de l'application restant en portrait (PS-117, PS-123) ;

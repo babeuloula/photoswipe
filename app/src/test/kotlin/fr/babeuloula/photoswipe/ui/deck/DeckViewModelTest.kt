@@ -24,6 +24,7 @@ import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
+import fr.babeuloula.photoswipe.domain.usecase.DropPendingFavorite
 import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
 import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
@@ -35,6 +36,7 @@ import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
 import fr.babeuloula.photoswipe.domain.usecase.RecordFavoriteResult
 import fr.babeuloula.photoswipe.domain.usecase.RequestFavorite
+import fr.babeuloula.photoswipe.domain.usecase.RequestUnfavorite
 import fr.babeuloula.photoswipe.domain.usecase.ReviewMarkedMedia
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import kotlinx.coroutines.flow.first
@@ -56,89 +58,7 @@ import java.time.LocalTime.NOON
 
 /** Robolectric : la route typée se relit depuis le `SavedStateHandle` avec le `Bundle` d'Android. */
 @RunWith(RobolectricTestRunner::class)
-class DeckViewModelTest {
-    @get:Rule
-    val mainDispatcher = MainDispatcherRule()
-
-    /** Pile rattrapée : le 14 mai, consulté le 16. */
-    private val day = LocalDate.of(2026, 5, 14)
-    private val clock = FixedClock.at(LocalDate.of(2026, 5, 16).atTime(10, 0))
-    private val repository = FakeReviewRepository()
-
-    /** Journal des décisions, partagé par les ViewModels d'un test comme la base de l'appareil. */
-    private val journal = FakeDecisionJournal(repository)
-
-    private fun takenOn(
-        id: Long,
-        year: Int,
-    ): MediaItem =
-        aMediaItem(
-            id = id,
-            takenAt =
-                day
-                    .withYear(year)
-                    .atTime(NOON)
-                    .atZone(clock.zone)
-                    .toInstant(),
-        )
-
-    private fun deckViewModel(
-        source: MediaSource,
-        journal: DecisionJournal = this.journal,
-        route: Map<String, Any?> = mapOf("epochDay" to day.toEpochDay()),
-    ): DeckViewModel =
-        DeckViewModel(
-            savedStateHandle = SavedStateHandle(route),
-            loading =
-                DeckLoading(
-                    getDeckForDay =
-                        GetDeckForDay(
-                            SameDayMatcher(),
-                            source,
-                            repository,
-                            RecentYearsFirstOrdering(),
-                            clock,
-                        ),
-                    getDaySession = GetDaySession(journal, repository, source, ReviewWindowProvider(clock)),
-                    getPreviousDecisions = GetPreviousDecisions(repository),
-                    getMarkedDeck = GetMarkedDeck(repository, source, SameDayMatcher(), clock),
-                ),
-            decisions =
-                DeckDecisions(
-                    keepMedia = KeepMedia(repository, journal, clock),
-                    markForDeletion = MarkForDeletion(repository, journal, clock),
-                    favoriteMedia = FavoriteMedia(repository, journal, clock),
-                    undoLastDecision = UndoLastDecision(repository, journal),
-                    reviewMarkedMedia =
-                        ReviewMarkedMedia(
-                            KeepMedia(repository, journal, clock),
-                            MarkForDeletion(repository, journal, clock),
-                            FavoriteMedia(repository, journal, clock),
-                        ),
-                ),
-            clock = clock,
-            galleryFavorite =
-                GalleryFavorite(
-                    RequestFavorite(FakeMediaActionRequestFactory()),
-                    RecordFavoriteResult(repository),
-                    OfferManageMediaTip(settings),
-                    mediaActionIntents = { intentSender },
-                    mediaManagement = { mediaManagementGranted },
-                    GetPendingFavorites(repository),
-                ),
-        )
-
-    private val settings = FakeSettingsRepository()
-
-    /** Accès « Gestion des médias » simulé, refusé par défaut. */
-    private var mediaManagementGranted = false
-
-    /** Demande système factice : un vrai `IntentSender`, jamais lancé ici. */
-    private val intentSender: IntentSender =
-        PendingIntent
-            .getActivity(RuntimeEnvironment.getApplication(), 0, Intent(), PendingIntent.FLAG_IMMUTABLE)
-            .intentSender
-
+class DeckViewModelTest : DeckViewModelTestBase() {
     private fun DeckViewModel.cardIds(): List<MediaId> =
         when (val state = uiState.value) {
             is DeckUiState.Loaded -> state.cards.map { it.id }

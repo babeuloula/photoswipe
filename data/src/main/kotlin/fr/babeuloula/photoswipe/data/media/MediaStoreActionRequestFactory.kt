@@ -26,17 +26,19 @@ class IntentSenderMediaActionRequest(
  * rester sous la taille maximale d'un Intent : chaque lot donne un dialogue système.
  *
  * @param createTrash crée la demande d'envoi à la corbeille (restaurable) des URI d'un lot.
- * @param createFavorite crée la demande d'ajout aux favoris des URI d'un lot.
+ * @param createFavorite crée la demande d'ajout aux favoris (vrai) ou de retrait (faux) des URI d'un lot.
  */
 class MediaStoreActionRequestFactory(
     private val createTrash: (List<Uri>) -> IntentSender,
-    private val createFavorite: (List<Uri>) -> IntentSender,
+    private val createFavorite: (List<Uri>, Boolean) -> IntentSender,
     private val batchSize: Int = BATCH_SIZE,
 ) : MediaActionRequestFactory {
     @Inject
     constructor(contentResolver: ContentResolver) : this(
         createTrash = { uris -> MediaStore.createTrashRequest(contentResolver, uris, true).intentSender },
-        createFavorite = { uris -> MediaStore.createFavoriteRequest(contentResolver, uris, true).intentSender },
+        createFavorite = { uris, favorite ->
+            MediaStore.createFavoriteRequest(contentResolver, uris, favorite).intentSender
+        },
     )
 
     init {
@@ -45,7 +47,11 @@ class MediaStoreActionRequestFactory(
 
     override fun trashRequests(media: List<MediaItem>): List<MediaActionRequest> = requests(media, createTrash)
 
-    override fun favoriteRequests(media: List<MediaItem>): List<MediaActionRequest> = requests(media, createFavorite)
+    override fun favoriteRequests(media: List<MediaItem>): List<MediaActionRequest> =
+        requests(media) { uris -> createFavorite(uris, true) }
+
+    override fun unfavoriteRequests(media: List<MediaItem>): List<MediaActionRequest> =
+        requests(media) { uris -> createFavorite(uris, false) }
 
     private fun requests(
         media: List<MediaItem>,

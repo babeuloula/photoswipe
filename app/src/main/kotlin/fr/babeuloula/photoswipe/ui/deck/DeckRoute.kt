@@ -41,6 +41,10 @@ fun DeckRoute(
         rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
             viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = result.resultCode == Activity.RESULT_OK))
         }
+    val unfavoriteRequest =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            viewModel.onEvent(DeckEvent.UnfavoriteRequestAnswered(confirmed = result.resultCode == Activity.RESULT_OK))
+        }
     LaunchedEffect(viewModel) {
         viewModel.uiEffects.collect { effect ->
             when (effect) {
@@ -54,6 +58,10 @@ fun DeckRoute(
 
                 is DeckEffect.LaunchFavoriteRequest -> {
                     favoriteRequest.launch(IntentSenderRequest.Builder(effect.intentSender).build())
+                }
+
+                is DeckEffect.LaunchUnfavoriteRequest -> {
+                    unfavoriteRequest.launch(IntentSenderRequest.Builder(effect.intentSender).build())
                 }
 
                 is DeckEffect.Share -> {

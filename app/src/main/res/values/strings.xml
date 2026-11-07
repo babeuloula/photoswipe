@@ -57,6 +57,7 @@
     <!-- Menu de la carte, ouvert en glissant vers le haut (SPEC §2). -->
     <string name="deck_menu">More actions</string>
     <string name="deck_favorite">Add to favorites</string>
+    <string name="deck_unfavorite">Remove from favorites</string>
     <string name="deck_share">Share</string>
     <string name="deck_share_failed">This media can\'t be shared.</string>
     <string name="summary_title">Summary</string>
