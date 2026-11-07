@@ -27,6 +27,7 @@ import fr.babeuloula.photoswipe.ui.deck.DeckScreen
 import fr.babeuloula.photoswipe.ui.deck.DeckUiState
 import fr.babeuloula.photoswipe.ui.deck.PREVIEW_CARD
 import fr.babeuloula.photoswipe.ui.deck.PhotoViewerContent
+import fr.babeuloula.photoswipe.ui.deck.VideoProgressBar
 import fr.babeuloula.photoswipe.ui.home.HomeScreen
 import fr.babeuloula.photoswipe.ui.home.HomeUiState
 import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
@@ -48,6 +49,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.time.Duration
 import java.time.LocalDate
 
 /**
@@ -103,6 +105,12 @@ class AccessibilityTest {
         assertTrue(problems.joinToString("\n"), problems.isEmpty())
     }
 
+    /** Ce qui s'ouvre ou se pose sur la carte de la pile : photo en grand, barre de progression. */
+    private fun deckOverlays() {
+        check { PhotoViewerContent(card = PREVIEW_CARD, onClose = {}) }
+        check { VideoProgressBar(position = Duration.ofSeconds(12), duration = Duration.ofSeconds(45), onSeek = {}) }
+    }
+
     private fun everyScreen() {
         check { TutorialScreen(onDone = {}) }
         check { PracticePage() }
@@ -139,7 +147,7 @@ class AccessibilityTest {
             )
         }
         check { DeckScreen(day = today, state = DeckUiState.Empty(canUndo = true), onEvent = {}) }
-        check { PhotoViewerContent(card = PREVIEW_CARD, onClose = {}) }
+        deckOverlays()
         check {
             SummaryScreen(
                 state =

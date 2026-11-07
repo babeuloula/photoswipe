@@ -33,6 +33,8 @@
     <string name="deck_video_pause">Pause video</string>
     <string name="deck_video_sound_on">Turn sound on</string>
     <string name="deck_video_sound_off">Turn sound off</string>
+    <string name="deck_video_position">Position in the video</string>
+    <string name="deck_video_position_state">%1$s of %2$s</string>
     <string name="deck_media_unavailable">Preview unavailable</string>
     <string name="deck_error">The memories of this day could not be loaded.</string>
     <string name="deck_retry">Try again</string>

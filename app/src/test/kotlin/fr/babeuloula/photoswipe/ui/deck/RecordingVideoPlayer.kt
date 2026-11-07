@@ -45,6 +45,14 @@ internal class RecordingVideoPlayer(
         calls += "pause $uri"
     }
 
+    override fun seekTo(
+        uri: String,
+        position: Duration,
+    ) {
+        calls += "seek $uri ${position.toMillis()}"
+        this.position = position
+    }
+
     override fun stop(uri: String) {
         calls += "stop $uri"
     }
