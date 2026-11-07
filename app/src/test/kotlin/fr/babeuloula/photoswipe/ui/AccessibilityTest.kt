@@ -23,6 +23,7 @@ import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
+import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.deck.DeckScreen
 import fr.babeuloula.photoswipe.ui.deck.DeckUiState
@@ -123,6 +124,21 @@ class AccessibilityTest {
         videoPlayer.release()
     }
 
+    /** Réglages, rappel activé et statistiques remplies. */
+    private fun settingsScreen() {
+        check {
+            SettingsScreen(
+                state =
+                    SettingsUiState(
+                        reminder = ReminderSettings.DEFAULT.copy(enabled = true),
+                        statistics = UsageStatistics(today, deletedCount = 12, freedBytes = 40_000_000),
+                    ),
+                onEvent = {},
+                environment = SettingsEnvironment(languageLabel = "English"),
+            )
+        }
+    }
+
     private fun everyScreen() {
         check { TutorialScreen(onDone = {}) }
         check { PracticePage() }
@@ -174,13 +190,7 @@ class AccessibilityTest {
                 onEvent = {},
             )
         }
-        check {
-            SettingsScreen(
-                state = SettingsUiState(reminder = ReminderSettings.DEFAULT.copy(enabled = true)),
-                onEvent = {},
-                environment = SettingsEnvironment(languageLabel = "English"),
-            )
-        }
+        settingsScreen()
         check { LicensesScreen(onBack = {}, licenseText = "Apache License, Version 2.0") }
     }
 

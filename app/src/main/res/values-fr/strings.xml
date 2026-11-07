@@ -87,6 +87,11 @@
     <string name="settings_support_rate_summary">Sur le Play Store</string>
     <string name="settings_support_donate">Soutenir le développeur</string>
     <string name="settings_support_donate_summary">Faire un don avec PayPal</string>
+    <string name="settings_statistics_section">Statistiques</string>
+    <string name="settings_statistics_since">PhotoSwipe utilisée depuis le</string>
+    <string name="settings_statistics_nothing_deleted">Aucun média supprimé pour l\'instant</string>
+    <string name="settings_statistics_deleted">Médias supprimés</string>
+    <string name="settings_statistics_freed">Espace libéré</string>
     <string name="link_unavailable">Aucune application de ce téléphone ne peut ouvrir ce lien.</string>
     <string name="rating_title">PhotoSwipe vous plaît ?</string>
     <string name="rating_text">Trois jours de souvenirs triés, merci ! Une note sur le Play Store aide d\'autres personnes à découvrir l\'application. Et si vous le souhaitez, vous pouvez soutenir son développement.</string>

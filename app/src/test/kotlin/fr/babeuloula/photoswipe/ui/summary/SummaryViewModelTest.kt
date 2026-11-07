@@ -9,6 +9,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeUsageStatisticsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
@@ -84,7 +85,12 @@ class SummaryViewModelTest {
             confirmation =
                 ConfirmationActions(
                     prepareTrash = PrepareTrash(reviews, gallery, factory),
-                    recordTrashResult = RecordTrashResult(reviews, FakeDecisionJournal(repository)),
+                    recordTrashResult =
+                        RecordTrashResult(
+                            reviews,
+                            FakeDecisionJournal(repository),
+                            FakeUsageStatisticsRepository(),
+                        ),
                     orphanCleanup =
                         OrphanCleanup(
                             CleanOrphanEntries(reviews, gallery, FakeDecisionJournal(repository)),

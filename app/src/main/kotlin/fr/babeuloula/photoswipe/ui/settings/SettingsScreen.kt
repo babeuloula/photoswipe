@@ -54,7 +54,7 @@ import java.util.Date
  * Réglages (SPEC §4.5), en liste de préférences Material 3 : le rappel quotidien (SPEC §3.6),
  * activé ou non, et son heure, choisie dans le sélecteur d'heure Material 3 ; la langue de
  * l'application ([SettingsEnvironment.languageLabel]), choisie dans le réglage de langue par application d'Android ;
- * le thème (celui du téléphone, clair ou sombre) ; « Soutenir PhotoSwipe » (noter l'application, faire un don) ;
+ * le thème (celui du téléphone, clair ou sombre) ; les statistiques d'utilisation ; « Soutenir PhotoSwipe » (noter l'application, faire un don) ;
  * puis « À propos » : version de l'application et licences.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,6 +101,7 @@ fun SettingsScreen(
                         ReminderSection(reminder, onEvent)
                         LanguageSection(environment.languageLabel, onEvent)
                         state.themeMode?.let { AppearanceSection(it, onEvent) }
+                        state.statistics?.let { StatisticsSection(it) }
                         SupportSection(onEvent)
                         AboutSection(onEvent, environment.showDeveloperTools)
                     }

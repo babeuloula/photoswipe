@@ -96,6 +96,11 @@
     <string name="settings_support_rate_summary">On the Play Store</string>
     <string name="settings_support_donate">Support the developer</string>
     <string name="settings_support_donate_summary">Make a donation with PayPal</string>
+    <string name="settings_statistics_section">Statistics</string>
+    <string name="settings_statistics_since">Using PhotoSwipe since</string>
+    <string name="settings_statistics_nothing_deleted">No media deleted yet</string>
+    <string name="settings_statistics_deleted">Media deleted</string>
+    <string name="settings_statistics_freed">Space freed</string>
     <string name="link_unavailable">No app on this phone can open this link.</string>
     <string name="rating_title">Enjoying PhotoSwipe?</string>
     <string name="rating_text">Three days of memories sorted, thank you! A rating on the Play Store helps other people find the app. And if you like, you can support its development.</string>

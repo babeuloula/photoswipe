@@ -62,4 +62,8 @@
         <item quantity="one">%d byte</item>
         <item quantity="other">%d bytes</item>
     </plurals>
+    <plurals name="settings_statistics_deleted_count">
+        <item quantity="one">%d photo or video</item>
+        <item quantity="other">%d photos and videos</item>
+    </plurals>
 </resources>

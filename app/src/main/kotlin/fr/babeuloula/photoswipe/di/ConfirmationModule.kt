@@ -9,6 +9,7 @@ import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
+import fr.babeuloula.photoswipe.domain.port.UsageStatisticsRepository
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.usecase.CleanOrphanEntries
 import fr.babeuloula.photoswipe.domain.usecase.GetMarkedPreviews
@@ -53,7 +54,8 @@ object ConfirmationModule {
     fun provideRecordTrashResult(
         reviewRepository: ReviewRepository,
         journal: DecisionJournal,
-    ): RecordTrashResult = RecordTrashResult(reviewRepository, journal)
+        statistics: UsageStatisticsRepository,
+    ): RecordTrashResult = RecordTrashResult(reviewRepository, journal, statistics)
 
     @Provides
     fun provideGetPendingFavorites(reviewRepository: ReviewRepository): GetPendingFavorites =

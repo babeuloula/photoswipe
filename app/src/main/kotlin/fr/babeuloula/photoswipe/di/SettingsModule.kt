@@ -7,7 +7,9 @@ import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.domain.port.ReminderNotifier
 import fr.babeuloula.photoswipe.domain.port.ReminderScheduler
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
+import fr.babeuloula.photoswipe.domain.port.UsageStatisticsRepository
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
+import fr.babeuloula.photoswipe.domain.usecase.GetUsageStatistics
 import fr.babeuloula.photoswipe.domain.usecase.MarkRatingAsked
 import fr.babeuloula.photoswipe.domain.usecase.RecordTodaySorted
 import fr.babeuloula.photoswipe.domain.usecase.RescheduleReminder
@@ -48,6 +50,10 @@ object SettingsModule {
     @Provides
     fun provideMarkRatingAsked(settingsRepository: SettingsRepository): MarkRatingAsked =
         MarkRatingAsked(settingsRepository)
+
+    @Provides
+    fun provideGetUsageStatistics(repository: UsageStatisticsRepository): GetUsageStatistics =
+        GetUsageStatistics(repository)
 
     @Provides
     fun provideSendDailyReminder(

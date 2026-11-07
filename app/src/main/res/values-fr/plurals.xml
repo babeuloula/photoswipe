@@ -66,4 +66,9 @@
         <item quantity="many">%d d\'octets</item>
         <item quantity="other">%d octets</item>
     </plurals>
+    <plurals name="settings_statistics_deleted_count">
+        <item quantity="one">%d photo ou vidéo</item>
+        <item quantity="many">%d de photos et vidéos</item>
+        <item quantity="other">%d photos et vidéos</item>
+    </plurals>
 </resources>
