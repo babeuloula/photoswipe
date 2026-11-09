@@ -14,6 +14,7 @@ Restent dans le dépôt :
 | Fichier | Contenu |
 |---|---|
 | [screenshots/](screenshots/) | Captures de la fiche, mises en scène (`fr/`, `en/`) et brutes (`raw/`) |
+| [feature-graphic/](feature-graphic/) | Image de présentation 1024 × 500 (FR, EN) et sa source HTML |
 | [credits.md](credits.md) | Photos Unsplash des captures et leurs auteurs |
 
 ## Version
@@ -85,3 +86,17 @@ F-Droid compile l'application depuis les sources et la signe avec sa propre clé
 ## Captures d'écran
 
 Prises sur l'émulateur `Medium_Phone_API_37.0` (1080 × 2400) avec des photos Unsplash datées par leur EXIF d'un 6 novembre de plusieurs années, barre d'état en mode démo (09:41, batterie pleine). Les visuels mis en scène (1080 × 1920) ajoutent un titre, le téléphone et les crédits des photos visibles.
+
+## Image de présentation
+
+[`feature-graphic/`](feature-graphic/) : l'image de présentation de la fiche Play Store (1024 × 500, JPEG sans transparence), en français (`fr-feature-graphic.jpg`) et en anglais (`en-feature-graphic.jpg`). Elle reprend le fond, les polices et les captures brutes (accueil et pile) des visuels mis en scène. Source : `feature-graphic.html` ; la régénérer après un changement des captures ou du texte :
+
+```bash
+cd docs/store/feature-graphic
+for l in fr en; do
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --hide-scrollbars --allow-file-access-from-files \
+    --force-device-scale-factor=1 --window-size=1024,500 --virtual-time-budget=3000 \
+    --screenshot="$PWD/$l.png" "file://$PWD/feature-graphic.html?lang=$l"
+  sips -s format jpeg -s formatOptions 92 "$l.png" --out "$l-feature-graphic.jpg" && rm -f "$l.png"
+done
+```
