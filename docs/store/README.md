@@ -100,3 +100,16 @@ for l in fr en; do
   sips -s format jpeg -s formatOptions 92 "$l.png" --out "$l-feature-graphic.jpg" && rm -f "$l.png"
 done
 ```
+
+## Vidéo de présentation
+
+[`video/`](video/) : la vidéo de 30 s de la fiche (à publier sur YouTube puis à lier dans la Play Console), montée avec [HyperFrames](https://hyperframes.heygen.com) à partir de vrais enregistrements de l'émulateur (`assets/footage/`, une version `fr-` et une `en-`). Le film est décrit dans `SPEC.md`, les deux autres histoires possibles dans `STORYLINES.md`. Musique : bibliothèque musicale HeyGen ; photos : celles de [credits.md](credits.md), créditées à la fin de la vidéo.
+
+```bash
+cd docs/store/video
+npx hyperframes preview                    # aperçu modifiable dans le navigateur
+npx hyperframes render -o renders/photoswipe-fr.mp4
+npx hyperframes render --variables-file variables-en.json -o renders/photoswipe-en.mp4
+```
+
+Les rushes bruts (`footage-raw/`), le cache des médias et les rendus (`renders/`) restent hors Git. À reprendre : le plan du tri accéléré (vers 13–15 s) passe trop vite sur les photos, et la musique est un peu forte (−11,4 LUFS, pour −14 visés).

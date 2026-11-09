@@ -1,0 +1,23 @@
+{
+  "t1": "6 PM, today's memories",
+  "t2": "Swipe right to keep",
+  "t3": "Swipe up to favorite",
+  "t4": "Swipe left to delete",
+  "t5": "One swipe per memory",
+  "t6": "Nothing is deleted without you",
+  "t7": "Restorable from the trash for 30 days",
+  "t8": "And tomorrow, more memories",
+  "tagline": "Relive the memories of this very day",
+  "stores": "On Google Play and F-Droid",
+  "credits_photos": "Unsplash photos: Alvan Nee, Juliane Liebermann, Theng, Nathan Dumlao, Michal Balog, Patrick Donnelly, Sergej, Nadia Valko, Graham Smith, Vitaly Gariev, Austin, sydney Rae",
+  "credits_music": "Music: HeyGen music library",
+  "v_notif": "assets/footage/en-notif.mp4",
+  "v_keep": "assets/footage/en-keep.mp4",
+  "v_up": "assets/footage/en-up.mp4",
+  "v_fav": "assets/footage/en-fav.mp4",
+  "v_delete": "assets/footage/en-delete.mp4",
+  "v_sort": "assets/footage/en-sort.mp4",
+  "v_summary": "assets/footage/en-summary.mp4",
+  "v_dialog": "assets/footage/en-dialog.mp4",
+  "v_home": "assets/footage/en-home.mp4"
+}

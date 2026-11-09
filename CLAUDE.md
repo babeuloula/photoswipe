@@ -12,7 +12,7 @@ Application Android (Kotlin + Jetpack Compose) qui fait revoir chaque jour les p
 - `README.md` : présentation courte et liens vers la documentation.
 - `fastlane/metadata/android/` : la fiche F-Droid (en-US, fr-FR : titre, descriptions, icône, captures), reprise de la fiche du Play Store ; procédure F-Droid dans `docs/store/README.md` (PS-128).
 - `PRIVACY.md` : la politique de confidentialité (FR/EN), version de référence de celle publiée pour le Play Store. Toute nouvelle autorisation ou donnée enregistrée la met à jour dans la même PR.
-- `docs/store/` : publication sur le Play Store (captures et crédits Unsplash, image de présentation 1024 × 500, signature et version). Les textes de la Play Console (politique de confidentialité à publier sur le site de Jérémy, déclaration des autorisations photos, sécurité des données, fiche FR/EN) vivent dans Notion, page « Publication Play Store » sous PhotoSwipe.
+- `docs/store/` : publication sur le Play Store (captures et crédits Unsplash, image de présentation 1024 × 500, vidéo HyperFrames dans `docs/store/video/`, signature et version). Les textes de la Play Console (politique de confidentialité à publier sur le site de Jérémy, déclaration des autorisations photos, sécurité des données, fiche FR/EN) vivent dans Notion, page « Publication Play Store » sous PhotoSwipe.
 - `docs/tutorial-coverage.md` : fonctionnalités livrées comparées au contenu du tutoriel, à relire à chaque nouvelle fonctionnalité visible.
 - `docs/decisions/` : les ADR. Toute décision structurante absente de la spec y est écrite au lieu d'être improvisée en silence.
 

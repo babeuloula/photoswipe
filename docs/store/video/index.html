@@ -1,0 +1,160 @@
+<!doctype html>
+<html
+  lang="fr"
+  data-composition-variables='[
+    {"id":"t1","type":"string","label":"Titre notification","default":"18:00, vos souvenirs du jour"},
+    {"id":"t2","type":"string","label":"Titre garder","default":"À droite, je garde"},
+    {"id":"t3","type":"string","label":"Titre favori","default":"Vers le haut, en favori"},
+    {"id":"t4","type":"string","label":"Titre supprimer","default":"À gauche, je supprime"},
+    {"id":"t5","type":"string","label":"Titre tri","default":"Un geste par souvenir"},
+    {"id":"t6","type":"string","label":"Titre résumé","default":"Rien n’est supprimé sans vous"},
+    {"id":"t7","type":"string","label":"Titre corbeille","default":"Restaurable 30 jours dans la corbeille"},
+    {"id":"t8","type":"string","label":"Titre accueil","default":"Et demain, d’autres souvenirs"},
+    {"id":"tagline","type":"string","label":"Accroche finale","default":"Revivez vos souvenirs du jour"},
+    {"id":"stores","type":"string","label":"Où l’installer","default":"Sur Google Play et F-Droid"},
+    {"id":"credits_photos","type":"string","label":"Crédits photos","default":"Photos Unsplash : Alvan Nee, Juliane Liebermann, Theng, Nathan Dumlao, Michal Balog, Patrick Donnelly, Sergej, Nadia Valko, Graham Smith, Vitaly Gariev, Austin, sydney Rae"},
+    {"id":"credits_music","type":"string","label":"Crédits musique","default":"Musique : bibliothèque musicale HeyGen"},
+    {"id":"v_notif","type":"string","label":"Vidéo notification","default":"assets/footage/fr-notif.mp4"},
+    {"id":"v_keep","type":"string","label":"Vidéo garder","default":"assets/footage/fr-keep.mp4"},
+    {"id":"v_up","type":"string","label":"Vidéo menu","default":"assets/footage/fr-up.mp4"},
+    {"id":"v_fav","type":"string","label":"Vidéo favori","default":"assets/footage/fr-fav.mp4"},
+    {"id":"v_delete","type":"string","label":"Vidéo supprimer","default":"assets/footage/fr-delete.mp4"},
+    {"id":"v_sort","type":"string","label":"Vidéo tri","default":"assets/footage/fr-sort.mp4"},
+    {"id":"v_summary","type":"string","label":"Vidéo résumé","default":"assets/footage/fr-summary.mp4"},
+    {"id":"v_dialog","type":"string","label":"Vidéo corbeille","default":"assets/footage/fr-dialog.mp4"},
+    {"id":"v_home","type":"string","label":"Vidéo accueil","default":"assets/footage/fr-home.mp4"}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Atkinson Hyperlegible Next";
+        src: url("assets/fonts/atkinson_hyperlegible_next.ttf");
+        font-weight: 200 800;
+      }
+      @font-face {
+        font-family: "Plex Mono PS";
+        src: url("assets/fonts/ibm_plex_mono_medium.ttf");
+      }
+      :root {
+        --ink: #2a1e08;
+        --accent: #f2c96b;
+        --frame: #231a0e;
+        --font-display: "Atkinson Hyperlegible Next", sans-serif;
+        --font-mono: "Plex Mono PS", monospace;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #edd29a; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; font-family: var(--font-display); color: var(--ink); }
+      #ground { position: absolute; inset: 0; background: linear-gradient(160deg, #f5e3be 0%, #edd29a 55%, #e2bc72 100%); }
+
+      /* Le téléphone : tous les enregistrements jouent dans le même écran. */
+      #cam { position: absolute; left: 1166px; top: 46px; width: 470px; height: 988px; transform-origin: 50% 50%; }
+      #phone { position: absolute; inset: 0; background: var(--frame); border-radius: 76px; padding: 22px; box-shadow: 0 40px 80px rgba(60, 40, 5, 0.35); }
+      #screen { position: relative; width: 100%; height: 100%; border-radius: 56px; overflow: hidden; background: #fdf8f2; }
+      #screen video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
+
+      .title { position: absolute; left: 144px; top: 0; height: 1080px; width: 900px; display: flex; flex-direction: column; justify-content: center; }
+      .title h2 { text-wrap: balance; font-size: 84px; line-height: 1.08; font-weight: 600; letter-spacing: -0.01em; }
+      .title .w { display: inline-block; margin-right: 0.24em; }
+
+      #end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      #end-lockup { display: flex; align-items: center; gap: 40px; }
+      #end-icon { width: 200px; height: 200px; border-radius: 48px; box-shadow: 0 24px 48px rgba(60, 40, 5, 0.3); }
+      #end-name { font-size: 132px; font-weight: 600; letter-spacing: -0.02em; }
+      #end-tagline { margin-top: 44px; font-size: 56px; font-weight: 500; }
+      #end-stores { margin-top: 36px; background: var(--ink); color: var(--accent); font-family: var(--font-mono); font-size: 40px; padding: 18px 36px; border-radius: 16px; clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%); }
+
+      #credits { position: absolute; left: 240px; right: 240px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; gap: 36px; text-align: center; font-size: 36px; line-height: 1.45; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="30" data-width="1920" data-height="1080">
+      <div id="ground"></div>
+
+      <div id="cam">
+        <div id="phone">
+          <div id="screen">
+            <video id="v-notif" class="clip" data-start="0" data-duration="3.31" data-media-start="0.5" data-var-src="v_notif" src="assets/footage/fr-notif.mp4" muted playsinline data-track-index="1"></video>
+            <video id="v-keep" class="clip" data-start="3.31" data-duration="2.9" data-media-start="0.5" data-var-src="v_keep" src="assets/footage/fr-keep.mp4" muted playsinline data-track-index="1"></video>
+            <video id="v-up" class="clip" data-start="6.21" data-duration="1.86" data-media-start="0.3" data-var-src="v_up" src="assets/footage/fr-up.mp4" muted playsinline data-track-index="1"></video>
+            <video id="v-fav" class="clip" data-start="8.07" data-duration="1.9" data-media-start="0" data-var-src="v_fav" src="assets/footage/fr-fav.mp4" muted playsinline data-track-index="1"></video>
+            <video id="v-delete" class="clip" data-start="9.97" data-duration="2.76" data-media-start="0" data-var-src="v_delete" src="assets/footage/fr-delete.mp4" muted playsinline data-track-index="1"></video>
+            <video id="v-sort" class="clip" data-start="12.73" data-duration="2.17" data-media-start="0.2" data-playback-rate="4" data-var-src="v_sort" src="assets/footage/fr-sort.mp4" muted playsinline data-track-index="1"></video>
+            <video id="v-summary" class="clip" data-start="14.9" data-duration="2.89" data-media-start="0.4" data-var-src="v_summary" src="assets/footage/fr-summary.mp4" muted playsinline data-track-index="1"></video>
+            <video id="v-dialog" class="clip" data-start="17.79" data-duration="2.91" data-media-start="0.6" data-var-src="v_dialog" src="assets/footage/fr-dialog.mp4" muted playsinline data-track-index="1"></video>
+            <video id="v-home" class="clip" data-start="20.7" data-duration="2.39" data-media-start="1.7" data-var-src="v_home" src="assets/footage/fr-home.mp4" muted playsinline data-track-index="1"></video>
+          </div>
+        </div>
+      </div>
+
+      <div id="title1" class="title clip" data-start="0" data-duration="3.31" data-track-index="2"><h2 data-var-text="t1">18:00, vos souvenirs du jour</h2></div>
+      <div id="title2" class="title clip" data-start="3.31" data-duration="2.9" data-track-index="2"><h2 data-var-text="t2">À droite, je garde</h2></div>
+      <div id="title3" class="title clip" data-start="6.21" data-duration="3.76" data-track-index="2"><h2 data-var-text="t3">Vers le haut, en favori</h2></div>
+      <div id="title4" class="title clip" data-start="9.97" data-duration="2.76" data-track-index="2"><h2 data-var-text="t4">À gauche, je supprime</h2></div>
+      <div id="title5" class="title clip" data-start="12.73" data-duration="2.17" data-track-index="2"><h2 data-var-text="t5">Un geste par souvenir</h2></div>
+      <div id="title6" class="title clip" data-start="14.9" data-duration="2.89" data-track-index="2"><h2 data-var-text="t6">Rien n’est supprimé sans vous</h2></div>
+      <div id="title7" class="title clip" data-start="17.79" data-duration="2.91" data-track-index="2"><h2 data-var-text="t7">Restaurable 30 jours dans la corbeille</h2></div>
+      <div id="title8" class="title clip" data-start="20.7" data-duration="2.39" data-track-index="2"><h2 data-var-text="t8">Et demain, d’autres souvenirs</h2></div>
+
+      <div id="end" class="clip" data-start="23.09" data-duration="3.3" data-track-index="3">
+        <div id="end-lockup">
+          <img id="end-icon" src="assets/images/icon.png" alt="" />
+          <div id="end-name">PhotoSwipe</div>
+        </div>
+        <div id="end-tagline" data-var-text="tagline">Revivez vos souvenirs du jour</div>
+        <div id="end-stores" data-var-text="stores">Sur Google Play et F-Droid</div>
+      </div>
+
+      <div id="credits" class="clip" data-start="26.39" data-duration="3.61" data-track-index="3">
+        <p id="credits-photos" data-var-text="credits_photos">Photos Unsplash</p>
+        <p id="credits-music" data-var-text="credits_music">Musique</p>
+      </div>
+
+      <audio id="music" class="clip" data-start="0" data-duration="30" data-volume="0.9" data-fade-out="1.2" src="assets/music.wav" data-track-index="4"></audio>
+    </div>
+    <script>
+      // Découpe chaque titre en mots pour les faire entrer un par un (rien de minuté n’est créé ici).
+      const vars = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+      document.querySelectorAll("[data-var-text]").forEach((el) => {
+        const value = vars[el.dataset.varText];
+        if (typeof value === "string") el.textContent = value;
+      });
+      document.querySelectorAll(".title h2").forEach((h) => {
+        h.innerHTML = h.textContent.trim().split(/\s+/).map((w) => `<span class="w">${w}</span>`).join("");
+      });
+
+      const tl = gsap.timeline({ paused: true });
+      const cam = "#cam";
+
+      // Plans du téléphone : [début, durée] de chaque titre.
+      const shots = [[0, 3.31], [3.31, 2.9], [6.21, 3.76], [9.97, 2.76], [12.73, 2.17], [14.9, 2.89], [17.79, 2.91], [20.7, 2.39]];
+      shots.forEach(([start, dur], i) => {
+        const words = `#title${i + 1} .w`;
+        if (i > 0) tl.fromTo(words, { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.13, stagger: 0.067, ease: "power2.out" }, start + 0.12);
+        tl.to(words, { opacity: 0, filter: "blur(6px)", duration: 0.18, stagger: 0.03, ease: "power2.in" }, start + dur - 0.3);
+      });
+
+      // Caméra : ouverture du téléphone, gros plans sur la notification, le résumé et le dialogue.
+      tl.to(cam, { scale: 1.5, x: 160, y: 380, duration: 0.6, ease: "power2.inOut" }, 0.5);
+      tl.to(cam, { scale: 1, x: 0, y: 0, duration: 0.5, ease: "power2.inOut" }, 2.75);
+      tl.to(cam, { scale: 1.45, x: 120, y: 330, duration: 0.5, ease: "power2.inOut" }, 15.0);
+      tl.to(cam, { scale: 1.4, x: 0, y: 0, duration: 0.5, ease: "power2.inOut" }, 17.79);
+      tl.to(cam, { scale: 1, x: 0, y: 0, duration: 0.5, ease: "power2.inOut" }, 20.7);
+
+      // Le téléphone part, la marque arrive.
+      tl.to(cam, { y: 1200, duration: 0.45, ease: "power3.in" }, 22.7);
+      tl.fromTo("#end-icon", { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.6)" }, 23.2);
+      tl.fromTo("#end-name", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.5, ease: "power3.out" }, 23.55);
+      tl.fromTo("#end-tagline", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2 }, 24.2);
+      tl.fromTo("#end-stores", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "expo.out" }, 24.6);
+      tl.to("#end-lockup, #end-tagline, #end-stores", { opacity: 0, filter: "blur(8px)", duration: 0.2 }, 26.15);
+      tl.fromTo("#credits p", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, stagger: 0.12 }, 26.45);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
