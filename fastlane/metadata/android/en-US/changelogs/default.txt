@@ -1,1 +1,1 @@
-• Write the F-Droid changelog from the GitHub release notes
+• Offer to send crash reports to GlitchTip through the browser
