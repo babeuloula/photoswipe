@@ -1,0 +1,59 @@
+# Publication de la page d'envoi des rapports de plantage sur GitHub Pages (PS-134, ADR 0033) :
+# https://babeuloula.github.io/photoswipe/crash/
+# Publiée depuis main seulement, après ses tests. Les polices sont celles de l'application,
+# copiées depuis app/src/main/res/font au moment de la publication (aucune copie dans le dépôt).
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "pages/**"
+      - "app/src/main/res/font/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish the crash report page
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}crash/
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Crash report page tests
+        run: node --test pages/crash/*.test.mjs
+
+      - name: Assemble the site
+        run: |
+          mkdir -p _site/crash/fonts
+          cp pages/crash/index.html pages/crash/style.css pages/crash/page.js pages/crash/crash.js pages/crash/icon.svg _site/crash/
+          cp app/src/main/res/font/*.ttf _site/crash/fonts/
+          touch _site/.nojekyll
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5

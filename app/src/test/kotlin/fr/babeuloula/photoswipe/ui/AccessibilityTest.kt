@@ -25,6 +25,7 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.crash.CrashReportDialog
 import fr.babeuloula.photoswipe.ui.deck.DeckScreen
 import fr.babeuloula.photoswipe.ui.deck.DeckUiState
 import fr.babeuloula.photoswipe.ui.deck.FullscreenVideoContent
@@ -192,6 +193,7 @@ class AccessibilityTest {
         }
         settingsScreen()
         check { LicensesScreen(onBack = {}, licenseText = "Apache License, Version 2.0") }
+        check { CrashReportDialog(onEvent = {}) }
     }
 
     @Test
