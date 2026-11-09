@@ -15,6 +15,8 @@ Restent dans le dépôt :
 |---|---|
 | [screenshots/](screenshots/) | Captures de la fiche, mises en scène (`fr/`, `en/`) et brutes (`raw/`) |
 | [feature-graphic/](feature-graphic/) | Image de présentation 1024 × 500 (FR, EN) et sa source HTML |
+| [youtube-thumbnail/](youtube-thumbnail/) | Miniature YouTube 1280 × 720 (FR, EN) et sa source HTML |
+| [video/](video/) | Vidéo de présentation (projet HyperFrames) |
 | [credits.md](credits.md) | Photos Unsplash des captures et leurs auteurs |
 
 ## Version
@@ -100,6 +102,10 @@ for l in fr en; do
   sips -s format jpeg -s formatOptions 92 "$l.png" --out "$l-feature-graphic.jpg" && rm -f "$l.png"
 done
 ```
+
+## Miniature YouTube
+
+[`youtube-thumbnail/`](youtube-thumbnail/) : la miniature des vidéos YouTube (1280 × 720, JPEG), en français et en anglais, dans le style de l'image de présentation. Source : `youtube-thumbnail.html`, rendue comme l'image de présentation avec `--window-size=1280,720` et `youtube-thumbnail.html?lang=$l`.
 
 ## Vidéo de présentation
 
