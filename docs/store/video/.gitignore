@@ -1,0 +1,8 @@
+# Rushes de l'émulateur, médias en cache, rendus et fichiers de travail de HyperFrames : régénérables, hors Git.
+footage-raw/
+.media/
+.thumbnails/
+.hyperframes/
+renders/
+node_modules/
+.DS_Store

@@ -14,6 +14,9 @@ Restent dans le dépôt :
 | Fichier | Contenu |
 |---|---|
 | [screenshots/](screenshots/) | Captures de la fiche, mises en scène (`fr/`, `en/`) et brutes (`raw/`) |
+| [feature-graphic/](feature-graphic/) | Image de présentation 1024 × 500 (FR, EN) et sa source HTML |
+| [youtube-thumbnail/](youtube-thumbnail/) | Miniature YouTube 1280 × 720 (FR, EN) et sa source HTML |
+| [video/](video/) | Vidéo de présentation (projet HyperFrames) |
 | [credits.md](credits.md) | Photos Unsplash des captures et leurs auteurs |
 
 ## Version
@@ -85,3 +88,34 @@ F-Droid compile l'application depuis les sources et la signe avec sa propre clé
 ## Captures d'écran
 
 Prises sur l'émulateur `Medium_Phone_API_37.0` (1080 × 2400) avec des photos Unsplash datées par leur EXIF d'un 6 novembre de plusieurs années, barre d'état en mode démo (09:41, batterie pleine). Les visuels mis en scène (1080 × 1920) ajoutent un titre, le téléphone et les crédits des photos visibles.
+
+## Image de présentation
+
+[`feature-graphic/`](feature-graphic/) : l'image de présentation de la fiche Play Store (1024 × 500, JPEG sans transparence), en français (`fr-feature-graphic.jpg`) et en anglais (`en-feature-graphic.jpg`). Elle reprend le fond, les polices et les captures brutes (accueil et pile) des visuels mis en scène. Source : `feature-graphic.html` ; la régénérer après un changement des captures ou du texte :
+
+```bash
+cd docs/store/feature-graphic
+for l in fr en; do
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --hide-scrollbars --allow-file-access-from-files \
+    --force-device-scale-factor=1 --window-size=1024,500 --virtual-time-budget=3000 \
+    --screenshot="$PWD/$l.png" "file://$PWD/feature-graphic.html?lang=$l"
+  sips -s format jpeg -s formatOptions 92 "$l.png" --out "$l-feature-graphic.jpg" && rm -f "$l.png"
+done
+```
+
+## Miniature YouTube
+
+[`youtube-thumbnail/`](youtube-thumbnail/) : la miniature des vidéos YouTube (1280 × 720, JPEG), en français et en anglais, dans le style de l'image de présentation. Source : `youtube-thumbnail.html`, rendue comme l'image de présentation avec `--window-size=1280,720` et `youtube-thumbnail.html?lang=$l`.
+
+## Vidéo de présentation
+
+[`video/`](video/) : la vidéo de 30 s de la fiche (à publier sur YouTube puis à lier dans la Play Console), montée avec [HyperFrames](https://hyperframes.heygen.com) à partir de vrais enregistrements de l'émulateur (`assets/footage/`, une version `fr-` et une `en-`). Le film est décrit dans `SPEC.md`, les deux autres histoires possibles dans `STORYLINES.md`. Musique : bibliothèque musicale HeyGen ; photos : celles de [credits.md](credits.md), créditées à la fin de la vidéo.
+
+```bash
+cd docs/store/video
+npx hyperframes preview                    # aperçu modifiable dans le navigateur
+npx hyperframes render -o renders/photoswipe-fr.mp4
+npx hyperframes render --variables-file variables-en.json -o renders/photoswipe-en.mp4
+```
+
+Les rushes bruts (`footage-raw/`), le cache des médias et les rendus (`renders/`) restent hors Git. À reprendre : le plan du tri accéléré (vers 13–15 s) passe trop vite sur les photos, et la musique est un peu forte (−11,4 LUFS, pour −14 visés).

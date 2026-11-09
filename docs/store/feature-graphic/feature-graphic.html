@@ -1,0 +1,41 @@
+<!doctype html>
+<!-- Image de présentation du Play Store (1024 × 500). Rendu : voir docs/store/README.md, « Image de présentation ». -->
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Atkinson; src: url(../../../app/src/main/res/font/atkinson_hyperlegible_next.ttf); font-weight: 200 800; }
+@font-face { font-family: PlexMono; src: url(../../../app/src/main/res/font/ibm_plex_mono_medium.ttf); }
+* { margin: 0; box-sizing: border-box; }
+html, body { width: 1024px; height: 500px; overflow: hidden; }
+body { background: linear-gradient(160deg, #F5E3BE 0%, #EDD29A 55%, #E2BC72 100%); font-family: Atkinson; color: #2A1E08; position: relative; }
+.text { position: absolute; left: 64px; top: 0; bottom: 0; width: 500px; display: flex; flex-direction: column; justify-content: center; }
+.brand { display: flex; align-items: center; gap: 16px; margin-bottom: 30px; }
+.brand img { width: 64px; height: 64px; border-radius: 16px; }
+.brand span { font-size: 34px; font-weight: 600; }
+h1 { font-size: 46px; line-height: 1.12; font-weight: 500; letter-spacing: -0.5px; }
+.chip { align-self: flex-start; margin-top: 30px; background: #2A1E08; color: #F2C96B; font-family: PlexMono; font-size: 20px; padding: 10px 20px; border-radius: 10px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+.phone { position: absolute; width: 282px; height: 627px; border: 11px solid #231A0E; border-radius: 42px; background: #231A0E; overflow: hidden; box-shadow: 0 24px 50px rgba(60, 40, 5, .35); }
+.phone img { width: 100%; display: block; border-radius: 31px; }
+.back { left: 760px; top: 70px; transform: rotate(7deg); }
+.front { left: 590px; top: 40px; transform: rotate(-4deg); }
+</style></head>
+<body>
+<div class="text">
+  <div class="brand"><img src="../../../fastlane/metadata/android/en-US/images/icon.png" alt=""><span>PhotoSwipe</span></div>
+  <h1 id="title"></h1>
+  <div class="chip" id="chip"></div>
+</div>
+<div class="phone back"><img id="back" alt=""></div>
+<div class="phone front"><img id="front" alt=""></div>
+<script>
+const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'fr';
+const t = {
+  fr: { title: 'Revivez vos souvenirs du jour, triez d’un simple geste', chip: 'Il y a 3 ans · 6 nov.' },
+  en: { title: 'Relive the memories of this very day, tidy them with a swipe', chip: '3 years ago · Nov 6' },
+}[lang];
+document.documentElement.lang = lang;
+document.getElementById('title').textContent = t.title;
+document.getElementById('chip').textContent = t.chip;
+document.getElementById('front').src = `../screenshots/raw/${lang}/${lang}-1-home.jpg`;
+document.getElementById('back').src = `../screenshots/raw/${lang}/${lang}-2-keep.jpg`;
+</script>
+</body></html>
