@@ -191,4 +191,9 @@
     <string name="tutorial_catch_up_illustration">Animation : les 7 derniers jours, chacun avec son nombre de souvenirs à trier, sont triés l\'un après l\'autre, et le rappel compte ce qui reste.</string>
     <string name="tutorial_confirmation_illustration">Animation : le résumé montre l\'espace libéré estimé, puis un dialogue propose de mettre les médias marqués à la corbeille.</string>
     <string name="tutorial_swipes_illustration">Animation : une photo glisse à droite sous un voile vert avec une coche, Garder, puis à gauche sous un voile rouge avec une corbeille, Supprimer.</string>
+    <!-- Rapport de plantage proposé au lancement suivant (ADR 0033). -->
+    <string name="crash_report_title">PhotoSwipe s\'est fermé de façon inattendue</string>
+    <string name="crash_report_text">Un rapport de l\'erreur est prêt : la version de l\'application, le modèle du téléphone et le détail technique de l\'erreur, sans aucune photo. Vous pouvez le voir dans votre navigateur et choisir de l\'envoyer ou non au développeur.</string>
+    <string name="crash_report_send">Voir et envoyer</string>
+    <string name="crash_report_ignore">Ignorer</string>
 </resources>

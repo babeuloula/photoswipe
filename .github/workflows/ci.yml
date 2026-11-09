@@ -52,6 +52,11 @@ jobs:
           python3 -m unittest discover -s scripts -v
           shellcheck scripts/*.sh
 
+      # Page d'envoi des rapports de plantage (PS-134, ADR 0033) : tests JavaScript avec le
+      # lanceur de tests de Node, préinstallé sur le runner.
+      - name: Crash report page tests
+        run: node --test pages/crash/*.test.mjs
+
       # Une seule invocation Gradle : avec org.gradle.parallel, Gradle répartit tests, qualité et build
       # entre les cœurs du runner et ne compile chaque module qu'une fois.
       # --continue : un échec n'arrête pas les tâches indépendantes, toutes les erreurs remontent d'un coup.

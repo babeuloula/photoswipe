@@ -202,4 +202,9 @@
     <string name="tutorial_catch_up_illustration">Animation: the last 7 days, each with its number of memories to sort, get sorted one after another, and the reminder counts what is left.</string>
     <string name="tutorial_confirmation_illustration">Animation: the summary shows the estimated space freed, then a dialog asks to move the marked items to the trash.</string>
     <string name="tutorial_swipes_illustration">Animation: a photo slides right under a green veil with a check mark, Keep, then left under a red veil with a trash can, Delete.</string>
+    <!-- Rapport de plantage proposé au lancement suivant (ADR 0033). -->
+    <string name="crash_report_title">PhotoSwipe closed unexpectedly</string>
+    <string name="crash_report_text">A report of the error is ready: the app version, the phone model and the technical details of the error, without any photo. You can view it in your browser and choose whether to send it to the developer.</string>
+    <string name="crash_report_send">View and send</string>
+    <string name="crash_report_ignore">Ignore</string>
 </resources>

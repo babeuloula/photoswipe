@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- Icône de PhotoSwipe (ic_launcher_foreground sur launcher_background, ADR 0025). -->
+  <rect width="108" height="108" rx="24" fill="#785A0B"/>
+  <g transform="translate(21.6 23.4) scale(0.9)">
+    <path transform="rotate(-10 27 34)" fill="#BD9948" d="M16,11H38A6,6 0,0 1,44 17V51A6,6 0,0 1,38 57H16A6,6 0,0 1,10 51V17A6,6 0,0 1,16 11Z"/>
+    <path fill="#FFDF9F" d="M26,8H46L54,16V48A6,6 0,0 1,48 54H26A6,6 0,0 1,20 48V14A6,6 0,0 1,26 8Z"/>
+    <path fill="#261A00" d="M26,12H44.3L50,17.7V39A2,2 0,0 1,48 41H26A2,2 0,0 1,24 39V14A2,2 0,0 1,26 12Z"/>
+    <path fill="#5C4300" d="M24,33L31,27L37,32L41,29L50,35V39A2,2 0,0 1,48 41H26A2,2 0,0 1,24 39Z"/>
+    <path fill="#EAC16C" d="M27.5,19.5A3.5,3.5 0,1 0,34.5 19.5A3.5,3.5 0,1 0,27.5 19.5Z"/>
+  </g>
+</svg>

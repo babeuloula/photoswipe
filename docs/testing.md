@@ -31,6 +31,9 @@ Prérequis : JDK 17 (`export JAVA_HOME=/opt/homebrew/opt/openjdk@17` sur la mach
 # Scripts : émulateur et notes de version F-Droid (Python, bibliothèque standard)
 python3 -m unittest discover -s scripts
 shellcheck scripts/*.sh
+
+# Page d'envoi des rapports de plantage (JavaScript, lanceur de tests de Node, ADR 0033)
+node --test pages/crash/*.test.mjs
 ```
 
 Rapports : `<module>/build/reports/tests/<tâche>/index.html` (HTML lisible) et `<module>/build/test-results/` (XML JUnit, repris par la CI). Tests instrumentés : `<module>/build/reports/androidTests/connected/` et `<module>/build/outputs/androidTest-results/connected/`.
@@ -123,11 +126,12 @@ Objectifs de la SPEC : couverture du domaine **≥ 90 %** (pas encore mesurée a
 - **Quality, unit tests and debug build** (check obligatoire du ruleset, ADR 0004) : `./gradlew test quality assembleDebug --continue` en une seule invocation parallèle ;
 - **Instrumented tests (emulator)** : `./gradlew connectedDebugAndroidTest` sur un émulateur API 34 (`reactivecircus/android-emulator-runner`, accélération KVM).
 
-Le job obligatoire lance aussi, avant Gradle, les tests Python de `scripts/` et `shellcheck scripts/*.sh`.
+Le job obligatoire lance aussi, avant Gradle, les tests Python de `scripts/`, `shellcheck scripts/*.sh` et les tests JavaScript de la page des rapports de plantage (`node --test pages/crash/*.test.mjs`).
 
 **Dépréciations** (PS-132) : le build tourne avec `--warning-mode all` et le script d'init `.github/ci/kotlin-warnings.init.gradle.kts`, qui sort la compilation Kotlin du build cache (une tâche restaurée du cache ne réaffiche pas ses avertissements). `scripts/deprecation_report.py` relit le journal et relève les dépréciations Kotlin (fichier, ligne) et Gradle : avertissements jaunes sur les lignes et le run, résumé du job, et un seul commentaire sur la PR, mis à jour à chaque push (« Plus aucune dépréciation » une fois tout corrigé). Jamais bloquant : l'étape est en `continue-on-error`, la CI reste verte. Les avertissements qui ne sont pas des dépréciations (opt-in des tests…) ne sont pas relevés.
 
  Le résumé du run liste les tests passés et échoués ; en cas d'échec, les rapports sont publiés en artefact. Un nouveau type de test s'ajoute à la CI dans la PR qui l'introduit.
 - **Tutoriel au premier lancement** : les réglages DataStore sont vides au début de chaque test Robolectric, donc `MainActivity` montre d'abord le tutoriel (`FirstLaunchTest`). Un test qui démarre `MainActivity` et attend l'explication d'accès ou l'accueil désinstalle `TutorialModule` et lie `ShouldShowTutorial` et `MarkTutorialSeen` construits sur `FakeSettingsRepository(tutorialVersionSeen = Tutorial.CURRENT_VERSION)` (`@UninstallModules`, `@BindValue`), comme `MainActivityTest` (ADR 0027).
+- **Rapports de plantage** (ADR 0033) : `CrashReportFormatterTest` (format de Sentry, ordre des causes et des appels, coupes), `CrashReportStoreTest`, `CrashReportHandlerTest` (rapport enregistré, puis main rendue à Android même si le rapport échoue), `CrashReportLinkTest` (gzip et Base64 URL dans le fragment, relus par le test), `CrashReportViewModelTest` et `CrashReportDialogTest`. La page se teste avec Node (`pages/crash/crash.test.mjs`) : décodage d'un rapport compressé comme le fait l'application, résumé, adresse d'envoi tirée du DSN. Un vrai plantage se provoque à la main : voir la checklist de la PR (PS-134).
 - **Tutoriel et accessibilité** : `TutorialAccessibilityTest` simule « Supprimer les animations » (`Settings.Global.ANIMATOR_DURATION_SCALE` à 0), parcourt le tutoriel avec les seuls boutons en vérifiant les descriptions TalkBack des animations, et vérifie à 200 % de police, en `GraphicsMode.NATIVE`, qu'aucun texte d'illustration n'est coupé (lignes perdues ou points de suspension). À la main : activer « Supprimer les animations » dans les options d'accessibilité et vérifier les illustrations statiques.
 - **MediaStore réel (tests instrumentés de `:data`)** : MediaStore recalcule `DATE_TAKEN` depuis le fichier (EXIF, `mvhd` des vidéos) en l'indexant, de façon asynchrone ; sur l'émulateur logiciel de la CI, une lecture trop rapide ne trouvait pas le média à sa date (PS-103). Après une insertion, un test appelle `MediaStoreIndexing.scanOwnMedia(context)` (`data/src/androidTest`, `MediaScannerConnection.scanFile` sur les fichiers dont le test est propriétaire, attendu jusqu'au bout ; renvoie le nombre de fichiers indexés, que le test vérifie), puis relit avec `MediaStoreIndexing.eventually(attendu) { … }` (lecture répétée toutes les 200 ms, 30 s au plus, en temps réel hors de l'horloge de `runTest`). Jamais de `Thread.sleep`.

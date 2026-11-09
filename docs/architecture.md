@@ -117,7 +117,7 @@ Parcours principaux :
 | `minSdk` | 33 (Android 13) | SPEC §2 : permissions médias granulaires, choix de langue par application |
 | `compileSdk` / `targetSdk` | 37 (Android 17) | Dernière version stable, et le Play Store impose une cible récente |
 | JVM cible | 17 (toolchain) | Minimum requis par AGP 9.5. AGP déduit `compileOptions` du toolchain |
-| Permissions | `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_MEDIA_VISUAL_USER_SELECTED` (accès partiel d'Android 14+), `POST_NOTIFICATIONS` (demandée seulement à l'activation du rappel), `SCHEDULE_EXACT_ALARM` (rappel à l'heure pile, accordée dans « Alarmes et rappels », ADR 0031), `RECEIVE_BOOT_COMPLETED` (replanifier le rappel au démarrage), `MANAGE_MEDIA` (accès spécial « Gestion des médias », donné dans les réglages d'Android : corbeille et favoris sans dialogue, ADR [0023](decisions/0023-manage-media-access.md)) | `INTERNET` est interdite (SPEC §0.6). La suppression et les favoris passent par les dialogues système de MediaStore, sans permission d'écriture |
+| Permissions | `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_MEDIA_VISUAL_USER_SELECTED` (accès partiel d'Android 14+), `POST_NOTIFICATIONS` (demandée seulement à l'activation du rappel), `SCHEDULE_EXACT_ALARM` (rappel à l'heure pile, accordée dans « Alarmes et rappels », ADR 0031), `RECEIVE_BOOT_COMPLETED` (replanifier le rappel au démarrage), `MANAGE_MEDIA` (accès spécial « Gestion des médias », donné dans les réglages d'Android : corbeille et favoris sans dialogue, ADR [0023](decisions/0023-manage-media-access.md)) | `INTERNET` est interdite (SPEC §0.6) : les rapports de plantage partent par le navigateur, avec l'accord de la personne (ADR [0033](decisions/0033-crash-reports-through-browser.md)). La suppression et les favoris passent par les dialogues système de MediaStore, sans permission d'écriture |
 
 ## 5. Versions
 
@@ -215,6 +215,7 @@ Outils de développement hors APK et hors Gradle : `scripts/seed_photos.py` n'ut
 - **Cache Gradle** : géré par `setup-gradle` (dépendances, build cache, wrapper). Seuls les runs de `main` écrivent le cache ; les PR le lisent sans le modifier. Les tâches KSP n'y passent pas (ADR [0021](decisions/0021-ksp-build-cache.md)).
 - **Tests instrumentés** : second job, `./gradlew connectedDebugAndroidTest` sur un émulateur API 34 (`reactivecircus/android-emulator-runner`).
 - **Script de l'émulateur** : le job obligatoire lance aussi les tests Python de `scripts/` et `shellcheck`.
+- **Page des rapports de plantage** : le job obligatoire lance ses tests JavaScript (`node --test pages/crash/*.test.mjs`) ; le workflow `Pages` (`.github/workflows/pages.yml`) la publie depuis `main` sur <https://babeuloula.github.io/photoswipe/crash/>, avec les polices de l'application (ADR [0033](decisions/0033-crash-reports-through-browser.md)).
 - **Blocage** : un ruleset GitHub sur `main` exige que le job « Quality, unit tests and debug build » soit vert avant tout merge (ADR [0004](decisions/0004-required-ci-check-on-main.md)). Renommer ce job impose de mettre à jour le ruleset.
 
 ## Version et signature release

@@ -147,6 +147,7 @@ photoswipe/
 │   ├── src/testFixtures/kotlin/…/fixtures/  Outils de test partagés avec data et app : builders aMediaItem(), aReviewEntry(), faux ports (FakeMediaSource, FakeReviewRepository, FakeMediaActionRequestFactory), FixedClock
 │   └── src/test/
 ├── docs/                      Documentation (ce guide, l'architecture, les décisions)
+├── pages/                     Pages web publiées par GitHub Pages : crash/ affiche un rapport de plantage et l'envoie à GlitchTip si la personne le veut (ADR 0033)
 ├── scripts/                   Outils hors Gradle : seed-emulator.sh pousse sur l'émulateur des photos datées (pour tester les dialogues de corbeille d'Android), avec son générateur Python et ses tests
 ├── gradle/
 │   ├── libs.versions.toml     Version catalog : toutes les bibliothèques et versions

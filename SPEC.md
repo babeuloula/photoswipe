@@ -13,7 +13,7 @@ Ce document est destiné à Claude Code. Il peut être copié à la racine du d�
 3. **Dépendances inversées** : le domaine ne connaît ni Android, ni Room, ni Compose. Les couches externes dépendent du domaine, jamais l'inverse.
 4. **KISS d'abord** : pas d'abstraction sans besoin réel et testable. Pas de bibliothèque ajoutée sans justification écrite dans `docs/architecture.md`.
 5. **Chaque fonctionnalité arrive avec ses tests** (voir §11). Une PR/étape sans test n'est pas terminée.
-6. **Aucune permission `INTERNET`**. L'app est 100 % locale, sans analytics ni réseau.
+6. **Aucune permission `INTERNET`**. L'app est 100 % locale, sans analytics ni réseau. Seule exception, à la demande de la personne : le rapport d'un plantage, ouvert dans le navigateur qui l'envoie (ADR 0033).
 7. **Aucune suppression sans confirmation système explicite** de l'utilisateur.
 8. Avant de coder une étape, relire la section concernée. En cas d'ambiguïté, noter l'hypothèse dans `docs/decisions/` (mini ADR) plutôt que d'improviser en silence.
 
