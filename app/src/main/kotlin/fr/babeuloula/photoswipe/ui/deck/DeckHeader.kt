@@ -19,6 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -31,20 +33,46 @@ import java.time.format.DateTimeFormatter
 
 /**
  * Progression dans la pile du jour, sous la barre du haut : une barre et « 4 sur 23 » en chiffres
- * tabulaires. TalkBack la lit comme une barre de progression.
+ * tabulaires. TalkBack la lit comme une barre de progression. Avec plusieurs années ([segments]),
+ * la barre est coupée en un tronçon par année, à la taille de son nombre de souvenirs (PS-144) :
+ * on voit combien d'années il reste à trier.
  */
 @Composable
 internal fun DeckProgress(
     position: Int,
     total: Int,
     yearProgress: YearProgress? = null,
+    segments: List<YearSegment> = emptyList(),
 ) {
-    val label = stringResource(R.string.deck_progress, position, total)
+    val progressLabel = stringResource(R.string.deck_progress, position, total)
+    val label =
+        if (segments.size > 1) {
+            stringResource(
+                R.string.deck_progress_with_years,
+                progressLabel,
+                pluralStringResource(R.plurals.deck_progress_years, segments.size, segments.size),
+            )
+        } else {
+            progressLabel
+        }
     Column {
-        ProgressRow(position, total, label)
+        ProgressRow(position, total, progressLabel, label, segments)
         yearProgress?.let { YearLine(it) }
     }
 }
+
+/**
+ * Tronçon d'une année dans la barre de progression de la pile (PS-144).
+ *
+ * @property year année de prise de vue.
+ * @property sorted souvenirs de cette année déjà triés pendant la session.
+ * @property total souvenirs de cette année dans la pile, triés ou non.
+ */
+data class YearSegment(
+    val year: Int,
+    val sorted: Int,
+    val total: Int,
+)
 
 /**
  * Où en est la pile dans l'année de la carte du dessus (PS-138).
@@ -87,19 +115,38 @@ private fun YearLine(progress: YearProgress) {
 private fun ProgressRow(
     position: Int,
     total: Int,
+    shown: String,
     label: String,
+    segments: List<YearSegment>,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        LinearProgressIndicator(
-            progress = { if (total == 0) 0f else (position - 1).toFloat() / total },
-            modifier = Modifier.weight(1f).semantics { contentDescription = label },
-        )
+        val barModifier = Modifier.weight(1f).semantics { contentDescription = label }
+        if (segments.size > 1) {
+            Row(
+                modifier = barModifier.testTag(YEAR_SEGMENTS_TAG),
+                horizontalArrangement = Arrangement.spacedBy(SEGMENT_GAP),
+            ) {
+                segments.forEach { segment ->
+                    LinearProgressIndicator(
+                        progress = { segment.sorted.toFloat() / segment.total },
+                        modifier = Modifier.weight(segment.total.toFloat()),
+                        gapSize = 0.dp,
+                        drawStopIndicator = {},
+                    )
+                }
+            }
+        } else {
+            LinearProgressIndicator(
+                progress = { if (total == 0) 0f else (position - 1).toFloat() / total },
+                modifier = barModifier,
+            )
+        }
         Text(
-            text = label,
+            text = shown,
             style = MaterialTheme.typography.monoLabel,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.clearAndSetSemantics {},
@@ -115,3 +162,9 @@ internal fun dayAndMonth(
     val locale = context.resources.configuration.locales[0]
     return date.format(DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "dMMMM"), locale))
 }
+
+/** Repère de test de la barre coupée par année. */
+internal const val YEAR_SEGMENTS_TAG = "deck_year_segments"
+
+/** Espace entre les tronçons de deux années. */
+private val SEGMENT_GAP = 4.dp

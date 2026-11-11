@@ -90,4 +90,8 @@
         <item quantity="one">Sort the last one</item>
         <item quantity="other">Sort the %d left</item>
     </plurals>
+    <plurals name="deck_progress_years">
+        <item quantity="one">%d year</item>
+        <item quantity="other">%d years</item>
+    </plurals>
 </resources>

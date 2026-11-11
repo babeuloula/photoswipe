@@ -101,6 +101,8 @@ class DeckViewModelTest : DeckViewModelTestBase() {
 
             viewModel.onEvent(DeckEvent.Undo)
             assertEquals(Triple(2025, 3, 3), Triple(state().year, state().yearPosition, state().yearTotal))
+            // La barre de progression a un tronçon par année, de la plus récente à la plus ancienne (PS-144).
+            assertEquals(listOf(YearSegment(2025, 2, 3), YearSegment(2023, 0, 1)), state().yearSegments)
         }
 
     @Test

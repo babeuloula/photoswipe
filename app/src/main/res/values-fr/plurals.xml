@@ -100,4 +100,9 @@
         <item quantity="many">Trier les %d de restants</item>
         <item quantity="other">Trier les %d restants</item>
     </plurals>
+    <plurals name="deck_progress_years">
+        <item quantity="one">%d année</item>
+        <item quantity="many">%d d\'années</item>
+        <item quantity="other">%d années</item>
+    </plurals>
 </resources>

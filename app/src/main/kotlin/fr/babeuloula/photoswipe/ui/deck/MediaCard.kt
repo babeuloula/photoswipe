@@ -32,6 +32,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -107,29 +108,34 @@ fun MediaCard(
             modifier = Modifier.size(size),
             shape = MaterialTheme.shapes.extraLarge,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-            // Légère ombre portée, plus marquée en bas : la carte se détache de celle d'en dessous.
             elevation = CardDefaults.cardElevation(defaultElevation = CARD_ELEVATION),
         ) {
-            val context = LocalContext.current
-            val date = localizedDate(context, card.takenOn)
+            val date = localizedDate(LocalContext.current, card.takenOn)
             var failed by remember(card.uri) { mutableStateOf(false) }
             val descriptionRes =
                 if (card.type == MediaType.VIDEO) R.string.deck_video_description else R.string.deck_photo_description
             Box(modifier = Modifier.fillMaxSize()) {
-                AsyncImage(
-                    model = card.uri,
-                    contentDescription = stringResource(descriptionRes, date),
-                    imageLoader = LocalImageLoader.current,
-                    placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
-                    contentScale = if (crop) ContentScale.Crop else ContentScale.Fit,
-                    onSuccess = { success ->
-                        failed = false
-                        val intrinsic = success.painter.intrinsicSize
-                        if (intrinsic.isSpecified && intrinsic.height > 0f) onRatio(intrinsic.width / intrinsic.height)
-                    },
-                    onError = { failed = true },
-                    modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen),
-                )
+                // L'échelle n'est relue qu'à la création de l'image : la recréer quand le rognage change.
+                key(crop) {
+                    AsyncImage(
+                        model = card.uri,
+                        contentDescription = stringResource(descriptionRes, date),
+                        imageLoader = LocalImageLoader.current,
+                        placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
+                        contentScale = if (crop) ContentScale.Crop else ContentScale.Fit,
+                        onSuccess = { success ->
+                            failed = false
+                            val intrinsic = success.painter.intrinsicSize
+                            if (intrinsic.isSpecified &&
+                                intrinsic.height > 0f
+                            ) {
+                                onRatio(intrinsic.width / intrinsic.height)
+                            }
+                        },
+                        onError = { failed = true },
+                        modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen),
+                    )
+                }
                 if (failed) {
                     Unavailable(type = card.type, modifier = Modifier.align(Alignment.Center))
                 }
@@ -485,7 +491,7 @@ private fun Unavailable(
 /** Marge du repère et des pastilles dans la carte. */
 private val CARD_PADDING = 16.dp
 
-/** Élévation de la carte : une légère ombre portée (PS-142). */
+/** Élévation de la carte : une légère ombre portée, plus marquée en bas, qui la détache de celle d'en dessous (PS-142). */
 private val CARD_ELEVATION = 6.dp
 
 /** Taille de la pastille du cœur des favoris. */
