@@ -35,9 +35,11 @@ data class OverviewYear(
  * @property decision décision prise ce jour-là, `null` s'il reste à trier (y compris sur un jour
  * rouvert pour être retrié, ADR 0026).
  * @property favorite vrai s'il est en favori dans la galerie, ou demandé en favori depuis la pile.
+ * @property similar place de la photo parmi des photos prises à la suite (PS-140), `null` sinon.
  */
 data class OverviewMemory(
     val media: MediaItem,
     val decision: ReviewDecision?,
     val favorite: Boolean,
+    val similar: SimilarGroup? = null,
 )

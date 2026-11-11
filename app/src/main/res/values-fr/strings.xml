@@ -213,4 +213,8 @@
     <string name="day_overview_kept">gardée</string>
     <string name="day_overview_marked">marquée pour suppression</string>
     <string name="day_overview_favorite">en favori</string>
+    <!-- Photos prises à la suite (PS-140). -->
+    <string name="deck_similar">%1$d/%2$d</string>
+    <string name="deck_similar_description">Photo %1$d sur %2$d prises à la suite</string>
+    <string name="day_overview_similar">%1$d sur %2$d prises à la suite</string>
 </resources>

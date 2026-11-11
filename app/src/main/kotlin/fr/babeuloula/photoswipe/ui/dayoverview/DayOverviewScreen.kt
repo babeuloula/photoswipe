@@ -53,6 +53,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.OverviewMemory
 import fr.babeuloula.photoswipe.domain.model.OverviewYear
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
+import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import fr.babeuloula.photoswipe.ui.common.Thumbnail
 import fr.babeuloula.photoswipe.ui.deck.PhotoViewer
 import fr.babeuloula.photoswipe.ui.deck.dayAndMonth
@@ -224,6 +225,7 @@ private fun MemoryTile(
                 },
             ),
         )
+        memory.similar?.let { SimilarBadge(it, Modifier.align(Alignment.TopEnd)) }
         if (memory.media.type == MediaType.VIDEO) {
             StateBadge(
                 R.drawable.ic_play_arrow_filled,
@@ -240,6 +242,36 @@ private fun MemoryTile(
                 ReviewDecision.TRASHED, null -> Unit
             }
         }
+    }
+}
+
+/** « ⧉ 2/3 » : la photo a des voisines prises à la suite (PS-140). */
+@Composable
+private fun SimilarBadge(
+    similar: SimilarGroup,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .padding(4.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.onPrimaryFixed)
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Icon(
+            painterResource(R.drawable.ic_burst_mode),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primaryFixed,
+            modifier = Modifier.size(12.dp),
+        )
+        Text(
+            text = stringResource(R.string.deck_similar, similar.position, similar.size),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primaryFixed,
+        )
     }
 }
 
@@ -284,7 +316,15 @@ private fun memoryDescription(memory: OverviewMemory): String {
                 null -> R.string.day_overview_to_sort
             },
         )
-    val parts = listOfNotNull(type, decision, stringResource(R.string.day_overview_favorite).takeIf { memory.favorite })
+    val similar =
+        memory.similar?.let { stringResource(R.string.day_overview_similar, it.position, it.size) }
+    val parts =
+        listOfNotNull(
+            type,
+            decision,
+            stringResource(R.string.day_overview_favorite).takeIf { memory.favorite },
+            similar,
+        )
     return parts.joinToString(", ")
 }
 

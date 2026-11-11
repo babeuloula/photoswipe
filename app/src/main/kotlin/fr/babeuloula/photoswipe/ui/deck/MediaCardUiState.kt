@@ -4,6 +4,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
+import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneId
@@ -24,6 +25,7 @@ import java.time.ZoneId
  * l'application : la carte affiche un cœur (PS-86).
  * @property previousDecision décision d'avant (gardé, marqué pour suppression), sur un jour rouvert
  * pour être retrié (ADR 0026) ; `null` sinon.
+ * @property similar place de la photo parmi des photos du jour prises à la suite (PS-140), `null` sinon.
  */
 data class MediaCardUiState(
     val id: MediaId,
@@ -35,12 +37,14 @@ data class MediaCardUiState(
     val duration: Duration? = null,
     val favorite: Boolean = false,
     val previousDecision: ReviewDecision? = null,
+    val similar: SimilarGroup? = null,
 ) {
     companion object {
         /**
          * Carte du souvenir [media] montré dans la pile du jour [day], dans le fuseau [zone] ;
          * [favorite] vaut vrai par défaut si la galerie le dit en favori ; [previousDecision] est
-         * la décision d'avant, sur un jour rouvert pour être retrié.
+         * la décision d'avant, sur un jour rouvert pour être retrié ; [similar] sa place parmi des
+         * photos prises à la suite.
          */
         fun of(
             media: MediaItem,
@@ -48,6 +52,7 @@ data class MediaCardUiState(
             zone: ZoneId,
             favorite: Boolean = media.isFavorite,
             previousDecision: ReviewDecision? = null,
+            similar: SimilarGroup? = null,
         ): MediaCardUiState {
             val takenOn = media.takenAt.atZone(zone).toLocalDate()
             return MediaCardUiState(
@@ -60,6 +65,7 @@ data class MediaCardUiState(
                 duration = media.duration,
                 favorite = favorite,
                 previousDecision = previousDecision,
+                similar = similar,
             )
         }
     }

@@ -4,10 +4,12 @@ import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
+import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.GetMarkedDeck
 import fr.babeuloula.photoswipe.domain.usecase.GetPreviousDecisions
+import fr.babeuloula.photoswipe.domain.usecase.GetSimilarMemories
 import fr.babeuloula.photoswipe.domain.usecase.MarkedMedia
 import fr.babeuloula.photoswipe.ui.navigation.DeckRoute
 import java.time.LocalDate
@@ -21,6 +23,7 @@ import javax.inject.Inject
  * @property getDeckForDay paquet des médias à trier.
  * @property getDaySession décisions du jour encore annulables.
  * @property getPreviousDecisions décisions d'avant, à montrer sur les cartes d'un jour rouvert.
+ * @property getSimilarMemories photos du jour prises à la suite (PS-140).
  * @property getMarkedDeck pile des médias marqués, ouverte depuis le résumé (PS-112).
  */
 class DeckLoading
@@ -30,6 +33,7 @@ class DeckLoading
         val getDaySession: GetDaySession,
         val getPreviousDecisions: GetPreviousDecisions,
         val getMarkedDeck: GetMarkedDeck,
+        val getSimilarMemories: GetSimilarMemories,
     ) {
         /** Pile de [route] : celle de son jour, ou celle des marqués. */
         suspend fun load(route: DeckRoute): LoadedDeck =
@@ -44,7 +48,9 @@ class DeckLoading
             val cards = deck.sortedByDescending { it.id.value == first }
             val previous =
                 getPreviousDecisions(day, cards.mapTo(HashSet()) { it.id }).mapValues { it.value.decision }
-            return LoadedDeck(cards, getDaySession(day), previous)
+            // Les photos proches ne sont qu'une aide : sans elles, la pile reste utilisable.
+            val similar = runCatching { getSimilarMemories(day) }.getOrDefault(emptyMap())
+            return LoadedDeck(cards, getDaySession(day), previous, similar = similar)
         }
 
         /** Le média touché dans le résumé en tête ; chaque carte porte la pastille « marqué ». */
@@ -66,10 +72,12 @@ class DeckLoading
  * @property session décisions encore annulables.
  * @property previousDecisions décision d'avant à montrer sur chaque carte qui en a une.
  * @property marked pile des marqués : jours de revue des marquages de chaque média ; vide sinon.
+ * @property similar place des photos prises à la suite (PS-140) ; vide pour la pile des marqués.
  */
 data class LoadedDeck(
     val cards: List<MediaItem>,
     val session: ReviewSession,
     val previousDecisions: Map<MediaId, ReviewDecision> = emptyMap(),
     val marked: Map<MediaId, MarkedMedia> = emptyMap(),
+    val similar: Map<MediaId, SimilarGroup> = emptyMap(),
 )

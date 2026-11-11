@@ -19,6 +19,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
+import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
@@ -114,6 +115,26 @@ class DeckViewModelTest : DeckViewModelTestBase() {
 
             assertEquals(listOf(MediaId(3), MediaId(1)), viewModel.cardIds())
             assertEquals(3, (viewModel.uiState.value as DeckUiState.Loaded).total)
+        }
+
+    @Test
+    fun `says which cards were taken one after another, counting the photos already sorted`() =
+        runTest {
+            val burst =
+                (1L..3L).map {
+                    takenOn(it, 2023).let { media ->
+                        media.copy(
+                            takenAt =
+                                media.takenAt.plusSeconds(it * 5),
+                        )
+                    }
+                }
+            repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
+            val viewModel = deckViewModel(FakeMediaSource(burst + takenOn(4, 2020)))
+
+            val cards = (viewModel.uiState.value as DeckUiState.Loaded).cards
+
+            assertEquals(listOf(SimilarGroup(2, 3), SimilarGroup(3, 3)), cards.map { it.similar })
         }
 
     @Test
