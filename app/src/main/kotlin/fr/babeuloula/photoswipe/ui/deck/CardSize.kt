@@ -1,7 +1,10 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateMap
@@ -13,6 +16,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.min
+import fr.babeuloula.photoswipe.ui.theme.motion
 import kotlin.math.abs
 
 /**
@@ -61,8 +65,12 @@ internal fun FittedCardBox(
     val ratios = LocalCardAspectRatios.current
     val ratio = ratios?.get(uri) ?: ownRatio.value
     BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
-        val size = fittedCardSize(maxWidth, maxHeight, ratio)
-        content(size, fillsByCropping(size, ratio)) { loaded ->
+        val target = fittedCardSize(maxWidth, maxHeight, ratio)
+        // Une image tout juste chargée : la carte prend sa forme en douceur, sans sauter.
+        val spec = MaterialTheme.motion.defaultSpatial<Dp>()
+        val width by animateDpAsState(target.width, spec, label = "cardWidth")
+        val height by animateDpAsState(target.height, spec, label = "cardHeight")
+        content(DpSize(width, height), fillsByCropping(target, ratio)) { loaded ->
             if (ratios != null) ratios[uri] = loaded else ownRatio.value = loaded
         }
     }

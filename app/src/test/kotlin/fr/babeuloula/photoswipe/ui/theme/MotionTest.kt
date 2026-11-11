@@ -4,8 +4,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.material3.MaterialTheme
-import fr.babeuloula.photoswipe.ui.navigation.SharedAxisTransitions
-import fr.babeuloula.photoswipe.ui.navigation.rememberSharedAxisTransitions
+import fr.babeuloula.photoswipe.ui.navigation.ScreenTransitions
+import fr.babeuloula.photoswipe.ui.navigation.rememberScreenTransitions
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -50,11 +50,11 @@ class MotionTest {
     @Test
     fun `provides the motion and the screen transitions through the theme`() {
         var provided: PhotoSwipeMotion? = null
-        var transitions: SharedAxisTransitions? = null
+        var transitions: ScreenTransitions? = null
         Robolectric.buildActivity(ComponentActivity::class.java).setup().get().setContent {
             PhotoSwipeTheme {
                 provided = MaterialTheme.motion
-                transitions = rememberSharedAxisTransitions()
+                transitions = rememberScreenTransitions()
             }
         }
         ShadowLooper.idleMainLooper()
@@ -62,5 +62,8 @@ class MotionTest {
         assertNotNull(provided)
         assertNotNull(transitions!!.enter)
         assertNotNull(transitions!!.popExit)
+        // Fondu avec zoom : l'entrée et la sortie au retour ne sont pas de simples fondus (PS-141).
+        assertTrue(transitions!!.enter.toString().contains("Scale"))
+        assertTrue(transitions!!.popExit.toString().contains("Scale"))
     }
 }

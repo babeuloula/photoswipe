@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -54,7 +55,9 @@ import fr.babeuloula.photoswipe.domain.model.OverviewMemory
 import fr.babeuloula.photoswipe.domain.model.OverviewYear
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SimilarGroup
+import fr.babeuloula.photoswipe.ui.common.SharedScreenKey
 import fr.babeuloula.photoswipe.ui.common.Thumbnail
+import fr.babeuloula.photoswipe.ui.common.sharedScreen
 import fr.babeuloula.photoswipe.ui.deck.PhotoViewer
 import fr.babeuloula.photoswipe.ui.deck.dayAndMonth
 import fr.babeuloula.photoswipe.ui.theme.monoLabel
@@ -76,7 +79,8 @@ fun DayOverviewScreen(
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
-        modifier = modifier,
+        // Les vignettes du jour, sur l'accueil, s'agrandissent jusqu'à cet écran (PS-141).
+        modifier = modifier.sharedScreen(SharedScreenKey.Overview(day), RectangleShape),
         topBar = {
             TopAppBar(
                 title = {
