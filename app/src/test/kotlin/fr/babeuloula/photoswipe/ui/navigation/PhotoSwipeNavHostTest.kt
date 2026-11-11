@@ -153,7 +153,7 @@ class PhotoSwipeNavHostTest {
 
     @Test
     fun `goes from the deck to the summary then back home when done`() {
-        clickOn(R.string.home_today)
+        clickOn(R.string.home_start_sorting)
         clickOn(R.string.deck_finish)
         awaitText(text(R.string.summary_title))
 

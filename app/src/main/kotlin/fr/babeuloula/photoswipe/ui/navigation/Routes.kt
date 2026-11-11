@@ -14,13 +14,14 @@ data object HomeRoute
  *
  * @property epochDay jour cible en jours depuis le 1er janvier 1970 (les routes typées ne
  * transportent que des types simples) ; `null` pour la pile des marqués.
- * @property firstMarkedMediaId pile des marqués : média touché dans le résumé, montré en premier ;
+ * @property firstMediaId média montré en premier : celui touché dans le résumé (pile des marqués) ou
+ * dans la vue d'ensemble du jour (PS-139) ;
  * `null` pour commencer par le plus récemment marqué.
  */
 @Serializable
 data class DeckRoute(
     val epochDay: Long? = null,
-    val firstMarkedMediaId: Long? = null,
+    val firstMediaId: Long? = null,
 ) {
     /** Jour cible, `null` pour la pile des marqués. */
     val day: LocalDate? get() = epochDay?.let(LocalDate::ofEpochDay)
@@ -29,11 +30,32 @@ data class DeckRoute(
     val isMarked: Boolean get() = epochDay == null
 
     companion object {
-        /** Route de la pile du jour [day]. */
-        fun of(day: LocalDate): DeckRoute = DeckRoute(day.toEpochDay())
+        /** Route de la pile du jour [day], en commençant par [first] s'il reste à trier. */
+        fun of(
+            day: LocalDate,
+            first: MediaId? = null,
+        ): DeckRoute = DeckRoute(day.toEpochDay(), first?.value)
 
         /** Route de la pile des médias marqués, en commençant par [first] s'il est donné. */
-        fun marked(first: MediaId? = null): DeckRoute = DeckRoute(firstMarkedMediaId = first?.value)
+        fun marked(first: MediaId? = null): DeckRoute = DeckRoute(firstMediaId = first?.value)
+    }
+}
+
+/**
+ * Vue d'ensemble d'un jour (PS-139) : tous ses souvenirs, triés ou non, rangés par année.
+ *
+ * @property epochDay jour cible en jours depuis le 1er janvier 1970.
+ */
+@Serializable
+data class DayOverviewRoute(
+    val epochDay: Long,
+) {
+    /** Jour cible. */
+    val day: LocalDate get() = LocalDate.ofEpochDay(epochDay)
+
+    companion object {
+        /** Route de la vue d'ensemble du jour [day]. */
+        fun of(day: LocalDate): DayOverviewRoute = DayOverviewRoute(day.toEpochDay())
     }
 }
 

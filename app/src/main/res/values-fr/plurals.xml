@@ -89,4 +89,15 @@
         <item quantity="many">%1$d de médias supprimés · %2$s libérés</item>
         <item quantity="other">%1$d médias supprimés · %2$s libérés</item>
     </plurals>
+    <!-- Vue d'ensemble d'un jour (PS-139). -->
+    <plurals name="day_overview_memories">
+        <item quantity="one">%d souvenir</item>
+        <item quantity="many">%d de souvenirs</item>
+        <item quantity="other">%d souvenirs</item>
+    </plurals>
+    <plurals name="day_overview_sort">
+        <item quantity="one">Trier le %d restant</item>
+        <item quantity="many">Trier les %d de restants</item>
+        <item quantity="other">Trier les %d restants</item>
+    </plurals>
 </resources>

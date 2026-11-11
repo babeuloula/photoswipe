@@ -202,4 +202,15 @@
     <string name="deck_year_progress">%1$d · %2$d sur %3$d de cette année</string>
     <!-- Carte du jour : les souvenirs viennent de toutes les années passées (PS-138). -->
     <string name="home_today_every_year">Ce jour-là, toutes les années passées</string>
+    <!-- Vue d'ensemble d'un jour (PS-139). -->
+    <string name="day_overview_open">Voir tous les souvenirs du jour</string>
+    <string name="day_overview_error">Les souvenirs n\'ont pas pu être chargés.</string>
+    <string name="day_overview_empty">Aucun souvenir ce jour-là.</string>
+    <string name="day_overview_year">%1$d · %2$s · %3$s</string>
+    <string name="day_overview_photo">Photo</string>
+    <string name="day_overview_video">Vidéo</string>
+    <string name="day_overview_to_sort">à trier</string>
+    <string name="day_overview_kept">gardée</string>
+    <string name="day_overview_marked">marquée pour suppression</string>
+    <string name="day_overview_favorite">en favori</string>
 </resources>

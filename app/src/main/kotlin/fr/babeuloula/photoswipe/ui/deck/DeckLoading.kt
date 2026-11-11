@@ -33,10 +33,15 @@ class DeckLoading
     ) {
         /** Pile de [route] : celle de son jour, ou celle des marqués. */
         suspend fun load(route: DeckRoute): LoadedDeck =
-            route.day?.let { loadDay(it) } ?: loadMarked(route.firstMarkedMediaId)
+            route.day?.let { loadDay(it, route.firstMediaId) } ?: loadMarked(route.firstMediaId)
 
-        private suspend fun loadDay(day: LocalDate): LoadedDeck {
-            val cards = getDeckForDay(day)
+        /** Pile du jour [day] ; le média [first], touché dans la vue d'ensemble, passe en tête (PS-139). */
+        private suspend fun loadDay(
+            day: LocalDate,
+            first: Long?,
+        ): LoadedDeck {
+            val deck = getDeckForDay(day)
+            val cards = deck.sortedByDescending { it.id.value == first }
             val previous =
                 getPreviousDecisions(day, cards.mapTo(HashSet()) { it.id }).mapValues { it.value.decision }
             return LoadedDeck(cards, getDaySession(day), previous)
