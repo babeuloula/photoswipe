@@ -324,7 +324,11 @@ private fun CardStack(
     // Proportions des images, partagées par les cartes : chacune garde sa forme en montant (PS-142).
     val ratios = remember { mutableStateMapOf<String, Float>() }
     // Place des bords qui dépassent sous la carte du dessus, pour que la pile ne déborde pas sur les boutons.
-    Box(modifier = modifier.padding(bottom = STACK_OFFSET_STEP * (DeckUiState.Loaded.VISIBLE_CARDS - 1))) {
+    BoxWithConstraints(
+        modifier = modifier.padding(bottom = STACK_OFFSET_STEP * (DeckUiState.Loaded.VISIBLE_CARDS - 1)),
+    ) {
+        // Hauteur de la carte du dessus : le bas de chaque carte du dessous se cale sur le sien.
+        val topHeight = fittedCardSize(maxWidth, maxHeight, ratios[state.current.uri]).height
         CompositionLocalProvider(LocalCardAspectRatios provides ratios) {
             // Une vraie pile (PS-147) : du fond vers le dessus. Chaque carte garde sa composition, et
             // son image, du fond jusqu'au dessus ; seule celle du dessus se glisse.
@@ -334,8 +338,9 @@ private fun CardStack(
                     StackedCard(
                         card = card,
                         depth = depth,
-                        // Les cartes du dessous prennent le cadre de celle du dessus : leurs bords dépassent.
-                        frameRatio = if (depth == 0) null else ratios[state.current.uri],
+                        // Chaque carte garde sa forme ; le bas de celles du dessous suit celui de la carte du dessus.
+                        bottomAlign = (topHeight - fittedCardSize(maxWidth, maxHeight, ratios[card.uri]).height) / 2,
+                        ready = card.uri in ratios,
                         actions =
                             TopCardActions(
                                 onEvent = onEvent,

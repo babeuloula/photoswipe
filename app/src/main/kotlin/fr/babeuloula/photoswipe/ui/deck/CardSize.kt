@@ -53,21 +53,19 @@ internal fun fittedCardSize(
 /**
  * Place la carte du média [uri] dans tout l'espace donné, à la forme de son image (PS-142) :
  * [content] reçoit la taille de la carte et de quoi retenir les proportions de l'image une fois
- * chargée. [frameRatio], s'il est donné, remplace les proportions de l'image pour la taille de la
- * carte : les cartes de la pile prennent le cadre de celle du dessus (PS-147).
+ * chargée.
  */
 @Composable
 internal fun FittedCardBox(
     uri: String,
     modifier: Modifier = Modifier,
-    frameRatio: Float? = null,
     content: @Composable (size: DpSize, onRatio: (Float) -> Unit) -> Unit,
 ) {
     val ownRatio = remember(uri) { mutableStateOf<Float?>(null) }
     val ratios = LocalCardAspectRatios.current
     val ratio = ratios?.get(uri) ?: ownRatio.value
     BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
-        val target = fittedCardSize(maxWidth, maxHeight, frameRatio ?: ratio)
+        val target = fittedCardSize(maxWidth, maxHeight, ratio)
         // Une image tout juste chargée : la carte prend sa forme en douceur, sans sauter.
         val spec = MaterialTheme.motion.defaultSpatial<Dp>()
         val width by animateDpAsState(target.width, spec, label = "cardWidth")

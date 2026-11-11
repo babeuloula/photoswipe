@@ -89,9 +89,8 @@ import java.time.LocalDate
  * [active] marque la carte du dessus : si c'est une vidéo, elle est lue en muet par le lecteur de
  * la pile ([LocalCardVideoPlayer]) ; la carte suivante, préparée dessous, reste sur sa miniature.
  *
- * [overlay] se dessine par-dessus, sur toute la carte (voile du geste). [frameRatio], s'il est
- * donné, impose les proportions de la carte (celles de la carte du dessus, pour une carte de la pile,
- * PS-147) : l'image la remplit alors, rognée ; sans [details], ni repère ni pastilles.
+ * [overlay] se dessine par-dessus, sur toute la carte (voile du geste). Sans [details], ni repère ni
+ * pastilles : c'est une carte du dessous de la pile (PS-147).
  *
  * [onOpen], s'il est donné, est appelé par un appui sur une photo : la pile l'ouvre en grand
  * (PS-117). Sur une vidéo, l'appui garde son rôle de lecture et de pause.
@@ -103,10 +102,9 @@ fun MediaCard(
     active: Boolean = false,
     onOpen: (() -> Unit)? = null,
     overlay: @Composable BoxScope.() -> Unit = {},
-    frameRatio: Float? = null,
     details: Boolean = true,
 ) {
-    FittedCardBox(uri = card.uri, modifier = modifier, frameRatio = frameRatio) { size, onRatio ->
+    FittedCardBox(uri = card.uri, modifier = modifier) { size, onRatio ->
         Card(
             modifier = Modifier.size(size),
             shape = MaterialTheme.shapes.extraLarge,

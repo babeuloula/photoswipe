@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -13,6 +14,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import fr.babeuloula.photoswipe.ui.theme.motion
@@ -23,19 +25,28 @@ import fr.babeuloula.photoswipe.ui.theme.motion
  * Une carte de la pile, à la profondeur [depth] (0 : celle du dessus). Celles du dessous sont un peu
  * plus bas, plus petites et légèrement inclinées, comme une pile de tirages ; elles remontent d'un
  * cran, en douceur, à chaque carte triée, et la dernière arrivée au fond apparaît en fondu (PS-147).
+ *
+ * Chaque carte garde sa propre forme : [bottomAlign] la descend pour caler son bas sur celui de la
+ * carte du dessus (vers le haut si elle est plus haute), d'où ses bords qui dépassent. Arrivée en
+ * haut, elle remonte au centre sans se déformer ni zoomer son image. Tant que son image n'est pas
+ * chargée ([ready] faux), une carte du dessous reste invisible.
  */
 @Composable
 internal fun StackedCard(
     card: MediaCardUiState,
     depth: Int,
-    frameRatio: Float?,
+    bottomAlign: Dp,
     actions: TopCardActions,
+    ready: Boolean = true,
 ) {
     val top = depth == 0
     val motion = MaterialTheme.motion
     val stacked by animateFloatAsState(depth.toFloat(), motion.defaultSpatial(), label = "stackDepth")
+    // Une nouvelle carte du dessus d'une autre hauteur : les cartes du dessous suivent son bas en douceur.
+    val align by animateDpAsState(bottomAlign, motion.defaultSpatial(), label = "stackAlign")
     val appear = remember { Animatable(if (top) 1f else 0f) }
-    LaunchedEffect(Unit) { appear.animateTo(1f, motion.defaultEffects()) }
+    // Une carte du dessous n'apparaît qu'avec son image : avant, elle n'a pas encore sa forme.
+    LaunchedEffect(ready) { if (ready) appear.animateTo(1f, motion.defaultEffects()) }
     SwipeableMediaCard(
         card = card,
         onEvent = actions.onEvent,
@@ -44,7 +55,6 @@ internal fun StackedCard(
         returningFrom = actions.returningFrom.takeIf { top },
         onIndicationChange = if (top) actions.onIndicationChange else { _ -> },
         onOpen = actions.onOpen.takeIf { top },
-        frameRatio = frameRatio,
         modifier =
             Modifier
                 .fillMaxSize()
@@ -53,9 +63,11 @@ internal fun StackedCard(
                     scaleX = scale
                     scaleY = scale
                     transformOrigin = TransformOrigin(STACK_PIVOT_X, 1f)
-                    translationY = STACK_OFFSET_STEP.toPx() * stacked
+                    // Le bas calé sur celui de la carte du dessus, puis un cran plus bas par profondeur ;
+                    // en arrivant en haut, la carte remonte au centre sans changer de forme.
+                    translationY = align.toPx() * stacked.coerceAtMost(1f) + STACK_OFFSET_STEP.toPx() * stacked
                     rotationZ = stackRotation(stacked)
-                    alpha = appear.value
+                    alpha = if (top) 1f else appear.value
                 }.then(if (top) Modifier else Modifier.clearAndSetSemantics { testTag = stackTag(depth) }),
     )
 }

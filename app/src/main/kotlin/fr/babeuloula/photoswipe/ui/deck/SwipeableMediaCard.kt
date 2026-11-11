@@ -1,6 +1,8 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.AnimationVector2D
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -105,7 +107,6 @@ fun SwipeableMediaCard(
     onIndicationChange: (SwipeIndication?) -> Unit = {},
     onOpen: (() -> Unit)? = null,
     enabled: Boolean = true,
-    frameRatio: Float? = null,
 ) {
     BoxWithConstraints(modifier = modifier) {
         val size = with(LocalDensity.current) { Offset(maxWidth.toPx(), maxHeight.toPx()) }
@@ -124,8 +125,8 @@ fun SwipeableMediaCard(
         /** Sortie de la carte par [side], voile plein de ce côté, puis décision. */
         suspend fun exit(side: CardSide) {
             drag.value = side.direction * maxOf(size.x, size.y)
-            offset.animateTo(exitOffset(side, size), exitSpring)
-            onEvent(side.decision)
+            // La décision part dès que la carte a quitté l'écran : la pile remonte sans attendre la fin du ressort.
+            offset.leave(exitOffset(side, size), exitSpring, size) { onEvent(side.decision) }
         }
 
         suspend fun backToCenter() {
@@ -183,7 +184,6 @@ fun SwipeableMediaCard(
                 onOpen = onOpen,
                 modifier = Modifier.matchParentSize(),
                 overlay = { SwipeIndicator(indication = indication, modifier = Modifier.matchParentSize()) },
-                frameRatio = frameRatio,
                 details = enabled,
             )
         }
@@ -361,35 +361,3 @@ private const val EXIT_DISTANCE = 1.5f
 
 /** Inclinaison quand la carte a parcouru toute sa largeur. */
 private const val MAX_ROTATION_DEGREES = 12f
-
-/**
- * Geste de glissement de la carte, seulement si [enabled] (la carte du dessus, PS-147) : [onDrag]
- * reçoit chaque déplacement du doigt, [onRelease] le doigt levé, ou le geste annulé (vrai).
- */
-private fun Modifier.swipeGestures(
-    enabled: Boolean,
-    key: Any,
-    onDragStart: () -> Unit,
-    onRelease: (cancelled: Boolean) -> Unit,
-    onDrag: (Offset) -> Unit,
-): Modifier =
-    if (!enabled) {
-        this
-    } else {
-        pointerInput(key) {
-            detectDragGestures(
-                onDragStart = { onDragStart() },
-                onDragEnd = { onRelease(false) },
-                onDragCancel = { onRelease(true) },
-            ) { change, dragAmount ->
-                change.consume()
-                onDrag(dragAmount)
-            }
-        }
-    }
-
-/** Vrai si le doigt vient d'atteindre une nouvelle cible ([after]) : retour haptique. */
-private fun crossesThreshold(
-    before: SwipeTarget?,
-    after: SwipeTarget?,
-): Boolean = after != null && after != before
