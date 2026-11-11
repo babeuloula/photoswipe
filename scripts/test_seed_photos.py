@@ -18,8 +18,20 @@ class PlanTest(unittest.TestCase):
         days = {(photo.month, photo.day) for photo in taken}
         expected_days = {((today - datetime.timedelta(days=n)).month, (today - datetime.timedelta(days=n)).day) for n in range(7)}
         self.assertEqual(expected_days, days)
-        self.assertEqual(7 * 5, len(taken))
+        self.assertEqual(6 * 5 + 1 + 2 * 3, len(taken))
         self.assertEqual(list(range(2021, 2026)), sorted({photo.year for photo in taken}))
+
+    def test_plans_a_burst_of_photos_a_few_seconds_apart_today(self):
+        taken = [photo for photo in seed_photos.plan(datetime.date(2026, 11, 6)) if photo.date() == datetime.date(2024, 11, 6)]
+
+        burst = sorted(photo for photo in taken if photo.hour == seed_photos.BURST_HOUR)
+        self.assertEqual(3, len(burst))
+        self.assertEqual([0, 4, 8], [photo.second for photo in burst])
+
+    def test_plans_a_single_photo_two_days_ago(self):
+        taken = [photo for photo in seed_photos.plan(datetime.date(2026, 11, 6)) if (photo.month, photo.day) == (11, 4)]
+
+        self.assertEqual([datetime.date(2025, 11, 4)], [photo.date() for photo in taken])
 
     def test_moves_leap_day_photos_to_february_28_on_non_leap_years(self):
         taken = seed_photos.plan(datetime.date(2028, 2, 29), years=1, days=1)
@@ -34,7 +46,7 @@ class PlanTest(unittest.TestCase):
     def test_names_every_file_after_its_date(self):
         taken = datetime.datetime(2021, 11, 6, 10, 0, tzinfo=PARIS_SUMMER)
 
-        self.assertEqual("photoswipe-adb-2021-11-06-1000.jpg", seed_photos.file_name(taken))
+        self.assertEqual("photoswipe-adb-2021-11-06-100000.jpg", seed_photos.file_name(taken))
 
 
 class ExifTest(unittest.TestCase):
@@ -53,6 +65,7 @@ class ExifTest(unittest.TestCase):
 
     def test_gives_each_year_its_own_color(self):
         self.assertNotEqual(seed_photos.color_of(2021), seed_photos.color_of(2022))
+        self.assertNotEqual(seed_photos.color_of(2021, 0), seed_photos.color_of(2021, 1))
         self.assertRegex(seed_photos.color_of(2021), r"^0x[0-9a-f]{6}$")
 
 

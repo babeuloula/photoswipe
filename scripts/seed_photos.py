@@ -2,9 +2,13 @@
 """Génère des photos JPEG datées par leur EXIF pour le script seed-emulator.sh (SPEC §10).
 
 Une photo par année sur YEARS_BACK ans, pour aujourd'hui et les 6 jours précédents, dans le fuseau
-de l'ordinateur. Les pixels (une couleur par année) viennent de ffmpeg ; l'EXIF (DateTimeOriginal
-et son décalage horaire, que MediaStore lit pour remplir DATE_TAKEN) est écrit ici, sans
-dépendance hors de la bibliothèque standard.
+de l'ordinateur, avec de quoi essayer les retours d'utilisateurs du 2026-11-11 :
+- aujourd'hui et il y a BURST_DAYS[1] jours, une rafale de BURST_SIZE photos prises à BURST_GAP
+  secondes d'intervalle il y a BURST_YEARS_AGO ans (photos proches, PS-140 ; vue d'ensemble, PS-139) ;
+- il y a SINGLE_PHOTO_DAY jours, une seule photo, de l'an dernier : la supprimer vide le jour (PS-136).
+Les pixels (une couleur par année, plus sombre à chaque photo d'une rafale) viennent de ffmpeg ;
+l'EXIF (DateTimeOriginal et son décalage horaire, que MediaStore lit pour remplir DATE_TAKEN) est
+écrit ici, sans dépendance hors de la bibliothèque standard.
 
 Usage : seed_photos.py DOSSIER [--years N] [--days N]
 """
@@ -20,6 +24,12 @@ import sys
 YEARS_BACK = 5
 WINDOW_DAYS = 7
 FIRST_PHOTO_HOUR = 9
+BURST_DAYS = (0, 4)
+BURST_YEARS_AGO = 2
+BURST_SIZE = 3
+BURST_GAP = 4
+BURST_HOUR = 15
+SINGLE_PHOTO_DAY = 2
 WIDTH, HEIGHT = 900, 1200
 
 TAG_EXIF_IFD = 0x8769
@@ -34,8 +44,14 @@ def plan(today, years=YEARS_BACK, days=WINDOW_DAYS):
     taken = []
     for days_ago in range(days):
         day = today - datetime.timedelta(days=days_ago)
+        if days_ago == SINGLE_PHOTO_DAY:
+            taken.append(local_time(minus_years(day, 1), FIRST_PHOTO_HOUR + 1))
+            continue
         for years_ago in range(1, years + 1):
             taken.append(local_time(minus_years(day, years_ago), FIRST_PHOTO_HOUR + years_ago))
+        if days_ago in BURST_DAYS:
+            start = local_time(minus_years(day, BURST_YEARS_AGO), BURST_HOUR)
+            taken.extend(start + datetime.timedelta(seconds=BURST_GAP * shot) for shot in range(BURST_SIZE))
     return taken
 
 
@@ -53,7 +69,7 @@ def local_time(day, hour):
 
 
 def file_name(taken):
-    return taken.strftime("photoswipe-adb-%Y-%m-%d-%H%M.jpg")
+    return taken.strftime("photoswipe-adb-%Y-%m-%d-%H%M%S.jpg")
 
 
 def exif_segment(taken):
@@ -96,9 +112,9 @@ def exif_dates(jpeg):
     return values[TAG_DATETIME_ORIGINAL], values[TAG_OFFSET_TIME_ORIGINAL]
 
 
-def color_of(year):
-    """Couleur propre à l'année, au format hexadécimal de ffmpeg."""
-    red, green, blue = colorsys.hsv_to_rgb((year * 47 % 360) / 360, 0.55, 0.7)
+def color_of(year, shot=0):
+    """Couleur propre à l'année, plus sombre à chaque photo [shot] d'une rafale, au format de ffmpeg."""
+    red, green, blue = colorsys.hsv_to_rgb((year * 47 % 360) / 360, 0.55, 0.7 - 0.15 * shot)
     return "0x%02x%02x%02x" % (int(red * 255), int(green * 255), int(blue * 255))
 
 
@@ -123,7 +139,8 @@ def main(arguments):
     options.folder.mkdir(parents=True, exist_ok=True)
     photos = plan(datetime.date.today(), options.years, options.days)
     for taken in photos:
-        (options.folder / file_name(taken)).write_bytes(with_exif(solid_jpeg(color_of(taken.year)), taken))
+        color = color_of(taken.year, taken.second // BURST_GAP)
+        (options.folder / file_name(taken)).write_bytes(with_exif(solid_jpeg(color), taken))
     print(len(photos))
 
 

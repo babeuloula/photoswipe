@@ -4,7 +4,8 @@
 # n'appartiennent pas à PhotoSwipe : les dialogues système de corbeille et de favori s'affichent.
 #
 # Usage :
-#   scripts/seed-emulator.sh            # une photo par année sur 5 ans, aujourd'hui et les 6 jours précédents
+#   scripts/seed-emulator.sh            # une photo par année sur 5 ans, aujourd'hui et les 6 jours précédents,
+#                                       # des rafales (aujourd'hui, J-4) et une seule photo à J-2
 #   scripts/seed-emulator.sh --years 3  # options passées à seed_photos.py (--years, --days)
 #   scripts/seed-emulator.sh --remove   # retire les photos poussées
 #

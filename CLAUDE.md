@@ -42,7 +42,7 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 git tag v1.2.0-dev.3 && git push origin v1.2.0-dev.3   # tag à la main : seulement vX.Y.Z-dev.N, pré-version avec l'APK debug ; tout autre tag est supprimé
 ./gradlew test quality assembleDebug   # ce que lance le job obligatoire de la CI
 ./gradlew connectedDebugAndroidTest   # tests instrumentés (src/androidTest), émulateur démarré ; second job de la CI
-scripts/seed-emulator.sh [--remove]   # pousse (ou retire) des photos datées par EXIF sur l'émulateur (adb, python3, ffmpeg)
+scripts/seed-emulator.sh [--remove]   # pousse (ou retire) des photos datées par EXIF sur l'émulateur (adb, python3, ffmpeg) : rafales aujourd'hui et à J-4, une seule photo à J-2
 scripts/fdroid-changelog.sh vX.Y.Z    # lancé par le workflow Release : notes de version F-Droid (changelogs/default.txt) tirées des notes générées par GitHub (gh)
 python3 -m unittest discover -s scripts && shellcheck scripts/*.sh   # tests des scripts, lancés aussi par la CI
 node --test pages/crash/*.test.mjs   # tests de la page d'envoi des rapports de plantage, lancés aussi par la CI
