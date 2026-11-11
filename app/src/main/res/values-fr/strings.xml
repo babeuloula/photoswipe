@@ -199,7 +199,8 @@
     <!-- Résumé quand tout est confirmé : place libérée aujourd'hui (ADR 0034). -->
     <string name="summary_freed_today">Espace libéré aujourd\'hui</string>
     <!-- Pile : place de la carte parmi les souvenirs de son année (PS-138). -->
-    <string name="deck_year_progress">%1$d · %2$d sur %3$d de cette année</string>
+    <string name="deck_year_progress">%1$d · souvenir %2$d sur %3$d</string>
+    <string name="deck_year_single">%1$d · seul souvenir de cette année</string>
     <!-- Carte du jour : les souvenirs viennent de toutes les années passées (PS-138). -->
     <string name="home_today_every_year">Ce jour-là, toutes les années passées</string>
     <!-- Vue d'ensemble d'un jour (PS-139). -->

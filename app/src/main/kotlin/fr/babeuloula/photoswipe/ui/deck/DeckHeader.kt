@@ -88,7 +88,7 @@ internal data class YearProgress(
 )
 
 /**
- * « 2023 · 2 sur 5 de cette année » : la pile va d'une année à l'autre, de la plus récente à la plus
+ * « 2023 · souvenir 2 sur 5 », ou « 2025 · seul souvenir de cette année » : la pile va d'une année à l'autre, de la plus récente à la plus
  * ancienne ; la ligne glisse à chaque changement d'année pour le rendre visible.
  */
 @Composable
@@ -103,7 +103,12 @@ private fun YearLine(progress: YearProgress) {
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
     ) { shown ->
         Text(
-            text = stringResource(R.string.deck_year_progress, shown.year, shown.position, shown.total),
+            text =
+                if (shown.total == 1) {
+                    stringResource(R.string.deck_year_single, shown.year)
+                } else {
+                    stringResource(R.string.deck_year_progress, shown.year, shown.position, shown.total)
+                },
             style = MaterialTheme.typography.monoLabel,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
