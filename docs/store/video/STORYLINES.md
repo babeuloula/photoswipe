@@ -1,11 +1,13 @@
 # Vidéo de la fiche Play Store : trois histoires
 
+> L'histoire A a été retenue et tournée : [`storylines/`](storylines/README.md). B et C ont été montées pour comparer, puis écartées.
+
 Une seule idée à retenir : **chaque jour, quelques souvenirs du même jour reviennent, et on les trie d'un geste sans rien perdre.**
 Fil conducteur : une personne trie les 8 souvenirs du 6 novembre, de la notification de 18:00 jusqu'au résumé.
 
 Commun aux trois : 25 à 35 s, 1920 × 1080 à 30 i/s, musique et bruitages sans voix off, une version française et une anglaise dans le même projet (textes en variables). Les écrans sont de vrais enregistrements de l'émulateur (`adb screenrecord`), avec les photos Unsplash des captures.
 
-## A. « Un 6 novembre » (recommandée)
+## A. « Un 6 novembre » (retenue, tournée le 11 novembre : voir [storylines/](storylines/README.md))
 
 - **Procédé et forme** : un moment dans la journée de quelqu'un, en une seule prise continue : la caméra ne coupe jamais, elle s'approche du téléphone et en ressort.
 - **Ce qu'on voit** : la notification « 8 souvenirs à trier aujourd'hui » arrive à 18:00. On l'ouvre, et les années défilent sur la carte du jour. On garde le chien de 2025, on écarte un doublon flou, on met la balade de 2024 en favori, puis le résumé affiche l'espace libéré et la corbeille « restaurable 30 jours ». **Ce qu'on ressent** : un petit rituel tranquille, sans risque.

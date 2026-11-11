@@ -118,4 +118,6 @@ npx hyperframes render -o renders/photoswipe-fr.mp4
 npx hyperframes render --variables-file variables-en.json -o renders/photoswipe-en.mp4
 ```
 
+La vidéo retenue ensuite, « Un jour, un rituel » (histoire A de `STORYLINES.md`, une prise continue en temps réel, en français et en anglais), est dans [`video/storylines/`](video/storylines/README.md) avec ses outils de tournage.
+
 Les rushes bruts (`footage-raw/`), le cache des médias et les rendus (`renders/`) restent hors Git. À reprendre : le plan du tri accéléré (vers 13–15 s) passe trop vite sur les photos, et la musique est un peu forte (−11,4 LUFS, pour −14 visés).
