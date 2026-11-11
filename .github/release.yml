@@ -1,0 +1,10 @@
+# Notes de version générées par GitHub : « gh release create --generate-notes » du workflow Release et
+# scripts/fdroid-changelog.sh (notes F-Droid) lisent ce fichier.
+#
+# La PR de release (« chore(release): vX.Y.Z ») est mergée dans main après la pose du tag, qui pointe
+# sur sa branche release/vX.Y.Z : sans cette exclusion, elle apparaîtrait dans les notes de la
+# release suivante (PS-135). Le workflow Release lui met le label « release ».
+changelog:
+  exclude:
+    labels:
+      - release
