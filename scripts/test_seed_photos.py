@@ -63,10 +63,32 @@ class ExifTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             seed_photos.with_exif(b"\x89PNG", datetime.datetime(2021, 7, 15, tzinfo=PARIS_SUMMER))
 
-    def test_gives_each_year_its_own_color(self):
-        self.assertNotEqual(seed_photos.color_of(2021), seed_photos.color_of(2022))
-        self.assertNotEqual(seed_photos.color_of(2021, 0), seed_photos.color_of(2021, 1))
-        self.assertRegex(seed_photos.color_of(2021), r"^0x[0-9a-f]{6}$")
+class PhotosTest(unittest.TestCase):
+    def test_ships_portrait_landscape_square_and_panorama_test_photos(self):
+        names = [path.name for path in seed_photos.fixtures()]
+
+        self.assertGreaterEqual(len(names), 10)
+        self.assertTrue(any("panorama" in name for name in names))
+        self.assertTrue(any("square" in name for name in names))
+        self.assertTrue((seed_photos.FIXTURES / "CREDITS.md").exists())
+
+    def test_gives_each_moment_its_own_photo_but_the_same_one_to_a_burst(self):
+        start = datetime.datetime(2024, 11, 6, 15, 0, tzinfo=PARIS_SUMMER)
+        taken = [
+            datetime.datetime(2025, 11, 6, 10, 0, tzinfo=PARIS_SUMMER),
+            start,
+            start + datetime.timedelta(seconds=4),
+            start + datetime.timedelta(seconds=8),
+            datetime.datetime(2023, 11, 6, 12, 0, tzinfo=PARIS_SUMMER),
+        ]
+
+        assigned = seed_photos.assign(taken, ["a", "b", "c"])
+
+        self.assertEqual(["a", "b", "b", "b", "c"], assigned)
+
+    def test_crops_each_following_photo_of_a_burst_a_little_more(self):
+        self.assertEqual("crop=iw*1.00:ih*1.00", seed_photos.crop_filter(0))
+        self.assertEqual("crop=iw*0.88:ih*0.88", seed_photos.crop_filter(2))
 
 
 if __name__ == "__main__":

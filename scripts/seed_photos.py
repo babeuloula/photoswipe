@@ -6,15 +6,15 @@ de l'ordinateur, avec de quoi essayer les retours d'utilisateurs du 2026-11-11 :
 - aujourd'hui et il y a BURST_DAYS[1] jours, une rafale de BURST_SIZE photos prises à BURST_GAP
   secondes d'intervalle il y a BURST_YEARS_AGO ans (photos proches, PS-140 ; vue d'ensemble, PS-139) ;
 - il y a SINGLE_PHOTO_DAY jours, une seule photo, de l'an dernier : la supprimer vide le jour (PS-136).
-Les pixels (une couleur par année, plus sombre à chaque photo d'une rafale) viennent de ffmpeg ;
-l'EXIF (DateTimeOriginal et son décalage horaire, que MediaStore lit pour remplir DATE_TAKEN) est
+Les images sont de vraies photos (scripts/fixtures/photos, Unsplash, PS-143) prises tour à tour :
+portrait, paysage, carré et panorama ; chaque photo d'une rafale est la même image un peu plus
+recadrée. ffmpeg les réencode (sans leurs métadonnées d'origine) ; l'EXIF (DateTimeOriginal et son décalage horaire, que MediaStore lit pour remplir DATE_TAKEN) est
 écrit ici, sans dépendance hors de la bibliothèque standard.
 
 Usage : seed_photos.py DOSSIER [--years N] [--days N]
 """
 
 import argparse
-import colorsys
 import datetime
 import pathlib
 import struct
@@ -30,7 +30,8 @@ BURST_SIZE = 3
 BURST_GAP = 4
 BURST_HOUR = 15
 SINGLE_PHOTO_DAY = 2
-WIDTH, HEIGHT = 900, 1200
+FIXTURES = pathlib.Path(__file__).resolve().parent / "fixtures" / "photos"
+BURST_ZOOM = 0.06
 
 TAG_EXIF_IFD = 0x8769
 TAG_DATETIME_ORIGINAL = 0x9003
@@ -112,18 +113,37 @@ def exif_dates(jpeg):
     return values[TAG_DATETIME_ORIGINAL], values[TAG_OFFSET_TIME_ORIGINAL]
 
 
-def color_of(year, shot=0):
-    """Couleur propre à l'année, plus sombre à chaque photo [shot] d'une rafale, au format de ffmpeg."""
-    red, green, blue = colorsys.hsv_to_rgb((year * 47 % 360) / 360, 0.55, 0.7 - 0.15 * shot)
-    return "0x%02x%02x%02x" % (int(red * 255), int(green * 255), int(blue * 255))
+def fixtures():
+    """Photos de test, dans l'ordre de leur nom."""
+    return sorted(FIXTURES.glob("*.jpg"))
 
 
-def solid_jpeg(color):
-    """JPEG uni de la couleur [color], produit par ffmpeg."""
+def assign(taken, photos):
+    """Photo de chaque prise de vue : tour à tour, et la même pour toutes les photos d'une rafale."""
+    assigned = []
+    index = -1
+    previous = None
+    for moment in taken:
+        same_burst = previous is not None and datetime.timedelta(0) < moment - previous <= datetime.timedelta(seconds=BURST_GAP)
+        if not same_burst:
+            index += 1
+        assigned.append(photos[index % len(photos)])
+        previous = moment
+    return assigned
+
+
+def crop_filter(shot):
+    """Filtre ffmpeg de la photo [shot] d'une rafale : la première entière, les suivantes un peu recadrées."""
+    keep = 1 - BURST_ZOOM * shot
+    return f"crop=iw*{keep:.2f}:ih*{keep:.2f}"
+
+
+def photo_jpeg(path, shot):
+    """JPEG de [path] réencodé par ffmpeg, recadré pour la photo [shot] d'une rafale."""
     return subprocess.run(
         [
-            "ffmpeg", "-loglevel", "error", "-f", "lavfi", "-i", f"color=c={color}:s={WIDTH}x{HEIGHT}",
-            "-frames:v", "1", "-f", "image2", "-c:v", "mjpeg", "-",
+            "ffmpeg", "-loglevel", "error", "-i", str(path), "-vf", crop_filter(shot),
+            "-map_metadata", "-1", "-frames:v", "1", "-f", "image2", "-c:v", "mjpeg", "-q:v", "4", "-",
         ],
         check=True,
         capture_output=True,
@@ -138,9 +158,9 @@ def main(arguments):
     options = parser.parse_args(arguments)
     options.folder.mkdir(parents=True, exist_ok=True)
     photos = plan(datetime.date.today(), options.years, options.days)
-    for taken in photos:
-        color = color_of(taken.year, taken.second // BURST_GAP)
-        (options.folder / file_name(taken)).write_bytes(with_exif(solid_jpeg(color), taken))
+    for taken, source in zip(photos, assign(photos, fixtures())):
+        jpeg = photo_jpeg(source, taken.second // BURST_GAP)
+        (options.folder / file_name(taken)).write_bytes(with_exif(jpeg, taken))
     print(len(photos))
 
 
