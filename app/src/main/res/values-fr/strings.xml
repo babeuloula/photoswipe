@@ -172,7 +172,7 @@
     <string name="tutorial_swipe_up_title">Favori ou partage</string>
     <string name="tutorial_swipe_up_body">Glissez vers le haut pour ouvrir le menu : ajoutez le souvenir à vos favoris, ce qui le garde aussi, ou partagez-le.</string>
     <string name="tutorial_catch_up_title">Rattrapez les jours manqués</string>
-    <string name="tutorial_catch_up_body">Un jour de manqué ? Les 7 derniers jours restent sur l\'accueil, et un jour déjà trié peut être retrié. Un rappel quotidien, à activer dans les réglages, vous prévient seulement s\'il reste des souvenirs à trier.</string>
+    <string name="tutorial_catch_up_body">Un jour de manqué ? Sur l\'accueil, sous la carte d\'aujourd\'hui, la liste « À rattraper » garde les 6 jours précédents, et un jour déjà trié peut être retrié. Un rappel quotidien, à activer dans les réglages, vous prévient seulement s\'il reste des souvenirs à trier.</string>
     <string name="tutorial_confirmation_title">Rien n\'est définitif</string>
     <string name="tutorial_confirmation_body">Les médias marqués sont supprimés ensemble, quand vous confirmez à la fin du tri ; touchez-les dans le résumé pour les revoir en grand avant. Ils partent dans la corbeille du système, d\'où vous pouvez les restaurer pendant environ 30 jours.</string>
     <string name="tutorial_practice_title">Essayez</string>
@@ -188,7 +188,7 @@
     <string name="settings_about_tutorial_summary">Le fonctionnement du tri, et un essai sur des cartes d\'exemple</string>
     <string name="tutorial_same_day_illustration">Animation : des photos de plusieurs années défilent, il y a 1 an, il y a 3 ans, il y a 5 ans, à cette même date.</string>
     <string name="tutorial_swipe_up_illustration">Animation : une photo glisse vers le haut sous un voile bleu avec un cœur, puis le menu s\'ouvre avec Ajouter aux favoris et Partager.</string>
-    <string name="tutorial_catch_up_illustration">Animation : les 7 derniers jours, chacun avec son nombre de souvenirs à trier, sont triés l\'un après l\'autre, et le rappel compte ce qui reste.</string>
+    <string name="tutorial_catch_up_illustration">Animation : la liste des jours de l\'accueil, aujourd\'hui en haut puis les 6 jours précédents, chacun avec son nombre de souvenirs à trier ; ils sont triés l\'un après l\'autre, et le rappel compte ce qui reste.</string>
     <string name="tutorial_confirmation_illustration">Animation : le résumé montre l\'espace libéré estimé, puis un dialogue propose de mettre les médias marqués à la corbeille.</string>
     <string name="tutorial_swipes_illustration">Animation : une photo glisse à droite sous un voile vert avec une coche, Garder, puis à gauche sous un voile rouge avec une corbeille, Supprimer.</string>
     <!-- Rapport de plantage proposé au lancement suivant (ADR 0033). -->

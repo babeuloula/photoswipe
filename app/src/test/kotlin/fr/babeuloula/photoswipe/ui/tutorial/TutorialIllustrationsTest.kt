@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.ui.tutorial
 import androidx.activity.compose.setContent
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -15,12 +16,16 @@ import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.deck.DELETE_INDICATOR_TAG
 import fr.babeuloula.photoswipe.ui.deck.KEEP_INDICATOR_TAG
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /** Illustrations du tutoriel, animées ou statiques, faites de formes et de repères, jamais de photos. */
 @HiltAndroidTest
@@ -99,6 +104,19 @@ class TutorialIllustrationsTest {
         composeRule.mainClock.advanceTimeBy(CATCH_UP_STEP_MILLIS + CATCH_UP_STEP_MILLIS / 2)
 
         composeRule.onNodeWithText(reminder(SAMPLE_COUNTS.sum() - SAMPLE_COUNTS.last())).assertIsDisplayed()
+    }
+
+    @Test
+    fun `the catch up page lists the days vertically like the home screen, today at the top`() {
+        show(TutorialPage.CATCH_UP, animate = false)
+        val yesterday =
+            LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("EEE d", Locale.getDefault()))
+
+        val today = composeRule.onNodeWithText(composeRule.activity.getString(R.string.home_today)).getBoundsInRoot()
+        val previous = composeRule.onNodeWithText(yesterday).getBoundsInRoot()
+
+        assertTrue(today.bottom <= previous.top)
+        assertEquals(today.left, previous.left)
     }
 
     @Test
