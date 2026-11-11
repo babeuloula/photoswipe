@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.domain.port.DecisionJournal
+import fr.babeuloula.photoswipe.domain.port.DeletionHistory
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.DeckOrdering
@@ -33,14 +34,17 @@ object DomainModule {
     @Provides
     fun provideReviewWindowProvider(clock: Clock): ReviewWindowProvider = ReviewWindowProvider(clock)
 
+    // Un paramètre par dépendance du use case, que Hilt fournit : rien à regrouper ici.
+    @Suppress("LongParameterList")
     @Provides
     fun provideGetReviewDays(
         windowProvider: ReviewWindowProvider,
         sameDayMatcher: SameDayMatcher,
         mediaSource: MediaSource,
         reviewRepository: ReviewRepository,
+        history: DeletionHistory,
         clock: Clock,
-    ): GetReviewDays = GetReviewDays(windowProvider, sameDayMatcher, mediaSource, reviewRepository, clock)
+    ): GetReviewDays = GetReviewDays(windowProvider, sameDayMatcher, mediaSource, reviewRepository, history, clock)
 
     @Provides
     fun provideDeckOrdering(): DeckOrdering = RecentYearsFirstOrdering()

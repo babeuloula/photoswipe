@@ -318,7 +318,7 @@ class HomeViewModelTest {
 
     private fun homeViewModel(source: MediaSource): HomeViewModel =
         HomeViewModel(
-            GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, clock),
+            GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, history, clock),
             GetSessionSummary(repository, FakeDecisionJournal(repository), history, ReviewWindowProvider(clock), clock),
             settings,
             mediaManagement = { mediaManagementGranted },

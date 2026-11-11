@@ -64,7 +64,7 @@ class HomeRouteTest {
         val pending = mutableStateOf(trashedCount)
         val viewModel =
             HomeViewModel(
-                GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, clock),
+                GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, history, clock),
                 GetSessionSummary(
                     repository,
                     FakeDecisionJournal(repository),

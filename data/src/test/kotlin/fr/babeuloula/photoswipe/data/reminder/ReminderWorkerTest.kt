@@ -5,6 +5,7 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReminderNotifier
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
@@ -37,7 +38,14 @@ class ReminderWorkerTest {
 
     private fun worker(gallery: MediaSource): ReminderWorker {
         val getReviewDays =
-            GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), gallery, FakeReviewRepository(), clock)
+            GetReviewDays(
+                ReviewWindowProvider(clock),
+                SameDayMatcher(),
+                gallery,
+                FakeReviewRepository(),
+                FakeDeletionHistory(),
+                clock,
+            )
         val sendDailyReminder = SendDailyReminder(getReviewDays, notifier)
         return TestListenableWorkerBuilder
             .from(context, ReminderWorker::class.java)

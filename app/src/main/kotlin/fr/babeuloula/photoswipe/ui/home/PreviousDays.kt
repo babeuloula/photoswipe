@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -75,6 +76,7 @@ import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.common.Thumbnail
 import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
 import fr.babeuloula.photoswipe.ui.common.segmentShape
+import fr.babeuloula.photoswipe.ui.deck.fileSizeLabel
 import fr.babeuloula.photoswipe.ui.theme.IbmPlexMono
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.monoLabel
@@ -112,7 +114,9 @@ internal fun PreviousDaysTitle() {
 /**
  * Un jour à rattraper : vignette, date et état (« 8 médias à trier », « Tout est trié »,
  * « Aucun souvenir »), chevron s'il reste à trier. Un jour tout trié s'ouvre pour être retrié
- * (ADR 0026) ; un jour sans souvenir est grisé et inactif.
+ * (ADR 0026) ; un jour sans souvenir est grisé et inactif. Ce qui y a été supprimé s'ajoute en
+ * dessous (« 1 média supprimé · 2,4 Mo libérés ») ; un jour vidé par ses suppressions n'est pas
+ * grisé, mais n'a plus rien à ouvrir (ADR 0034).
  */
 @Composable
 private fun PreviousDay(
@@ -137,8 +141,8 @@ private fun PreviousDay(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        val alpha = if (hasMemories) 1f else DISABLED_ALPHA
-        DayThumbnail(day.previews.firstOrNull(), modifier = Modifier.alpha(alpha))
+        val alpha = if (hasMemories || day.isEmptied) 1f else DISABLED_ALPHA
+        DayThumbnail(day.previews.firstOrNull(), emptied = day.isEmptied, modifier = Modifier.alpha(alpha))
         Column(modifier = Modifier.weight(1f).alpha(alpha)) {
             Text(dayLabel(day.date), style = MaterialTheme.typography.bodyLarge)
             Text(
@@ -152,7 +156,7 @@ private fun PreviousDay(
                             )
                         }
 
-                        hasMemories -> {
+                        hasMemories || day.isEmptied -> {
                             stringResource(R.string.home_day_done)
                         }
 
@@ -163,10 +167,11 @@ private fun PreviousDay(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (day.deletedCount > 0) DeletedLabel(day)
         }
         when {
             hasMedia -> TrailingIcon(R.drawable.ic_chevron_right)
-            hasMemories -> TrailingIcon(R.drawable.ic_check)
+            hasMemories || day.isEmptied -> TrailingIcon(R.drawable.ic_check)
         }
     }
 }
@@ -179,10 +184,34 @@ private fun TrailingIcon(
     Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
-/** Vignette de 48 dp d'un jour, ou une image barrée s'il n'a aucun souvenir. */
+/** « 1 média supprimé · 2,4 Mo libérés » : ce qui a été supprimé ce jour-là (ADR 0034). */
+@Composable
+internal fun DeletedLabel(
+    day: ReviewDay,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text =
+            pluralStringResource(
+                R.plurals.home_day_deleted,
+                day.deletedCount,
+                day.deletedCount,
+                fileSizeLabel(LocalContext.current, day.freedBytes),
+            ),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Vignette de 48 dp d'un jour ; une corbeille pour un jour vidé par ses suppressions ([emptied]),
+ * une image barrée s'il n'a jamais eu de souvenir.
+ */
 @Composable
 private fun DayThumbnail(
     media: MediaItem?,
+    emptied: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val thumbnailModifier = modifier.size(48.dp).clip(MaterialTheme.shapes.small)
@@ -191,7 +220,10 @@ private fun DayThumbnail(
             modifier = thumbnailModifier.background(MaterialTheme.colorScheme.surfaceContainerHighest),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(painterResource(R.drawable.ic_hide_image), contentDescription = null)
+            Icon(
+                painterResource(if (emptied) R.drawable.ic_delete else R.drawable.ic_hide_image),
+                contentDescription = null,
+            )
         }
     } else {
         Thumbnail(media, thumbnailModifier)

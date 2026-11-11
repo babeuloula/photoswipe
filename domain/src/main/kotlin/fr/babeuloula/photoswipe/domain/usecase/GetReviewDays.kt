@@ -1,18 +1,20 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.model.ConfirmedDeletion
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import fr.babeuloula.photoswipe.domain.model.isSorted
+import fr.babeuloula.photoswipe.domain.port.DeletionHistory
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneId
@@ -30,6 +32,11 @@ import java.time.ZoneId
  * à la collecte : un média ajouté à la galerie ou le passage à minuit ne sont pris en compte qu'à
  * la collecte suivante (l'accueil recollecte en revenant au premier plan, ADR 0008).
  *
+ * Chaque jour dit aussi ce qui y a été supprimé et confirmé (ADR 0034, PS-136) : un média envoyé à
+ * la corbeille n'est plus un souvenir, mais le jour garde la trace de ce qui a été fait tant qu'il
+ * reste dans la fenêtre. Le flux suit aussi l'historique des suppressions.
+ *
+ * @param history suppressions confirmées des jours de la fenêtre.
  * @param clock la même horloge que celle de [windowProvider] : son fuseau sert à apparier les médias.
  */
 class GetReviewDays(
@@ -37,6 +44,7 @@ class GetReviewDays(
     private val sameDayMatcher: SameDayMatcher,
     private val mediaSource: MediaSource,
     private val reviewRepository: ReviewRepository,
+    private val history: DeletionHistory,
     private val clock: Clock,
 ) {
     /** Jours de la fenêtre, d'aujourd'hui au plus ancien, avec leur nombre de médias à trier. */
@@ -49,8 +57,8 @@ class GetReviewDays(
                 }
             val reviewYears = mediaByDay.keys.mapTo(HashSet()) { it.year }
             emitAll(
-                reviewRepository.observeEntries(reviewYears).map { entries ->
-                    reviewDays(mediaByDay, entries, zone)
+                combine(reviewRepository.observeEntries(reviewYears), history.observe()) { entries, deletions ->
+                    reviewDays(mediaByDay, entries, deletions, zone)
                 },
             )
         }.distinctUntilChanged()
@@ -58,8 +66,10 @@ class GetReviewDays(
     private fun reviewDays(
         mediaByDay: Map<LocalDate, List<MediaItem>>,
         entries: List<ReviewEntry>,
+        deletions: List<ConfirmedDeletion>,
         zone: ZoneId,
     ): List<ReviewDay> {
+        val deletedByDay = deletions.filter { it.day != null }.groupBy { it.day }
         val treatedByYear =
             entries
                 .filter { it.isSorted }
@@ -69,12 +79,15 @@ class GetReviewDays(
             val treated = treatedByYear[day.year].orEmpty()
             val remaining = media.filter { it.id !in treated }
             val years = media.map { it.takenAt.atZone(zone).year }
+            val deleted = deletedByDay[day].orEmpty().distinctBy { it.mediaId }
             ReviewDay(
                 date = day,
                 remainingCount = remaining.size,
                 memoryCount = media.size,
                 previews = previews(remaining, media, zone),
                 years = if (years.isEmpty()) null else years.min()..years.max(),
+                deletedCount = deleted.size,
+                freedBytes = deleted.sumOf { it.sizeBytes },
             )
         }
     }

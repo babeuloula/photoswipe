@@ -105,6 +105,17 @@ internal fun TodayCard(
             NoMemoriesCard(state)
         }
 
+        // Vidé par ses suppressions : la carte dit ce qui a été fait, et mène au résumé (ADR 0034).
+        today.isEmptied -> {
+            TextCard(
+                title = stringResource(R.string.home_today_done),
+                body = null,
+                date = today.date,
+                day = today,
+                onSummary = { onEvent(HomeEvent.OpenPendingDeletions) },
+            )
+        }
+
         today.memoryCount == 0 -> {
             TextCard(
                 title = stringResource(R.string.home_today_no_memories),
@@ -136,12 +147,17 @@ private fun NoMemoriesCard(state: HomeUiState.Loaded) {
     )
 }
 
-/** Carte de texte du jour, sans souvenir à montrer. */
+/**
+ * Carte de texte du jour, sans souvenir à montrer ; pour un jour vidé par ses suppressions ([day]),
+ * ce qui a été supprimé et « Voir le résumé » ([onSummary]).
+ */
 @Composable
 private fun TextCard(
     title: String,
-    body: String,
+    body: String?,
     date: LocalDate,
+    day: ReviewDay? = null,
+    onSummary: (() -> Unit)? = null,
 ) {
     Column(
         modifier =
@@ -158,7 +174,15 @@ private fun TextCard(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-        Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        body?.let {
+            Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        day?.let { DeletedLabel(it) }
+        onSummary?.let {
+            FilledTonalButton(onClick = it, modifier = Modifier.heightIn(min = 48.dp)) {
+                Text(stringResource(R.string.home_view_summary))
+            }
+        }
     }
 }
 
@@ -223,6 +247,7 @@ private fun MemoriesCard(
                 compact -> Text(stringResource(R.string.home_today_done), style = MaterialTheme.typography.bodyLarge)
                 else -> AllSorted(onSummary, onResort)
             }
+            if (today.deletedCount > 0) DeletedLabel(today)
         }
     }
 }
