@@ -5,6 +5,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
+import fr.babeuloula.photoswipe.domain.service.SimilarMediaGrouping
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -58,5 +59,14 @@ class DemoMediaCatalogTest {
             )
 
         assertEquals(media.size, tokyo.size)
+    }
+
+    @Test
+    fun `includes a burst of photos taken a few seconds apart today`() {
+        val media = DemoMediaCatalog.generate(clock)
+
+        val groups = SimilarMediaGrouping().groups(media)
+
+        assertEquals(DemoMediaCatalog.BURST_SIZE.toInt(), groups.size)
     }
 }

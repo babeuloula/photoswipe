@@ -16,6 +16,7 @@ import java.time.LocalTime
  *   avec plusieurs médias la même année.
  * - Une photo du 29 février 2024 (montrée le 28 février des années non bissextiles).
  * - Une grosse vidéo (environ 2 Go).
+ * - Une rafale de [BURST_SIZE] photos prises à quelques secondes d'intervalle aujourd'hui (PS-140).
  * - Un média sans `DATE_TAKEN` : MediaStore le daterait par `DATE_ADDED` ; il est donc daté ici de son
  *   ajout, à une heure ronde, comme le ferait le repli de `MediaStoreMediaSource`.
  *
@@ -28,6 +29,9 @@ object DemoMediaCatalog {
 
     /** Taille de la grosse vidéo : 2 Go. */
     const val BIG_VIDEO_BYTES: Long = 2_000_000_000
+
+    /** Photos de la rafale d'aujourd'hui, il y a deux ans. */
+    const val BURST_SIZE: Long = 3
 
     private const val WINDOW_DAYS = 7L
     private const val PHOTO_BYTES = 3_500_000L
@@ -79,6 +83,14 @@ object DemoMediaCatalog {
                 ),
                 media(today.minusDays(1).minusYears(2), LocalTime.MIDNIGHT),
             )
-        return memories + sameDay + edgeCases
+        // Rafale : trois photos prises à quatre secondes d'intervalle, des photos proches (PS-140).
+        val burst =
+            (0L until BURST_SIZE).map { shot ->
+                media(
+                    today.minusYears(2),
+                    LocalTime.of(15, 0).plusSeconds(shot * 4),
+                )
+            }
+        return memories + sameDay + edgeCases + burst
     }
 }
