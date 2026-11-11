@@ -38,6 +38,16 @@ interface SettingsRepository {
     suspend fun saveThemeMode(mode: ThemeMode)
 
     /**
+     * Animations de l'application (PS-146), observées par l'activité et les réglages : la valeur
+     * actuelle dès la collecte (`true` si rien n'est enregistré), puis chaque nouvelle valeur. Les
+     * couper allège l'application sur un téléphone ancien.
+     */
+    fun observeAnimationsEnabled(): Flow<Boolean>
+
+    /** Enregistre si les animations de l'application sont actives. */
+    suspend fun saveAnimationsEnabled(enabled: Boolean)
+
+    /**
      * Conseil « Gestion des médias » de l'accueil : la valeur actuelle dès la collecte
      * ([ManageMediaTip.DEFAULT] si rien n'est enregistré), puis chaque nouvelle valeur.
      */

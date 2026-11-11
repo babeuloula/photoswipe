@@ -219,4 +219,7 @@
     <string name="day_overview_similar">%1$d sur %2$d prises à la suite</string>
     <!-- Barre de progression coupée par année, lue par TalkBack (PS-144). -->
     <string name="deck_progress_with_years">%1$s, sur %2$s</string>
+    <!-- Réglage des animations (PS-146). -->
+    <string name="settings_animations">Animations</string>
+    <string name="settings_animations_summary">À couper pour alléger l\'application sur un téléphone ancien</string>
 </resources>

@@ -23,6 +23,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.common.LocalAnimationsDisabled
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.common.rememberReducedMotion
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -76,6 +77,17 @@ class TutorialAccessibilityTest {
 
         removeAnimations()
         composeRule.activity.setContent { reduced = rememberReducedMotion() }
+        composeRule.waitForIdle()
+
+        assertTrue(reduced!!)
+    }
+
+    @Test
+    fun `follows the animations turned off in the app settings`() {
+        var reduced: Boolean? = null
+        composeRule.activity.setContent {
+            CompositionLocalProvider(LocalAnimationsDisabled provides true) { reduced = rememberReducedMotion() }
+        }
         composeRule.waitForIdle()
 
         assertTrue(reduced!!)

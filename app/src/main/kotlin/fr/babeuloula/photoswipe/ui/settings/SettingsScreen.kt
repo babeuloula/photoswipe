@@ -100,7 +100,7 @@ fun SettingsScreen(
                     ) {
                         ReminderSection(reminder, environment.exactAlarmAllowed, onEvent)
                         LanguageSection(environment.languageLabel, onEvent)
-                        state.themeMode?.let { AppearanceSection(it, onEvent) }
+                        state.themeMode?.let { AppearanceSection(it, onEvent, state.animationsEnabled) }
                         state.statistics?.let { StatisticsSection(it) }
                         SupportSection(onEvent)
                         AboutSection(onEvent, environment.showDeveloperTools)

@@ -29,6 +29,7 @@ import javax.inject.Inject
  * @property reminder réglages du rappel quotidien, `null` tant qu'ils ne sont pas lus.
  * @property timePickerOpen vrai pendant le choix de l'heure du rappel.
  * @property themeMode thème de l'application, `null` tant qu'il n'est pas lu.
+ * @property animationsEnabled vrai si les animations de l'application sont actives (PS-146).
  * @property statistics statistiques d'utilisation (PS-122), `null` tant qu'elles ne sont pas lues
  * ou si elles ne peuvent pas l'être.
  */
@@ -36,6 +37,7 @@ data class SettingsUiState(
     val reminder: ReminderSettings? = null,
     val timePickerOpen: Boolean = false,
     val themeMode: ThemeMode? = null,
+    val animationsEnabled: Boolean = true,
     val statistics: UsageStatistics? = null,
 )
 
@@ -98,6 +100,15 @@ sealed interface SettingsEvent {
      */
     data class ThemePicked(
         val mode: ThemeMode,
+    ) : ThemeEvent
+
+    /**
+     * Interrupteur « Animations » (PS-146), pour alléger l'application sur un téléphone ancien.
+     *
+     * @property enabled vrai pour garder les animations.
+     */
+    data class AnimationsToggled(
+        val enabled: Boolean,
     ) : ThemeEvent
 
     /** « Langue » : ouvrir le réglage de langue par application d'Android. */
@@ -239,6 +250,12 @@ class SettingsViewModel
                     .catch { emit(ThemeMode.DEFAULT) }
                     .collect { mode -> state.update { it.copy(themeMode = mode) } }
             }
+            viewModelScope.launch {
+                settingsRepository
+                    .observeAnimationsEnabled()
+                    .catch { emit(true) }
+                    .collect { enabled -> state.update { it.copy(animationsEnabled = enabled) } }
+            }
         }
 
         /** Traite une action de l'utilisateur. */
@@ -279,11 +296,14 @@ class SettingsViewModel
             }
         }
 
-        /** Enregistre le thème choisi dans la liste des réglages. */
+        /** Enregistre le thème choisi ou le choix des animations, dans la section « Apparence ». */
         private fun onThemeEvent(event: SettingsEvent.ThemeEvent) {
-            when (event) {
-                is SettingsEvent.ThemePicked -> {
-                    viewModelScope.launch { runCatching { settingsRepository.saveThemeMode(event.mode) } }
+            viewModelScope.launch {
+                runCatching {
+                    when (event) {
+                        is SettingsEvent.ThemePicked -> settingsRepository.saveThemeMode(event.mode)
+                        is SettingsEvent.AnimationsToggled -> settingsRepository.saveAnimationsEnabled(event.enabled)
+                    }
                 }
             }
         }

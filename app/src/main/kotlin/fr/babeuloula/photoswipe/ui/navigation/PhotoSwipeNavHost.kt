@@ -1,6 +1,8 @@
 package fr.babeuloula.photoswipe.ui.navigation
 
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.safeDrawingPadding
@@ -17,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import fr.babeuloula.photoswipe.ui.common.LocalNavAnimatedScope
 import fr.babeuloula.photoswipe.ui.common.LocalSharedTransitionScope
+import fr.babeuloula.photoswipe.ui.common.rememberReducedMotion
 import fr.babeuloula.photoswipe.ui.home.ConfirmationAnnouncement
 import fr.babeuloula.photoswipe.ui.home.HomeNavigation
 import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
@@ -62,13 +65,15 @@ private fun PhotoSwipeGraph(
     navController: NavHostController,
     transitions: ScreenTransitions,
 ) {
+    val reduced = rememberReducedMotion()
     NavHost(
         navController = navController,
         startDestination = HomeRoute,
-        enterTransition = { transitions.enter },
-        exitTransition = { transitions.exit },
-        popEnterTransition = { transitions.popEnter },
-        popExitTransition = { transitions.popExit },
+        // Animations coupées (réglages de PhotoSwipe ou d'Android) : les écrans changent d'un coup.
+        enterTransition = { if (reduced) EnterTransition.None else transitions.enter },
+        exitTransition = { if (reduced) ExitTransition.None else transitions.exit },
+        popEnterTransition = { if (reduced) EnterTransition.None else transitions.popEnter },
+        popExitTransition = { if (reduced) ExitTransition.None else transitions.popExit },
     ) {
         homeDestination(navController)
         composable<DeckRoute> {

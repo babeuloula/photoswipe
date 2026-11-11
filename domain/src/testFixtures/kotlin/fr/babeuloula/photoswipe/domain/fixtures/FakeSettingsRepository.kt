@@ -29,7 +29,13 @@ class FakeSettingsRepository(
     manageMediaTip: ManageMediaTip = ManageMediaTip.DEFAULT,
     tutorialVersionSeen: Int = Tutorial.NEVER_SEEN,
     ratingInvitation: RatingInvitation = RatingInvitation.DEFAULT,
+    animationsEnabled: Boolean = true,
 ) : SettingsRepository {
+    private val storedAnimations = MutableStateFlow(animationsEnabled)
+
+    /** Animations actives enregistrées, pour les vérifications du test. */
+    val animationsEnabled: Boolean get() = storedAnimations.value
+
     /** Invitation à noter l'application enregistrée, pour les vérifications du test. */
     var ratingInvitation: RatingInvitation = ratingInvitation
         private set
@@ -64,6 +70,12 @@ class FakeSettingsRepository(
 
     override suspend fun saveThemeMode(mode: ThemeMode) {
         storedTheme.value = mode
+    }
+
+    override fun observeAnimationsEnabled(): Flow<Boolean> = storedAnimations.asStateFlow()
+
+    override suspend fun saveAnimationsEnabled(enabled: Boolean) {
+        storedAnimations.value = enabled
     }
 
     override fun observeManageMediaTip(): Flow<ManageMediaTip> = storedTip.asStateFlow()
