@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.min
+import fr.babeuloula.photoswipe.ui.common.rememberReducedMotion
 import fr.babeuloula.photoswipe.ui.theme.motion
 import kotlin.math.abs
 
@@ -70,7 +71,9 @@ internal fun FittedCardBox(
         val spec = MaterialTheme.motion.defaultSpatial<Dp>()
         val width by animateDpAsState(target.width, spec, label = "cardWidth")
         val height by animateDpAsState(target.height, spec, label = "cardHeight")
-        content(DpSize(width, height), fillsByCropping(target, ratio)) { loaded ->
+        // Animations coupées (PS-146) : la carte prend sa forme d'un coup.
+        val size = if (rememberReducedMotion()) target else DpSize(width, height)
+        content(size, fillsByCropping(target, ratio)) { loaded ->
             if (ratios != null) ratios[uri] = loaded else ownRatio.value = loaded
         }
     }

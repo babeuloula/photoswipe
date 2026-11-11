@@ -43,6 +43,18 @@ class SettingsFakesTest {
         }
 
     @Test
+    fun `keeps the animations on until they are turned off`() =
+        runTest {
+            val repository = FakeSettingsRepository()
+            assertEquals(true, repository.observeAnimationsEnabled().first())
+
+            repository.saveAnimationsEnabled(false)
+
+            assertEquals(false, repository.observeAnimationsEnabled().first())
+            assertEquals(false, repository.animationsEnabled)
+        }
+
+    @Test
     fun `gives the media management tip as never offered until another state is saved`() =
         runTest {
             val repository = FakeSettingsRepository()

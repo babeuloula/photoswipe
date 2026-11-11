@@ -95,6 +95,17 @@ class DataStoreSettingsRepositoryTest {
         }
 
     @Test
+    fun `keeps the animations on when nothing is stored, then reads back the saved choice`() =
+        runTest {
+            val repository = DataStoreSettingsRepository(dataStore())
+            assertEquals(true, repository.observeAnimationsEnabled().first())
+
+            repository.saveAnimationsEnabled(false)
+
+            assertEquals(false, repository.observeAnimationsEnabled().first())
+        }
+
+    @Test
     fun `follows the phone theme when no theme is stored`() =
         runTest {
             assertEquals(ThemeMode.SYSTEM, DataStoreSettingsRepository(dataStore()).observeThemeMode().first())

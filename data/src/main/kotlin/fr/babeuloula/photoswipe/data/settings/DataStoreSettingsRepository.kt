@@ -58,6 +58,13 @@ class DataStoreSettingsRepository
             dataStore.edit { it[THEME_MODE] = mode.name }
         }
 
+        override fun observeAnimationsEnabled(): Flow<Boolean> =
+            preferences().map { it[ANIMATIONS_ENABLED] ?: true }.distinctUntilChanged()
+
+        override suspend fun saveAnimationsEnabled(enabled: Boolean) {
+            dataStore.edit { it[ANIMATIONS_ENABLED] = enabled }
+        }
+
         override fun observeManageMediaTip(): Flow<ManageMediaTip> =
             preferences()
                 .map { preferences ->
@@ -119,6 +126,7 @@ class DataStoreSettingsRepository
             val REMINDER_ENABLED = booleanPreferencesKey("reminder_enabled")
             val REMINDER_MINUTE_OF_DAY = intPreferencesKey("reminder_minute_of_day")
             val THEME_MODE = stringPreferencesKey("theme_mode")
+            val ANIMATIONS_ENABLED = booleanPreferencesKey("animations_enabled")
             val MANAGE_MEDIA_TIP = stringPreferencesKey("manage_media_tip")
             val TUTORIAL_VERSION_SEEN = intPreferencesKey("tutorial_version_seen")
             val RATING_SORTED_DAYS = intPreferencesKey("rating_sorted_days")

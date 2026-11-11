@@ -286,4 +286,15 @@ class SettingsViewModelTest {
         assertEquals(ThemeMode.DARK, repository.themeMode)
         assertEquals(ThemeMode.DARK, viewModel.uiState.value.themeMode)
     }
+
+    @Test
+    fun `keeps the animations on by default, then saves and shows them turned off`() {
+        val viewModel = settingsViewModel()
+        assertTrue(viewModel.uiState.value.animationsEnabled)
+
+        viewModel.onEvent(SettingsEvent.AnimationsToggled(false))
+
+        assertFalse(repository.animationsEnabled)
+        assertFalse(viewModel.uiState.value.animationsEnabled)
+    }
 }

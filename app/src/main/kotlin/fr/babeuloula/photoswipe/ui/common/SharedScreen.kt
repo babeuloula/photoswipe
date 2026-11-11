@@ -44,7 +44,7 @@ sealed interface SharedScreenKey {
  * rétracte au retour, y compris pendant le geste de retour prédictif. Les écrans existent dès le
  * départ, avant d'avoir chargé leurs photos : l'effet ne dépend pas de leur chargement. [shape] est
  * la forme de l'élément, gardée pendant qu'il grandit. Sans graphe de navigation (aperçus, tests
- * d'un écran seul), rien ne change.
+ * d'un écran seul), ou animations coupées (PS-146), rien ne change.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -54,7 +54,7 @@ fun Modifier.sharedScreen(
 ): Modifier {
     val shared = LocalSharedTransitionScope.current
     val animated = LocalNavAnimatedScope.current
-    if (shared == null || animated == null) return this
+    if (shared == null || animated == null || rememberReducedMotion()) return this
     return with(shared) {
         this@sharedScreen.sharedBounds(
             rememberSharedContentState(key),

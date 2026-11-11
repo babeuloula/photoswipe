@@ -5,15 +5,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,12 +35,14 @@ import fr.babeuloula.photoswipe.ui.common.segmentShape
 
 /**
  * Section « Apparence » : le thème de l'application, en boutons radio dans la liste (ADR 0025) :
- * « Celui du téléphone », « Clair », « Sombre », appliqué dès qu'on touche un thème.
+ * « Celui du téléphone », « Clair », « Sombre », appliqué dès qu'on touche un thème ; puis
+ * l'interrupteur « Animations » (PS-146), à couper sur un téléphone ancien.
  */
 @Composable
 internal fun AppearanceSection(
     themeMode: ThemeMode,
     onEvent: (SettingsEvent) -> Unit,
+    animationsEnabled: Boolean = true,
 ) {
     PreferenceSection(stringResource(R.string.settings_appearance_section)) {
         Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -65,6 +71,20 @@ internal fun AppearanceSection(
                 )
             }
         }
+        Spacer(Modifier.height(8.dp))
+        // Toute la ligne bascule l'interrupteur, et TalkBack l'annonce comme un interrupteur.
+        PreferenceRow(
+            shape = segmentShape(0, 1),
+            title = stringResource(R.string.settings_animations),
+            summary = stringResource(R.string.settings_animations_summary),
+            trailing = { Switch(checked = animationsEnabled, onCheckedChange = null) },
+            modifier =
+                Modifier.toggleable(
+                    value = animationsEnabled,
+                    role = Role.Switch,
+                    onValueChange = { onEvent(SettingsEvent.AnimationsToggled(it)) },
+                ),
+        )
     }
 }
 

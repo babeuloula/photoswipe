@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.ui.settings
 
 import android.text.format.DateFormat
 import androidx.activity.compose.setContent
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
@@ -255,6 +256,19 @@ class SettingsScreenTest {
         composeRule.onNodeWithText(text(R.string.settings_developer_tools)).performScrollTo().performClick()
 
         assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenDeveloperTools), events)
+    }
+
+    @Test
+    fun `turns the animations off from the whole row, announced as a switch`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.LIGHT))
+
+        composeRule
+            .onNodeWithText(text(R.string.settings_animations_summary))
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.settings_animations)).performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.AnimationsToggled(false)), events)
     }
 
     @Test

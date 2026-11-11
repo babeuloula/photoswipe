@@ -21,6 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.ui.PhotoSwipeApp
+import fr.babeuloula.photoswipe.ui.common.LocalAnimationsDisabled
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.common.RotationPolicy
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -64,8 +65,10 @@ class MainActivity : ComponentActivity() {
         val themeModes = settingsRepository.observeThemeMode().catch { emit(ThemeMode.DEFAULT) }
         // Lecture courte d'un petit fichier local, une fois au démarrage : évite un éclair du mauvais thème.
         val savedThemeMode = runBlocking { themeModes.first() }
+        val animations = settingsRepository.observeAnimationsEnabled().catch { emit(true) }
         setContent {
             val themeMode by remember { themeModes }.collectAsStateWithLifecycle(savedThemeMode)
+            val animationsEnabled by remember { animations }.collectAsStateWithLifecycle(true)
             val darkTheme = themeMode.isDark(isSystemInDarkTheme())
             DisposableEffect(darkTheme) {
                 enableEdgeToEdge(
@@ -74,7 +77,11 @@ class MainActivity : ComponentActivity() {
                 )
                 onDispose {}
             }
-            CompositionLocalProvider(LocalImageLoader provides imageLoader) {
+            CompositionLocalProvider(
+                LocalImageLoader provides imageLoader,
+                // Animations coupées dans les réglages, pour les téléphones anciens (PS-146).
+                LocalAnimationsDisabled provides !animationsEnabled,
+            ) {
                 PhotoSwipeTheme(darkTheme = darkTheme) {
                     // Portrait, sauf le plein écran vidéo et la photo en grand (ADR 0028).
                     RotationPolicy {
