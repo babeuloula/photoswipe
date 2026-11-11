@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 /** État de la pile de swipe (SPEC §4.3). */
@@ -57,6 +58,9 @@ sealed interface DeckUiState {
      * @property returningFrom côté d'où revient la carte du dessus après un undo, celui par lequel
      * elle était sortie ; `null` si elle ne revient pas.
      * @property menuOpen vrai quand le menu favori / partage de la carte du dessus est ouvert.
+     * @property yearPosition rang de la carte du dessus parmi les souvenirs de son année (PS-138) :
+     * la pile va d'une année à l'autre, de la plus récente à la plus ancienne.
+     * @property yearTotal souvenirs de l'année de la carte du dessus dans la pile, triés ou non.
      */
     data class Loaded(
         val cards: List<MediaCardUiState>,
@@ -65,6 +69,8 @@ sealed interface DeckUiState {
         val canUndo: Boolean = false,
         val returningFrom: CardSide? = null,
         val menuOpen: Boolean = false,
+        val yearPosition: Int = 1,
+        val yearTotal: Int = 1,
     ) : DeckUiState {
         init {
             require(cards.size in 1..VISIBLE_CARDS) { "a loaded deck shows 1 to $VISIBLE_CARDS cards: ${cards.size}" }
@@ -75,6 +81,9 @@ sealed interface DeckUiState {
 
         /** Carte suivante, préparée sous celle du dessus ; `null` pour la dernière carte. */
         val next: MediaCardUiState? get() = cards.getOrNull(1)
+
+        /** Année de prise de vue de la carte du dessus. */
+        val year: Int get() = current.takenOn.year
 
         /** Rang de la carte du dessus dans la pile du jour, à partir de 1 (« 4 sur 23 »). */
         val position: Int get() = sortedCount + 1
@@ -457,25 +466,41 @@ class DeckViewModel
                 if (deck.isEmpty()) {
                     DeckUiState.Empty(canUndo)
                 } else {
-                    DeckUiState.Loaded(
-                        cards =
-                            deck
-                                .take(
-                                    DeckUiState.Loaded.VISIBLE_CARDS,
-                                ).map {
-                                    MediaCardUiState.of(
-                                        media = it,
-                                        day = day ?: marked.getValue(it.id).reviewDays.first(),
-                                        zone = clock.zone,
-                                        favorite = galleryFavorite.isFavorite(it),
-                                        previousDecision = previousDecisions[it.id],
-                                    )
-                                },
-                        remainingCount = deck.size,
-                        sortedCount = session.decisions.distinctBy { it.media.id }.size,
-                        canUndo = canUndo,
-                        returningFrom = returningFrom,
-                    )
+                    DeckUiState
+                        .Loaded(
+                            cards =
+                                deck
+                                    .take(
+                                        DeckUiState.Loaded.VISIBLE_CARDS,
+                                    ).map {
+                                        MediaCardUiState.of(
+                                            media = it,
+                                            day = day ?: marked.getValue(it.id).reviewDays.first(),
+                                            zone = clock.zone,
+                                            favorite = galleryFavorite.isFavorite(it),
+                                            previousDecision = previousDecisions[it.id],
+                                        )
+                                    },
+                            remainingCount = deck.size,
+                            sortedCount = session.decisions.distinctBy { it.media.id }.size,
+                            canUndo = canUndo,
+                            returningFrom = returningFrom,
+                        ).withYearProgress(deck, session.decisions.map { it.media }, clock.zone)
                 }
         }
     }
+
+/**
+ * Place de la carte du dessus parmi les souvenirs de son année (PS-138) : ceux de [sorted] (triés
+ * pendant la session) qui ne sont plus dans [deck], puis ceux qui y restent ; années lues dans [zone].
+ */
+internal fun DeckUiState.Loaded.withYearProgress(
+    deck: Collection<MediaItem>,
+    sorted: List<MediaItem>,
+    zone: ZoneId,
+): DeckUiState.Loaded {
+    val inYear = { media: MediaItem -> media.takenAt.atZone(zone).year == year }
+    val deckIds = deck.mapTo(HashSet()) { it.id }
+    val sortedInYear = sorted.distinctBy { it.id }.count { it.id !in deckIds && inYear(it) }
+    return copy(yearPosition = sortedInYear + 1, yearTotal = sortedInYear + deck.count(inYear))
+}

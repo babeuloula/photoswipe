@@ -177,7 +177,7 @@
     <string name="tutorial_start">Let\'s go</string>
     <string name="tutorial_page_indicator">Page %1$d of %2$d</string>
     <string name="tutorial_same_day_title">Memories of the same day</string>
-    <string name="tutorial_same_day_body">Every day, PhotoSwipe shows you the photos and videos taken on this same day in previous years: a moment to relive your memories and tidy them up.</string>
+    <string name="tutorial_same_day_body">Every day, PhotoSwipe shows you the photos and videos taken on this same day in every previous year, not just last year: one year after another, from the most recent to the oldest. A moment to relive your memories and tidy up.</string>
     <string name="tutorial_swipes_title">Keep or delete</string>
     <string name="tutorial_swipes_body">Swipe right to keep a memory: it will come back next year. Swipe left to mark it for deletion: nothing is deleted without your confirmation. Changed your mind? Undo brings the card back.</string>
     <string name="tutorial_swipe_up_title">Favorite or share</string>
@@ -209,4 +209,8 @@
     <string name="crash_report_ignore">Ignore</string>
     <!-- Résumé quand tout est confirmé : place libérée aujourd'hui (ADR 0034). -->
     <string name="summary_freed_today">Space freed today</string>
+    <!-- Pile : place de la carte parmi les souvenirs de son année (PS-138). -->
+    <string name="deck_year_progress">%1$d · %2$d of %3$d from that year</string>
+    <!-- Carte du jour : les souvenirs viennent de toutes les années passées (PS-138). -->
+    <string name="home_today_every_year">This day, in every past year</string>
 </resources>

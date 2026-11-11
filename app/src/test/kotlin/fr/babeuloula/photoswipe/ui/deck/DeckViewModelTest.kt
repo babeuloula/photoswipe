@@ -83,6 +83,26 @@ class DeckViewModelTest : DeckViewModelTestBase() {
         }
 
     @Test
+    fun `says where the top card stands among the memories of its year`() =
+        runTest {
+            val gallery = listOf(takenOn(1, 2025), takenOn(2, 2025), takenOn(3, 2023), takenOn(4, 2025))
+            val viewModel = deckViewModel(FakeMediaSource(gallery))
+
+            fun state() = viewModel.uiState.value as DeckUiState.Loaded
+            assertEquals(Triple(2025, 1, 3), Triple(state().year, state().yearPosition, state().yearTotal))
+
+            viewModel.onEvent(DeckEvent.Keep)
+            viewModel.onEvent(DeckEvent.MarkForDeletion)
+            assertEquals(Triple(2025, 3, 3), Triple(state().year, state().yearPosition, state().yearTotal))
+
+            viewModel.onEvent(DeckEvent.Keep)
+            assertEquals(Triple(2023, 1, 1), Triple(state().year, state().yearPosition, state().yearTotal))
+
+            viewModel.onEvent(DeckEvent.Undo)
+            assertEquals(Triple(2025, 3, 3), Triple(state().year, state().yearPosition, state().yearTotal))
+        }
+
+    @Test
     fun `is empty when everything has been sorted`() =
         runTest {
             repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))

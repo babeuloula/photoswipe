@@ -231,6 +231,8 @@ private fun MemoriesCard(
                         modifier = Modifier.semantics { heading() },
                     )
                     Text(dayLabel(today.date), style = MaterialTheme.typography.headlineSmall)
+                    // Les souvenirs ne viennent pas que de l'an dernier (PS-138).
+                    Text(stringResource(R.string.home_today_every_year), style = MaterialTheme.typography.bodyMedium)
                 }
                 if (!compact) today.years?.let { FilmEdgeLabel(yearsLabel(it)) }
             }

@@ -166,7 +166,7 @@
     <string name="tutorial_start">C\'est parti</string>
     <string name="tutorial_page_indicator">Page %1$d sur %2$d</string>
     <string name="tutorial_same_day_title">Les souvenirs du même jour</string>
-    <string name="tutorial_same_day_body">Chaque jour, PhotoSwipe vous montre les photos et vidéos prises ce même jour les années précédentes : un moment pour revivre vos souvenirs et faire le tri.</string>
+    <string name="tutorial_same_day_body">Chaque jour, PhotoSwipe vous montre les photos et vidéos prises ce même jour lors de toutes les années précédentes, pas seulement l\'an dernier : une année après l\'autre, de la plus récente à la plus ancienne. Un moment pour revivre vos souvenirs et faire le tri.</string>
     <string name="tutorial_swipes_title">Garder ou supprimer</string>
     <string name="tutorial_swipes_body">Glissez à droite pour garder un souvenir : il reviendra l\'année prochaine. Glissez à gauche pour le marquer pour suppression : rien n\'est supprimé sans votre confirmation. Changé d\'avis ? « Annuler » ramène la carte.</string>
     <string name="tutorial_swipe_up_title">Favori ou partage</string>
@@ -198,4 +198,8 @@
     <string name="crash_report_ignore">Ignorer</string>
     <!-- Résumé quand tout est confirmé : place libérée aujourd'hui (ADR 0034). -->
     <string name="summary_freed_today">Espace libéré aujourd\'hui</string>
+    <!-- Pile : place de la carte parmi les souvenirs de son année (PS-138). -->
+    <string name="deck_year_progress">%1$d · %2$d sur %3$d de cette année</string>
+    <!-- Carte du jour : les souvenirs viennent de toutes les années passées (PS-138). -->
+    <string name="home_today_every_year">Ce jour-là, toutes les années passées</string>
 </resources>
