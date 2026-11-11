@@ -22,3 +22,6 @@ captures/
 
 # OS
 .DS_Store
+
+# Caches Python des scripts (tests lancés en local)
+__pycache__/
