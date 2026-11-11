@@ -103,6 +103,20 @@ class DeckViewModelTest : DeckViewModelTestBase() {
         }
 
     @Test
+    fun `opens the deck of the day on the media tapped in the day overview`() =
+        runTest {
+            val gallery = listOf(takenOn(1, 2025), takenOn(2, 2023), takenOn(3, 2020))
+            val viewModel =
+                deckViewModel(
+                    FakeMediaSource(gallery),
+                    route = mapOf("epochDay" to day.toEpochDay(), "firstMediaId" to 3L),
+                )
+
+            assertEquals(listOf(MediaId(3), MediaId(1)), viewModel.cardIds())
+            assertEquals(3, (viewModel.uiState.value as DeckUiState.Loaded).total)
+        }
+
+    @Test
     fun `is empty when everything has been sorted`() =
         runTest {
             repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
@@ -681,7 +695,7 @@ class DeckViewModelTest : DeckViewModelTestBase() {
             val tapped = takenOn(2, 2023)
             markInDayDeck(first, tapped)
             val viewModel =
-                deckViewModel(FakeMediaSource(listOf(first, tapped)), route = mapOf("firstMarkedMediaId" to 2L))
+                deckViewModel(FakeMediaSource(listOf(first, tapped)), route = mapOf("firstMediaId" to 2L))
 
             val state = viewModel.uiState.value as DeckUiState.Loaded
 

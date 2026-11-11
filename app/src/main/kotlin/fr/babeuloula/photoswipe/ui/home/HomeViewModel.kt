@@ -79,6 +79,15 @@ sealed interface HomeEvent {
     ) : HomeEvent
 
     /**
+     * « Voir tout le jour » : la vue d'ensemble de ses souvenirs (PS-139).
+     *
+     * @property date jour à montrer.
+     */
+    data class OpenOverview(
+        val date: LocalDate,
+    ) : HomeEvent
+
+    /**
      * « Retrier » un jour déjà trié (ADR 0026) : ses médias reviennent à trier, puis sa pile s'ouvre.
      *
      * @property date jour à retrier.
@@ -119,6 +128,11 @@ sealed interface HomeEvent {
 sealed interface HomeEffect {
     /** Ouvrir la pile du jour [date]. */
     data class OpenDeck(
+        val date: LocalDate,
+    ) : HomeEffect
+
+    /** Ouvrir la vue d'ensemble du jour [date] (PS-139). */
+    data class OpenOverview(
         val date: LocalDate,
     ) : HomeEffect
 
@@ -185,6 +199,10 @@ class HomeViewModel
             when (event) {
                 is HomeEvent.OpenDay -> {
                     effects.trySend(HomeEffect.OpenDeck(event.date))
+                }
+
+                is HomeEvent.OpenOverview -> {
+                    effects.trySend(HomeEffect.OpenOverview(event.date))
                 }
 
                 is HomeEvent.ResortDay -> {

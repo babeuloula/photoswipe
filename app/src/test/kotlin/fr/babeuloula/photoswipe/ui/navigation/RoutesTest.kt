@@ -23,7 +23,7 @@ class RoutesTest {
 
         assertTrue(route.isMarked)
         assertNull(route.day)
-        assertEquals(42L, route.firstMarkedMediaId)
+        assertEquals(42L, route.firstMediaId)
         assertFalse(DeckRoute.of(LocalDate.of(2026, 7, 15)).isMarked)
     }
 }

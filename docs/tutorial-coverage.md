@@ -21,6 +21,7 @@ Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été inc
 | Accès aux photos, accès partiel d'Android 14+ | epic 4 | Hors tutoriel : écrans d'accès, juste après lui |
 | Lecture des vidéos (muette au départ, son au ▶) | epic 6, PS-105 | Non détaillé : découvert sur la carte même, sans risque |
 | Accès « Gestion des médias » | PS-84 | Hors tutoriel : conseil de l'accueil, proposé au bon moment |
+| Vue d'ensemble d'un jour (tous ses souvenirs par année) | PS-139 | Hors tutoriel : ouverte en touchant les vignettes de la carte du jour ou l'icône de grille de la pile, découverte sans risque |
 | Langue, thème, licences, revoir le tutoriel | epic 9, PS-81, PS-87 | Hors tutoriel : réglages |
 
 ## Écart connu

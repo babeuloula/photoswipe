@@ -89,6 +89,7 @@ fun DeckScreen(
     onEvent: (DeckEvent) -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    onOpenOverview: (() -> Unit)? = null,
 ) {
     Scaffold(
         modifier = modifier,
@@ -112,6 +113,15 @@ fun DeckScreen(
                     }
                 },
                 actions = {
+                    // Tous les souvenirs du jour d'un coup d'œil (PS-139) ; pas pour la pile des marqués.
+                    onOpenOverview?.let {
+                        IconButton(onClick = it) {
+                            Icon(
+                                painterResource(R.drawable.ic_grid_view),
+                                contentDescription = stringResource(R.string.day_overview_open),
+                            )
+                        }
+                    }
                     TextButton(onClick = { onEvent(DeckEvent.Finish) }) { Text(stringResource(R.string.deck_finish)) }
                 },
             )

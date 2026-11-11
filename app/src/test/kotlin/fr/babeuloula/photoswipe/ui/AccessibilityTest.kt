@@ -18,7 +18,11 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
+import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
+import fr.babeuloula.photoswipe.domain.model.DayOverview
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.domain.model.OverviewMemory
+import fr.babeuloula.photoswipe.domain.model.OverviewYear
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
@@ -26,6 +30,8 @@ import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.crash.CrashReportDialog
+import fr.babeuloula.photoswipe.ui.dayoverview.DayOverviewScreen
+import fr.babeuloula.photoswipe.ui.dayoverview.DayOverviewUiState
 import fr.babeuloula.photoswipe.ui.deck.DeckScreen
 import fr.babeuloula.photoswipe.ui.deck.DeckUiState
 import fr.babeuloula.photoswipe.ui.deck.FullscreenVideoContent
@@ -177,6 +183,7 @@ class AccessibilityTest {
         }
         check { DeckScreen(day = today, state = DeckUiState.Empty(canUndo = true), onEvent = {}) }
         deckOverlays()
+        check { DayOverviewScreen(day = today, state = DayOverviewUiState.Loaded(sampleOverview()), onEvent = {}) }
         check {
             SummaryScreen(
                 state =
@@ -195,6 +202,22 @@ class AccessibilityTest {
         check { LicensesScreen(onBack = {}, licenseText = "Apache License, Version 2.0") }
         check { CrashReportDialog(onEvent = {}) }
     }
+
+    /** Vue d'ensemble d'exemple : une année, un souvenir de chaque état. */
+    private fun sampleOverview(): DayOverview =
+        DayOverview(
+            today,
+            listOf(
+                OverviewYear(
+                    today.year - 2,
+                    listOf(
+                        OverviewMemory(aMediaItem(id = 1), decision = null, favorite = false),
+                        OverviewMemory(aMediaItem(id = 2), ReviewDecision.KEPT, favorite = true),
+                        OverviewMemory(aMediaItem(id = 3), ReviewDecision.MARKED_FOR_DELETION, favorite = false),
+                    ),
+                ),
+            ),
+        )
 
     @Test
     fun `every screen passes the accessibility checks`() {

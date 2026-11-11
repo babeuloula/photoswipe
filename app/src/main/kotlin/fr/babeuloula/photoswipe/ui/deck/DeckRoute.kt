@@ -18,6 +18,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.babeuloula.photoswipe.R
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 /**
  * Pile de swipe reliée à son ViewModel : elle exécute les navigations, lance la demande de favori
@@ -29,6 +30,7 @@ fun DeckRoute(
     onBack: () -> Unit,
     onOpenSummary: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenOverview: (LocalDate) -> Unit = {},
     viewModel: DeckViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -79,6 +81,7 @@ fun DeckRoute(
             onEvent = viewModel::onEvent,
             modifier = modifier,
             snackbarHostState = snackbarHostState,
+            onOpenOverview = viewModel.day?.let { day -> { onOpenOverview(day) } },
         )
     }
 }

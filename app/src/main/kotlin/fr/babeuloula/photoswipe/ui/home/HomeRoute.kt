@@ -55,31 +55,20 @@ fun HomeRoute(
     }
     LaunchedEffect(viewModel) {
         viewModel.uiEffects.collect { effect ->
+            if (navigation.navigate(effect)) return@collect
             when (effect) {
-                is HomeEffect.OpenDeck -> {
-                    navigation.openDeck(effect.date)
-                }
-
-                HomeEffect.OpenSettings -> {
-                    navigation.openSettings()
-                }
-
-                HomeEffect.OpenSummary -> {
-                    navigation.openSummary()
-                }
-
                 HomeEffect.OpenManageMediaSettings -> {
                     openManageMediaSettings(context)
                 }
 
                 HomeEffect.OpenRating, HomeEffect.OpenDonation -> {
-                    if (!openSupportLink(
-                            context,
-                            effect,
-                        )
-                    ) {
+                    if (!openSupportLink(context, effect)) {
                         scope.launch { snackbarHostState.showSnackbar(linkUnavailable) }
                     }
+                }
+
+                else -> {
+                    Unit
                 }
             }
         }
@@ -126,15 +115,29 @@ class ConfirmationAnnouncement(
     val markAnnounced: () -> Unit,
 )
 
+/** Exécute [effect] s'il mène à un autre écran de l'application ; renvoie `false` sinon. */
+private fun HomeNavigation.navigate(effect: HomeEffect): Boolean {
+    when (effect) {
+        is HomeEffect.OpenDeck -> openDeck(effect.date)
+        is HomeEffect.OpenOverview -> openOverview(effect.date)
+        HomeEffect.OpenSettings -> openSettings()
+        HomeEffect.OpenSummary -> openSummary()
+        else -> return false
+    }
+    return true
+}
+
 /**
  * Navigations demandées par l'accueil, exécutées par le graphe de navigation.
  *
  * @property openDeck ouvre la pile d'un jour.
+ * @property openOverview ouvre la vue d'ensemble d'un jour (PS-139).
  * @property openSettings ouvre les réglages.
  * @property openSummary ouvre le résumé des décisions en attente.
  */
 class HomeNavigation(
     val openDeck: (LocalDate) -> Unit,
+    val openOverview: (LocalDate) -> Unit,
     val openSettings: () -> Unit,
     val openSummary: () -> Unit,
 )

@@ -111,6 +111,16 @@ class HomeViewModelTest {
         }
 
     @Test
+    fun `opens the overview of the chosen day`() =
+        runTest {
+            val viewModel = homeViewModel(FakeMediaSource())
+
+            viewModel.onEvent(HomeEvent.OpenOverview(today))
+
+            assertEquals(HomeEffect.OpenOverview(today), viewModel.uiEffects.first())
+        }
+
+    @Test
     fun `reopens a sorted day, brings its count back and opens its deck`() =
         runTest {
             repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026, decision = ReviewDecision.KEPT))

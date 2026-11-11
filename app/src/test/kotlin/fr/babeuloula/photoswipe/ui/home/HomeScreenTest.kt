@@ -7,6 +7,7 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performFirstLinkClick
@@ -106,7 +107,7 @@ class HomeScreenTest {
         )
 
         composeRule.onNodeWithText("All sorted for today").assertIsDisplayed()
-        composeRule.onNodeWithText(text(R.string.home_today)).performClick()
+        composeRule.onNodeWithText(text(R.string.home_today), useUnmergedTree = true).performClick()
 
         assertEquals(listOf<HomeEvent>(HomeEvent.ResortDay(LocalDate.of(2026, 7, 15))), events)
     }
@@ -314,6 +315,16 @@ class HomeScreenTest {
     }
 
     @Test
+    fun `opens the overview of every memory of today from its previews`() {
+        val today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 2, previews = listOf(aMediaItem(id = 1)))
+        show(loaded(todayCount = 2).copy(today = today))
+
+        composeRule.onNodeWithTag(PREVIEW_STRIP_TAG).performClick()
+
+        assertEquals(listOf<HomeEvent>(HomeEvent.OpenOverview(LocalDate.of(2026, 7, 15))), events)
+    }
+
+    @Test
     fun `shows the today card with the date and the count of media to sort`() {
         show(loaded(todayCount = 12))
 
@@ -327,7 +338,7 @@ class HomeScreenTest {
     fun `opens the deck of today when the card is tapped`() {
         show(loaded(todayCount = 1))
 
-        composeRule.onNodeWithText("1 item to sort").performClick()
+        composeRule.onNodeWithText("1 item to sort", useUnmergedTree = true).performClick()
 
         assertEquals(listOf<HomeEvent>(HomeEvent.OpenDay(LocalDate.of(2026, 7, 15))), events)
     }

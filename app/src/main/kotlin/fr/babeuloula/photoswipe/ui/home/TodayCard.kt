@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -125,13 +126,7 @@ internal fun TodayCard(
         }
 
         else -> {
-            MemoriesCard(
-                today,
-                onOpenDay = onOpenDay,
-                onSummary = { onEvent(HomeEvent.OpenPendingDeletions) },
-                onResort = { onEvent(HomeEvent.ResortDay(today.date)) },
-                compact = compact,
-            )
+            MemoriesCard(today, onOpenDay = onOpenDay, onEvent = onEvent, compact = compact)
         }
     }
 }
@@ -194,10 +189,10 @@ private fun TextCard(
 private fun MemoriesCard(
     today: ReviewDay,
     onOpenDay: () -> Unit,
-    onSummary: () -> Unit,
-    onResort: () -> Unit,
+    onEvent: (HomeEvent) -> Unit,
     compact: Boolean,
 ) {
+    val onResort = { onEvent(HomeEvent.ResortDay(today.date)) }
     val toSort = today.remainingCount > 0
     val scheme = MaterialTheme.colorScheme
     val container = if (toSort) scheme.primaryContainer else scheme.surfaceContainerHigh
@@ -223,85 +218,50 @@ private fun MemoriesCard(
             },
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.home_today),
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.semantics { heading() },
-                    )
-                    Text(dayLabel(today.date), style = MaterialTheme.typography.headlineSmall)
-                    // Les souvenirs ne viennent pas que de l'an dernier (PS-138).
-                    Text(stringResource(R.string.home_today_every_year), style = MaterialTheme.typography.bodyMedium)
-                }
-                if (!compact) today.years?.let { FilmEdgeLabel(yearsLabel(it)) }
-            }
+            CardHeader(today, compact)
             if (!compact) {
+                // Toucher les vignettes montre tous les souvenirs du jour, avant ou après le tri (PS-139).
                 PreviewStrip(
                     today = today,
                     tileColor = content,
                     onTileColor = container,
-                    modifier = Modifier.alpha(if (toSort) 1f else SORTED_ALPHA),
+                    modifier =
+                        Modifier
+                            .alpha(if (toSort) 1f else SORTED_ALPHA)
+                            .clip(MaterialTheme.shapes.small)
+                            .clickable(onClickLabel = stringResource(R.string.day_overview_open)) {
+                                onEvent(HomeEvent.OpenOverview(today.date))
+                            }.testTag(PREVIEW_STRIP_TAG),
                 )
             }
             when {
                 toSort -> TodayCount(today.remainingCount, onStart = onOpenDay.takeUnless { compact })
                 compact -> Text(stringResource(R.string.home_today_done), style = MaterialTheme.typography.bodyLarge)
-                else -> AllSorted(onSummary, onResort)
+                else -> AllSorted({ onEvent(HomeEvent.OpenPendingDeletions) }, onResort)
             }
             if (today.deletedCount > 0) DeletedLabel(today)
         }
     }
 }
 
-/**
- * Bande de vignettes du jour en [ReviewDay.PREVIEW_SLOTS] cases, l'année sous chaque vignette en
- * chasse fixe ; s'il reste des souvenirs hors de la bande, la dernière case en donne le nombre (« +20 »).
- */
+/** « Aujourd'hui », la date, « Ce jour-là, toutes les années passées » et, hors volets, le repère des années. */
 @Composable
-private fun PreviewStrip(
+private fun CardHeader(
     today: ReviewDay,
-    tileColor: Color,
-    onTileColor: Color,
-    modifier: Modifier = Modifier,
+    compact: Boolean,
 ) {
-    val zone = ZoneId.systemDefault()
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        today.previews.forEach { media ->
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Thumbnail(media, Modifier.fillMaxWidth().height(PREVIEW_HEIGHT).clip(MaterialTheme.shapes.small))
-                Text(
-                    text =
-                        media.takenAt
-                            .atZone(zone)
-                            .year
-                            .toString(),
-                    style = MaterialTheme.typography.monoLabel,
-                )
-            }
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.home_today),
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.semantics { heading() },
+            )
+            Text(dayLabel(today.date), style = MaterialTheme.typography.headlineSmall)
+            // Les souvenirs ne viennent pas que de l'an dernier (PS-138).
+            Text(stringResource(R.string.home_today_every_year), style = MaterialTheme.typography.bodyMedium)
         }
-        val moreTile = today.hiddenCount > 0
-        val emptySlots = ReviewDay.PREVIEW_SLOTS - today.previews.size - if (moreTile) 1 else 0
-        repeat(emptySlots.coerceAtLeast(0)) { Spacer(Modifier.weight(1f)) }
-        if (moreTile) {
-            Box(
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .height(PREVIEW_HEIGHT)
-                        .clip(MaterialTheme.shapes.small)
-                        .background(tileColor),
-                contentAlignment = Alignment.Center,
-            ) {
-                val description = stringResource(R.string.home_more_memories_description, today.hiddenCount)
-                Text(
-                    text = stringResource(R.string.home_more_memories, today.hiddenCount),
-                    style = MaterialTheme.typography.titleLarge.copy(fontFamily = IbmPlexMono),
-                    color = onTileColor,
-                    modifier = Modifier.clearAndSetSemantics { contentDescription = description },
-                )
-            }
-        }
+        if (!compact) today.years?.let { FilmEdgeLabel(yearsLabel(it)) }
     }
 }
 
@@ -392,8 +352,8 @@ private fun dayAndMonth(date: LocalDate): String {
     return date.format(DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "dMMMM"), locale))
 }
 
-/** Hauteur des vignettes de la carte du jour. */
-private val PREVIEW_HEIGHT = 104.dp
-
 /** Opacité des vignettes d'un jour déjà trié : elles restent reconnaissables, mais en retrait. */
 private const val SORTED_ALPHA = 0.72f
+
+/** Repère de test de la bande de vignettes de la carte du jour. */
+internal const val PREVIEW_STRIP_TAG = "today_preview_strip"

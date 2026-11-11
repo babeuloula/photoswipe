@@ -16,6 +16,7 @@ import fr.babeuloula.photoswipe.ui.home.HomeNavigation
 import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
 import fr.babeuloula.photoswipe.ui.tutorial.TutorialScreen
 import java.time.LocalDate
+import fr.babeuloula.photoswipe.ui.dayoverview.DayOverviewRoute as DayOverviewDestination
 import fr.babeuloula.photoswipe.ui.deck.DeckRoute as DeckDestination
 import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
 import fr.babeuloula.photoswipe.ui.settings.SettingsRoute as SettingsDestination
@@ -23,7 +24,7 @@ import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
 
 /**
  * Graphe de navigation de l'application (SPEC §5.4), en routes typées : accueil, pile d'un jour,
- * résumé, réglages, licences, tutoriel revu depuis les réglages. Le rappel quotidien peut demander d'ouvrir directement une pile
+ * vue d'ensemble d'un jour, résumé, réglages, licences, tutoriel revu depuis les réglages. Le rappel quotidien peut demander d'ouvrir directement une pile
  * ([deckToOpen]), qui s'empile au-dessus de l'accueil. Les écrans s'enchaînent en axe partagé
  * horizontal ([SharedAxisTransitions]).
  *
@@ -54,6 +55,16 @@ fun PhotoSwipeNavHost(
             DeckDestination(
                 onBack = navController::popBackStack,
                 onOpenSummary = { navController.navigate(SummaryRoute) },
+                onOpenOverview = { day -> navController.navigate(DayOverviewRoute.of(day)) },
+            )
+        }
+        composable<DayOverviewRoute> {
+            DayOverviewDestination(
+                onBack = navController::popBackStack,
+                // La pile ouverte depuis la vue d'ensemble remplace celle d'où elle venait, s'il y en a une.
+                onOpenDeck = { day, first ->
+                    navController.navigate(DeckRoute.of(day, first)) { popUpTo<HomeRoute> { inclusive = false } }
+                },
             )
         }
         composable<SummaryRoute> {
@@ -112,6 +123,7 @@ private fun NavGraphBuilder.homeDestination(navController: NavHostController) {
             navigation =
                 HomeNavigation(
                     openDeck = { day -> navController.navigate(DeckRoute.of(day)) },
+                    openOverview = { day -> navController.navigate(DayOverviewRoute.of(day)) },
                     openSettings = { navController.navigate(SettingsRoute) },
                     openSummary = { navController.navigate(SummaryRoute) },
                 ),

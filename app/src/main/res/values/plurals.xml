@@ -81,4 +81,13 @@
         <item quantity="one">%1$d item deleted · %2$s freed</item>
         <item quantity="other">%1$d items deleted · %2$s freed</item>
     </plurals>
+    <!-- Vue d'ensemble d'un jour (PS-139). -->
+    <plurals name="day_overview_memories">
+        <item quantity="one">%d memory</item>
+        <item quantity="other">%d memories</item>
+    </plurals>
+    <plurals name="day_overview_sort">
+        <item quantity="one">Sort the last one</item>
+        <item quantity="other">Sort the %d left</item>
+    </plurals>
 </resources>

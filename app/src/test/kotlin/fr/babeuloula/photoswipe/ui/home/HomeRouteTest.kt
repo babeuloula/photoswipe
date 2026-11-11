@@ -82,7 +82,13 @@ class HomeRouteTest {
             CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
                 PhotoSwipeTheme {
                     HomeRoute(
-                        navigation = HomeNavigation(openDeck = {}, openSettings = {}, openSummary = {}),
+                        navigation =
+                            HomeNavigation(
+                                openDeck = {},
+                                openOverview = {},
+                                openSettings = {},
+                                openSummary = {},
+                            ),
                         confirmed =
                             if (pending.value != 0) {
                                 ConfirmationAnnouncement(pending.value) {
