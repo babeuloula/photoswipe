@@ -183,7 +183,7 @@
     <string name="tutorial_swipe_up_title">Favorite or share</string>
     <string name="tutorial_swipe_up_body">Swipe up to open the menu: add the memory to your favorites, which also keeps it, or share it.</string>
     <string name="tutorial_catch_up_title">Catch up on missed days</string>
-    <string name="tutorial_catch_up_body">Missed a day? The last 7 days stay on the home screen, and a day already sorted can be sorted again. A daily reminder, which you can turn on in the settings, lets you know only when memories are left to sort.</string>
+    <string name="tutorial_catch_up_body">Missed a day? On the home screen, below today\'s card, the “Catch up” list keeps the 6 previous days, and a day already sorted can be sorted again. A daily reminder, which you can turn on in the settings, lets you know only when memories are left to sort.</string>
     <string name="tutorial_confirmation_title">Nothing is final</string>
     <string name="tutorial_confirmation_body">Marked media are deleted together, once you confirm at the end of sorting; tap them in the summary to review them full size first. They go to the system trash, where you can restore them for about 30 days.</string>
     <string name="tutorial_practice_title">Give it a try</string>
@@ -199,7 +199,7 @@
     <string name="settings_about_tutorial_summary">How sorting works, and a try on sample cards</string>
     <string name="tutorial_same_day_illustration">Animation: photos from several years go by, one year ago, three years ago, five years ago, on this same date.</string>
     <string name="tutorial_swipe_up_illustration">Animation: a photo slides up under a blue veil with a heart, then the menu opens with Add to favorites and Share.</string>
-    <string name="tutorial_catch_up_illustration">Animation: the last 7 days, each with its number of memories to sort, get sorted one after another, and the reminder counts what is left.</string>
+    <string name="tutorial_catch_up_illustration">Animation: the list of days on the home screen, today at the top then the 6 previous days, each with its number of memories to sort; they get sorted one after another, and the reminder counts what is left.</string>
     <string name="tutorial_confirmation_illustration">Animation: the summary shows the estimated space freed, then a dialog asks to move the marked items to the trash.</string>
     <string name="tutorial_swipes_illustration">Animation: a photo slides right under a green veil with a check mark, Keep, then left under a red veil with a trash can, Delete.</string>
     <!-- Rapport de plantage proposé au lancement suivant (ADR 0033). -->
