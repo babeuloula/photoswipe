@@ -10,7 +10,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performFirstLinkClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -148,7 +147,9 @@ class HomeScreenTest {
     fun `lists the six previous days with their localized date and count`() {
         show(loaded(todayCount = 1))
 
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText(text(R.string.home_previous_days)))
         composeRule.onNodeWithText(text(R.string.home_previous_days)).assertIsDisplayed()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("3 items to sort"))
         composeRule.onNodeWithText("Tuesday, July 14").assertIsDisplayed()
         composeRule.onNodeWithText("3 items to sort").assertIsDisplayed()
         composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Thursday, July 9"))
@@ -243,6 +244,7 @@ class HomeScreenTest {
     fun `opens the deck of a previous day`() {
         show(loaded(todayCount = 1))
 
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Tuesday, July 14"))
         composeRule.onNodeWithText("Tuesday, July 14").performClick()
 
         assertEquals(listOf<HomeEvent>(HomeEvent.OpenDay(LocalDate.of(2026, 7, 14))), events)
@@ -285,7 +287,8 @@ class HomeScreenTest {
         val day = state.previousDays[0].copy(deletedCount = 2, freedBytes = 5_000_000)
         show(state.copy(previousDays = listOf(day) + state.previousDays.drop(1)))
 
-        composeRule.onNodeWithText("2 médias supprimés", substring = true).performScrollTo().assertIsDisplayed()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("2 médias supprimés", substring = true))
+        composeRule.onNodeWithText("2 médias supprimés", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -316,6 +319,7 @@ class HomeScreenTest {
 
         composeRule.onNodeWithText(text(R.string.home_today)).assertIsDisplayed()
         composeRule.onNodeWithText("Wednesday, July 15").assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.home_today_every_year)).assertIsDisplayed()
         composeRule.onNodeWithText("12 items to sort").assertIsDisplayed()
     }
 

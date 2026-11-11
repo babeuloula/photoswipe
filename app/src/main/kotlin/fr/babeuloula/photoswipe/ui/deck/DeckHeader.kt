@@ -2,7 +2,14 @@ package fr.babeuloula.photoswipe.ui.deck
 
 import android.content.Context
 import android.text.format.DateFormat
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,8 +37,58 @@ import java.time.format.DateTimeFormatter
 internal fun DeckProgress(
     position: Int,
     total: Int,
+    yearProgress: YearProgress? = null,
 ) {
     val label = stringResource(R.string.deck_progress, position, total)
+    Column {
+        ProgressRow(position, total, label)
+        yearProgress?.let { YearLine(it) }
+    }
+}
+
+/**
+ * Où en est la pile dans l'année de la carte du dessus (PS-138).
+ *
+ * @property year année de prise de vue.
+ * @property position rang de la carte parmi les souvenirs de cette année, à partir de 1.
+ * @property total souvenirs de cette année dans la pile.
+ */
+internal data class YearProgress(
+    val year: Int,
+    val position: Int,
+    val total: Int,
+)
+
+/**
+ * « 2023 · 2 sur 5 de cette année » : la pile va d'une année à l'autre, de la plus récente à la plus
+ * ancienne ; la ligne glisse à chaque changement d'année pour le rendre visible.
+ */
+@Composable
+private fun YearLine(progress: YearProgress) {
+    AnimatedContent(
+        targetState = progress,
+        contentKey = { it.year },
+        transitionSpec = {
+            (slideInVertically { it } + fadeIn()) togetherWith (slideOutVertically { -it } + fadeOut())
+        },
+        label = "deckYear",
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+    ) { shown ->
+        Text(
+            text = stringResource(R.string.deck_year_progress, shown.year, shown.position, shown.total),
+            style = MaterialTheme.typography.monoLabel,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** Barre de progression et « 4 sur 23 ». */
+@Composable
+private fun ProgressRow(
+    position: Int,
+    total: Int,
+    label: String,
+) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),

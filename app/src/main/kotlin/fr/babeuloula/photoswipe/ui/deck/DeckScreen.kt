@@ -125,7 +125,11 @@ fun DeckScreen(
         ) {
             Column(Modifier.fillMaxSize()) {
                 if (state is DeckUiState.Loaded) {
-                    DeckProgress(position = state.position, total = state.total)
+                    DeckProgress(
+                        position = state.position,
+                        total = state.total,
+                        yearProgress = YearProgress(state.year, state.yearPosition, state.yearTotal),
+                    )
                 }
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     DeckContent(state = state, onEvent = onEvent)
