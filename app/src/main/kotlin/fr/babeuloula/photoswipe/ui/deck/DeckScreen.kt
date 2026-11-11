@@ -2,6 +2,8 @@ package fr.babeuloula.photoswipe.ui.deck
 
 import android.content.Context
 import android.text.format.DateFormat
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
@@ -75,6 +78,7 @@ import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
 import fr.babeuloula.photoswipe.ui.common.sharedScreen
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.monoLabel
+import fr.babeuloula.photoswipe.ui.theme.motion
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -269,7 +273,6 @@ internal fun LoadedDeck(
                     requestedExit = requestedExit,
                     onEvent = onEvent,
                     onIndicationChange = { indication = it },
-                    nextCardProgress = { indication?.progress ?: 0f },
                     modifier = cardModifier,
                 )
             },
@@ -309,7 +312,6 @@ private fun CardStack(
     requestedExit: CardSide?,
     onEvent: (DeckEvent) -> Unit,
     onIndicationChange: (SwipeIndication?) -> Unit,
-    nextCardProgress: () -> Float,
     modifier: Modifier = Modifier,
 ) {
     // Photo du dessus ouverte en grand (PS-117), tenue par la pile : gardée quand une rotation
@@ -319,39 +321,46 @@ private fun CardStack(
     if (openPhoto.value == state.current.id.value) {
         PhotoViewer(card = state.current, onClose = { openPhoto.value = null })
     }
-    // Proportions des images, partagées par les cartes : la suivante garde sa forme en montant (PS-142).
+    // Proportions des images, partagées par les cartes : chacune garde sa forme en montant (PS-142).
     val ratios = remember { mutableStateMapOf<String, Float>() }
-    Box(modifier = modifier) {
+    // Place des bords qui dépassent sous la carte du dessus, pour que la pile ne déborde pas sur les boutons.
+    BoxWithConstraints(
+        modifier = modifier.padding(bottom = STACK_OFFSET_STEP * (DeckUiState.Loaded.VISIBLE_CARDS - 1)),
+    ) {
+        // Hauteur de la carte du dessus : le bas de chaque carte du dessous se cale sur le sien.
+        val topHeight = fittedCardSize(maxWidth, maxHeight, ratios[state.current.uri]).height
         CompositionLocalProvider(LocalCardAspectRatios provides ratios) {
-            state.next?.let { next ->
-                key(next.id) {
-                    MediaCard(
-                        card = next,
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .graphicsLayer {
-                                    // Posée un peu plus bas et plus petite, elle remonte à mesure que la carte du dessus part.
-                                    val progress = nextCardProgress()
-                                    val scale = lerp(NEXT_CARD_SCALE, 1f, progress)
-                                    scaleX = scale
-                                    scaleY = scale
-                                    transformOrigin = TransformOrigin(NEXT_CARD_PIVOT_X, 1f)
-                                    translationY = lerp(NEXT_CARD_OFFSET.toPx(), 0f, progress)
-                                }.clearAndSetSemantics { testTag = NEXT_CARD_TAG },
+            // Une vraie pile (PS-147) : du fond vers le dessus. Chaque carte garde sa composition, et
+            // son image, du fond jusqu'au dessus ; seule celle du dessus se glisse.
+            state.cards.indices.reversed().forEach { depth ->
+                val card = state.cards[depth]
+                key(card.id) {
+                    StackedCard(
+                        card = card,
+                        depth = depth,
+                        // Chaque carte garde sa forme ; le bas de celles du dessous suit celui de la carte du dessus.
+                        bottomAlign = (topHeight - fittedCardSize(maxWidth, maxHeight, ratios[card.uri]).height) / 2,
+                        // Plus haute que la carte du dessus, elle est réduite pour ne pas dépasser au-dessus.
+                        fitScale =
+                            (
+                                topHeight /
+                                    fittedCardSize(
+                                        maxWidth,
+                                        maxHeight,
+                                        ratios[card.uri],
+                                    ).height
+                            ).coerceAtMost(1f),
+                        ready = card.uri in ratios,
+                        actions =
+                            TopCardActions(
+                                onEvent = onEvent,
+                                requestedExit = requestedExit,
+                                returningFrom = state.returningFrom,
+                                onIndicationChange = onIndicationChange,
+                                onOpen = { openPhoto.value = card.id.value },
+                            ),
                     )
                 }
-            }
-            key(state.current.id) {
-                SwipeableMediaCard(
-                    card = state.current,
-                    onEvent = onEvent,
-                    requestedExit = requestedExit,
-                    returningFrom = state.returningFrom,
-                    onIndicationChange = onIndicationChange,
-                    onOpen = { openPhoto.value = state.current.id.value },
-                    modifier = Modifier.fillMaxSize(),
-                )
             }
         }
     }
@@ -470,14 +479,22 @@ private fun DeckScreenPreview() {
     }
 }
 
-/** Pivot horizontal de la carte suivante : son milieu, pour qu'elle grandisse vers le haut depuis son bas. */
-private const val NEXT_CARD_PIVOT_X = 0.5f
-
-/** Taille de la carte suivante au repos, avant de remonter sous la carte du dessus. */
-private const val NEXT_CARD_SCALE = 0.92f
-
-/** Décalage vers le bas de la carte suivante au repos. */
-private val NEXT_CARD_OFFSET = 14.dp
-
 /** Étiquette de test de la carte suivante, préparée sous celle du dessus. */
 internal const val NEXT_CARD_TAG = "next_card"
+
+/**
+ * Ce que fait la carte du dessus, seule à se glisser (PS-147).
+ *
+ * @property onEvent décision prise par le geste ou les boutons.
+ * @property requestedExit côté par lequel un bouton fait sortir la carte.
+ * @property returningFrom côté d'où revient une carte annulée.
+ * @property onIndicationChange indicateur du geste en cours.
+ * @property onOpen ouverture de la photo en grand.
+ */
+internal class TopCardActions(
+    val onEvent: (DeckEvent) -> Unit,
+    val requestedExit: CardSide?,
+    val returningFrom: CardSide?,
+    val onIndicationChange: (SwipeIndication?) -> Unit,
+    val onOpen: () -> Unit,
+)

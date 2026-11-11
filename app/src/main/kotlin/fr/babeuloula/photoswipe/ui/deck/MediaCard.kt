@@ -32,7 +32,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -90,7 +89,8 @@ import java.time.LocalDate
  * [active] marque la carte du dessus : si c'est une vidéo, elle est lue en muet par le lecteur de
  * la pile ([LocalCardVideoPlayer]) ; la carte suivante, préparée dessous, reste sur sa miniature.
  *
- * [overlay] se dessine par-dessus, sur toute la carte (voile du geste).
+ * [overlay] se dessine par-dessus, sur toute la carte (voile du geste). Sans [details], ni repère ni
+ * pastilles : c'est une carte du dessous de la pile (PS-147).
  *
  * [onOpen], s'il est donné, est appelé par un appui sur une photo : la pile l'ouvre en grand
  * (PS-117). Sur une vidéo, l'appui garde son rôle de lecture et de pause.
@@ -102,8 +102,9 @@ fun MediaCard(
     active: Boolean = false,
     onOpen: (() -> Unit)? = null,
     overlay: @Composable BoxScope.() -> Unit = {},
+    details: Boolean = true,
 ) {
-    FittedCardBox(uri = card.uri, modifier = modifier) { size, crop, onRatio ->
+    FittedCardBox(uri = card.uri, modifier = modifier) { size, onRatio ->
         Card(
             modifier = Modifier.size(size),
             shape = MaterialTheme.shapes.extraLarge,
@@ -115,27 +116,25 @@ fun MediaCard(
             val descriptionRes =
                 if (card.type == MediaType.VIDEO) R.string.deck_video_description else R.string.deck_photo_description
             Box(modifier = Modifier.fillMaxSize()) {
-                // L'échelle n'est relue qu'à la création de l'image : la recréer quand le rognage change.
-                key(crop) {
-                    AsyncImage(
-                        model = card.uri,
-                        contentDescription = stringResource(descriptionRes, date),
-                        imageLoader = LocalImageLoader.current,
-                        placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
-                        contentScale = if (crop) ContentScale.Crop else ContentScale.Fit,
-                        onSuccess = { success ->
-                            failed = false
-                            val intrinsic = success.painter.intrinsicSize
-                            if (intrinsic.isSpecified &&
-                                intrinsic.height > 0f
-                            ) {
-                                onRatio(intrinsic.width / intrinsic.height)
-                            }
-                        },
-                        onError = { failed = true },
-                        modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen),
-                    )
-                }
+                AsyncImage(
+                    model = card.uri,
+                    contentDescription = stringResource(descriptionRes, date),
+                    imageLoader = LocalImageLoader.current,
+                    placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
+                    // L'image remplit toujours sa carte : à sa forme, rien n'est rogné ; ailleurs, pas de bande grise.
+                    contentScale = ContentScale.Crop,
+                    onSuccess = { success ->
+                        failed = false
+                        val intrinsic = success.painter.intrinsicSize
+                        if (intrinsic.isSpecified &&
+                            intrinsic.height > 0f
+                        ) {
+                            onRatio(intrinsic.width / intrinsic.height)
+                        }
+                    },
+                    onError = { failed = true },
+                    modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen),
+                )
                 if (failed) {
                     Unavailable(type = card.type, modifier = Modifier.align(Alignment.Center))
                 }
@@ -146,17 +145,20 @@ fun MediaCard(
                     } else {
                         null
                     }
-                TopRow(
-                    card = card,
-                    modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(CARD_PADDING),
-                ) {
-                    if (video != null) VideoCornerButtons(video)
+                // Repère et pastilles : pas sur les cartes du dessous de la pile, dont seuls les bords dépassent.
+                if (details) {
+                    TopRow(
+                        card = card,
+                        modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(CARD_PADDING),
+                    ) {
+                        if (video != null) VideoCornerButtons(video)
+                    }
+                    CardBottom(
+                        card = card,
+                        video = video,
+                        modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(CARD_PADDING),
+                    )
                 }
-                CardBottom(
-                    card = card,
-                    video = video,
-                    modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(CARD_PADDING),
-                )
                 overlay()
             }
         }

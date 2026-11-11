@@ -1,6 +1,8 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.AnimationVector2D
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -90,6 +92,10 @@ internal enum class SwipeTarget { LEFT, RIGHT, MENU }
  *
  * L'état du geste vit dans la composition : l'appelant entoure la carte d'un `key` sur le média,
  * pour que chaque nouvelle carte parte du centre.
+ *
+ * Sans [enabled], la carte attend dans la pile, sous celle du dessus (PS-147) : ni geste, ni lecture
+ * vidéo, ni ouverture en grand. Elle garde ainsi la même composition, et son image chargée, du fond
+ * de la pile jusqu'au dessus.
  */
 @Composable
 fun SwipeableMediaCard(
@@ -100,6 +106,7 @@ fun SwipeableMediaCard(
     returningFrom: CardSide? = null,
     onIndicationChange: (SwipeIndication?) -> Unit = {},
     onOpen: (() -> Unit)? = null,
+    enabled: Boolean = true,
 ) {
     BoxWithConstraints(modifier = modifier) {
         val size = with(LocalDensity.current) { Offset(maxWidth.toPx(), maxHeight.toPx()) }
@@ -118,8 +125,8 @@ fun SwipeableMediaCard(
         /** Sortie de la carte par [side], voile plein de ce côté, puis décision. */
         suspend fun exit(side: CardSide) {
             drag.value = side.direction * maxOf(size.x, size.y)
-            offset.animateTo(exitOffset(side, size), exitSpring)
-            onEvent(side.decision)
+            // La décision part dès que la carte a quitté l'écran : la pile remonte sans attendre la fin du ressort.
+            offset.leave(exitOffset(side, size), exitSpring, size) { onEvent(side.decision) }
         }
 
         suspend fun backToCenter() {
@@ -153,21 +160,19 @@ fun SwipeableMediaCard(
                         translationX = offset.value.x
                         translationY = offset.value.y
                         rotationZ = offset.value.x / size.x * MAX_ROTATION_DEGREES
-                    }.pointerInput(card.id) {
-                        detectDragGestures(
-                            onDragStart = { drag.value = offset.value },
-                            onDragEnd = { scope.launch { release() } },
-                            onDragCancel = { scope.launch { backToCenter() } },
-                        ) { change, dragAmount ->
-                            change.consume()
-                            val before = swipeTarget(drag.value, size)
-                            drag.value += dragAmount
-                            val after = swipeTarget(drag.value, size)
-                            if (after != null && after != before) {
-                                haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                            }
-                            scope.launch { offset.snapTo(drag.value) }
+                    }.swipeGestures(
+                        enabled = enabled,
+                        key = card.id,
+                        onDragStart = { drag.value = offset.value },
+                        onRelease = { cancelled -> scope.launch { if (cancelled) backToCenter() else release() } },
+                    ) { dragAmount ->
+                        val before = swipeTarget(drag.value, size)
+                        drag.value += dragAmount
+                        val after = swipeTarget(drag.value, size)
+                        if (crossesThreshold(before, after)) {
+                            haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                         }
+                        scope.launch { offset.snapTo(drag.value) }
                     },
         ) {
             val indication = swipeIndication(drag.value, size)
@@ -175,10 +180,11 @@ fun SwipeableMediaCard(
             // Le voile suit la carte, à la forme de la photo (PS-142).
             MediaCard(
                 card = card,
-                active = true,
+                active = enabled,
                 onOpen = onOpen,
                 modifier = Modifier.matchParentSize(),
                 overlay = { SwipeIndicator(indication = indication, modifier = Modifier.matchParentSize()) },
+                details = enabled,
             )
         }
     }

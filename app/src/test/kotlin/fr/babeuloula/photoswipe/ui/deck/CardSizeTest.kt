@@ -23,7 +23,6 @@ class CardSizeTest {
 
         assertEquals(maxWidth, size.width)
         assertEquals(213.75f, size.height.value, 0.01f)
-        assertFalse(fillsByCropping(size, 16f / 9f))
     }
 
     @Test
@@ -31,7 +30,6 @@ class CardSizeTest {
         val size = fittedCardSize(maxWidth, maxHeight, 0.5f)
 
         assertEquals(DpSize(300.dp, maxHeight), size)
-        assertFalse(fillsByCropping(size, 0.5f))
     }
 
     @Test
@@ -39,7 +37,6 @@ class CardSizeTest {
         val size = fittedCardSize(maxWidth, maxHeight, 3f)
 
         assertEquals(DpSize(maxWidth, MIN_CARD_HEIGHT), size)
-        assertTrue(fillsByCropping(size, 3f))
     }
 
     @Test
@@ -47,7 +44,6 @@ class CardSizeTest {
         val size = fittedCardSize(maxWidth, maxHeight, 0.2f)
 
         assertEquals(DpSize(MIN_CARD_WIDTH, maxHeight), size)
-        assertTrue(fillsByCropping(size, 0.2f))
     }
 
     @Test

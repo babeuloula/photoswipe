@@ -115,7 +115,7 @@ class DeckViewModelTest : DeckViewModelTestBase() {
                     route = mapOf("epochDay" to day.toEpochDay(), "firstMediaId" to 3L),
                 )
 
-            assertEquals(listOf(MediaId(3), MediaId(1)), viewModel.cardIds())
+            assertEquals(listOf(MediaId(3), MediaId(1), MediaId(2)), viewModel.cardIds())
             assertEquals(3, (viewModel.uiState.value as DeckUiState.Loaded).total)
         }
 
@@ -136,7 +136,7 @@ class DeckViewModelTest : DeckViewModelTestBase() {
 
             val cards = (viewModel.uiState.value as DeckUiState.Loaded).cards
 
-            assertEquals(listOf(SimilarGroup(2, 3), SimilarGroup(3, 3)), cards.map { it.similar })
+            assertEquals(listOf(SimilarGroup(2, 3), SimilarGroup(3, 3), null), cards.map { it.similar })
         }
 
     @Test
@@ -391,15 +391,16 @@ class DeckViewModelTest : DeckViewModelTestBase() {
         }
 
     @Test
-    fun `prepares only the top card and the next one`() =
+    fun `prepares only the top card and the three below it in the stack`() =
         runTest {
-            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2021), takenOn(3, 2022))))
+            val gallery = (1L..6L).map { takenOn(it, 2014 + it.toInt()) }
+            val viewModel = deckViewModel(FakeMediaSource(gallery))
 
             val state = viewModel.uiState.value as DeckUiState.Loaded
 
-            assertEquals(listOf(MediaId(3), MediaId(2)), state.cards.map { it.id })
-            assertEquals(MediaId(2), state.next?.id)
-            assertEquals(3, state.remainingCount)
+            assertEquals(listOf(MediaId(6), MediaId(5), MediaId(4), MediaId(3)), state.cards.map { it.id })
+            assertEquals(MediaId(5), state.next?.id)
+            assertEquals(6, state.remainingCount)
         }
 
     @Test
@@ -685,7 +686,11 @@ class DeckViewModelTest : DeckViewModelTestBase() {
 
             val cards = (viewModel.uiState.value as DeckUiState.Loaded).cards
             assertEquals(
-                mapOf(MediaId(2) to ReviewDecision.MARKED_FOR_DELETION, MediaId(3) to null),
+                mapOf(
+                    MediaId(2) to ReviewDecision.MARKED_FOR_DELETION,
+                    MediaId(3) to null,
+                    MediaId(1) to ReviewDecision.KEPT,
+                ),
                 cards.associate { it.id to it.previousDecision },
             )
 

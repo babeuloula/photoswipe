@@ -96,8 +96,8 @@ sealed interface DeckUiState {
         val total: Int get() = sortedCount + remainingCount
 
         companion object {
-            /** Cartes préparées à l'écran : celle du dessus et la suivante, pas plus. */
-            const val VISIBLE_CARDS = 2
+            /** Cartes préparées à l'écran : celle du dessus et trois dessous, en pile (PS-147), pas plus. */
+            const val VISIBLE_CARDS = 4
         }
     }
 }

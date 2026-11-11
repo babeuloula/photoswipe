@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.ui.tutorial
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.ui.deck.CardSide
 import fr.babeuloula.photoswipe.ui.deck.DeckEvent
+import fr.babeuloula.photoswipe.ui.deck.DeckUiState
 import fr.babeuloula.photoswipe.ui.deck.PREVIEW_CARD
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -15,10 +16,10 @@ class PracticeStateTest {
     private val start = PracticeState(remaining = cards)
 
     @Test
-    fun `shows the first two sample cards, nothing to undo yet`() {
+    fun `shows the sample cards as a stack, nothing to undo yet`() {
         val deck = start.deck!!
 
-        assertEquals(cards.take(2), deck.cards)
+        assertEquals(cards.take(DeckUiState.Loaded.VISIBLE_CARDS), deck.cards)
         assertEquals(1, deck.position)
         assertEquals(3, deck.total)
         assertFalse(deck.canUndo)
