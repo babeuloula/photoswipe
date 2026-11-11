@@ -228,4 +228,6 @@
     <string name="deck_similar">%1$d/%2$d</string>
     <string name="deck_similar_description">Photo %1$d of %2$d taken one after another</string>
     <string name="day_overview_similar">%1$d of %2$d taken one after another</string>
+    <!-- Barre de progression coupée par année, lue par TalkBack (PS-144). -->
+    <string name="deck_progress_with_years">%1$s, over %2$s</string>
 </resources>

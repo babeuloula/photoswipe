@@ -108,11 +108,9 @@ fun MediaCard(
             modifier = Modifier.size(size),
             shape = MaterialTheme.shapes.extraLarge,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-            // Légère ombre portée, plus marquée en bas : la carte se détache de celle d'en dessous.
             elevation = CardDefaults.cardElevation(defaultElevation = CARD_ELEVATION),
         ) {
-            val context = LocalContext.current
-            val date = localizedDate(context, card.takenOn)
+            val date = localizedDate(LocalContext.current, card.takenOn)
             var failed by remember(card.uri) { mutableStateOf(false) }
             val descriptionRes =
                 if (card.type == MediaType.VIDEO) R.string.deck_video_description else R.string.deck_photo_description
@@ -493,7 +491,7 @@ private fun Unavailable(
 /** Marge du repère et des pastilles dans la carte. */
 private val CARD_PADDING = 16.dp
 
-/** Élévation de la carte : une légère ombre portée (PS-142). */
+/** Élévation de la carte : une légère ombre portée, plus marquée en bas, qui la détache de celle d'en dessous (PS-142). */
 private val CARD_ELEVATION = 6.dp
 
 /** Taille de la pastille du cœur des favoris. */

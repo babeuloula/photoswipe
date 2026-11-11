@@ -62,6 +62,8 @@ sealed interface DeckUiState {
      * @property yearPosition rang de la carte du dessus parmi les souvenirs de son année (PS-138) :
      * la pile va d'une année à l'autre, de la plus récente à la plus ancienne.
      * @property yearTotal souvenirs de l'année de la carte du dessus dans la pile, triés ou non.
+     * @property yearSegments une entrée par année de la pile, de la plus récente à la plus
+     * ancienne, avec ses souvenirs triés et son total (PS-144).
      */
     data class Loaded(
         val cards: List<MediaCardUiState>,
@@ -72,6 +74,7 @@ sealed interface DeckUiState {
         val menuOpen: Boolean = false,
         val yearPosition: Int = 1,
         val yearTotal: Int = 1,
+        val yearSegments: List<YearSegment> = emptyList(),
     ) : DeckUiState {
         init {
             require(cards.size in 1..VISIBLE_CARDS) { "a loaded deck shows 1 to $VISIBLE_CARDS cards: ${cards.size}" }
@@ -499,6 +502,7 @@ class DeckViewModel
 /**
  * Place de la carte du dessus parmi les souvenirs de son année (PS-138) : ceux de [sorted] (triés
  * pendant la session) qui ne sont plus dans [deck], puis ceux qui y restent ; années lues dans [zone].
+ * Et, pour la barre de progression, les triés et le total de chaque année de la pile (PS-144).
  */
 internal fun DeckUiState.Loaded.withYearProgress(
     deck: Collection<MediaItem>,
@@ -507,6 +511,17 @@ internal fun DeckUiState.Loaded.withYearProgress(
 ): DeckUiState.Loaded {
     val inYear = { media: MediaItem -> media.takenAt.atZone(zone).year == year }
     val deckIds = deck.mapTo(HashSet()) { it.id }
-    val sortedInYear = sorted.distinctBy { it.id }.count { it.id !in deckIds && inYear(it) }
-    return copy(yearPosition = sortedInYear + 1, yearTotal = sortedInYear + deck.count(inYear))
+    val done = sorted.distinctBy { it.id }.filter { it.id !in deckIds }
+    val sortedInYear = done.count(inYear)
+    val yearOf = { media: MediaItem -> media.takenAt.atZone(zone).year }
+    val segments =
+        (done + deck).map(yearOf).distinct().sortedDescending().map { segmentYear ->
+            val sortedCount = done.count { yearOf(it) == segmentYear }
+            YearSegment(segmentYear, sortedCount, sortedCount + deck.count { yearOf(it) == segmentYear })
+        }
+    return copy(
+        yearPosition = sortedInYear + 1,
+        yearTotal = sortedInYear + deck.count(inYear),
+        yearSegments = segments,
+    )
 }

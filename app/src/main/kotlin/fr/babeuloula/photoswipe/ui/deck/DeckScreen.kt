@@ -145,6 +145,7 @@ fun DeckScreen(
                         position = state.position,
                         total = state.total,
                         yearProgress = YearProgress(state.year, state.yearPosition, state.yearTotal),
+                        segments = state.yearSegments,
                     )
                 }
                 Box(Modifier.weight(1f).fillMaxWidth()) {
