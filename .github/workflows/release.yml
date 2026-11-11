@@ -175,7 +175,8 @@ jobs:
             ${previous:+--notes-start-tag "$previous"} --verify-tag --latest
 
       # La release est publiée : une PR impossible à ouvrir ne la fait pas échouer. Ouverte par le
-      # jeton personnel, la PR lance la vraie CI et se merge seule (auto-merge, merge commit).
+      # jeton personnel, la PR lance la vraie CI et se merge seule (auto-merge, merge commit). Son
+      # label « release » la retire des notes de la release suivante (.github/release.yml, PS-135).
       - name: Open the release pull request
         continue-on-error: true
         env:
@@ -185,14 +186,14 @@ jobs:
           body="Release $TAG : notes de version F-Droid. Le tag $TAG pointe sur le commit de cette PR. Merge en **merge commit** (pas de squash ni de rebase) pour garder ce commit dans l'historique de main."
           if [ -n "$RELEASE_TOKEN" ]; then
             url=$(GH_TOKEN="$RELEASE_TOKEN" gh pr create --base main --head "release/$TAG" \
-              --title "chore(release): $TAG" --body "$body") \
+              --title "chore(release): $TAG" --body "$body" --label release) \
               || { echo "::warning::Could not open the pull request: open release/$TAG → main by hand (merge commit)."; exit 1; }
             GH_TOKEN="$RELEASE_TOKEN" gh pr merge "$url" --auto --merge \
               || { echo "::warning::Could not enable auto-merge on $url: merge it by hand (merge commit) once green."; exit 1; }
             echo "Auto-merge enabled on $url"
           else
             echo "::warning::PHOTOSWIPE_RELEASE_TOKEN is missing: the pull request will not run the CI nor merge by itself (see release.yml)."
-            gh pr create --base main --head "release/$TAG" --title "chore(release): $TAG" --body "$body" \
+            gh pr create --base main --head "release/$TAG" --title "chore(release): $TAG" --body "$body" --label release \
               || { echo "::warning::Could not open the pull request: open release/$TAG → main by hand (merge commit)."; exit 1; }
           fi
 
