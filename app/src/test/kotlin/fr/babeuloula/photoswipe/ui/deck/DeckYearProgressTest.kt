@@ -44,7 +44,7 @@ class DeckYearProgressTest {
     fun `says which year the top card comes from and where it stands in that year`() {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD), remainingCount = 20, yearPosition = 2, yearTotal = 5))
 
-        composeRule.onNodeWithText("2023 · 2 of 5 from that year").assertIsDisplayed()
+        composeRule.onNodeWithText("2023 · memory 2 of 5").assertIsDisplayed()
     }
 
     @Test
@@ -52,7 +52,15 @@ class DeckYearProgressTest {
     fun `says which year the top card comes from in French`() {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD), yearPosition = 1, yearTotal = 3))
 
-        composeRule.onNodeWithText("2023 · 1 sur 3 de cette année").assertIsDisplayed()
+        composeRule.onNodeWithText("2023 · souvenir 1 sur 3").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `says when the top card is the only memory of its year`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD), yearPosition = 1, yearTotal = 1))
+
+        composeRule.onNodeWithText("2023 · seul souvenir de cette année").assertIsDisplayed()
     }
 
     @Test
