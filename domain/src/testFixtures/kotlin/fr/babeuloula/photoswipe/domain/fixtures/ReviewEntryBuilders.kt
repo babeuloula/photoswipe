@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
+import fr.babeuloula.photoswipe.domain.model.ConfirmedDeletion
 import fr.babeuloula.photoswipe.domain.model.DecisionRecord
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
@@ -56,3 +57,14 @@ fun aDecisionRecord(
         made = aReviewEntry(mediaId, day.year, decision, favoritePending = favoritePending),
         previous = previous,
     )
+
+/**
+ * Construit une [ConfirmedDeletion] valide : par défaut, le média [mediaId] du 15 juillet de
+ * l'année de revue [DEFAULT_REVIEW_YEAR], confirmé à l'instant [DEFAULT_DECIDED_AT].
+ */
+fun aConfirmedDeletion(
+    mediaId: Long = 1,
+    day: LocalDate? = LocalDate.of(DEFAULT_REVIEW_YEAR, 7, 15),
+    sizeBytes: Long = DEFAULT_SIZE_BYTES,
+    confirmedAt: Instant = DEFAULT_DECIDED_AT,
+): ConfirmedDeletion = ConfirmedDeletion(MediaId(mediaId), day, sizeBytes, confirmedAt)

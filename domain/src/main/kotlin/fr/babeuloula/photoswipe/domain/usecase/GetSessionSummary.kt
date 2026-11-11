@@ -4,8 +4,10 @@ import fr.babeuloula.photoswipe.domain.model.DecisionRecord
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.port.DecisionJournal
+import fr.babeuloula.photoswipe.domain.port.DeletionHistory
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
+import kotlinx.coroutines.flow.first
 import java.time.Clock
 import java.time.LocalDate
 
@@ -21,27 +23,41 @@ import java.time.LocalDate
  * années de revue ne compte qu'une fois, comme dans la demande système ; l'espace libéré additionne
  * la taille de chaque média mémorisée au moment de sa décision.
  *
+ * Supprimés aujourd'hui : les suppressions confirmées aujourd'hui, lues dans l'historique
+ * (ADR 0034), un média ne comptant qu'une fois ; elles ne sont plus en base une fois confirmées.
+ *
  * Résultat ponctuel (`suspend`), comme le paquet : l'écran de résumé le lit une fois.
  *
  * @param journal journal des décisions des jours de la fenêtre (ADR 0019).
+ * @param history suppressions confirmées des derniers jours.
  * @param window jours de la fenêtre, dont le journal garde les décisions.
  * @param clock horloge de l'appareil : elle dit quel jour est « aujourd'hui ».
  */
 class GetSessionSummary(
     private val reviewRepository: ReviewRepository,
     private val journal: DecisionJournal,
+    private val history: DeletionHistory,
     private val window: ReviewWindowProvider,
     private val clock: Clock,
 ) {
-    /** Résumé du tri d'aujourd'hui et des demandes de corbeille en attente. */
+    /** Résumé du tri et des suppressions d'aujourd'hui, et des demandes de corbeille en attente. */
     suspend operator fun invoke(): SessionSummary {
         val marked = reviewRepository.entriesMarkedForDeletion().distinctBy { it.mediaId }
         val sortedToday = decisionsMadeToday()
+        val today = LocalDate.now(clock)
+        val trashedToday =
+            history
+                .observe()
+                .first()
+                .filter { it.confirmedAt.atZone(clock.zone).toLocalDate() == today }
+                .distinctBy { it.mediaId }
         return SessionSummary(
             keptCount = sortedToday.count { !it.made.favoritePending },
             markedForDeletionCount = marked.size,
             favoriteCount = sortedToday.count { it.made.favoritePending },
             estimatedFreedBytes = marked.sumOf { it.sizeBytes },
+            trashedTodayCount = trashedToday.size,
+            trashedTodayBytes = trashedToday.sumOf { it.sizeBytes },
         )
     }
 

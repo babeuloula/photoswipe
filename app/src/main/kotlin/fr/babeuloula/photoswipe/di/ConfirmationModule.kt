@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.domain.port.DecisionJournal
+import fr.babeuloula.photoswipe.domain.port.DeletionHistory
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
@@ -33,9 +34,10 @@ object ConfirmationModule {
     fun provideGetSessionSummary(
         reviewRepository: ReviewRepository,
         journal: DecisionJournal,
+        history: DeletionHistory,
         window: ReviewWindowProvider,
         clock: Clock,
-    ): GetSessionSummary = GetSessionSummary(reviewRepository, journal, window, clock)
+    ): GetSessionSummary = GetSessionSummary(reviewRepository, journal, history, window, clock)
 
     @Provides
     fun provideGetMarkedPreviews(
@@ -50,12 +52,17 @@ object ConfirmationModule {
         requestFactory: MediaActionRequestFactory,
     ): PrepareTrash = PrepareTrash(reviewRepository, mediaSource, requestFactory)
 
+    // Un paramètre par dépendance du use case, que Hilt fournit : rien à regrouper ici.
+    @Suppress("LongParameterList")
     @Provides
     fun provideRecordTrashResult(
         reviewRepository: ReviewRepository,
         journal: DecisionJournal,
         statistics: UsageStatisticsRepository,
-    ): RecordTrashResult = RecordTrashResult(reviewRepository, journal, statistics)
+        history: DeletionHistory,
+        window: ReviewWindowProvider,
+        clock: Clock,
+    ): RecordTrashResult = RecordTrashResult(reviewRepository, journal, statistics, history, window, clock)
 
     @Provides
     fun provideGetPendingFavorites(reviewRepository: ReviewRepository): GetPendingFavorites =

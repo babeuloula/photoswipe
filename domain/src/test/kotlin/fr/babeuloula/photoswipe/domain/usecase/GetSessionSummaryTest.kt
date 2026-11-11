@@ -1,8 +1,10 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
+import fr.babeuloula.photoswipe.domain.fixtures.aConfirmedDeletion
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
@@ -21,6 +23,7 @@ class GetSessionSummaryTest {
     private val today = LocalDate.of(2026, 7, 15)
     private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 0))
     private val repository = FakeReviewRepository()
+    private val history = FakeDeletionHistory()
     private val journal = FakeDecisionJournal(repository)
     private val keepMedia = KeepMedia(repository, journal, clock)
     private val markForDeletion = MarkForDeletion(repository, journal, clock)
@@ -28,7 +31,7 @@ class GetSessionSummaryTest {
     private val getSessionSummary = summaryOf(repository)
 
     private fun summaryOf(reviews: FakeReviewRepository): GetSessionSummary =
-        GetSessionSummary(reviews, journal, ReviewWindowProvider(clock), clock)
+        GetSessionSummary(reviews, journal, history, ReviewWindowProvider(clock), clock)
 
     @Test
     fun `is empty when nothing was sorted today and nothing is pending`() =
@@ -125,6 +128,38 @@ class GetSessionSummaryTest {
             session = (UndoLastDecision(repository, journal)(session) as UndoLastDecision.Result.Undone).session
 
             assertEquals(SessionSummary(1, 0, 0, 0), getSessionSummary())
+        }
+
+    @Test
+    fun `counts the deletions confirmed today, a media marked for two review years counting once`() =
+        runTest {
+            history.record(
+                listOf(
+                    aConfirmedDeletion(mediaId = 1, sizeBytes = 1_000, confirmedAt = clock.instant()),
+                    aConfirmedDeletion(mediaId = 1, day = null, sizeBytes = 1_000, confirmedAt = clock.instant()),
+                    aConfirmedDeletion(mediaId = 2, sizeBytes = 500, confirmedAt = clock.instant()),
+                ),
+            )
+
+            val summary = getSessionSummary()
+
+            assertEquals(2, summary.trashedTodayCount)
+            assertEquals(1_500L, summary.trashedTodayBytes)
+            assertEquals(0, summary.markedForDeletionCount)
+        }
+
+    @Test
+    fun `does not count the deletions confirmed on an earlier day`() =
+        runTest {
+            history.record(
+                listOf(
+                    aConfirmedDeletion(
+                        confirmedAt = LocalDateTime.of(2026, 7, 14, 23, 0).atZone(clock.zone).toInstant(),
+                    ),
+                ),
+            )
+
+            assertEquals(0, getSessionSummary().trashedTodayCount)
         }
 
     @Test

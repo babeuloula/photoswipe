@@ -1,13 +1,16 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeUsageStatisticsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
+import fr.babeuloula.photoswipe.domain.fixtures.aConfirmedDeletion
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
+import fr.babeuloula.photoswipe.domain.model.ConfirmedDeletion
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
@@ -19,10 +22,13 @@ import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /** `PrepareTrash` et `RecordTrashResult`, testés ensemble comme l'écran de confirmation les enchaîne. */
 class TrashTest {
+    private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 0))
     private val gallery = FakeMediaSource((1L..5L).map { aMediaItem(id = it, sizeBytes = it * 1_000) })
 
     @Test
@@ -71,11 +77,7 @@ class TrashTest {
                 FakeReviewRepository(listOf(marked(1), marked(2), aReviewEntry(mediaId = 3, decision = KEPT)))
             val request = prepareTrash(repository)().single()
 
-            RecordTrashResult(
-                repository,
-                FakeDecisionJournal(repository),
-                FakeUsageStatisticsRepository(),
-            )(request, confirmed = true)
+            recordTrashResult(repository)(request, confirmed = true)
 
             assertEquals(listOf(TRASHED, TRASHED, KEPT), repository.entries.map { it.decision })
         }
@@ -93,7 +95,7 @@ class TrashTest {
                 )
             val statistics = FakeUsageStatisticsRepository()
 
-            RecordTrashResult(repository, FakeDecisionJournal(repository), statistics)(
+            recordTrashResult(repository, statistics)(
                 prepareTrash(repository)().single(),
                 confirmed = true,
             )
@@ -108,7 +110,7 @@ class TrashTest {
             val repository = FakeReviewRepository(listOf(marked(1)))
             val statistics = FakeUsageStatisticsRepository()
 
-            RecordTrashResult(repository, FakeDecisionJournal(repository), statistics)(
+            recordTrashResult(repository, statistics)(
                 prepareTrash(repository)().single(),
                 confirmed = false,
             )
@@ -117,16 +119,61 @@ class TrashTest {
         }
 
     @Test
+    fun `records each confirmed marking in the history with the day of the window that made it`() =
+        runTest {
+            val repository = FakeReviewRepository()
+            val journal = FakeDecisionJournal(repository)
+            val markForDeletion = MarkForDeletion(repository, journal, clock)
+            val day = LocalDate.of(2026, 7, 13)
+            markForDeletion(gallery.mediaByIds(ids(1)).single(), day)
+            repository.save(marked(2, reviewYear = 2025))
+            val history = FakeDeletionHistory()
+
+            recordTrashResult(repository, history = history, journal = journal)(
+                prepareTrash(repository)().single(),
+                confirmed = true,
+            )
+
+            assertEquals(
+                listOf(
+                    ConfirmedDeletion(MediaId(1), day, 1_000, clock.instant()),
+                    ConfirmedDeletion(MediaId(2), null, 2_000, clock.instant()),
+                ),
+                history.deletions,
+            )
+        }
+
+    @Test
+    fun `forgets the deletions confirmed before the window when recording new ones`() =
+        runTest {
+            val repository = FakeReviewRepository(listOf(marked(1)))
+            val old = aConfirmedDeletion(mediaId = 9, confirmedAt = Instant.parse("2026-07-01T10:00:00Z"))
+            val recent = aConfirmedDeletion(mediaId = 8, confirmedAt = Instant.parse("2026-07-10T10:00:00Z"))
+            val history = FakeDeletionHistory(listOf(old, recent))
+
+            recordTrashResult(repository, history = history)(prepareTrash(repository)().single(), confirmed = true)
+
+            assertEquals(listOf(MediaId(8), MediaId(1)), history.deletions.map { it.mediaId })
+        }
+
+    @Test
+    fun `records nothing in the history when the request is refused`() =
+        runTest {
+            val repository = FakeReviewRepository(listOf(marked(1)))
+            val history = FakeDeletionHistory()
+
+            recordTrashResult(repository, history = history)(prepareTrash(repository)().single(), confirmed = false)
+
+            assertEquals(emptyList<ConfirmedDeletion>(), history.deletions)
+        }
+
+    @Test
     fun `keeps the markings when the request is refused`() =
         runTest {
             val entries = listOf(marked(1), marked(2))
             val repository = FakeReviewRepository(entries)
 
-            RecordTrashResult(
-                repository,
-                FakeDecisionJournal(repository),
-                FakeUsageStatisticsRepository(),
-            )(prepareTrash(repository)().single(), confirmed = false)
+            recordTrashResult(repository)(prepareTrash(repository)().single(), confirmed = false)
 
             assertEquals(entries, repository.entries)
         }
@@ -138,7 +185,7 @@ class TrashTest {
             val requests = prepareTrash(repository, batchSize = 2)()
 
             requests.forEachIndexed { index, request ->
-                RecordTrashResult(repository, FakeDecisionJournal(repository), FakeUsageStatisticsRepository())(
+                recordTrashResult(repository)(
                     request,
                     confirmed =
                         index != 1,
@@ -165,14 +212,27 @@ class TrashTest {
                     ),
                 )
 
-            val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 0))
             val summary =
-                GetSessionSummary(repository, FakeDecisionJournal(repository), ReviewWindowProvider(clock), clock)()
+                GetSessionSummary(
+                    repository,
+                    FakeDecisionJournal(repository),
+                    FakeDeletionHistory(),
+                    ReviewWindowProvider(clock),
+                    clock,
+                )()
             val requested = prepareTrash(repository, batchSize = 2)().flatMap { it.mediaIds }
 
             assertEquals(summary.markedForDeletionCount, requested.size)
             assertEquals(summary.estimatedFreedBytes, gallery.mediaByIds(requested.toSet()).sumOf { it.sizeBytes })
         }
+
+    private fun recordTrashResult(
+        repository: FakeReviewRepository,
+        statistics: FakeUsageStatisticsRepository = FakeUsageStatisticsRepository(),
+        history: FakeDeletionHistory = FakeDeletionHistory(),
+        journal: FakeDecisionJournal = FakeDecisionJournal(repository),
+    ): RecordTrashResult =
+        RecordTrashResult(repository, journal, statistics, history, ReviewWindowProvider(clock), clock)
 
     private fun prepareTrash(
         repository: FakeReviewRepository,

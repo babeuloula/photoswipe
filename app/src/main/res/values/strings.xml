@@ -207,4 +207,6 @@
     <string name="crash_report_text">A report of the error is ready: the app version, the phone model and the technical details of the error, without any photo. You can view it in your browser and choose whether to send it to the developer.</string>
     <string name="crash_report_send">View and send</string>
     <string name="crash_report_ignore">Ignore</string>
+    <!-- Résumé quand tout est confirmé : place libérée aujourd'hui (ADR 0034). -->
+    <string name="summary_freed_today">Space freed today</string>
 </resources>

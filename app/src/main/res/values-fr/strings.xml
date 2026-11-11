@@ -196,4 +196,6 @@
     <string name="crash_report_text">Un rapport de l\'erreur est prêt : la version de l\'application, le modèle du téléphone et le détail technique de l\'erreur, sans aucune photo. Vous pouvez le voir dans votre navigateur et choisir de l\'envoyer ou non au développeur.</string>
     <string name="crash_report_send">Voir et envoyer</string>
     <string name="crash_report_ignore">Ignorer</string>
+    <!-- Résumé quand tout est confirmé : place libérée aujourd'hui (ADR 0034). -->
+    <string name="summary_freed_today">Espace libéré aujourd\'hui</string>
 </resources>

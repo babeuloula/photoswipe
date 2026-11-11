@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
@@ -32,6 +33,7 @@ import java.time.LocalTime
 class ReopenDayTest {
     private val today = LocalDate.of(2026, 7, 15)
     private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 0))
+    private val history = FakeDeletionHistory()
     private val memories = (1L..4L).map { memory(it) }
     private val gallery = FakeMediaSource(memories + memory(9, LocalDate.of(2025, 7, 14)))
     private val reviews = FakeReviewRepository()
@@ -114,7 +116,13 @@ class ReopenDayTest {
             assertEquals(emptyList<Any>(), reviews.entriesMarkedForDeletion())
             assertEquals(
                 0,
-                GetSessionSummary(reviews, journal, ReviewWindowProvider(clock), clock)().markedForDeletionCount,
+                GetSessionSummary(
+                    reviews,
+                    journal,
+                    history,
+                    ReviewWindowProvider(clock),
+                    clock,
+                )().markedForDeletionCount,
             )
         }
 
@@ -126,7 +134,7 @@ class ReopenDayTest {
             reopenDay()(today)
 
             assertEquals(ReviewSession(), GetDaySession(journal, reviews, gallery, ReviewWindowProvider(clock))(today))
-            val summary = GetSessionSummary(reviews, journal, ReviewWindowProvider(clock), clock)()
+            val summary = GetSessionSummary(reviews, journal, history, ReviewWindowProvider(clock), clock)()
             assertEquals(0, summary.keptCount)
             assertEquals(0, summary.favoriteCount)
         }
