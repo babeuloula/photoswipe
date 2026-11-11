@@ -6,7 +6,7 @@ de l'ordinateur, avec de quoi essayer les retours d'utilisateurs du 2026-11-11 :
 - aujourd'hui et il y a BURST_DAYS[1] jours, une rafale de BURST_SIZE photos prises à BURST_GAP
   secondes d'intervalle il y a BURST_YEARS_AGO ans (photos proches, PS-140 ; vue d'ensemble, PS-139) ;
 - il y a SINGLE_PHOTO_DAY jours, une seule photo, de l'an dernier : la supprimer vide le jour (PS-136).
-Les images sont de vraies photos (scripts/fixtures/photos, Unsplash, PS-143) prises tour à tour :
+Les images sont de vraies photos (scripts/fixtures/photos, photos de Jérémy, PS-145) prises tour à tour :
 portrait, paysage, carré et panorama ; chaque photo d'une rafale est la même image un peu plus
 recadrée. ffmpeg les réencode (sans leurs métadonnées d'origine) ; l'EXIF (DateTimeOriginal et son décalage horaire, que MediaStore lit pour remplir DATE_TAKEN) est
 écrit ici, sans dépendance hors de la bibliothèque standard.
