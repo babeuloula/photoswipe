@@ -1,7 +1,11 @@
 package fr.babeuloula.photoswipe.ui.navigation
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -11,6 +15,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import fr.babeuloula.photoswipe.ui.common.LocalNavAnimatedScope
+import fr.babeuloula.photoswipe.ui.common.LocalSharedTransitionScope
 import fr.babeuloula.photoswipe.ui.home.ConfirmationAnnouncement
 import fr.babeuloula.photoswipe.ui.home.HomeNavigation
 import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
@@ -26,12 +32,14 @@ import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
  * Graphe de navigation de l'application (SPEC §5.4), en routes typées : accueil, pile d'un jour,
  * vue d'ensemble d'un jour, résumé, réglages, licences, tutoriel revu depuis les réglages. Le rappel quotidien peut demander d'ouvrir directement une pile
  * ([deckToOpen]), qui s'empile au-dessus de l'accueil. Les écrans s'enchaînent en axe partagé
- * horizontal ([SharedAxisTransitions]).
+ * avec zoom ([ScreenTransitions]), et les photos passent d'un écran à l'autre en grandissant
+ * (éléments partagés, `SharedTransitionLayout`, PS-141).
  *
  * L'accès aux médias n'est pas une destination : `MediaAccessGate` entoure ce graphe, pour qu'un
  * accès retiré ramène à l'explication quel que soit l'écran (ADR 0014).
  *
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun PhotoSwipeNavHost(
     modifier: Modifier = Modifier,
@@ -40,11 +48,23 @@ fun PhotoSwipeNavHost(
     onDeckOpened: () -> Unit = {},
 ) {
     OpenRequestedDeck(navController, deckToOpen, onDeckOpened)
-    val transitions = rememberSharedAxisTransitions()
+    val transitions = rememberScreenTransitions()
+    SharedTransitionLayout(modifier = modifier) {
+        CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+            PhotoSwipeGraph(navController, transitions)
+        }
+    }
+}
+
+/** Les destinations de l'application, enchaînées par [transitions]. */
+@Composable
+private fun PhotoSwipeGraph(
+    navController: NavHostController,
+    transitions: ScreenTransitions,
+) {
     NavHost(
         navController = navController,
         startDestination = HomeRoute,
-        modifier = modifier,
         enterTransition = { transitions.enter },
         exitTransition = { transitions.exit },
         popEnterTransition = { transitions.popEnter },
@@ -52,20 +72,24 @@ fun PhotoSwipeNavHost(
     ) {
         homeDestination(navController)
         composable<DeckRoute> {
-            DeckDestination(
-                onBack = navController::popBackStack,
-                onOpenSummary = { navController.navigate(SummaryRoute) },
-                onOpenOverview = { day -> navController.navigate(DayOverviewRoute.of(day)) },
-            )
+            SharedScreen(this) {
+                DeckDestination(
+                    onBack = navController::popBackStack,
+                    onOpenSummary = { navController.navigate(SummaryRoute) },
+                    onOpenOverview = { day -> navController.navigate(DayOverviewRoute.of(day)) },
+                )
+            }
         }
         composable<DayOverviewRoute> {
-            DayOverviewDestination(
-                onBack = navController::popBackStack,
-                // La pile ouverte depuis la vue d'ensemble remplace celle d'où elle venait, s'il y en a une.
-                onOpenDeck = { day, first ->
-                    navController.navigate(DeckRoute.of(day, first)) { popUpTo<HomeRoute> { inclusive = false } }
-                },
-            )
+            SharedScreen(this) {
+                DayOverviewDestination(
+                    onBack = navController::popBackStack,
+                    // La pile ouverte depuis la vue d'ensemble remplace celle d'où elle venait, s'il y en a une.
+                    onOpenDeck = { day, first ->
+                        navController.navigate(DeckRoute.of(day, first)) { popUpTo<HomeRoute> { inclusive = false } }
+                    },
+                )
+            }
         }
         composable<SummaryRoute> {
             SummaryDestination(
@@ -118,21 +142,32 @@ private fun OpenRequestedDeck(
 /** Accueil : il ouvre les autres écrans et annonce ce que la confirmation du résumé a changé. */
 private fun NavGraphBuilder.homeDestination(navController: NavHostController) {
     composable<HomeRoute> { entry ->
-        val trashedCount by entry.savedStateHandle.getStateFlow(TRASHED_COUNT_KEY, 0).collectAsState()
-        HomeDestination(
-            navigation =
-                HomeNavigation(
-                    openDeck = { day -> navController.navigate(DeckRoute.of(day)) },
-                    openOverview = { day -> navController.navigate(DayOverviewRoute.of(day)) },
-                    openSettings = { navController.navigate(SettingsRoute) },
-                    openSummary = { navController.navigate(SummaryRoute) },
-                ),
-            confirmed =
-                if (trashedCount > 0) {
-                    ConfirmationAnnouncement(trashedCount) { entry.savedStateHandle[TRASHED_COUNT_KEY] = 0 }
-                } else {
-                    null
-                },
-        )
+        SharedScreen(this) {
+            val trashedCount by entry.savedStateHandle.getStateFlow(TRASHED_COUNT_KEY, 0).collectAsState()
+            HomeDestination(
+                navigation =
+                    HomeNavigation(
+                        openDeck = { day -> navController.navigate(DeckRoute.of(day)) },
+                        openOverview = { day -> navController.navigate(DayOverviewRoute.of(day)) },
+                        openSettings = { navController.navigate(SettingsRoute) },
+                        openSummary = { navController.navigate(SummaryRoute) },
+                    ),
+                confirmed =
+                    if (trashedCount > 0) {
+                        ConfirmationAnnouncement(trashedCount) { entry.savedStateHandle[TRASHED_COUNT_KEY] = 0 }
+                    } else {
+                        null
+                    },
+            )
+        }
     }
+}
+
+/** Fournit à [content] l'animation de sa destination, pour ses éléments partagés (PS-141). */
+@Composable
+private fun SharedScreen(
+    scope: AnimatedVisibilityScope,
+    content: @Composable () -> Unit,
+) {
+    CompositionLocalProvider(LocalNavAnimatedScope provides scope, content = content)
 }

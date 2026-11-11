@@ -47,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.ColorPainter
@@ -69,7 +70,9 @@ import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.SharedScreenKey
 import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
+import fr.babeuloula.photoswipe.ui.common.sharedScreen
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.monoLabel
 import java.time.LocalDate
@@ -93,7 +96,9 @@ fun DeckScreen(
     onOpenOverview: (() -> Unit)? = null,
 ) {
     Scaffold(
-        modifier = modifier,
+        // La carte ou la ligne du jour, sur l'accueil, s'agrandit jusqu'à cet écran (PS-141).
+        modifier =
+            modifier.then(day?.let { Modifier.sharedScreen(SharedScreenKey.Deck(it), RectangleShape) } ?: Modifier),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(

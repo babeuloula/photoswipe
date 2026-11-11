@@ -101,7 +101,13 @@ internal fun PreviewStrip(
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         today.previews.forEach { media ->
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Thumbnail(media, Modifier.fillMaxWidth().height(PREVIEW_HEIGHT).clip(MaterialTheme.shapes.small))
+                Thumbnail(
+                    media,
+                    Modifier
+                        .fillMaxWidth()
+                        .height(PREVIEW_HEIGHT)
+                        .clip(MaterialTheme.shapes.small),
+                )
                 Text(
                     text =
                         media.takenAt

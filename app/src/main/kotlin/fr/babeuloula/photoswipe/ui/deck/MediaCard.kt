@@ -89,6 +89,8 @@ import java.time.LocalDate
  * [active] marque la carte du dessus : si c'est une vidéo, elle est lue en muet par le lecteur de
  * la pile ([LocalCardVideoPlayer]) ; la carte suivante, préparée dessous, reste sur sa miniature.
  *
+ * [overlay] se dessine par-dessus, sur toute la carte (voile du geste).
+ *
  * [onOpen], s'il est donné, est appelé par un appui sur une photo : la pile l'ouvre en grand
  * (PS-117). Sur une vidéo, l'appui garde son rôle de lecture et de pause.
  */

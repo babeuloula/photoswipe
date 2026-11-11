@@ -75,8 +75,10 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.SharedScreenKey
 import fr.babeuloula.photoswipe.ui.common.Thumbnail
 import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
+import fr.babeuloula.photoswipe.ui.common.sharedScreen
 import fr.babeuloula.photoswipe.ui.theme.IbmPlexMono
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.monoLabel
@@ -208,14 +210,18 @@ private fun MemoriesCard(
                 contentColor = content,
             ),
         modifier =
-            Modifier.fillMaxWidth().semantics {
-                if (!toSort) {
-                    onClick(label = resortLabel) {
-                        onResort()
-                        true
+            Modifier
+                // La carte s'agrandit jusqu'à devenir la pile du jour (PS-141).
+                .sharedScreen(SharedScreenKey.Deck(today.date), MaterialTheme.shapes.extraLarge)
+                .fillMaxWidth()
+                .semantics {
+                    if (!toSort) {
+                        onClick(label = resortLabel) {
+                            onResort()
+                            true
+                        }
                     }
-                }
-            },
+                },
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             CardHeader(today, compact)
@@ -227,6 +233,8 @@ private fun MemoriesCard(
                     onTileColor = container,
                     modifier =
                         Modifier
+                            // Les vignettes s'agrandissent jusqu'à la vue d'ensemble du jour (PS-141).
+                            .sharedScreen(SharedScreenKey.Overview(today.date), MaterialTheme.shapes.small)
                             .alpha(if (toSort) 1f else SORTED_ALPHA)
                             .clip(MaterialTheme.shapes.small)
                             .clickable(onClickLabel = stringResource(R.string.day_overview_open)) {

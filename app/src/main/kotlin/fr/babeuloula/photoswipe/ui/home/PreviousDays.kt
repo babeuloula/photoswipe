@@ -73,9 +73,11 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.SharedScreenKey
 import fr.babeuloula.photoswipe.ui.common.Thumbnail
 import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
 import fr.babeuloula.photoswipe.ui.common.segmentShape
+import fr.babeuloula.photoswipe.ui.common.sharedScreen
 import fr.babeuloula.photoswipe.ui.deck.fileSizeLabel
 import fr.babeuloula.photoswipe.ui.theme.IbmPlexMono
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -129,6 +131,8 @@ private fun PreviousDay(
     Row(
         modifier =
             Modifier
+                // La ligne s'agrandit jusqu'à devenir la pile du jour (PS-141).
+                .sharedScreen(SharedScreenKey.Deck(day.date), shape)
                 .fillMaxWidth()
                 .heightIn(min = 64.dp)
                 .clip(shape)
