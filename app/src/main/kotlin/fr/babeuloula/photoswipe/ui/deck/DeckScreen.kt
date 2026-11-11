@@ -39,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -312,36 +313,40 @@ private fun CardStack(
     if (openPhoto.value == state.current.id.value) {
         PhotoViewer(card = state.current, onClose = { openPhoto.value = null })
     }
+    // Proportions des images, partagées par les cartes : la suivante garde sa forme en montant (PS-142).
+    val ratios = remember { mutableStateMapOf<String, Float>() }
     Box(modifier = modifier) {
-        state.next?.let { next ->
-            key(next.id) {
-                MediaCard(
-                    card = next,
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .graphicsLayer {
-                                // Posée un peu plus bas et plus petite, elle remonte à mesure que la carte du dessus part.
-                                val progress = nextCardProgress()
-                                val scale = lerp(NEXT_CARD_SCALE, 1f, progress)
-                                scaleX = scale
-                                scaleY = scale
-                                transformOrigin = TransformOrigin(NEXT_CARD_PIVOT_X, 1f)
-                                translationY = lerp(NEXT_CARD_OFFSET.toPx(), 0f, progress)
-                            }.clearAndSetSemantics { testTag = NEXT_CARD_TAG },
+        CompositionLocalProvider(LocalCardAspectRatios provides ratios) {
+            state.next?.let { next ->
+                key(next.id) {
+                    MediaCard(
+                        card = next,
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .graphicsLayer {
+                                    // Posée un peu plus bas et plus petite, elle remonte à mesure que la carte du dessus part.
+                                    val progress = nextCardProgress()
+                                    val scale = lerp(NEXT_CARD_SCALE, 1f, progress)
+                                    scaleX = scale
+                                    scaleY = scale
+                                    transformOrigin = TransformOrigin(NEXT_CARD_PIVOT_X, 1f)
+                                    translationY = lerp(NEXT_CARD_OFFSET.toPx(), 0f, progress)
+                                }.clearAndSetSemantics { testTag = NEXT_CARD_TAG },
+                    )
+                }
+            }
+            key(state.current.id) {
+                SwipeableMediaCard(
+                    card = state.current,
+                    onEvent = onEvent,
+                    requestedExit = requestedExit,
+                    returningFrom = state.returningFrom,
+                    onIndicationChange = onIndicationChange,
+                    onOpen = { openPhoto.value = state.current.id.value },
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
-        }
-        key(state.current.id) {
-            SwipeableMediaCard(
-                card = state.current,
-                onEvent = onEvent,
-                requestedExit = requestedExit,
-                returningFrom = state.returningFrom,
-                onIndicationChange = onIndicationChange,
-                onOpen = { openPhoto.value = state.current.id.value },
-                modifier = Modifier.fillMaxSize(),
-            )
         }
     }
 }

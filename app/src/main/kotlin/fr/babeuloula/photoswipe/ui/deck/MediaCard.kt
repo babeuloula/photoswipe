@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.ColorPainter
@@ -96,55 +98,59 @@ fun MediaCard(
     modifier: Modifier = Modifier,
     active: Boolean = false,
     onOpen: (() -> Unit)? = null,
+    overlay: @Composable BoxScope.() -> Unit = {},
 ) {
-    val context = LocalContext.current
-    val date = localizedDate(context, card.takenOn)
-    var failed by remember(card.uri) { mutableStateOf(false) }
-    val descriptionRes =
-        if (card.type ==
-            MediaType.VIDEO
+    FittedCardBox(uri = card.uri, modifier = modifier) { size, crop, onRatio ->
+        Card(
+            modifier = Modifier.size(size),
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+            // Légère ombre portée, plus marquée en bas : la carte se détache de celle d'en dessous.
+            elevation = CardDefaults.cardElevation(defaultElevation = CARD_ELEVATION),
         ) {
-            R.string.deck_video_description
-        } else {
-            R.string.deck_photo_description
-        }
-    Card(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                model = card.uri,
-                contentDescription = stringResource(descriptionRes, date),
-                imageLoader = LocalImageLoader.current,
-                placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
-                contentScale = ContentScale.Fit,
-                onSuccess = { failed = false },
-                onError = { failed = true },
-                modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen),
-            )
-            if (failed) {
-                Unavailable(type = card.type, modifier = Modifier.align(Alignment.Center))
-            }
-            val videoPlayer = LocalCardVideoPlayer.current
-            val video =
-                if (active && card.type == MediaType.VIDEO && videoPlayer != null) {
-                    activeVideo(card = card, videoPlayer = videoPlayer)
-                } else {
-                    null
+            val context = LocalContext.current
+            val date = localizedDate(context, card.takenOn)
+            var failed by remember(card.uri) { mutableStateOf(false) }
+            val descriptionRes =
+                if (card.type == MediaType.VIDEO) R.string.deck_video_description else R.string.deck_photo_description
+            Box(modifier = Modifier.fillMaxSize()) {
+                AsyncImage(
+                    model = card.uri,
+                    contentDescription = stringResource(descriptionRes, date),
+                    imageLoader = LocalImageLoader.current,
+                    placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
+                    contentScale = if (crop) ContentScale.Crop else ContentScale.Fit,
+                    onSuccess = { success ->
+                        failed = false
+                        val intrinsic = success.painter.intrinsicSize
+                        if (intrinsic.isSpecified && intrinsic.height > 0f) onRatio(intrinsic.width / intrinsic.height)
+                    },
+                    onError = { failed = true },
+                    modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen),
+                )
+                if (failed) {
+                    Unavailable(type = card.type, modifier = Modifier.align(Alignment.Center))
                 }
-            TopRow(
-                card = card,
-                modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(CARD_PADDING),
-            ) {
-                if (video != null) VideoCornerButtons(video)
+                val videoPlayer = LocalCardVideoPlayer.current
+                val video =
+                    if (active && card.type == MediaType.VIDEO && videoPlayer != null) {
+                        activeVideo(card = card, videoPlayer = videoPlayer)
+                    } else {
+                        null
+                    }
+                TopRow(
+                    card = card,
+                    modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(CARD_PADDING),
+                ) {
+                    if (video != null) VideoCornerButtons(video)
+                }
+                CardBottom(
+                    card = card,
+                    video = video,
+                    modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(CARD_PADDING),
+                )
+                overlay()
             }
-            CardBottom(
-                card = card,
-                video = video,
-                modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(CARD_PADDING),
-            )
         }
     }
 }
@@ -476,6 +482,9 @@ private fun Unavailable(
 
 /** Marge du repère et des pastilles dans la carte. */
 private val CARD_PADDING = 16.dp
+
+/** Élévation de la carte : une légère ombre portée (PS-142). */
+private val CARD_ELEVATION = 6.dp
 
 /** Taille de la pastille du cœur des favoris. */
 private val FAVORITE_BADGE_SIZE = 40.dp
