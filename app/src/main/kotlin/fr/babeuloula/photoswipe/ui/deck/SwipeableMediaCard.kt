@@ -90,6 +90,10 @@ internal enum class SwipeTarget { LEFT, RIGHT, MENU }
  *
  * L'état du geste vit dans la composition : l'appelant entoure la carte d'un `key` sur le média,
  * pour que chaque nouvelle carte parte du centre.
+ *
+ * Sans [enabled], la carte attend dans la pile, sous celle du dessus (PS-147) : ni geste, ni lecture
+ * vidéo, ni ouverture en grand. Elle garde ainsi la même composition, et son image chargée, du fond
+ * de la pile jusqu'au dessus.
  */
 @Composable
 fun SwipeableMediaCard(
@@ -100,6 +104,8 @@ fun SwipeableMediaCard(
     returningFrom: CardSide? = null,
     onIndicationChange: (SwipeIndication?) -> Unit = {},
     onOpen: (() -> Unit)? = null,
+    enabled: Boolean = true,
+    frameRatio: Float? = null,
 ) {
     BoxWithConstraints(modifier = modifier) {
         val size = with(LocalDensity.current) { Offset(maxWidth.toPx(), maxHeight.toPx()) }
@@ -153,21 +159,19 @@ fun SwipeableMediaCard(
                         translationX = offset.value.x
                         translationY = offset.value.y
                         rotationZ = offset.value.x / size.x * MAX_ROTATION_DEGREES
-                    }.pointerInput(card.id) {
-                        detectDragGestures(
-                            onDragStart = { drag.value = offset.value },
-                            onDragEnd = { scope.launch { release() } },
-                            onDragCancel = { scope.launch { backToCenter() } },
-                        ) { change, dragAmount ->
-                            change.consume()
-                            val before = swipeTarget(drag.value, size)
-                            drag.value += dragAmount
-                            val after = swipeTarget(drag.value, size)
-                            if (after != null && after != before) {
-                                haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                            }
-                            scope.launch { offset.snapTo(drag.value) }
+                    }.swipeGestures(
+                        enabled = enabled,
+                        key = card.id,
+                        onDragStart = { drag.value = offset.value },
+                        onRelease = { cancelled -> scope.launch { if (cancelled) backToCenter() else release() } },
+                    ) { dragAmount ->
+                        val before = swipeTarget(drag.value, size)
+                        drag.value += dragAmount
+                        val after = swipeTarget(drag.value, size)
+                        if (crossesThreshold(before, after)) {
+                            haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                         }
+                        scope.launch { offset.snapTo(drag.value) }
                     },
         ) {
             val indication = swipeIndication(drag.value, size)
@@ -175,10 +179,12 @@ fun SwipeableMediaCard(
             // Le voile suit la carte, à la forme de la photo (PS-142).
             MediaCard(
                 card = card,
-                active = true,
+                active = enabled,
                 onOpen = onOpen,
                 modifier = Modifier.matchParentSize(),
                 overlay = { SwipeIndicator(indication = indication, modifier = Modifier.matchParentSize()) },
+                frameRatio = frameRatio,
+                details = enabled,
             )
         }
     }
@@ -355,3 +361,35 @@ private const val EXIT_DISTANCE = 1.5f
 
 /** Inclinaison quand la carte a parcouru toute sa largeur. */
 private const val MAX_ROTATION_DEGREES = 12f
+
+/**
+ * Geste de glissement de la carte, seulement si [enabled] (la carte du dessus, PS-147) : [onDrag]
+ * reçoit chaque déplacement du doigt, [onRelease] le doigt levé, ou le geste annulé (vrai).
+ */
+private fun Modifier.swipeGestures(
+    enabled: Boolean,
+    key: Any,
+    onDragStart: () -> Unit,
+    onRelease: (cancelled: Boolean) -> Unit,
+    onDrag: (Offset) -> Unit,
+): Modifier =
+    if (!enabled) {
+        this
+    } else {
+        pointerInput(key) {
+            detectDragGestures(
+                onDragStart = { onDragStart() },
+                onDragEnd = { onRelease(false) },
+                onDragCancel = { onRelease(true) },
+            ) { change, dragAmount ->
+                change.consume()
+                onDrag(dragAmount)
+            }
+        }
+    }
+
+/** Vrai si le doigt vient d'atteindre une nouvelle cible ([after]) : retour haptique. */
+private fun crossesThreshold(
+    before: SwipeTarget?,
+    after: SwipeTarget?,
+): Boolean = after != null && after != before

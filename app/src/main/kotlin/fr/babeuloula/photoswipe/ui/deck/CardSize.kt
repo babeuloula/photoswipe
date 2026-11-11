@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.min
 import fr.babeuloula.photoswipe.ui.common.rememberReducedMotion
 import fr.babeuloula.photoswipe.ui.theme.motion
-import kotlin.math.abs
 
 /**
  * Taille de la carte d'un média dans l'espace [maxWidth] × [maxHeight] de la pile (PS-142) : aux
@@ -28,8 +27,8 @@ import kotlin.math.abs
  *
  * La carte garde au moins [MIN_CARD_WIDTH] de large et [MIN_CARD_HEIGHT] de haut (sans dépasser
  * l'espace) pour que le repère, les pastilles et les boutons de la vidéo y tiennent ; une image
- * plus étroite ou plus basse (panorama très allongé) la remplit alors en étant rognée
- * ([fillsByCropping]), entière une fois ouverte en grand. Sans proportions connues
+ * plus étroite ou plus basse (panorama très allongé) la remplit alors en étant rognée, entière une
+ * fois ouverte en grand. Sans proportions connues
  * (image pas encore chargée, illisible), la carte prend tout l'espace.
  */
 internal fun fittedCardSize(
@@ -53,27 +52,29 @@ internal fun fittedCardSize(
 
 /**
  * Place la carte du média [uri] dans tout l'espace donné, à la forme de son image (PS-142) :
- * [content] reçoit la taille de la carte, s'il faut rogner l'image ([fillsByCropping]) et de quoi
- * retenir les proportions de l'image une fois chargée.
+ * [content] reçoit la taille de la carte et de quoi retenir les proportions de l'image une fois
+ * chargée. [frameRatio], s'il est donné, remplace les proportions de l'image pour la taille de la
+ * carte : les cartes de la pile prennent le cadre de celle du dessus (PS-147).
  */
 @Composable
 internal fun FittedCardBox(
     uri: String,
     modifier: Modifier = Modifier,
-    content: @Composable (size: DpSize, crop: Boolean, onRatio: (Float) -> Unit) -> Unit,
+    frameRatio: Float? = null,
+    content: @Composable (size: DpSize, onRatio: (Float) -> Unit) -> Unit,
 ) {
     val ownRatio = remember(uri) { mutableStateOf<Float?>(null) }
     val ratios = LocalCardAspectRatios.current
     val ratio = ratios?.get(uri) ?: ownRatio.value
     BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
-        val target = fittedCardSize(maxWidth, maxHeight, ratio)
+        val target = fittedCardSize(maxWidth, maxHeight, frameRatio ?: ratio)
         // Une image tout juste chargée : la carte prend sa forme en douceur, sans sauter.
         val spec = MaterialTheme.motion.defaultSpatial<Dp>()
         val width by animateDpAsState(target.width, spec, label = "cardWidth")
         val height by animateDpAsState(target.height, spec, label = "cardHeight")
         // Animations coupées (PS-146) : la carte prend sa forme d'un coup.
         val size = if (rememberReducedMotion()) target else DpSize(width, height)
-        content(size, fillsByCropping(target, ratio)) { loaded ->
+        content(size) { loaded ->
             if (ratios != null) ratios[uri] = loaded else ownRatio.value = loaded
         }
     }
@@ -91,19 +92,3 @@ internal val MIN_CARD_WIDTH = 280.dp
 
 /** Hauteur minimale d'une carte : le repère en haut et les pastilles en bas y tiennent, un 2:1 aussi. */
 internal val MIN_CARD_HEIGHT = 180.dp
-
-/**
- * Vrai si l'image, aux proportions [aspectRatio], ne remplit pas la carte de taille [size] : elle y
- * est rognée plutôt que bordée de gris (PS-142).
- */
-internal fun fillsByCropping(
-    size: DpSize,
-    aspectRatio: Float?,
-): Boolean {
-    if (aspectRatio == null || aspectRatio <= 0f || size.height <= 0.dp) return false
-    val cardRatio = size.width / size.height
-    return abs(cardRatio - aspectRatio) / aspectRatio > RATIO_TOLERANCE
-}
-
-/** Écart de proportions toléré avant de rogner : un arrondi au pixel ne compte pas. */
-private const val RATIO_TOLERANCE = 0.01f
