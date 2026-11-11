@@ -32,6 +32,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -116,20 +117,27 @@ fun MediaCard(
             val descriptionRes =
                 if (card.type == MediaType.VIDEO) R.string.deck_video_description else R.string.deck_photo_description
             Box(modifier = Modifier.fillMaxSize()) {
-                AsyncImage(
-                    model = card.uri,
-                    contentDescription = stringResource(descriptionRes, date),
-                    imageLoader = LocalImageLoader.current,
-                    placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
-                    contentScale = if (crop) ContentScale.Crop else ContentScale.Fit,
-                    onSuccess = { success ->
-                        failed = false
-                        val intrinsic = success.painter.intrinsicSize
-                        if (intrinsic.isSpecified && intrinsic.height > 0f) onRatio(intrinsic.width / intrinsic.height)
-                    },
-                    onError = { failed = true },
-                    modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen),
-                )
+                // L'échelle n'est relue qu'à la création de l'image : la recréer quand le rognage change.
+                key(crop) {
+                    AsyncImage(
+                        model = card.uri,
+                        contentDescription = stringResource(descriptionRes, date),
+                        imageLoader = LocalImageLoader.current,
+                        placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
+                        contentScale = if (crop) ContentScale.Crop else ContentScale.Fit,
+                        onSuccess = { success ->
+                            failed = false
+                            val intrinsic = success.painter.intrinsicSize
+                            if (intrinsic.isSpecified &&
+                                intrinsic.height > 0f
+                            ) {
+                                onRatio(intrinsic.width / intrinsic.height)
+                            }
+                        },
+                        onError = { failed = true },
+                        modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen),
+                    )
+                }
                 if (failed) {
                     Unavailable(type = card.type, modifier = Modifier.align(Alignment.Center))
                 }
