@@ -172,8 +172,14 @@ fun SwipeableMediaCard(
         ) {
             val indication = swipeIndication(drag.value, size)
             SideEffect { onIndicationChange(indication) }
-            MediaCard(card = card, active = true, onOpen = onOpen, modifier = Modifier.matchParentSize())
-            SwipeIndicator(indication = indication, modifier = Modifier.matchParentSize())
+            // Le voile suit la carte, à la forme de la photo (PS-142).
+            MediaCard(
+                card = card,
+                active = true,
+                onOpen = onOpen,
+                modifier = Modifier.matchParentSize(),
+                overlay = { SwipeIndicator(indication = indication, modifier = Modifier.matchParentSize()) },
+            )
         }
     }
 }
