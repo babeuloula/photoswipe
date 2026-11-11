@@ -71,4 +71,16 @@
         <item quantity="many">%d de photos et vidéos</item>
         <item quantity="other">%d photos et vidéos</item>
     </plurals>
+    <!-- Sous l'espace libéré aujourd'hui (ADR 0034). -->
+    <plurals name="summary_trashed_today_detail">
+        <item quantity="one">%d média envoyé à la corbeille aujourd\'hui</item>
+        <item quantity="many">%d de médias envoyés à la corbeille aujourd\'hui</item>
+        <item quantity="other">%d médias envoyés à la corbeille aujourd\'hui</item>
+    </plurals>
+    <!-- Ligne « Trié aujourd'hui » du résumé : suppressions confirmées et leur poids (ADR 0034). -->
+    <plurals name="summary_deleted_today">
+        <item quantity="one">%1$d média supprimé (%2$s)</item>
+        <item quantity="many">%1$d de médias supprimés (%2$s)</item>
+        <item quantity="other">%1$d médias supprimés (%2$s)</item>
+    </plurals>
 </resources>

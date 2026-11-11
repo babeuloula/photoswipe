@@ -66,4 +66,14 @@
         <item quantity="one">%d photo or video</item>
         <item quantity="other">%d photos and videos</item>
     </plurals>
+    <!-- Sous l'espace libéré aujourd'hui (ADR 0034). -->
+    <plurals name="summary_trashed_today_detail">
+        <item quantity="one">%d item moved to the trash today</item>
+        <item quantity="other">%d items moved to the trash today</item>
+    </plurals>
+    <!-- Ligne « Trié aujourd'hui » du résumé : suppressions confirmées et leur poids (ADR 0034). -->
+    <plurals name="summary_deleted_today">
+        <item quantity="one">%1$d item deleted (%2$s)</item>
+        <item quantity="other">%1$d items deleted (%2$s)</item>
+    </plurals>
 </resources>

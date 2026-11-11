@@ -105,6 +105,29 @@ class PhotoSwipeDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun `migrates version 3 to 4 with an empty deletion history and keeps the decisions`() {
+        helper.createDatabase(DATABASE, 3).use { database ->
+            database.execSQL(
+                "INSERT INTO review_entry " +
+                    "(media_id, review_year, decision, favorite_pending, size_bytes, decided_at, reopened) " +
+                    "VALUES (42, 2026, 'MARKED_FOR_DELETION', 0, 3500000, 1784138400000, 0)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DATABASE, 4, true).use { database ->
+            database.query("SELECT media_id, decision FROM review_entry").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(42L, cursor.getLong(0))
+                assertEquals("MARKED_FOR_DELETION", cursor.getString(1))
+            }
+            database.query("SELECT COUNT(*) FROM confirmed_deletion").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(0, cursor.getInt(0))
+            }
+        }
+    }
+
     private companion object {
         const val DATABASE = "migration-test.db"
     }

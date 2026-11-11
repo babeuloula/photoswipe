@@ -4,7 +4,9 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.IntentSender
 import fr.babeuloula.photoswipe.MainDispatcherRule
+import fr.babeuloula.photoswipe.domain.fixtures.DEFAULT_SIZE_BYTES
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
@@ -72,6 +74,7 @@ class SummaryViewModelTest {
 
     private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 0))
     private val journal = FakeDecisionJournal(repository)
+    private val history = FakeDeletionHistory()
 
     private val settings = FakeSettingsRepository()
 
@@ -80,7 +83,7 @@ class SummaryViewModelTest {
 
     private fun summaryViewModel(reviews: ReviewRepository = repository): SummaryViewModel =
         SummaryViewModel(
-            getSessionSummary = GetSessionSummary(reviews, journal, ReviewWindowProvider(clock), clock),
+            getSessionSummary = GetSessionSummary(reviews, journal, history, ReviewWindowProvider(clock), clock),
             getMarkedPreviews = GetMarkedPreviews(reviews, gallery),
             confirmation =
                 ConfirmationActions(
@@ -90,6 +93,9 @@ class SummaryViewModelTest {
                             reviews,
                             FakeDecisionJournal(repository),
                             FakeUsageStatisticsRepository(),
+                            history,
+                            ReviewWindowProvider(clock),
+                            clock,
                         ),
                     orphanCleanup =
                         OrphanCleanup(
@@ -238,6 +244,24 @@ class SummaryViewModelTest {
 
             assertEquals(List(3) { ReviewDecision.TRASHED }, decisions())
             assertEquals(SummaryEffect.GoHome(trashedCount = 3), effects.last())
+        }
+
+    @Test
+    fun `still shows what was deleted today when the summary is opened again after confirming`() =
+        runTest {
+            mark(1, 2)
+            val viewModel = summaryViewModel()
+            collectEffects(viewModel)
+            viewModel.onEvent(SummaryEvent.Confirm)
+            viewModel.onEvent(SummaryEvent.SystemRequestAnswered(confirmed = true))
+            gallery.remove(MediaId(1))
+            gallery.remove(MediaId(2))
+
+            val reopened = summaryViewModel().uiState.value as SummaryUiState.Loaded
+
+            assertEquals(0, reopened.summary.markedForDeletionCount)
+            assertEquals(2, reopened.summary.trashedTodayCount)
+            assertEquals(2 * DEFAULT_SIZE_BYTES, reopened.summary.trashedTodayBytes)
         }
 
     @Test

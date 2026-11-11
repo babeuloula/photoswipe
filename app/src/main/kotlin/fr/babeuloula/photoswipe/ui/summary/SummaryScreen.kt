@@ -65,8 +65,8 @@ import fr.babeuloula.photoswipe.ui.theme.monoLabel
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
 
 /**
- * Résumé avant confirmation (SPEC §3.5) : l'espace libéré estimé en tête, puis ce qui a été trié
- * aujourd'hui (gardés, favoris, ADR 0024) et ce qui attend la confirmation (marqués pour suppression,
+ * Résumé avant confirmation (SPEC §3.5) : l'espace libéré estimé en tête (ou, tout étant confirmé,
+ * celui libéré aujourd'hui, ADR 0034), puis ce qui a été trié aujourd'hui (gardés, favoris, supprimés) et ce qui attend la confirmation (marqués pour suppression,
  * toutes sessions confondues). « Confirmer la suppression » présente les dialogues
  * système de corbeille ; « Plus tard » ramène à l'accueil sans rien changer.
  */
@@ -137,7 +137,6 @@ private fun SummaryContent(
     onEvent: (SummaryEvent) -> Unit,
 ) {
     val summary = state.summary
-    val colors = MaterialTheme.swipeColors
     Column(Modifier.fillMaxSize()) {
         Column(
             modifier =
@@ -147,29 +146,35 @@ private fun SummaryContent(
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            FreedSpace(summary.estimatedFreedBytes, summary.markedForDeletionCount)
-            Column {
-                SummaryHeading(stringResource(R.string.summary_sorted_today))
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    SummaryLine(
-                        icon = R.drawable.ic_check,
-                        tint = colors.keep,
-                        text = pluralStringResource(R.plurals.summary_kept, summary.keptCount, summary.keptCount),
-                        shape = segmentShape(0, 2),
-                    )
-                    SummaryLine(
-                        icon = R.drawable.ic_favorite_filled,
-                        tint = colors.favorite,
-                        text =
+            when {
+                summary.markedForDeletionCount > 0 -> {
+                    FreedSpace(
+                        title = stringResource(R.string.summary_freed_space),
+                        bytes = summary.estimatedFreedBytes,
+                        detail =
                             pluralStringResource(
-                                R.plurals.summary_favorites,
-                                summary.favoriteCount,
-                                summary.favoriteCount,
+                                R.plurals.summary_if_confirmed,
+                                summary.markedForDeletionCount,
+                                summary.markedForDeletionCount,
                             ),
-                        shape = segmentShape(1, 2),
+                    )
+                }
+
+                // Tout est confirmé : la place libérée aujourd'hui plutôt qu'une estimation à zéro (ADR 0034).
+                summary.trashedTodayCount > 0 -> {
+                    FreedSpace(
+                        title = stringResource(R.string.summary_freed_today),
+                        bytes = summary.trashedTodayBytes,
+                        detail =
+                            pluralStringResource(
+                                R.plurals.summary_trashed_today_detail,
+                                summary.trashedTodayCount,
+                                summary.trashedTodayCount,
+                            ),
                     )
                 }
             }
+            SortedToday(summary)
             // Rien n'attend : ni groupe « En attente », ni mention d'une suppression à venir.
             if (summary.markedForDeletionCount > 0) {
                 Column {
@@ -245,7 +250,7 @@ private fun SummaryActions(
 
 /** Titre d'un groupe de lignes, annoncé comme tel par TalkBack. */
 @Composable
-private fun SummaryHeading(text: String) {
+internal fun SummaryHeading(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleSmall,
@@ -255,20 +260,21 @@ private fun SummaryHeading(text: String) {
 }
 
 /**
- * Espace libéré estimé, mis en avant sans carte (ADR 0025) : le nombre en grand, en chasse fixe, et
- * ce dont il dépend (« Si vous confirmez les 12 médias marqués »).
+ * Espace libéré, mis en avant sans carte (ADR 0025) : le nombre en grand, en chasse fixe, sous son
+ * [title] (« Espace libéré estimé » ou « Espace libéré aujourd'hui »), et ce dont il dépend ([detail]).
  */
 @Composable
 private fun FreedSpace(
+    title: String,
     bytes: Long,
-    markedCount: Int,
+    detail: String,
 ) {
     Column(
         modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
-            text = stringResource(R.string.summary_freed_space),
+            text = title,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.semantics { heading() },
@@ -283,13 +289,11 @@ private fun FreedSpace(
             autoSize = TextAutoSize.StepBased(minFontSize = FREED_SPACE_MIN_FONT_SIZE, maxFontSize = style.fontSize),
             modifier = Modifier.testTag(FREED_SPACE_TAG),
         )
-        if (markedCount > 0) {
-            Text(
-                text = pluralStringResource(R.plurals.summary_if_confirmed, markedCount, markedCount),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        Text(
+            text = detail,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -377,7 +381,7 @@ private fun MoreMarked(
 
 /** Une ligne du détail : icône de la décision et nombre de médias. */
 @Composable
-private fun SummaryLine(
+internal fun SummaryLine(
     @DrawableRes icon: Int,
     tint: Color,
     text: String,

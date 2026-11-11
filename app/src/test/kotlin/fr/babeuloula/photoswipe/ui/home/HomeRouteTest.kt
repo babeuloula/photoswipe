@@ -12,6 +12,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
@@ -51,6 +52,7 @@ class HomeRouteTest {
 
     private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 10, 0))
     private val repository = FakeReviewRepository()
+    private val history = FakeDeletionHistory()
     private var settings = FakeSettingsRepository()
     private var source = FakeMediaSource()
 
@@ -63,7 +65,13 @@ class HomeRouteTest {
         val viewModel =
             HomeViewModel(
                 GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, clock),
-                GetSessionSummary(repository, FakeDecisionJournal(repository), ReviewWindowProvider(clock), clock),
+                GetSessionSummary(
+                    repository,
+                    FakeDecisionJournal(repository),
+                    history,
+                    ReviewWindowProvider(clock),
+                    clock,
+                ),
                 settings,
                 mediaManagement = { false },
                 reopenDay =

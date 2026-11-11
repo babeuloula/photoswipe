@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.ui.home
 
 import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
@@ -45,6 +46,7 @@ class HomeViewModelTest {
     private val today = LocalDate.of(2026, 7, 15)
     private val clock = FixedClock.at(today.atTime(10, 0))
     private val repository = FakeReviewRepository()
+    private val history = FakeDeletionHistory()
 
     @Test
     fun `shows how many media are left to sort today`() =
@@ -317,7 +319,7 @@ class HomeViewModelTest {
     private fun homeViewModel(source: MediaSource): HomeViewModel =
         HomeViewModel(
             GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, clock),
-            GetSessionSummary(repository, FakeDecisionJournal(repository), ReviewWindowProvider(clock), clock),
+            GetSessionSummary(repository, FakeDecisionJournal(repository), history, ReviewWindowProvider(clock), clock),
             settings,
             mediaManagement = { mediaManagementGranted },
             reopenDay = ReopenDay(SameDayMatcher(), source, repository, FakeDecisionJournal(repository), clock),

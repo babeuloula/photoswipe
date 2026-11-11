@@ -74,9 +74,37 @@ class SummaryScreenTest {
     @Test
     @Config(qualifiers = "fr")
     fun `writes a freed space under a kilobyte without parentheses`() {
-        show(SummaryUiState.Loaded(summary.copy(markedForDeletionCount = 0, estimatedFreedBytes = 0)))
+        show(SummaryUiState.Loaded(summary.copy(markedForDeletionCount = 1, estimatedFreedBytes = 0)))
 
         composeRule.onNodeWithText("0 octet").assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows no freed space at all when nothing is marked nor deleted today`() {
+        show(SummaryUiState.Loaded(nothingMarked))
+
+        composeRule.onNodeWithTag(FREED_SPACE_TAG).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.summary_freed_space)).assertDoesNotExist()
+    }
+
+    @Test
+    fun `shows the space freed today once every deletion is confirmed`() {
+        show(SummaryUiState.Loaded(nothingMarked.copy(trashedTodayCount = 10, trashedTodayBytes = 25_000_000)))
+
+        composeRule.onNodeWithText(text(R.string.summary_freed_today)).assertIsDisplayed()
+        composeRule.onNodeWithText("25 MB").assertIsDisplayed()
+        composeRule.onNodeWithText("10 items moved to the trash today").assertIsDisplayed()
+        composeRule.onNodeWithText("10 items deleted (25 MB)").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.summary_freed_space)).assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `keeps the estimate first and lists what was already deleted today in French`() {
+        show(SummaryUiState.Loaded(summary.copy(trashedTodayCount = 1, trashedTodayBytes = 2_400_000)))
+
+        composeRule.onNodeWithText("Espace libéré estimé").assertIsDisplayed()
+        composeRule.onNodeWithText("1 média supprimé (", substring = true).performScrollTo().assertIsDisplayed()
     }
 
     @Test
