@@ -340,6 +340,16 @@ private fun CardStack(
                         depth = depth,
                         // Chaque carte garde sa forme ; le bas de celles du dessous suit celui de la carte du dessus.
                         bottomAlign = (topHeight - fittedCardSize(maxWidth, maxHeight, ratios[card.uri]).height) / 2,
+                        // Plus haute que la carte du dessus, elle est réduite pour ne pas dépasser au-dessus.
+                        fitScale =
+                            (
+                                topHeight /
+                                    fittedCardSize(
+                                        maxWidth,
+                                        maxHeight,
+                                        ratios[card.uri],
+                                    ).height
+                            ).coerceAtMost(1f),
                         ready = card.uri in ratios,
                         actions =
                             TopCardActions(

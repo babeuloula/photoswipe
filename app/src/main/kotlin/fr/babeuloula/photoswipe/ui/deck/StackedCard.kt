@@ -28,7 +28,8 @@ import fr.babeuloula.photoswipe.ui.theme.motion
  *
  * Chaque carte garde sa propre forme : [bottomAlign] la descend pour caler son bas sur celui de la
  * carte du dessus (vers le haut si elle est plus haute), d'où ses bords qui dépassent. Arrivée en
- * haut, elle remonte au centre sans se déformer ni zoomer son image. Tant que son image n'est pas
+ * haut, elle remonte au centre sans se déformer ni zoomer son image. Plus haute que la carte du
+ * dessus, elle est réduite d'autant ([fitScale]) pour ne jamais dépasser au-dessus de la pile. Tant que son image n'est pas
  * chargée ([ready] faux), une carte du dessous reste invisible.
  */
 @Composable
@@ -37,6 +38,7 @@ internal fun StackedCard(
     depth: Int,
     bottomAlign: Dp,
     actions: TopCardActions,
+    fitScale: Float = 1f,
     ready: Boolean = true,
 ) {
     val top = depth == 0
@@ -44,6 +46,7 @@ internal fun StackedCard(
     val stacked by animateFloatAsState(depth.toFloat(), motion.defaultSpatial(), label = "stackDepth")
     // Une nouvelle carte du dessus d'une autre hauteur : les cartes du dessous suivent son bas en douceur.
     val align by animateDpAsState(bottomAlign, motion.defaultSpatial(), label = "stackAlign")
+    val fit by animateFloatAsState(fitScale, motion.defaultSpatial(), label = "stackFit")
     val appear = remember { Animatable(if (top) 1f else 0f) }
     // Une carte du dessous n'apparaît qu'avec son image : avant, elle n'a pas encore sa forme.
     LaunchedEffect(ready) { if (ready) appear.animateTo(1f, motion.defaultEffects()) }
@@ -59,7 +62,8 @@ internal fun StackedCard(
             Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    val scale = 1f - STACK_SCALE_STEP * stacked
+                    // Réduite par l'affichage seulement : l'image garde sa pleine résolution en arrivant en haut.
+                    val scale = (1f - STACK_SCALE_STEP * stacked) * lerp(1f, fit, stacked.coerceAtMost(1f))
                     scaleX = scale
                     scaleY = scale
                     transformOrigin = TransformOrigin(STACK_PIVOT_X, 1f)
