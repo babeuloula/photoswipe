@@ -224,4 +224,8 @@
     <string name="day_overview_kept">kept</string>
     <string name="day_overview_marked">marked for deletion</string>
     <string name="day_overview_favorite">in favorites</string>
+    <!-- Photos prises à la suite (PS-140). -->
+    <string name="deck_similar">%1$d/%2$d</string>
+    <string name="deck_similar_description">Photo %1$d of %2$d taken one after another</string>
+    <string name="day_overview_similar">%1$d of %2$d taken one after another</string>
 </resources>

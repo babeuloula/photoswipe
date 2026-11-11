@@ -12,6 +12,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
+import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import fr.babeuloula.photoswipe.domain.usecase.MarkedMedia
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import fr.babeuloula.photoswipe.ui.navigation.DeckRoute
@@ -241,6 +242,9 @@ class DeckViewModel
          */
         private var previousDecisions: Map<MediaId, ReviewDecision> = emptyMap()
 
+        /** Place des photos du jour prises à la suite (PS-140). */
+        private var similar: Map<MediaId, SimilarGroup> = emptyMap()
+
         /** Décisions du jour encore annulables, de la plus ancienne à la plus récente. */
         var session: ReviewSession = ReviewSession()
             private set
@@ -356,6 +360,7 @@ class DeckViewModel
                         deck.addAll(loaded.cards)
                         session = loaded.session
                         previousDecisions = loaded.previousDecisions
+                        similar = loaded.similar
                         marked = loaded.marked
                         render()
                     },
@@ -479,6 +484,7 @@ class DeckViewModel
                                             zone = clock.zone,
                                             favorite = galleryFavorite.isFavorite(it),
                                             previousDecision = previousDecisions[it.id],
+                                            similar = similar[it.id],
                                         )
                                     },
                             remainingCount = deck.size,

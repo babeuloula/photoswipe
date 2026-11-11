@@ -64,6 +64,7 @@ import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
+import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeChip
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
@@ -245,6 +246,7 @@ private fun CardBottom(
             duration = shownDuration(card, video),
             isVideo = card.type == MediaType.VIDEO && video?.ended != true,
             playing = video?.playing == true,
+            similar = card.similar,
         )
     }
 }
@@ -404,7 +406,8 @@ private data class PreviousDecisionStyle(
 
 /**
  * Bas de la carte : pour une vidéo ([isVideo]), ▶ et la durée au repos, ⏸ et le temps restant
- * pendant la lecture ; puis le poids du fichier. TalkBack lit « Durée : 00:32 ».
+ * pendant la lecture ; puis le poids du fichier, et pour une photo prise à la suite d'autres
+ * ([similar], PS-140) sa place parmi elles. TalkBack lit « Durée : 00:32 », « Photo 1 sur 3 prises à la suite ».
  */
 @Composable
 private fun BottomChips(
@@ -413,6 +416,7 @@ private fun BottomChips(
     isVideo: Boolean,
     playing: Boolean,
     modifier: Modifier = Modifier,
+    similar: SimilarGroup? = null,
 ) {
     val context = LocalContext.current
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -432,6 +436,7 @@ private fun BottomChips(
             }
         }
         FilmEdgeChip { Text(fileSizeLabel(context, sizeBytes)) }
+        similar?.let { SimilarChip(it) }
     }
 }
 

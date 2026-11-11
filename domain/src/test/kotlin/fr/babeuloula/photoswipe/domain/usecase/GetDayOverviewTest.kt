@@ -10,6 +10,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
+import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import kotlinx.coroutines.test.runTest
@@ -79,6 +80,21 @@ class GetDayOverviewTest {
             val memories = getDayOverview(media, entries)(today).years.single().memories
 
             assertEquals(listOf(true, true, false), memories.map { it.favorite })
+        }
+
+    @Test
+    fun `marks the photos taken one after another`() =
+        runTest {
+            val media =
+                listOf(
+                    takenOn(1, LocalDate.of(2024, 7, 15), LocalTime.of(9, 0, 0)),
+                    takenOn(2, LocalDate.of(2024, 7, 15), LocalTime.of(9, 0, 10)),
+                    takenOn(3, LocalDate.of(2024, 7, 15), LocalTime.of(15, 0)),
+                )
+
+            val memories = getDayOverview(media)(today).years.single().memories
+
+            assertEquals(listOf(SimilarGroup(1, 2), SimilarGroup(2, 2), null), memories.map { it.similar })
         }
 
     private fun getDayOverview(

@@ -20,6 +20,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.OverviewMemory
 import fr.babeuloula.photoswipe.domain.model.OverviewYear
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
+import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
@@ -57,7 +58,15 @@ class DayOverviewScreenTest {
                 ),
                 OverviewYear(
                     2020,
-                    listOf(OverviewMemory(aMediaItem(id = 3), ReviewDecision.MARKED_FOR_DELETION, false)),
+                    listOf(
+                        OverviewMemory(
+                            aMediaItem(id = 3),
+                            ReviewDecision.MARKED_FOR_DELETION,
+                            false,
+                            SimilarGroup(1, 2),
+                        ),
+                        OverviewMemory(aMediaItem(id = 4), decision = null, favorite = false, SimilarGroup(2, 2)),
+                    ),
                 ),
             ),
         )
@@ -76,7 +85,7 @@ class DayOverviewScreenTest {
 
         composeRule.onNodeWithText("Memories of May 14").assertIsDisplayed()
         composeRule.onNodeWithText("2024 · 2 years ago · 2 memories").assertIsDisplayed()
-        composeRule.onNodeWithText("2020 · 6 years ago · 1 memory").assertIsDisplayed()
+        composeRule.onNodeWithText("2020 · 6 years ago · 2 memories").assertIsDisplayed()
     }
 
     @Test
@@ -85,7 +94,9 @@ class DayOverviewScreenTest {
 
         composeRule.onNodeWithTag("${MEMORY_TILE_TAG}1").assertContentDescriptionEquals("Photo, to sort")
         composeRule.onNodeWithTag("${MEMORY_TILE_TAG}2").assertContentDescriptionEquals("Photo, kept, in favorites")
-        composeRule.onNodeWithTag("${MEMORY_TILE_TAG}3").assertContentDescriptionEquals("Photo, marked for deletion")
+        composeRule
+            .onNodeWithTag("${MEMORY_TILE_TAG}3")
+            .assertContentDescriptionEquals("Photo, marked for deletion, 1 of 2 taken one after another")
     }
 
     @Test
@@ -93,7 +104,7 @@ class DayOverviewScreenTest {
         show(DayOverviewUiState.Loaded(overview))
 
         composeRule.onNodeWithTag("${MEMORY_TILE_TAG}1").performClick()
-        composeRule.onNodeWithText("Sort the last one").performClick()
+        composeRule.onNodeWithText("Sort the 2 left").performClick()
 
         assertEquals(listOf(DayOverviewEvent.Open(MediaId(1)), DayOverviewEvent.StartSorting), events)
     }

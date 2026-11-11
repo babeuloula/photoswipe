@@ -31,6 +31,7 @@ import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.GetMarkedDeck
 import fr.babeuloula.photoswipe.domain.usecase.GetPendingFavorites
 import fr.babeuloula.photoswipe.domain.usecase.GetPreviousDecisions
+import fr.babeuloula.photoswipe.domain.usecase.GetSimilarMemories
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
@@ -103,6 +104,7 @@ abstract class DeckViewModelTestBase {
                     getDaySession = GetDaySession(journal, repository, source, ReviewWindowProvider(clock)),
                     getPreviousDecisions = GetPreviousDecisions(repository),
                     getMarkedDeck = GetMarkedDeck(repository, source, SameDayMatcher(), clock),
+                    getSimilarMemories = GetSimilarMemories(SameDayMatcher(), source, clock),
                 ),
             decisions =
                 DeckDecisions(

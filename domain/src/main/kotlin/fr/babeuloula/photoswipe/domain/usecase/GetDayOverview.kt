@@ -8,13 +8,15 @@ import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.DeckOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
+import fr.babeuloula.photoswipe.domain.service.SimilarMediaGrouping
 import java.time.Clock
 import java.time.LocalDate
 
 /**
  * Vue d'ensemble d'un jour (PS-139) : tous ses souvenirs (SPEC §3.1), triés ou non, avec la décision
  * prise pour son année de revue, rangés par année dans l'ordre de la pile ([DeckOrdering]) : de la
- * plus récente à la plus ancienne, et dans l'ordre de prise de vue au sein d'une année.
+ * plus récente à la plus ancienne, et dans l'ordre de prise de vue au sein d'une année. Les photos
+ * prises à la suite y sont repérées ([SimilarMediaGrouping], PS-140).
  *
  * Photo instantanée (`suspend`) : l'écran la relit à son retour au premier plan.
  *
@@ -26,6 +28,7 @@ class GetDayOverview(
     private val reviewRepository: ReviewRepository,
     private val deckOrdering: DeckOrdering,
     private val clock: Clock,
+    private val grouping: SimilarMediaGrouping = SimilarMediaGrouping(),
 ) {
     /** Souvenirs du jour [day], rangés par année, avec leur décision. */
     suspend operator fun invoke(day: LocalDate): DayOverview {
@@ -37,12 +40,18 @@ class GetDayOverview(
             reviewRepository
                 .entriesFor(day.year, memories.mapTo(HashSet()) { it.id })
                 .associateBy { it.mediaId }
+        val similar = grouping.groups(memories)
         val years =
             deckOrdering
                 .order(memories, zone)
                 .map { media ->
                     val entry = entries[media.id]?.takeIf { it.isSorted }
-                    OverviewMemory(media, entry?.decision, media.isFavorite || entry?.favoritePending == true)
+                    OverviewMemory(
+                        media = media,
+                        decision = entry?.decision,
+                        favorite = media.isFavorite || entry?.favoritePending == true,
+                        similar = similar[media.id],
+                    )
                 }.groupBy {
                     it.media.takenAt
                         .atZone(zone)
