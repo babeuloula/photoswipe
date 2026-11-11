@@ -143,7 +143,7 @@ class ReopenDayTest {
     fun `brings the count of the day back on the home screen`() =
         runTest {
             sortWholeDay()
-            val days = GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), gallery, reviews, clock)
+            val days = GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), gallery, reviews, history, clock)
 
             reopenDay()(today)
 

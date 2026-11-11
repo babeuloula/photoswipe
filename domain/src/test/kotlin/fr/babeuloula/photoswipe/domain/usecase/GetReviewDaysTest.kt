@@ -1,8 +1,10 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
+import fr.babeuloula.photoswipe.domain.fixtures.aConfirmedDeletion
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.MediaId
@@ -230,11 +232,48 @@ class GetReviewDaysTest {
             assertEquals(1, emissions.size)
         }
 
+    @Test
+    fun `keeps a trace of what was deleted on each day, even once the day has no memory left`() =
+        runTest {
+            val media = listOf(takenOn(id = 1, LocalDate.of(2025, 7, 14)))
+            val history =
+                FakeDeletionHistory(
+                    listOf(
+                        aConfirmedDeletion(mediaId = 2, day = LocalDate.of(2026, 7, 15), sizeBytes = 2_400_000),
+                        aConfirmedDeletion(mediaId = 2, day = LocalDate.of(2026, 7, 15), sizeBytes = 2_400_000),
+                        aConfirmedDeletion(mediaId = 3, day = LocalDate.of(2026, 7, 14), sizeBytes = 1_000),
+                        aConfirmedDeletion(mediaId = 4, day = null),
+                    ),
+                )
+
+            val days = getReviewDays(LocalDate.of(2026, 7, 15), media, history = history)().first()
+
+            assertEquals(1, days[0].deletedCount)
+            assertEquals(2_400_000L, days[0].freedBytes)
+            assertTrue(days[0].isEmptied)
+            assertEquals(1, days[1].deletedCount)
+            assertEquals(1, days[1].memoryCount)
+            assertEquals(false, days[1].isEmptied)
+            assertTrue(days.drop(2).all { it.deletedCount == 0 })
+        }
+
+    @Test
+    fun `follows the deletions confirmed while the flow is collected`() =
+        runTest {
+            val history = FakeDeletionHistory()
+            val emissions = collect(getReviewDays(LocalDate.of(2026, 7, 15), history = history))
+
+            history.record(listOf(aConfirmedDeletion(day = LocalDate.of(2026, 7, 13))))
+
+            assertEquals(1, emissions.last()[2].deletedCount)
+        }
+
     private fun getReviewDays(
         today: LocalDate,
         media: List<MediaItem> = emptyList(),
         entries: List<ReviewEntry> = emptyList(),
         repository: FakeReviewRepository = FakeReviewRepository(entries),
+        history: FakeDeletionHistory = FakeDeletionHistory(),
     ): GetReviewDays {
         val clock = FixedClock.at(today.atTime(NOON))
         return GetReviewDays(
@@ -242,6 +281,7 @@ class GetReviewDaysTest {
             sameDayMatcher = SameDayMatcher(),
             mediaSource = FakeMediaSource(media),
             reviewRepository = repository,
+            history = history,
             clock = clock,
         )
     }

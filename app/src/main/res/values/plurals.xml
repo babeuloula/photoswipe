@@ -76,4 +76,9 @@
         <item quantity="one">%1$d item deleted (%2$s)</item>
         <item quantity="other">%1$d items deleted (%2$s)</item>
     </plurals>
+    <!-- Accueil : ce qui a été supprimé ce jour-là, même s'il n'en reste rien (ADR 0034). -->
+    <plurals name="home_day_deleted">
+        <item quantity="one">%1$d item deleted · %2$s freed</item>
+        <item quantity="other">%1$d items deleted · %2$s freed</item>
+    </plurals>
 </resources>

@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
@@ -133,6 +134,7 @@ class GetDeckForDayTest {
                     SameDayMatcher(),
                     FakeMediaSource(media),
                     repository,
+                    FakeDeletionHistory(),
                     clock,
                 )()
                     .first()

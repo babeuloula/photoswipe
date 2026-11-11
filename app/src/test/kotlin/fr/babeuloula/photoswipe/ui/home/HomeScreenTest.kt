@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performFirstLinkClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -255,6 +256,58 @@ class HomeScreenTest {
         composeRule.onNodeWithText("Monday, July 13").performClick()
 
         assertEquals(emptyList<HomeEvent>(), events)
+    }
+
+    @Test
+    fun `keeps a trace of a previous day emptied by its deletions, without opening anything`() {
+        val state = loaded(todayCount = 1)
+        val emptied = state.previousDays[1].copy(deletedCount = 1, freedBytes = 2_400_000)
+        show(state.copy(previousDays = state.previousDays.toMutableList().also { it[1] = emptied }))
+
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Monday, July 13"))
+        composeRule.onNodeWithText("1 item deleted", substring = true).assertIsDisplayed()
+        composeRule
+            .onNode(
+                hasText(
+                    "Monday, July 13",
+                    substring = true,
+                ) and hasText(text(R.string.home_day_done), substring = true),
+            ).assertIsDisplayed()
+        composeRule.onNodeWithText("Monday, July 13").performClick()
+
+        assertEquals(emptyList<HomeEvent>(), events)
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `says what was deleted on a day that still has memories, in French`() {
+        val state = loaded(todayCount = 1)
+        val day = state.previousDays[0].copy(deletedCount = 2, freedBytes = 5_000_000)
+        show(state.copy(previousDays = listOf(day) + state.previousDays.drop(1)))
+
+        composeRule.onNodeWithText("2 médias supprimés", substring = true).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun `says today was emptied by its deletions and opens the summary`() {
+        val today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 0, memoryCount = 0, deletedCount = 3)
+        show(loaded(todayCount = 0).copy(today = today))
+
+        composeRule.onNodeWithText(text(R.string.home_today_no_memories)).assertDoesNotExist()
+        composeRule.onNodeWithText("3 items deleted", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.home_view_summary)).performClick()
+
+        assertEquals(listOf<HomeEvent>(HomeEvent.OpenPendingDeletions), events)
+    }
+
+    @Test
+    fun `does not say the week has no memories when every memory was deleted`() {
+        val today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 0, memoryCount = 0, deletedCount = 1)
+        val previous = (1L..6L).map { ReviewDay(LocalDate.of(2026, 7, 15).minusDays(it), remainingCount = 0) }
+        show(HomeUiState.Loaded(today, previous))
+
+        composeRule.onNodeWithText(text(R.string.home_empty_title)).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.home_today_done)).assertIsDisplayed()
     }
 
     @Test

@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReminderNotifier
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
@@ -33,6 +34,7 @@ class SendDailyReminderTest {
                 SameDayMatcher(),
                 FakeMediaSource(media),
                 FakeReviewRepository(entries),
+                FakeDeletionHistory(),
                 clock,
             )
         return SendDailyReminder(getReviewDays, notifier)

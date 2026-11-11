@@ -58,8 +58,12 @@ sealed interface HomeUiState {
         val showManageMediaTip: Boolean = false,
         val showRatingInvitation: Boolean = false,
     ) : HomeUiState {
-        /** Vrai si au moins un souvenir existe sur la fenêtre, trié ou non (SPEC §4, états vides). */
-        val hasMemories: Boolean get() = today.memoryCount > 0 || previousDays.any { it.memoryCount > 0 }
+        /**
+         * Vrai si au moins un souvenir existe sur la fenêtre, trié ou non, ou si un jour a été vidé
+         * par des suppressions confirmées (SPEC §4, états vides ; ADR 0034).
+         */
+        val hasMemories: Boolean
+            get() = (listOf(today) + previousDays).any { it.memoryCount > 0 || it.deletedCount > 0 }
     }
 }
 
