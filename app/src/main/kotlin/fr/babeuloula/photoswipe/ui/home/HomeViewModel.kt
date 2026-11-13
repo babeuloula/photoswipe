@@ -238,6 +238,8 @@ class HomeViewModel
                 .flatMapLatest { showLoading -> loadDays(showLoading) }
                 .onEach { state ->
                     if (state is HomeUiState.Loaded) {
+                        // Le widget « Ce jour-là » suit les tris, relus à chaque retour à l'accueil (PS-170).
+                        sortedDay.widgetRefresher.refresh()
                         countTodaySorted(state.today)
                         countStreak(listOf(state.today) + state.previousDays)
                     }

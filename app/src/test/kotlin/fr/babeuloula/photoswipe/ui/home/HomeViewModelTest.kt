@@ -70,6 +70,19 @@ class HomeViewModelTest {
         }
 
     @Test
+    fun `refreshes the home screen widget when the days are read again`() =
+        runTest {
+            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025), takenOn(2, 2020))))
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+            val afterLoading = widgetRefreshes
+
+            repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
+
+            assertTrue(afterLoading >= 1)
+            assertTrue(widgetRefreshes > afterLoading)
+        }
+
+    @Test
     fun `starts loading`() {
         assertEquals(HomeUiState.Loading, homeViewModel(FakeMediaSource()).uiState.value)
     }
@@ -421,6 +434,9 @@ class HomeViewModelTest {
 
     private var settings = FakeSettingsRepository()
 
+    /** Demandes de mise à jour du widget « Ce jour-là » (PS-170). */
+    private var widgetRefreshes = 0
+
     /** Accès « Gestion des médias » simulé, refusé par défaut. */
     private var mediaManagementGranted = false
 
@@ -431,7 +447,7 @@ class HomeViewModelTest {
             settings,
             mediaManagement = { mediaManagementGranted },
             reopenDay = ReopenDay(SameDayMatcher(), source, repository, FakeDecisionJournal(repository), clock),
-            announcements = homeAnnouncements(settings, clock),
+            announcements = homeAnnouncements(settings, clock, widgetRefresher = { widgetRefreshes++ }),
         )
 
     private suspend fun loaded(viewModel: HomeViewModel): HomeUiState =

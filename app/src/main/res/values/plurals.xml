@@ -138,4 +138,9 @@
         <item quantity="one">Show %d older day</item>
         <item quantity="other">Show %d older days</item>
     </plurals>
+    <!-- Widget « Ce jour-là » : souvenirs du jour qui restent à trier (PS-170). -->
+    <plurals name="widget_to_sort">
+        <item quantity="one">%d to sort</item>
+        <item quantity="other">%d to sort</item>
+    </plurals>
 </resources>

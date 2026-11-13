@@ -326,4 +326,19 @@
     <string name="whats_new_1_4_0_calendar_text">Voyez combien de souvenirs attendent chaque jour de l\'année, et touchez n\'importe quel jour pour l\'ouvrir, même hors de la semaine.</string>
     <string name="whats_new_1_4_0_goals_title">Badges et objectif</string>
     <string name="whats_new_1_4_0_goals_text">Gagnez des badges au fil du tri et fixez-vous une place à libérer.</string>
+    <!-- Widget « Ce jour-là » de l'écran d'accueil (PS-170). -->
+    <string name="widget_name">Ce jour-là</string>
+    <string name="widget_description">Un souvenir de ce jour, les années passées, et le nombre qu\'il reste à trier</string>
+    <string name="widget_years">%1$d–%2$d</string>
+    <string name="widget_all_sorted">Tout est trié</string>
+    <string name="widget_no_memories">Aucun souvenir ce jour-là</string>
+    <string name="widget_no_access">Ouvrez PhotoSwipe pour voir vos souvenirs</string>
+    <string name="widget_photo_description">Un souvenir de ce jour</string>
+    <string name="widget_preview_date">6 novembre</string>
+    <string name="widget_preview_count">23 à trier</string>
+    <string name="widget_settings_title">Widget « Ce jour-là »</string>
+    <string name="widget_settings_text">Le widget montre un souvenir de ce jour et le nombre qu\'il reste à trier. Un appui ouvre la pile du jour.</string>
+    <string name="widget_settings_show_photo">Montrer une photo</string>
+    <string name="widget_settings_show_photo_summary">À couper si d\'autres voient votre écran d\'accueil : le widget n\'affiche alors que la date et le nombre</string>
+    <string name="widget_settings_done">Terminé</string>
 </resources>

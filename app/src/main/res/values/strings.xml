@@ -337,4 +337,19 @@
     <string name="whats_new_1_4_0_calendar_text">See how many memories wait on each day of the year, and tap any day to open it, even outside this week.</string>
     <string name="whats_new_1_4_0_goals_title">Badges and a space goal</string>
     <string name="whats_new_1_4_0_goals_text">Earn badges as you sort, and set yourself an amount of space to free.</string>
+    <!-- Widget « Ce jour-là » de l'écran d'accueil (PS-170). -->
+    <string name="widget_name">This day</string>
+    <string name="widget_description">A memory from this day in past years, and how many are left to sort</string>
+    <string name="widget_years">%1$d–%2$d</string>
+    <string name="widget_all_sorted">All sorted</string>
+    <string name="widget_no_memories">No memories on this day</string>
+    <string name="widget_no_access">Open PhotoSwipe to see your memories</string>
+    <string name="widget_photo_description">A memory from this day</string>
+    <string name="widget_preview_date">November 6</string>
+    <string name="widget_preview_count">23 to sort</string>
+    <string name="widget_settings_title">“This day” widget</string>
+    <string name="widget_settings_text">The widget shows a memory from this day and how many are left to sort. A tap opens the day’s stack.</string>
+    <string name="widget_settings_show_photo">Show a photo</string>
+    <string name="widget_settings_show_photo_summary">Turn it off if others can see your home screen: the widget then only shows the date and the count</string>
+    <string name="widget_settings_done">Done</string>
 </resources>

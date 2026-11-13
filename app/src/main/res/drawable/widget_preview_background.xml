@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fond de l'aperçu du widget « Ce jour-là » (PS-170) : le conteneur ambre, arrondi comme le widget. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/widget_container" />
+    <corners android:radius="24dp" />
+</shape>

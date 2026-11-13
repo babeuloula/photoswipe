@@ -2,4 +2,7 @@
 <resources>
     <!-- Fond de l'écran de démarrage en sombre : la surface du thème sombre de repli. -->
     <color name="splash_background">#FF15130F</color>
+    <!-- Aperçu du widget « Ce jour-là » (PS-170) : primaryContainer et onPrimaryContainer du thème. -->
+    <color name="widget_container">#FF5C4300</color>
+    <color name="widget_on_container">#FFFFDF9F</color>
 </resources>

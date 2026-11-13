@@ -9,4 +9,7 @@
     <color name="launcher_background">#FF785A0B</color>
     <!-- Fond de l'écran de démarrage : la surface du thème clair de repli. -->
     <color name="splash_background">#FFFFF8F2</color>
+    <!-- Aperçu du widget « Ce jour-là » (PS-170) : primaryContainer et onPrimaryContainer du thème. -->
+    <color name="widget_container">#FFFFDF9F</color>
+    <color name="widget_on_container">#FF5C4300</color>
 </resources>

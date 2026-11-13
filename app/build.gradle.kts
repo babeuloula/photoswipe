@@ -125,6 +125,9 @@ dependencies {
     // Fabrique Hilt des tâches WorkManager, branchée dans PhotoSwipeApplication (rappel quotidien).
     implementation(libs.work.runtime)
     implementation(libs.androidx.hilt.work)
+    // Widget « Ce jour-là » de l'écran d'accueil (PS-170).
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -134,4 +137,7 @@ dependencies {
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.compiler)
     testImplementation(libs.androidx.compose.ui.test.junit4)
+    // Planification des mises à jour du widget et rendu de son contenu (PS-170).
+    testImplementation(libs.work.testing)
+    testImplementation(libs.glance.appwidget.testing)
 }

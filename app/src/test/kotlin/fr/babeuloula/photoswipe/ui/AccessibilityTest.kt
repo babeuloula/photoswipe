@@ -71,6 +71,7 @@ import fr.babeuloula.photoswipe.ui.tutorial.PracticePage
 import fr.babeuloula.photoswipe.ui.tutorial.TutorialScreen
 import fr.babeuloula.photoswipe.ui.whatsnew.WHATS_NEW
 import fr.babeuloula.photoswipe.ui.whatsnew.WhatsNewContent
+import fr.babeuloula.photoswipe.ui.widget.WidgetSettingsScreen
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -275,8 +276,14 @@ class AccessibilityTest {
         }
         settingsScreen()
         progressScreen()
+        smallScreens()
+    }
+
+    /** Licences, rapport de plantage et réglages du widget « Ce jour-là » (PS-170). */
+    private fun smallScreens() {
         check { LicensesScreen(onBack = {}, licenseText = "Apache License, Version 2.0") }
         check { CrashReportDialog(onEvent = {}) }
+        check { WidgetSettingsScreen(showPhoto = true, onShowPhotoChange = {}, onDone = {}) }
     }
 
     /** Vue d'ensemble d'un jour, puis la même pendant une sélection (PS-159). */
