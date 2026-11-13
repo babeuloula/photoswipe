@@ -24,6 +24,13 @@ class FakeUsageStatisticsRepository(
         current = current.afterDeletion(count, bytes)
     }
 
+    override suspend fun removeDeletion(
+        count: Int,
+        bytes: Long,
+    ) {
+        current = current.afterRestore(count, bytes)
+    }
+
     override suspend fun clear() {
         current = UsageStatistics(current.since)
     }

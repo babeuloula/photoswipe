@@ -31,6 +31,11 @@ class RoomDeletionHistory
             dao.deleteConfirmedBefore(instant.toEpochMilli())
         }
 
+        override suspend fun forget(mediaIds: Set<MediaId>) {
+            // Par lots, sous la limite de paramètres d'une requête SQLite.
+            mediaIds.map { it.value }.chunked(MAX_IDS_PER_QUERY).forEach { dao.deleteFor(it) }
+        }
+
         private fun ConfirmedDeletion.toEntity(): ConfirmedDeletionEntity =
             ConfirmedDeletionEntity(
                 mediaId = mediaId.value,
@@ -46,4 +51,9 @@ class RoomDeletionHistory
                 sizeBytes = sizeBytes,
                 confirmedAt = Instant.ofEpochMilli(confirmedAt),
             )
+
+        private companion object {
+            /** Identifiants par requête, loin sous la limite de paramètres de SQLite. */
+            const val MAX_IDS_PER_QUERY = 500
+        }
     }

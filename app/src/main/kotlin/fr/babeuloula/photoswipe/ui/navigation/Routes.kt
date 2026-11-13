@@ -63,6 +63,10 @@ data class DayOverviewRoute(
 @Serializable
 data object SummaryRoute
 
+/** Corbeille (PS-168) : les suppressions de PhotoSwipe encore restaurables, ouverte depuis le résumé. */
+@Serializable
+data object TrashRoute
+
 /** Réglages (SPEC §4.5). */
 @Serializable
 data object SettingsRoute

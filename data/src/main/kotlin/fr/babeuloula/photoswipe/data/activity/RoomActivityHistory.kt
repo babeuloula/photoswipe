@@ -24,6 +24,14 @@ class RoomActivityHistory
             dao.addTrashed(day.toEpochDay(), count, bytes)
         }
 
+        override suspend fun removeTrashed(
+            day: LocalDate,
+            count: Int,
+            bytes: Long,
+        ) {
+            dao.removeTrashed(day.toEpochDay(), count, bytes)
+        }
+
         override suspend fun since(day: LocalDate): List<DailyActivity> =
             dao.since(day.toEpochDay()).map { it.toDomain() }
 

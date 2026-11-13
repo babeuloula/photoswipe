@@ -1,12 +1,14 @@
 package fr.babeuloula.photoswipe.domain.port
 
 import fr.babeuloula.photoswipe.domain.model.ConfirmedDeletion
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
 /**
- * Historique des suppressions confirmées des derniers jours (ADR 0034), pour le résumé et l'accueil.
- * Implémenté dans `:data` sur Room ; il ne garde que ce qui sert à la fenêtre de revue.
+ * Historique des suppressions confirmées des 30 derniers jours (ADR 0034), pour le résumé, l'accueil
+ * et la page « Corbeille » (PS-168). Implémenté dans `:data` sur Room ; il ne garde que le temps
+ * qu'un média passe dans la corbeille d'Android (`ConfirmedDeletion.TRASH_RETENTION`).
  */
 interface DeletionHistory {
     /** Ajoute [deletions] à l'historique. */
@@ -18,6 +20,9 @@ interface DeletionHistory {
      */
     fun observe(): Flow<List<ConfirmedDeletion>>
 
-    /** Oublie les suppressions confirmées avant [instant], sorties de la fenêtre de revue. */
+    /** Oublie les suppressions confirmées avant [instant], déjà vidées de la corbeille. */
     suspend fun forgetConfirmedBefore(instant: Instant)
+
+    /** Oublie toutes les suppressions des médias [mediaIds], restaurés depuis la corbeille. */
+    suspend fun forget(mediaIds: Set<MediaId>)
 }

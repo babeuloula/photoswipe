@@ -29,7 +29,8 @@ import javax.inject.Singleton
 /**
  * Lie chaque port du domaine à son implémentation Android (SPEC §5.5) : le domaine et l'UI ne
  * connaissent que les interfaces. `MediaSource` est lié dans `:app`, par variante : MediaStore en
- * release, MediaStore ou données de démo en debug (ADR 0015).
+ * release, MediaStore ou données de démo en debug (ADR 0015). `SystemTrash` est lié à part, par
+ * `SystemTrashModule`.
  */
 @Module
 @InstallIn(SingletonComponent::class)

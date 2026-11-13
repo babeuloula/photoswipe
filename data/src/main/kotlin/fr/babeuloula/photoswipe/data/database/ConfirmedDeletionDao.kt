@@ -19,4 +19,8 @@ interface ConfirmedDeletionDao {
     /** Retire les suppressions confirmées avant [instant] (millisecondes epoch). */
     @Query("DELETE FROM confirmed_deletion WHERE confirmed_at < :instant")
     suspend fun deleteConfirmedBefore(instant: Long)
+
+    /** Retire toutes les suppressions des médias [mediaIds], restaurés (PS-168). */
+    @Query("DELETE FROM confirmed_deletion WHERE media_id IN (:mediaIds)")
+    suspend fun deleteFor(mediaIds: List<Long>)
 }

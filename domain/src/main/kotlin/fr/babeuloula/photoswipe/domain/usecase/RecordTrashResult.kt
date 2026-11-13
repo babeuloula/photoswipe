@@ -25,7 +25,7 @@ import java.time.LocalDate
  * poids enregistré au moment du marquage, un média marqué pour plusieurs années ne comptant qu'une
  * fois. Elle entre enfin dans l'historique des suppressions (ADR 0034), une ligne par marquage avec
  * le jour de la fenêtre qui l'a fait, lu dans le journal avant qu'il ne l'oublie ; l'historique
- * oublie au passage ce qui est sorti de la fenêtre. Elle compte aussi dans l'activité du jour de la
+ * oublie au passage ce qui a été confirmé il y a plus de 30 jours, déjà vidé de la corbeille (PS-168). Elle compte aussi dans l'activité du jour de la
  * confirmation (PS-154, ADR 0037), pour les graphiques de la page « Progression ».
  *
  * Une dépendance par chose qu'une confirmation met à jour (décisions, journal, statistiques,
@@ -57,8 +57,7 @@ class RecordTrashResult(
         val bytes = marked.distinctBy { it.mediaId }.sumOf { it.sizeBytes }
         statistics.recordDeletion(request.mediaIds.size, bytes)
         activity.recordTrashed(LocalDate.now(clock), request.mediaIds.size, bytes)
-        val days = window.days()
-        history.forgetConfirmedBefore(days.last().atStartOfDay(clock.zone).toInstant())
+        history.forgetConfirmedBefore(clock.instant().minus(ConfirmedDeletion.TRASH_RETENTION))
         history.record(deletions)
     }
 

@@ -30,4 +30,16 @@ class FakeUsageStatisticsRepositoryTest {
 
             assertEquals(UsageStatistics(since), repository.statistics())
         }
+
+    @Test
+    fun `removes a restored deletion without going below zero`() =
+        runTest {
+            repository.recordDeletion(3, 3_000)
+
+            repository.removeDeletion(1, 1_000)
+            assertEquals(UsageStatistics(since, deletedCount = 2, freedBytes = 2_000), repository.statistics())
+
+            repository.removeDeletion(5, 9_000)
+            assertEquals(UsageStatistics(since), repository.statistics())
+        }
 }

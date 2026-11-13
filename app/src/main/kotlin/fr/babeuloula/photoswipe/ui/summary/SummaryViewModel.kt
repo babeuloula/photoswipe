@@ -106,6 +106,9 @@ sealed interface SummaryEvent {
 
     /** Retour sur l'écran, par exemple depuis la pile des marqués : les marquages ont pu changer. */
     data object Resumed : SummaryEvent
+
+    /** Ligne « Corbeille » : voir les suppressions de PhotoSwipe encore restaurables (PS-168). */
+    data object OpenTrash : SummaryEvent
 }
 
 /** Navigation demandée par le résumé. */
@@ -131,6 +134,9 @@ sealed interface SummaryEffect {
     data class OpenMarkedDeck(
         val first: MediaId?,
     ) : SummaryEffect
+
+    /** Ouvrir la page « Corbeille » (PS-168). */
+    data object OpenTrash : SummaryEffect
 
     /**
      * Lancer un dialogue système ; la réponse revient par [SummaryEvent.SystemRequestAnswered].
@@ -216,6 +222,7 @@ class SummaryViewModel
                 SummaryEvent.Back -> effects.trySend(SummaryEffect.Close)
                 is SummaryEvent.OpenMarked -> effects.trySend(SummaryEffect.OpenMarkedDeck(event.first))
                 SummaryEvent.Resumed -> refreshWhenIdle()
+                SummaryEvent.OpenTrash -> effects.trySend(SummaryEffect.OpenTrash)
             }
         }
 

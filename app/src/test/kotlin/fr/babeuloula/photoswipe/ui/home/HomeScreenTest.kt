@@ -310,7 +310,7 @@ class HomeScreenTest {
         show(state.copy(previousDays = state.previousDays.toMutableList().also { it[1] = emptied }))
 
         composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Monday, July 13"))
-        composeRule.onNodeWithText("1 item deleted", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("1 item sent to the trash", substring = true).assertIsDisplayed()
         composeRule
             .onNode(
                 hasText(
@@ -330,8 +330,11 @@ class HomeScreenTest {
         val day = state.previousDays[0].copy(deletedCount = 2, freedBytes = 5_000_000)
         show(state.copy(previousDays = listOf(day) + state.previousDays.drop(1)))
 
-        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("2 médias supprimés", substring = true))
-        composeRule.onNodeWithText("2 médias supprimés", substring = true).assertIsDisplayed()
+        composeRule
+            .onNode(
+                hasScrollAction(),
+            ).performScrollToNode(hasText("2 médias mis à la corbeille", substring = true))
+        composeRule.onNodeWithText("2 médias mis à la corbeille", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -340,7 +343,7 @@ class HomeScreenTest {
         show(loaded(todayCount = 0).copy(today = today))
 
         composeRule.onNodeWithText(text(R.string.home_today_no_memories)).assertDoesNotExist()
-        composeRule.onNodeWithText("3 items deleted", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("3 items sent to the trash", substring = true).assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.home_view_summary)).performClick()
 
         assertEquals(listOf<HomeEvent>(HomeEvent.OpenPendingDeletions), events)

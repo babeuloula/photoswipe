@@ -58,8 +58,9 @@
     </plurals>
     <!-- Sous l'espace libéré du résumé : il dépend de la confirmation (ADR 0025). -->
     <plurals name="summary_if_confirmed">
-        <item quantity="one">Si vous confirmez le %d média marqué</item>
-        <item quantity="other">Si vous confirmez les %d médias marqués</item>
+        <item quantity="one">Si vous confirmez le %d média marqué, une fois sorti de la corbeille</item>
+        <item quantity="many">Si vous confirmez les %d de médias marqués, une fois sortis de la corbeille</item>
+        <item quantity="other">Si vous confirmez les %d médias marqués, une fois sortis de la corbeille</item>
     </plurals>
     <plurals name="file_size_bytes">
         <item quantity="one">%d octet</item>
@@ -73,21 +74,21 @@
     </plurals>
     <!-- Sous l'espace libéré aujourd'hui (ADR 0034). -->
     <plurals name="summary_trashed_today_detail">
-        <item quantity="one">%d média envoyé à la corbeille aujourd\'hui</item>
-        <item quantity="many">%d de médias envoyés à la corbeille aujourd\'hui</item>
-        <item quantity="other">%d médias envoyés à la corbeille aujourd\'hui</item>
+        <item quantity="one">%d média, place rendue dans 30 jours ou plus tôt depuis la corbeille</item>
+        <item quantity="many">%d de médias, place rendue dans 30 jours ou plus tôt depuis la corbeille</item>
+        <item quantity="other">%d médias, place rendue dans 30 jours ou plus tôt depuis la corbeille</item>
     </plurals>
     <!-- Ligne « Trié aujourd'hui » du résumé : suppressions confirmées et leur poids (ADR 0034). -->
     <plurals name="summary_deleted_today">
-        <item quantity="one">%1$d média supprimé (%2$s)</item>
-        <item quantity="many">%1$d de médias supprimés (%2$s)</item>
-        <item quantity="other">%1$d médias supprimés (%2$s)</item>
+        <item quantity="one">%1$d média mis à la corbeille (%2$s)</item>
+        <item quantity="many">%1$d de médias mis à la corbeille (%2$s)</item>
+        <item quantity="other">%1$d médias mis à la corbeille (%2$s)</item>
     </plurals>
     <!-- Accueil : ce qui a été supprimé ce jour-là, même s'il n'en reste rien (ADR 0034). -->
     <plurals name="home_day_deleted">
-        <item quantity="one">%1$d média supprimé · %2$s libérés</item>
-        <item quantity="many">%1$d de médias supprimés · %2$s libérés</item>
-        <item quantity="other">%1$d médias supprimés · %2$s libérés</item>
+        <item quantity="one">%1$d média mis à la corbeille · %2$s</item>
+        <item quantity="many">%1$d de médias mis à la corbeille · %2$s</item>
+        <item quantity="other">%1$d médias mis à la corbeille · %2$s</item>
     </plurals>
     <!-- Vue d'ensemble d'un jour (PS-139). -->
     <plurals name="day_overview_memories">
@@ -165,5 +166,11 @@
         <item quantity="one">%d à trier</item>
         <item quantity="many">%d à trier</item>
         <item quantity="other">%d à trier</item>
+    </plurals>
+    <!-- Page « Corbeille » (PS-168). -->
+    <plurals name="trash_count">
+        <item quantity="one">%d média supprimé avec PhotoSwipe, encore restaurable</item>
+        <item quantity="many">%d de médias supprimés avec PhotoSwipe, encore restaurables</item>
+        <item quantity="other">%d médias supprimés avec PhotoSwipe, encore restaurables</item>
     </plurals>
 </resources>

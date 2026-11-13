@@ -173,11 +173,12 @@ class TrashTest {
         }
 
     @Test
-    fun `forgets the deletions confirmed before the window when recording new ones`() =
+    fun `forgets the deletions confirmed more than 30 days ago, already emptied from the trash`() =
         runTest {
             val repository = FakeReviewRepository(listOf(marked(1)))
-            val old = aConfirmedDeletion(mediaId = 9, confirmedAt = Instant.parse("2026-07-01T10:00:00Z"))
-            val recent = aConfirmedDeletion(mediaId = 8, confirmedAt = Instant.parse("2026-07-10T10:00:00Z"))
+            val old = aConfirmedDeletion(mediaId = 9, confirmedAt = Instant.parse("2026-06-10T10:00:00Z"))
+            // Sortie de la fenêtre de 7 jours, mais encore dans la corbeille (PS-168).
+            val recent = aConfirmedDeletion(mediaId = 8, confirmedAt = Instant.parse("2026-07-01T10:00:00Z"))
             val history = FakeDeletionHistory(listOf(old, recent))
 
             recordTrashResult(repository, history = history)(prepareTrash(repository)().single(), confirmed = true)
