@@ -10,8 +10,10 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.theme.LightColorScheme
@@ -29,6 +31,7 @@ import kotlin.math.roundToInt
  * @property brandText couleur de la mention « PhotoSwipe ».
  * @property mono police du repère (IBM Plex Mono).
  * @property brandFont police de la mention (Atkinson Hyperlegible Next).
+ * @property logo icône de l'application, posée devant la mention ; `null` si elle ne peut pas être lue.
  */
 data class PostcardStyle(
     val paper: Int,
@@ -37,6 +40,7 @@ data class PostcardStyle(
     val brandText: Int,
     val mono: Typeface,
     val brandFont: Typeface,
+    val logo: Drawable? = null,
 ) {
     companion object {
         /** Style tiré du thème clair et des polices embarquées de [context]. */
@@ -53,6 +57,7 @@ data class PostcardStyle(
                         BRAND_WEIGHT,
                         false,
                     ),
+                logo = ContextCompat.getDrawable(context, R.mipmap.ic_launcher),
             )
 
         /** Police embarquée [id], ou [fallback] si elle ne peut pas être lue. */
@@ -176,8 +181,8 @@ private fun drawPhoto(
 }
 
 /**
- * Pied de carte : le repère à gauche, la mention à droite. Si les deux ne tiennent pas sur la
- * largeur (photo très haute), leur texte rapetisse jusqu'à tenir.
+ * Pied de carte : le repère à gauche, la mention à droite, précédée de l'icône de l'application.
+ * Si tout ne tient pas sur la largeur (photo très haute), l'ensemble rapetisse jusqu'à tenir.
  */
 private fun drawFooter(
     canvas: Canvas,
@@ -190,8 +195,12 @@ private fun drawFooter(
     val brandPaint = textPaint(style.brandFont, style.brandText, UNIT * BRAND_TEXT_UNITS)
     val chipPadding = UNIT * CHIP_PADDING_UNITS
     val gap = UNIT * GAP_UNITS
+    val logo = style.logo?.takeIf { brand != null }
+    val logoSize = UNIT * LOGO_UNITS
+    val logoWidth = logo?.let { logoSize + gap * LOGO_GAP_RATIO } ?: 0f
     val needed =
-        labelPaint.measureText(label) + 2 * chipPadding + (brand?.let { gap + brandPaint.measureText(it) } ?: 0f)
+        labelPaint.measureText(label) + 2 * chipPadding +
+            (brand?.let { gap + brandPaint.measureText(it) } ?: 0f) + logoWidth
     val scale = min(1f, footer.width() / needed)
     labelPaint.textSize *= scale
     brandPaint.textSize *= scale
@@ -208,6 +217,17 @@ private fun drawFooter(
     if (brand != null) {
         brandPaint.textAlign = Paint.Align.RIGHT
         canvas.drawText(brand, footer.right.toFloat(), baseline(chip.centerY(), brandPaint), brandPaint)
+        logo?.let {
+            val size = logoSize * scale
+            val right = footer.right - brandPaint.measureText(brand) - gap * LOGO_GAP_RATIO * scale
+            it.setBounds(
+                (right - size).roundToInt(),
+                (chip.centerY() - size / 2).roundToInt(),
+                right.roundToInt(),
+                (chip.centerY() + size / 2).roundToInt(),
+            )
+            it.draw(canvas)
+        }
     }
 }
 
@@ -266,6 +286,10 @@ private const val CHIP_PADDING_UNITS = 0.8f
 private const val LABEL_TEXT_UNITS = 0.8f
 private const val BRAND_TEXT_UNITS = 0.9f
 private const val GAP_UNITS = 1f
+
+/** Côté de l'icône de l'application, et écart avec la mention rapporté à [GAP_UNITS]. */
+private const val LOGO_UNITS = 2.2f
+private const val LOGO_GAP_RATIO = 0.4f
 
 /** Rayon et coin coupé du repère, rapportés à sa hauteur (12 et 10 dp sur 32 dp dans l'application). */
 private const val CHIP_CORNER_RATIO = 12f / 32f
