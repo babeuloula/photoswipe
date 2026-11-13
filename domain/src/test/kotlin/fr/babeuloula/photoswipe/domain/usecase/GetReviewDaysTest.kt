@@ -3,10 +3,12 @@ package fr.babeuloula.photoswipe.domain.usecase
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aConfirmedDeletion
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
@@ -25,6 +27,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime.NOON
@@ -268,16 +272,90 @@ class GetReviewDaysTest {
             assertEquals(1, emissions.last()[2].deletedCount)
         }
 
+    @ParameterizedTest
+    @EnumSource(CatchUpWindow::class)
+    fun `lists as many days as the chosen catch-up window, with the memories of the oldest one`(window: CatchUpWindow) =
+        runTest {
+            val today = LocalDate.of(2026, 7, 15)
+            val oldest = today.minusDays(window.days - 1L)
+            val media =
+                listOf(takenOn(id = 1, oldest.minusYears(2)), takenOn(id = 2, oldest.minusDays(1).minusYears(2)))
+            val settings = FakeSettingsRepository(catchUpWindow = window)
+
+            val days = getReviewDays(today, media, settings = settings)().first()
+
+            assertEquals(window.days, days.size)
+            assertEquals(oldest, days.last().date)
+            assertEquals(1, days.last().remainingCount)
+            assertEquals(1, days.sumOf { it.remainingCount })
+        }
+
+    @Test
+    fun `reads the gallery again on the new window when another catch-up window is chosen`() =
+        runTest {
+            val today = LocalDate.of(2026, 7, 15)
+            val settings = FakeSettingsRepository()
+            val media = listOf(takenOn(id = 1, LocalDate.of(2024, 6, 20)))
+            val emissions = collect(getReviewDays(today, media, settings = settings))
+
+            settings.saveCatchUpWindow(CatchUpWindow.MONTH)
+
+            assertEquals(listOf(7, 30), emissions.map { it.size })
+            assertEquals(0, emissions.first().sumOf { it.remainingCount })
+            assertEquals(1, emissions.last().sumOf { it.remainingCount })
+        }
+
+    /**
+     * Mesure grossière (PS-169) : une fenêtre de 30 jours sur une galerie de 30 000 médias en mémoire
+     * (300 par jour de l'année sur 10 ans, dont un tiers déjà triés) ; le temps est affiché, et ne
+     * doit pas dépasser quelques secondes même sur une machine de CI lente. Il ne mesure que le
+     * calcul du domaine, pas la lecture de MediaStore ni de Room.
+     */
+    @Test
+    fun `computes a thirty-day window over a large gallery in a reasonable time`() =
+        runTest {
+            val today = LocalDate.of(2026, 7, 15)
+            val media =
+                (0 until LARGE_GALLERY_SIZE).map { index ->
+                    takenOn(id = index + 1L, today.minusYears(1L + index % 10).minusDays((index / 10 % 365).toLong()))
+                }
+            val entries =
+                media
+                    .filterIndexed {
+                        index,
+                        _,
+                        ->
+                        index % 3 == 0
+                    }.map { aReviewEntry(mediaId = it.id.value, reviewYear = 2026) }
+            val useCase =
+                getReviewDays(
+                    today,
+                    media,
+                    entries,
+                    settings = FakeSettingsRepository(catchUpWindow = CatchUpWindow.MONTH),
+                )
+
+            val start = System.nanoTime()
+            val days = useCase().first()
+            val elapsedMillis = (System.nanoTime() - start) / NANOS_PER_MILLI
+            println("PS-169 : fenêtre de 30 jours sur $LARGE_GALLERY_SIZE médias calculée en $elapsedMillis ms")
+
+            assertEquals(30, days.size)
+            assertTrue(days.all { it.memoryCount > 0 })
+            assertTrue(elapsedMillis < MAX_MILLIS, "computed in $elapsedMillis ms")
+        }
+
     private fun getReviewDays(
         today: LocalDate,
         media: List<MediaItem> = emptyList(),
         entries: List<ReviewEntry> = emptyList(),
         repository: FakeReviewRepository = FakeReviewRepository(entries),
         history: FakeDeletionHistory = FakeDeletionHistory(),
+        settings: FakeSettingsRepository = FakeSettingsRepository(),
     ): GetReviewDays {
         val clock = FixedClock.at(today.atTime(NOON))
         return GetReviewDays(
-            windowProvider = ReviewWindowProvider(clock),
+            windowProvider = ReviewWindowProvider(clock, settings),
             sameDayMatcher = SameDayMatcher(),
             mediaSource = FakeMediaSource(media),
             reviewRepository = repository,
@@ -300,4 +378,10 @@ class GetReviewDaysTest {
 
     /** Date et nombres d'un jour, sans ses vignettes. */
     private fun ReviewDay.counts() = Triple(date, remainingCount, memoryCount)
+
+    private companion object {
+        const val LARGE_GALLERY_SIZE = 30_000
+        const val NANOS_PER_MILLI = 1_000_000L
+        const val MAX_MILLIS = 10_000L
+    }
 }

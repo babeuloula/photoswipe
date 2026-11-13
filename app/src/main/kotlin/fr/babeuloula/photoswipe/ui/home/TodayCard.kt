@@ -133,7 +133,7 @@ internal fun TodayCard(
     }
 }
 
-/** Aucun souvenir sur les 7 jours de la fenêtre : galerie récente, ou jours sans photo les années passées. */
+/** Aucun souvenir sur toute la fenêtre de rattrapage : galerie récente, ou jours sans photo les années passées. */
 @Composable
 private fun NoMemoriesCard(state: HomeUiState.Loaded) {
     val oldest = state.previousDays.lastOrNull()?.date ?: state.today.date

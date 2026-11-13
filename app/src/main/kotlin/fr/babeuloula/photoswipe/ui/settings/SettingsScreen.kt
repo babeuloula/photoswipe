@@ -40,6 +40,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
@@ -101,6 +102,7 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         ReminderSection(reminder, environment.exactAlarmAllowed, onEvent)
+                        state.catchUpWindow?.let { CatchUpSection(it, onEvent) }
                         LanguageSection(environment.languageLabel, onEvent)
                         state.themeMode?.let {
                             AppearanceSection(
@@ -359,6 +361,7 @@ private fun SettingsScreenPreview() {
                 SettingsUiState(
                     reminder = ReminderSettings.DEFAULT.copy(enabled = true),
                     themeMode = ThemeMode.SYSTEM,
+                    catchUpWindow = CatchUpWindow.WEEK,
                 ),
             environment = SettingsEnvironment(languageLabel = "Français"),
             onEvent = {},

@@ -44,7 +44,7 @@ enum class TutorialPage(
         R.string.tutorial_swipe_up_illustration,
     ),
 
-    /** Les 7 derniers jours à rattraper et le rappel quotidien. */
+    /** Les derniers jours à rattraper et le rappel quotidien. */
     CATCH_UP(
         R.string.tutorial_catch_up_title,
         R.string.tutorial_catch_up_body,

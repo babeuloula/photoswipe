@@ -10,10 +10,12 @@ import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import java.time.Clock
 import java.time.LocalDate
@@ -29,7 +31,7 @@ import java.time.ZoneId
  *
  * Le flux suit les décisions : chaque écriture dans [ReviewRepository] recalcule les nombres, et
  * une liste identique n'est pas réémise. La fenêtre et les médias de chaque jour sont lus une fois,
- * à la collecte : un média ajouté à la galerie ou le passage à minuit ne sont pris en compte qu'à
+ * à la collecte (ou au changement de durée de la fenêtre) : un média ajouté à la galerie ou le passage à minuit ne sont pris en compte qu'à
  * la collecte suivante (l'accueil recollecte en revenant au premier plan, ADR 0008).
  *
  * Chaque jour dit aussi ce qui y a été supprimé et confirmé (ADR 0034, PS-136) : un média envoyé à
@@ -47,12 +49,23 @@ class GetReviewDays(
     private val history: DeletionHistory,
     private val clock: Clock,
 ) {
-    /** Jours de la fenêtre, d'aujourd'hui au plus ancien, avec leur nombre de médias à trier. */
+    /**
+     * Jours de la fenêtre, d'aujourd'hui au plus ancien, avec leur nombre de médias à trier. Un
+     * nouveau choix de durée dans les réglages (PS-169) relit la galerie sur la nouvelle fenêtre.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(): Flow<List<ReviewDay>> =
+        windowProvider
+            .observeDays()
+            .flatMapLatest { days -> reviewDaysOf(days) }
+            .distinctUntilChanged()
+
+    /** Jours [days] suivis au fil des décisions et des suppressions. */
+    private fun reviewDaysOf(days: List<LocalDate>): Flow<List<ReviewDay>> =
         flow {
             val zone = clock.zone
             val mediaByDay =
-                windowProvider.days().associateWith { day ->
+                days.associateWith { day ->
                     mediaSource.mediaTakenIn(sameDayMatcher.rangesFor(day, zone)).distinctBy { it.id }
                 }
             val reviewYears = mediaByDay.keys.mapTo(HashSet()) { it.year }
@@ -61,7 +74,7 @@ class GetReviewDays(
                     reviewDays(mediaByDay, entries, deletions, zone)
                 },
             )
-        }.distinctUntilChanged()
+        }
 
     private fun reviewDays(
         mediaByDay: Map<LocalDate, List<MediaItem>>,

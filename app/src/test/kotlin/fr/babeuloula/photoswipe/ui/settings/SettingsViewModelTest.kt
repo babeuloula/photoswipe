@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.ui.settings
 import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReminderScheduler
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
@@ -312,5 +313,16 @@ class SettingsViewModelTest {
 
         assertTrue(repository.pureBlack)
         assertTrue(viewModel.uiState.value.pureBlack)
+    }
+
+    @Test
+    fun `catches up one week by default, then saves and shows the chosen duration`() {
+        val viewModel = settingsViewModel()
+        assertEquals(CatchUpWindow.WEEK, viewModel.uiState.value.catchUpWindow)
+
+        viewModel.onEvent(SettingsEvent.CatchUpWindowPicked(CatchUpWindow.MONTH))
+
+        assertEquals(CatchUpWindow.MONTH, repository.catchUpWindow)
+        assertEquals(CatchUpWindow.MONTH, viewModel.uiState.value.catchUpWindow)
     }
 }

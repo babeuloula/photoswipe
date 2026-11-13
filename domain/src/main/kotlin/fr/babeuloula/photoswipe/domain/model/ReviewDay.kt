@@ -3,7 +3,7 @@ package fr.babeuloula.photoswipe.domain.model
 import java.time.LocalDate
 
 /**
- * Jour cible de la fenêtre de revue (aujourd'hui ou l'un des 6 jours précédents, SPEC §3.1).
+ * Jour cible de la fenêtre de revue (aujourd'hui ou l'un des jours précédents de la fenêtre de rattrapage, SPEC §3.1, PS-169).
  *
  * @property date jour cible, dans le fuseau de l'appareil.
  * @property remainingCount nombre de médias qui restent à trier pour ce jour.

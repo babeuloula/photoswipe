@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
@@ -64,6 +65,18 @@ class SettingsFakesTest {
 
             assertEquals(true, repository.observePureBlack().first())
             assertEquals(true, repository.pureBlack)
+        }
+
+    @Test
+    fun `gives a one week catch-up window until another duration is saved`() =
+        runTest {
+            val repository = FakeSettingsRepository()
+            assertEquals(CatchUpWindow.WEEK, repository.observeCatchUpWindow().first())
+
+            repository.saveCatchUpWindow(CatchUpWindow.MONTH)
+
+            assertEquals(CatchUpWindow.MONTH, repository.observeCatchUpWindow().first())
+            assertEquals(CatchUpWindow.MONTH, repository.catchUpWindow)
         }
 
     @Test

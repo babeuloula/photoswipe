@@ -22,6 +22,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.model.Achievements
 import fr.babeuloula.photoswipe.domain.model.Badge
 import fr.babeuloula.photoswipe.domain.model.BadgeStatus
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.DayMemories
 import fr.babeuloula.photoswipe.domain.model.DayOverview
 import fr.babeuloula.photoswipe.domain.model.FreeSpaceGoal
@@ -36,6 +37,7 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.model.Streak
+import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.domain.model.YearMemories
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
@@ -156,6 +158,8 @@ class AccessibilityTest {
                 state =
                     SettingsUiState(
                         reminder = ReminderSettings.DEFAULT.copy(enabled = true),
+                        themeMode = ThemeMode.SYSTEM,
+                        catchUpWindow = CatchUpWindow.TWO_WEEKS,
                     ),
                 onEvent = {},
                 environment = SettingsEnvironment(languageLabel = "English"),
@@ -193,6 +197,27 @@ class AccessibilityTest {
         check { GoalDialog(onEvent = {}) }
     }
 
+    /** Accueil sur une fenêtre de 14 jours (PS-169) : liste repliée avec « Voir les jours plus anciens ». */
+    private fun catchUpHomeScreen() {
+        check {
+            HomeScreen(
+                state =
+                    HomeUiState.Loaded(
+                        today = ReviewDay(today, remainingCount = 3),
+                        previousDays =
+                            (1L..13L).map {
+                                ReviewDay(
+                                    today.minusDays(it),
+                                    remainingCount = 1,
+                                    memoryCount = 1,
+                                )
+                            },
+                    ),
+                onEvent = {},
+            )
+        }
+    }
+
     private fun everyScreen() {
         check { TutorialScreen(onDone = {}) }
         check { PracticePage() }
@@ -218,6 +243,7 @@ class AccessibilityTest {
                 onEvent = {},
             )
         }
+        catchUpHomeScreen()
         check {
             DeckScreen(
                 day = today,

@@ -7,6 +7,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aConfirmedDeletion
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
@@ -15,6 +16,8 @@ import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -54,6 +57,18 @@ class GetSessionSummaryTest {
             assertEquals(1, summary.markedForDeletionCount)
             assertEquals(2, summary.favoriteCount)
         }
+
+    @ParameterizedTest
+    @EnumSource(CatchUpWindow::class)
+    fun `counts what was kept today in the deck of a day twenty days ago only on a month-long window`(
+        window: CatchUpWindow,
+    ) = runTest {
+        keepMedia(aMediaItem(id = 1), today.minusDays(20))
+        val summary =
+            GetSessionSummary(repository, journal, history, ReviewWindowProvider(clock, window), clock)()
+
+        assertEquals(if (window == CatchUpWindow.MONTH) 1 else 0, summary.keptCount)
+    }
 
     @Test
     fun `keeps counting a favorite once the gallery applied it`() =

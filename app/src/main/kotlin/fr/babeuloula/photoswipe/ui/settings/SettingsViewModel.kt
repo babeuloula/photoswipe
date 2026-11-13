@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
@@ -30,6 +31,7 @@ import javax.inject.Inject
  * @property animationsEnabled vrai si les animations de l'application sont actives (PS-146).
  * @property pureBlack vrai si le thème sombre est en noir pur (PS-176).
  * @property whatsNewOpen vrai pendant la relecture des nouveautés de toutes les versions (PS-173).
+ * @property catchUpWindow durée de la fenêtre de rattrapage (PS-169), `null` tant qu'elle n'est pas lue.
  */
 data class SettingsUiState(
     val reminder: ReminderSettings? = null,
@@ -38,6 +40,7 @@ data class SettingsUiState(
     val animationsEnabled: Boolean = true,
     val pureBlack: Boolean = false,
     val whatsNewOpen: Boolean = false,
+    val catchUpWindow: CatchUpWindow? = null,
 )
 
 /** Action de l'utilisateur sur les réglages. */
@@ -88,6 +91,15 @@ sealed interface SettingsEvent {
     data object OpenNotificationSettings : OpensScreen {
         override val effect: SettingsEffect get() = SettingsEffect.OpenNotificationSettings
     }
+
+    /**
+     * Durée de la fenêtre de rattrapage choisie (PS-169).
+     *
+     * @property window jours à rattraper sur l'accueil.
+     */
+    data class CatchUpWindowPicked(
+        val window: CatchUpWindow,
+    ) : SettingsEvent
 
     /** Action sur le thème de l'application. */
     sealed interface ThemeEvent : SettingsEvent
@@ -283,6 +295,12 @@ class SettingsViewModel
                     .catch { emit(false) }
                     .collect { enabled -> state.update { it.copy(pureBlack = enabled) } }
             }
+            viewModelScope.launch {
+                settingsRepository
+                    .observeCatchUpWindow()
+                    .catch { emit(CatchUpWindow.DEFAULT) }
+                    .collect { window -> state.update { it.copy(catchUpWindow = window) } }
+            }
         }
 
         /** Traite une action de l'utilisateur. */
@@ -319,6 +337,10 @@ class SettingsViewModel
 
                 is SettingsEvent.ThemeEvent -> {
                     onThemeEvent(event)
+                }
+
+                is SettingsEvent.CatchUpWindowPicked -> {
+                    viewModelScope.launch { runCatching { settingsRepository.saveCatchUpWindow(event.window) } }
                 }
 
                 is SettingsEvent.OpensScreen -> {

@@ -130,4 +130,12 @@
         <item quantity="one">%d memory marked for deletion</item>
         <item quantity="other">%d memories marked for deletion</item>
     </plurals>
+    <plurals name="settings_catch_up_days_option">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="home_show_older_days">
+        <item quantity="one">Show %d older day</item>
+        <item quantity="other">Show %d older days</item>
+    </plurals>
 </resources>
