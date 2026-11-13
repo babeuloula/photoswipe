@@ -5,9 +5,13 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.domain.port.ActivityHistory
+import fr.babeuloula.photoswipe.domain.port.MediaSource
+import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
+import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetActivityReport
 import fr.babeuloula.photoswipe.domain.usecase.GetStreak
+import fr.babeuloula.photoswipe.domain.usecase.GetYearMemories
 import fr.babeuloula.photoswipe.domain.usecase.UpdateStreak
 import java.time.Clock
 
@@ -26,6 +30,14 @@ object ProgressModule {
         settingsRepository: SettingsRepository,
         clock: Clock,
     ): UpdateStreak = UpdateStreak(settingsRepository, clock)
+
+    @Provides
+    fun provideGetYearMemories(
+        sameDayMatcher: SameDayMatcher,
+        mediaSource: MediaSource,
+        reviewRepository: ReviewRepository,
+        clock: Clock,
+    ): GetYearMemories = GetYearMemories(sameDayMatcher, mediaSource, reviewRepository, clock)
 
     @Provides
     fun provideGetStreak(settingsRepository: SettingsRepository): GetStreak = GetStreak(settingsRepository)
