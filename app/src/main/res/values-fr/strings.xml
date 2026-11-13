@@ -280,4 +280,7 @@
     <!-- Réglage des animations (PS-146). -->
     <string name="settings_animations">Animations</string>
     <string name="settings_animations_summary">À couper pour alléger l\'application sur un téléphone ancien</string>
+    <!-- Réglage du noir pur du thème sombre (PS-176). -->
+    <string name="settings_pure_black">Noir pur</string>
+    <string name="settings_pure_black_summary">Fonds noirs en thème sombre, pour économiser la batterie d\'un écran OLED</string>
 </resources>

@@ -49,6 +49,16 @@ interface SettingsRepository {
     suspend fun saveAnimationsEnabled(enabled: Boolean)
 
     /**
+     * Noir pur du thème sombre (PS-176), observé par l'activité et les réglages : la valeur actuelle
+     * dès la collecte (`false` si rien n'est enregistré), puis chaque nouvelle valeur. Les fonds
+     * passent au noir sur un écran OLED ; le thème clair n'en tient pas compte.
+     */
+    fun observePureBlack(): Flow<Boolean>
+
+    /** Enregistre si le thème sombre est en noir pur. */
+    suspend fun savePureBlack(enabled: Boolean)
+
+    /**
      * Conseil « Gestion des médias » de l'accueil : la valeur actuelle dès la collecte
      * ([ManageMediaTip.DEFAULT] si rien n'est enregistré), puis chaque nouvelle valeur.
      */

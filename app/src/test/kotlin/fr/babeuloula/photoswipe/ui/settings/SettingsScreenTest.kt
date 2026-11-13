@@ -250,6 +250,32 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `turns pure black on from the whole row, announced as a switch`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.DARK))
+
+        composeRule
+            .onNodeWithText(text(R.string.settings_pure_black_summary))
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule
+            .onNodeWithText(text(R.string.settings_pure_black))
+            .assertIsOff()
+            .performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.PureBlackToggled(true)), events)
+    }
+
+    @Test
+    fun `shows pure black turned on`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.DARK, pureBlack = true))
+
+        composeRule
+            .onNodeWithText(text(R.string.settings_pure_black))
+            .performScrollTo()
+            .assertIsOn()
+    }
+
+    @Test
     fun `picks a theme among the phone one, light and dark, right in the list`() {
         show(SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.LIGHT))
 

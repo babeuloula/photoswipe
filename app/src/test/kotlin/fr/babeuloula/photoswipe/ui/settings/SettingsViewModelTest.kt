@@ -291,4 +291,15 @@ class SettingsViewModelTest {
         assertFalse(repository.animationsEnabled)
         assertFalse(viewModel.uiState.value.animationsEnabled)
     }
+
+    @Test
+    fun `keeps the dark theme in grays by default, then saves and shows pure black`() {
+        val viewModel = settingsViewModel()
+        assertFalse(viewModel.uiState.value.pureBlack)
+
+        viewModel.onEvent(SettingsEvent.PureBlackToggled(true))
+
+        assertTrue(repository.pureBlack)
+        assertTrue(viewModel.uiState.value.pureBlack)
+    }
 }

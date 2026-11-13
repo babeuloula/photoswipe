@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -36,13 +37,15 @@ import fr.babeuloula.photoswipe.ui.common.segmentShape
 /**
  * Section « Apparence » : le thème de l'application, en boutons radio dans la liste (ADR 0025) :
  * « Celui du téléphone », « Clair », « Sombre », appliqué dès qu'on touche un thème ; puis
- * l'interrupteur « Animations » (PS-146), à couper sur un téléphone ancien.
+ * l'interrupteur « Noir pur » (PS-176), qui ne change que le thème sombre, et l'interrupteur
+ * « Animations » (PS-146), à couper sur un téléphone ancien.
  */
 @Composable
 internal fun AppearanceSection(
     themeMode: ThemeMode,
     onEvent: (SettingsEvent) -> Unit,
     animationsEnabled: Boolean = true,
+    pureBlack: Boolean = false,
 ) {
     PreferenceSection(stringResource(R.string.settings_appearance_section)) {
         Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -72,20 +75,41 @@ internal fun AppearanceSection(
             }
         }
         Spacer(Modifier.height(8.dp))
-        // Toute la ligne bascule l'interrupteur, et TalkBack l'annonce comme un interrupteur.
-        PreferenceRow(
-            shape = segmentShape(0, 1),
-            title = stringResource(R.string.settings_animations),
-            summary = stringResource(R.string.settings_animations_summary),
-            trailing = { Switch(checked = animationsEnabled, onCheckedChange = null) },
-            modifier =
-                Modifier.toggleable(
-                    value = animationsEnabled,
-                    role = Role.Switch,
-                    onValueChange = { onEvent(SettingsEvent.AnimationsToggled(it)) },
-                ),
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            SwitchRow(
+                shape = segmentShape(0, 2),
+                title = stringResource(R.string.settings_pure_black),
+                summary = stringResource(R.string.settings_pure_black_summary),
+                checked = pureBlack,
+                onCheckedChange = { onEvent(SettingsEvent.PureBlackToggled(it)) },
+            )
+            SwitchRow(
+                shape = segmentShape(1, 2),
+                title = stringResource(R.string.settings_animations),
+                summary = stringResource(R.string.settings_animations_summary),
+                checked = animationsEnabled,
+                onCheckedChange = { onEvent(SettingsEvent.AnimationsToggled(it)) },
+            )
+        }
     }
+}
+
+/** Ligne à interrupteur : toute la ligne le bascule, et TalkBack l'annonce comme un interrupteur. */
+@Composable
+private fun SwitchRow(
+    shape: Shape,
+    title: String,
+    summary: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    PreferenceRow(
+        shape = shape,
+        title = title,
+        summary = summary,
+        trailing = { Switch(checked = checked, onCheckedChange = null) },
+        modifier = Modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
+    )
 }
 
 /** Nom du thème affiché à l'utilisateur. */

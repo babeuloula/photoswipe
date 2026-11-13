@@ -117,3 +117,18 @@ internal val DarkColorScheme =
         onTertiaryFixed = Color(0xFF082008),
         onTertiaryFixedVariant = Color(0xFF334D30),
     )
+
+/**
+ * Palette du thème sombre en noir pur (PS-176), pour les écrans OLED et la nuit : les fonds
+ * (`background`, `surface`, `surfaceDim`, `surfaceContainerLowest`) passent au noir, le conteneur
+ * bas prend l'ancien fond ; les surfaces surélevées (`surfaceContainer` et au-dessus) gardent les
+ * gris du thème sombre, pour rester distinctes du fond. Le reste du schéma est inchangé.
+ */
+internal val PureBlackColorScheme =
+    DarkColorScheme.copy(
+        background = Color.Black,
+        surface = Color.Black,
+        surfaceDim = Color.Black,
+        surfaceContainerLowest = Color.Black,
+        surfaceContainerLow = Color(0xFF15130F),
+    )

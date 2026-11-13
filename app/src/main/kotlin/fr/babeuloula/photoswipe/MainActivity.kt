@@ -38,7 +38,8 @@ import javax.inject.Inject
  * `enableEdgeToEdge()` dessine l'application sous les barres système (transparentes) ; les insets
  * sont gérés côté Compose. Le thème clair ou sombre suit le choix des réglages ([ThemeMode]) : il
  * s'applique dès qu'il change, sans redémarrer, et la couleur des icônes des barres système suit le
- * thème choisi, pas celui du téléphone. Le choix enregistré est lu une première fois avant
+ * thème choisi, pas celui du téléphone. Le noir pur du thème sombre (PS-176) suit le même chemin,
+ * jusqu'à la barre de navigation. Le choix enregistré est lu une première fois avant
  * d'afficher l'interface, pour qu'elle n'apparaisse pas un instant dans le mauvais thème.
  * Le chargeur d'images injecté est transmis aux écrans par [LocalImageLoader] (ADR 0016).
  *
@@ -65,15 +66,26 @@ class MainActivity : ComponentActivity() {
         val themeModes = settingsRepository.observeThemeMode().catch { emit(ThemeMode.DEFAULT) }
         // Lecture courte d'un petit fichier local, une fois au démarrage : évite un éclair du mauvais thème.
         val savedThemeMode = runBlocking { themeModes.first() }
+        val pureBlackChoices = settingsRepository.observePureBlack().catch { emit(false) }
+        // Lu avec le thème, pour que le noir pur s'affiche dès la première image (PS-176).
+        val savedPureBlack = runBlocking { pureBlackChoices.first() }
         val animations = settingsRepository.observeAnimationsEnabled().catch { emit(true) }
         setContent {
             val themeMode by remember { themeModes }.collectAsStateWithLifecycle(savedThemeMode)
+            val pureBlack by remember { pureBlackChoices }.collectAsStateWithLifecycle(savedPureBlack)
             val animationsEnabled by remember { animations }.collectAsStateWithLifecycle(true)
             val darkTheme = themeMode.isDark(isSystemInDarkTheme())
-            DisposableEffect(darkTheme) {
+            val pureBlackBars = darkTheme && pureBlack
+            DisposableEffect(darkTheme, pureBlackBars) {
                 enableEdgeToEdge(
                     statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
-                    navigationBarStyle = SystemBarStyle.auto(LIGHT_SCRIM, DARK_SCRIM) { darkTheme },
+                    // En noir pur, la barre de navigation à trois boutons est noire, comme le fond.
+                    navigationBarStyle =
+                        if (pureBlackBars) {
+                            SystemBarStyle.dark(Color.BLACK)
+                        } else {
+                            SystemBarStyle.auto(LIGHT_SCRIM, DARK_SCRIM) { darkTheme }
+                        },
                 )
                 onDispose {}
             }
@@ -82,7 +94,7 @@ class MainActivity : ComponentActivity() {
                 // Animations coupées dans les réglages, pour les téléphones anciens (PS-146).
                 LocalAnimationsDisabled provides !animationsEnabled,
             ) {
-                PhotoSwipeTheme(darkTheme = darkTheme) {
+                PhotoSwipeTheme(darkTheme = darkTheme, pureBlack = pureBlack) {
                     // Portrait, sauf le plein écran vidéo et la photo en grand (ADR 0028).
                     RotationPolicy {
                         PhotoSwipeApp(deckToOpen = deckToOpen, onDeckOpened = { deckToOpen = null })
