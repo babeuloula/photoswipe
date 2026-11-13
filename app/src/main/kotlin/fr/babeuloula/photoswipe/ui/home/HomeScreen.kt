@@ -110,18 +110,7 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
-                actions = {
-                    ProgressButton(
-                        streak = (state as? HomeUiState.Loaded)?.streak ?: 0,
-                        onClick = { onEvent(HomeEvent.OpenProgress) },
-                    )
-                    IconButton(onClick = { onEvent(HomeEvent.OpenSettings) }) {
-                        Icon(
-                            painterResource(R.drawable.ic_settings),
-                            contentDescription = stringResource(R.string.home_open_settings),
-                        )
-                    }
-                },
+                actions = { TopBarActions(streak = (state as? HomeUiState.Loaded)?.streak ?: 0, onEvent = onEvent) },
             )
         },
     ) { innerPadding ->
@@ -300,6 +289,21 @@ private fun ProgressButton(
         ) {
             Icon(painterResource(R.drawable.ic_progress), contentDescription = null)
         }
+    }
+}
+
+/** Boutons de la barre du haut : « Progression » (PS-153), « Corbeille » (PS-168) et réglages. */
+@Composable
+private fun TopBarActions(
+    streak: Int,
+    onEvent: (HomeEvent) -> Unit,
+) {
+    ProgressButton(streak = streak, onClick = { onEvent(HomeEvent.OpenProgress) })
+    IconButton(onClick = { onEvent(HomeEvent.OpenTrash) }) {
+        Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.home_open_trash))
+    }
+    IconButton(onClick = { onEvent(HomeEvent.OpenSettings) }) {
+        Icon(painterResource(R.drawable.ic_settings), contentDescription = stringResource(R.string.home_open_settings))
     }
 }
 

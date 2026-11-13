@@ -415,6 +415,15 @@ class HomeScreenTest {
     }
 
     @Test
+    fun `opens the trash page from the top bar`() {
+        show(HomeUiState.Loading)
+
+        composeRule.onNodeWithContentDescription(text(R.string.home_open_trash)).performClick()
+
+        assertEquals(listOf<HomeEvent>(HomeEvent.OpenTrash), events)
+    }
+
+    @Test
     fun `opens the progress page from the top bar`() {
         show(HomeUiState.Loading)
 

@@ -181,6 +181,16 @@ class HomeViewModelTest {
         }
 
     @Test
+    fun `opens the trash page`() =
+        runTest {
+            val viewModel = homeViewModel(FakeMediaSource())
+
+            viewModel.onEvent(HomeEvent.OpenTrash)
+
+            assertEquals(HomeEffect.OpenTrash, viewModel.uiEffects.first())
+        }
+
+    @Test
     fun `opens the progress page`() =
         runTest {
             val viewModel = homeViewModel(FakeMediaSource())

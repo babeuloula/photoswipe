@@ -165,6 +165,7 @@ private fun NavGraphBuilder.settingsDestinations(navController: NavHostControlle
                 openLicenses = { navController.navigate(LicensesRoute) },
                 openTutorial = { navController.navigate(TutorialRoute) },
                 openProgress = { navController.navigate(ProgressRoute) },
+                openTrash = { navController.navigate(TrashRoute) },
             ),
         )
     }
@@ -196,6 +197,7 @@ private fun NavGraphBuilder.homeDestination(navController: NavHostController) {
                         openSettings = { navController.navigate(SettingsRoute) },
                         openSummary = { navController.navigate(SummaryRoute) },
                         openProgress = { navController.navigate(ProgressRoute) },
+                        openTrash = { navController.navigate(TrashRoute) },
                     ),
                 confirmed =
                     if (trashedCount > 0) {

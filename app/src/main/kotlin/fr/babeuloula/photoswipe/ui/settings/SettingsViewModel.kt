@@ -179,6 +179,11 @@ sealed interface SettingsEvent {
         override val effect: SettingsEffect get() = SettingsEffect.OpenProgress
     }
 
+    /** « Corbeille » : les suppressions encore restaurables (PS-168). */
+    data object OpenTrash : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.OpenTrash
+    }
+
     /** « Revoir le tutoriel » de la section « À propos ». */
     data object OpenTutorial : OpensScreen {
         override val effect: SettingsEffect get() = SettingsEffect.OpenTutorial
@@ -243,6 +248,9 @@ sealed interface SettingsEffect {
 
     /** Ouvrir la page « Progression » (PS-153). */
     data object OpenProgress : SettingsEffect
+
+    /** Ouvrir la page « Corbeille » (PS-168). */
+    data object OpenTrash : SettingsEffect
 
     /** Ouvrir les licences de l'application et de ses bibliothèques. */
     data object OpenLicenses : SettingsEffect

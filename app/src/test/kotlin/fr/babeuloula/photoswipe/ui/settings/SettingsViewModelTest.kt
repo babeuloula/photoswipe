@@ -216,6 +216,16 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `opens the trash page`() =
+        runTest {
+            val viewModel = settingsViewModel()
+
+            viewModel.onEvent(SettingsEvent.OpenTrash)
+
+            assertEquals(SettingsEffect.OpenTrash, viewModel.uiEffects.first())
+        }
+
+    @Test
     fun `opens the progress page`() =
         runTest {
             val viewModel = settingsViewModel()
