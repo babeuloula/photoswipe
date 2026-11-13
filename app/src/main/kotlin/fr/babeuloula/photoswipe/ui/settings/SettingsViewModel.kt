@@ -5,9 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
-import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
-import fr.babeuloula.photoswipe.domain.usecase.GetUsageStatistics
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
 import fr.babeuloula.photoswipe.permission.ExactAlarmPermissionReader
 import fr.babeuloula.photoswipe.permission.NotificationPermissionReader
@@ -30,15 +28,12 @@ import javax.inject.Inject
  * @property timePickerOpen vrai pendant le choix de l'heure du rappel.
  * @property themeMode thème de l'application, `null` tant qu'il n'est pas lu.
  * @property animationsEnabled vrai si les animations de l'application sont actives (PS-146).
- * @property statistics statistiques d'utilisation (PS-122), `null` tant qu'elles ne sont pas lues
- * ou si elles ne peuvent pas l'être.
  */
 data class SettingsUiState(
     val reminder: ReminderSettings? = null,
     val timePickerOpen: Boolean = false,
     val themeMode: ThemeMode? = null,
     val animationsEnabled: Boolean = true,
-    val statistics: UsageStatistics? = null,
 )
 
 /** Action de l'utilisateur sur les réglages. */
@@ -121,6 +116,11 @@ sealed interface SettingsEvent {
         override val effect: SettingsEffect get() = SettingsEffect.OpenDeveloperTools
     }
 
+    /** « Progression » : les statistiques d'utilisation, sur leur propre page (PS-153). */
+    data object OpenProgress : OpensScreen {
+        override val effect: SettingsEffect get() = SettingsEffect.OpenProgress
+    }
+
     /** « Revoir le tutoriel » de la section « À propos ». */
     data object OpenTutorial : OpensScreen {
         override val effect: SettingsEffect get() = SettingsEffect.OpenTutorial
@@ -174,6 +174,9 @@ sealed interface SettingsEffect {
     /** Revoir le tutoriel, sans changer l'état « tutoriel vu ». */
     data object OpenTutorial : SettingsEffect
 
+    /** Ouvrir la page « Progression » (PS-153). */
+    data object OpenProgress : SettingsEffect
+
     /** Ouvrir les licences de l'application et de ses bibliothèques. */
     data object OpenLicenses : SettingsEffect
 
@@ -221,7 +224,6 @@ class SettingsViewModel
         private val notificationPermission: NotificationPermissionReader,
         /** Entrée des outils développeur : présente en debug seulement (SPEC §10). */
         val developerTools: DeveloperToolsEntry,
-        private val getUsageStatistics: GetUsageStatistics,
         /** Autorisation des alarmes exactes, relue par l'écran à chaque retour au premier plan (PS-125). */
         val exactAlarms: ExactAlarmPermissionReader,
     ) : ViewModel() {
@@ -235,9 +237,6 @@ class SettingsViewModel
         val uiEffects: Flow<SettingsEffect> = effects.receiveAsFlow()
 
         init {
-            viewModelScope.launch {
-                runCatching { getUsageStatistics() }.onSuccess { stats -> state.update { it.copy(statistics = stats) } }
-            }
             viewModelScope.launch {
                 settingsRepository
                     .observeReminderSettings()

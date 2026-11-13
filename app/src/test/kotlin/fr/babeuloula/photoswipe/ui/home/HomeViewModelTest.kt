@@ -167,6 +167,16 @@ class HomeViewModelTest {
         }
 
     @Test
+    fun `opens the progress page`() =
+        runTest {
+            val viewModel = homeViewModel(FakeMediaSource())
+
+            viewModel.onEvent(HomeEvent.OpenProgress)
+
+            assertEquals(HomeEffect.OpenProgress, viewModel.uiEffects.first())
+        }
+
+    @Test
     fun `offers media management once a system confirmation went through`() =
         runTest {
             settings.saveManageMediaTip(ManageMediaTip.OFFERED)

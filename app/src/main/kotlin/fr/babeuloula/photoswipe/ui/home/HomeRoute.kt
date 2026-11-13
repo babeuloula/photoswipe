@@ -121,6 +121,7 @@ private fun HomeNavigation.navigate(effect: HomeEffect): Boolean {
         is HomeEffect.OpenDeck -> openDeck(effect.date)
         is HomeEffect.OpenOverview -> openOverview(effect.date)
         HomeEffect.OpenSettings -> openSettings()
+        HomeEffect.OpenProgress -> openProgress()
         HomeEffect.OpenSummary -> openSummary()
         else -> return false
     }
@@ -134,10 +135,12 @@ private fun HomeNavigation.navigate(effect: HomeEffect): Boolean {
  * @property openOverview ouvre la vue d'ensemble d'un jour (PS-139).
  * @property openSettings ouvre les réglages.
  * @property openSummary ouvre le résumé des décisions en attente.
+ * @property openProgress ouvre la page « Progression » (PS-153).
  */
 class HomeNavigation(
     val openDeck: (LocalDate) -> Unit,
     val openOverview: (LocalDate) -> Unit,
     val openSettings: () -> Unit,
     val openSummary: () -> Unit,
+    val openProgress: () -> Unit = {},
 )
