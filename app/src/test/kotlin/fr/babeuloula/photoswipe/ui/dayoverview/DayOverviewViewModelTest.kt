@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.ui.dayoverview
 
 import androidx.lifecycle.SavedStateHandle
 import fr.babeuloula.photoswipe.MainDispatcherRule
+import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
@@ -15,6 +16,10 @@ import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetDayOverview
+import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
+import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
+import fr.babeuloula.photoswipe.domain.usecase.SortInBatch
+import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -37,6 +42,7 @@ class DayOverviewViewModelTest {
     private val day = LocalDate.of(2026, 5, 14)
     private val clock = FixedClock.at(day.atTime(10, 0))
     private val repository = FakeReviewRepository()
+    private val journal = FakeDecisionJournal(repository)
 
     private fun takenOn(
         id: Long,
@@ -59,8 +65,92 @@ class DayOverviewViewModelTest {
         DayOverviewViewModel(
             SavedStateHandle(mapOf("epochDay" to day.toEpochDay())),
             GetDayOverview(SameDayMatcher(), source, repository, RecentYearsFirstOrdering(), clock),
+            SortInBatch(
+                KeepMedia(repository, journal, clock),
+                MarkForDeletion(repository, journal, clock),
+                UndoLastDecision(repository, journal),
+            ),
             clock,
         )
+
+    private suspend fun decisionOf(id: Long): ReviewDecision? =
+        repository.entriesFor(2026, setOf(MediaId(id))).singleOrNull()?.decision
+
+    @Test
+    fun `selects memories by a long press, then a press toggles instead of opening`() =
+        runTest {
+            val viewModel = viewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2024))))
+
+            viewModel.onEvent(DayOverviewEvent.ToggleSelection(MediaId(1)))
+            viewModel.onEvent(DayOverviewEvent.Open(MediaId(2)))
+            assertEquals(setOf(MediaId(1), MediaId(2)), viewModel.loaded().selected)
+
+            viewModel.onEvent(DayOverviewEvent.Open(MediaId(1)))
+            assertEquals(setOf(MediaId(2)), viewModel.loaded().selected)
+        }
+
+    @Test
+    fun `selects or unselects a whole year from its header`() =
+        runTest {
+            val viewModel = viewModel(FakeMediaSource(listOf(takenOn(1, 2024), takenOn(2, 2024), takenOn(3, 2020))))
+            viewModel.onEvent(DayOverviewEvent.ToggleSelection(MediaId(3)))
+
+            viewModel.onEvent(DayOverviewEvent.ToggleYear(2024))
+            assertEquals(setOf(MediaId(1), MediaId(2), MediaId(3)), viewModel.loaded().selected)
+
+            viewModel.onEvent(DayOverviewEvent.ToggleYear(2024))
+            assertEquals(setOf(MediaId(3)), viewModel.loaded().selected)
+        }
+
+    @Test
+    fun `leaves the selection with back, without closing the screen`() =
+        runTest {
+            val viewModel = viewModel(FakeMediaSource(listOf(takenOn(1, 2020))))
+            viewModel.onEvent(DayOverviewEvent.ToggleSelection(MediaId(1)))
+
+            viewModel.onEvent(DayOverviewEvent.Back)
+
+            assertEquals(emptySet<MediaId>(), viewModel.loaded().selected)
+            viewModel.onEvent(DayOverviewEvent.Back)
+            assertEquals(DayOverviewEffect.Close, viewModel.uiEffects.first())
+        }
+
+    @Test
+    fun `keeps the selected memories, announces the batch and undoes it as a whole`() =
+        runTest {
+            repository.save(aReviewEntry(mediaId = 2, reviewYear = 2026, decision = ReviewDecision.MARKED_FOR_DELETION))
+            val viewModel = viewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2024), takenOn(3, 2024))))
+            viewModel.onEvent(DayOverviewEvent.ToggleSelection(MediaId(1)))
+            viewModel.onEvent(DayOverviewEvent.ToggleSelection(MediaId(2)))
+
+            viewModel.onEvent(DayOverviewEvent.KeepSelected)
+
+            assertEquals(DayOverviewEffect.BatchSorted(count = 2, kept = true), viewModel.uiEffects.first())
+            assertEquals(ReviewDecision.KEPT, decisionOf(1))
+            assertEquals(ReviewDecision.KEPT, decisionOf(2))
+            assertEquals(null, decisionOf(3))
+            assertEquals(emptySet<MediaId>(), viewModel.loaded().selected)
+            assertEquals(1, viewModel.loaded().remainingCount)
+
+            viewModel.onEvent(DayOverviewEvent.UndoBatch)
+
+            assertEquals(null, decisionOf(1))
+            assertEquals(ReviewDecision.MARKED_FOR_DELETION, decisionOf(2))
+            assertEquals(2, viewModel.loaded().remainingCount)
+        }
+
+    @Test
+    fun `marks the selected memories for deletion`() =
+        runTest {
+            val viewModel = viewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2024))))
+            viewModel.onEvent(DayOverviewEvent.ToggleYear(2020))
+
+            viewModel.onEvent(DayOverviewEvent.MarkSelected)
+
+            assertEquals(DayOverviewEffect.BatchSorted(count = 1, kept = false), viewModel.uiEffects.first())
+            assertEquals(ReviewDecision.MARKED_FOR_DELETION, decisionOf(1))
+            assertEquals(null, decisionOf(2))
+        }
 
     private fun DayOverviewViewModel.loaded() = uiState.value as DayOverviewUiState.Loaded
 

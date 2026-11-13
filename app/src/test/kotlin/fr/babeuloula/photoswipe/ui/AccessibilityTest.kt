@@ -27,6 +27,7 @@ import fr.babeuloula.photoswipe.domain.model.DayOverview
 import fr.babeuloula.photoswipe.domain.model.FreeSpaceGoal
 import fr.babeuloula.photoswipe.domain.model.GIGABYTE
 import fr.babeuloula.photoswipe.domain.model.GoalProgress
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.OverviewMemory
 import fr.babeuloula.photoswipe.domain.model.OverviewYear
@@ -228,7 +229,7 @@ class AccessibilityTest {
         }
         check { DeckScreen(day = today, state = DeckUiState.Empty(canUndo = true), onEvent = {}) }
         deckOverlays()
-        check { DayOverviewScreen(day = today, state = DayOverviewUiState.Loaded(sampleOverview()), onEvent = {}) }
+        dayOverviewScreens()
         check {
             SummaryScreen(
                 state =
@@ -247,6 +248,18 @@ class AccessibilityTest {
         progressScreen()
         check { LicensesScreen(onBack = {}, licenseText = "Apache License, Version 2.0") }
         check { CrashReportDialog(onEvent = {}) }
+    }
+
+    /** Vue d'ensemble d'un jour, puis la même pendant une sélection (PS-159). */
+    private fun dayOverviewScreens() {
+        check { DayOverviewScreen(day = today, state = DayOverviewUiState.Loaded(sampleOverview()), onEvent = {}) }
+        check {
+            DayOverviewScreen(
+                day = today,
+                state = DayOverviewUiState.Loaded(sampleOverview(), selected = setOf(MediaId(1))),
+                onEvent = {},
+            )
+        }
     }
 
     /** Vue d'ensemble d'exemple : une année, un souvenir de chaque état. */

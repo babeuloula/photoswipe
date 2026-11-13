@@ -286,6 +286,14 @@
     <string name="deck_similar">%1$d/%2$d</string>
     <string name="deck_similar_description">Photo %1$d of %2$d taken one after another</string>
     <string name="day_overview_similar">%1$d of %2$d taken one after another</string>
+    <string name="day_overview_keep_selected">Keep</string>
+    <string name="day_overview_mark_selected">Delete</string>
+    <string name="day_overview_select">Select</string>
+    <string name="day_overview_unselect">Unselect</string>
+    <string name="day_overview_selected_state">selected</string>
+    <string name="day_overview_clear_selection">Cancel the selection</string>
+    <string name="day_overview_select_year">Select all of %1$d</string>
+    <string name="day_overview_unselect_year">Unselect all of %1$d</string>
     <!-- Barre de progression coupée par année, lue par TalkBack (PS-144). -->
     <string name="deck_progress_with_years">%1$s, over %2$s</string>
     <!-- Réglage des animations (PS-146). -->
