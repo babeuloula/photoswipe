@@ -22,7 +22,10 @@ class SimilarMediaGrouping(
         require(!maxGap.isNegative) { "maxGap must not be negative: $maxGap" }
     }
 
-    /** Place de chaque photo de [media] qui appartient à un groupe d'au moins deux photos proches. */
+    /**
+     * Place de chaque photo de [media] qui appartient à un groupe d'au moins deux photos proches,
+     * avec la photo prise juste avant elle dans le groupe.
+     */
     fun groups(media: List<MediaItem>): Map<MediaId, SimilarGroup> {
         val photos = media.filter { it.type == MediaType.IMAGE }.distinctBy { it.id }.sortedBy { it.takenAt }
         val runs = mutableListOf<MutableList<MediaItem>>()
@@ -36,8 +39,11 @@ class SimilarMediaGrouping(
         }
         return runs
             .filter { it.size >= 2 }
-            .flatMap { run -> run.mapIndexed { index, photo -> photo.id to SimilarGroup(index + 1, run.size) } }
-            .toMap()
+            .flatMap { run ->
+                run.mapIndexed { index, photo ->
+                    photo.id to SimilarGroup(index + 1, run.size, previousUri = run.getOrNull(index - 1)?.uri)
+                }
+            }.toMap()
     }
 
     companion object {

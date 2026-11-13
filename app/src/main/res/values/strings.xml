@@ -285,6 +285,9 @@
     <!-- Photos prises à la suite (PS-140). -->
     <string name="deck_similar">%1$d/%2$d</string>
     <string name="deck_similar_description">Photo %1$d of %2$d taken one after another</string>
+    <string name="deck_compare_previous">Previous photo · %1$d of %2$d</string>
+    <string name="deck_compare_action">Compare with the previous photo</string>
+    <string name="deck_compare_back">Back to this photo</string>
     <string name="day_overview_similar">%1$d of %2$d taken one after another</string>
     <string name="day_overview_keep_selected">Keep</string>
     <string name="day_overview_mark_selected">Delete</string>

@@ -112,13 +112,12 @@ fun MediaCard(
             elevation = CardDefaults.cardElevation(defaultElevation = CARD_ELEVATION),
         ) {
             val date = localizedDate(LocalContext.current, card.takenOn)
+            val compare = rememberCompare(card)
             var failed by remember(card.uri) { mutableStateOf(false) }
-            val descriptionRes =
-                if (card.type == MediaType.VIDEO) R.string.deck_video_description else R.string.deck_photo_description
             Box(modifier = Modifier.fillMaxSize()) {
                 AsyncImage(
                     model = card.uri,
-                    contentDescription = stringResource(descriptionRes, date),
+                    contentDescription = stringResource(cardDescription(card.type), date),
                     imageLoader = LocalImageLoader.current,
                     placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainerHighest),
                     // L'image remplit toujours sa carte : à sa forme, rien n'est rogné ; ailleurs, pas de bande grise.
@@ -133,8 +132,9 @@ fun MediaCard(
                         }
                     },
                     onError = { failed = true },
-                    modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen),
+                    modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen, compare.takeIf { active }),
                 )
+                if (compare.showing && active) ComparedPhoto(card)
                 if (failed) {
                     Unavailable(type = card.type, modifier = Modifier.align(Alignment.Center))
                 }

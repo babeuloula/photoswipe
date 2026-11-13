@@ -34,8 +34,8 @@ class SimilarMediaGroupingTest {
         assertEquals(
             mapOf(
                 MediaId(1) to SimilarGroup(1, 3),
-                MediaId(2) to SimilarGroup(2, 3),
-                MediaId(3) to SimilarGroup(3, 3),
+                MediaId(2) to SimilarGroup(2, 3, previousUri = photoAt(1, 0).uri),
+                MediaId(3) to SimilarGroup(3, 3, previousUri = photoAt(2, 25).uri),
             ),
             groups,
         )
@@ -49,7 +49,7 @@ class SimilarMediaGroupingTest {
             )
 
         assertEquals(setOf(MediaId(1), MediaId(2), MediaId(4), MediaId(5)), groups.keys)
-        assertEquals(SimilarGroup(2, 2), groups[MediaId(5)])
+        assertEquals(SimilarGroup(2, 2, previousUri = photoAt(4, 1_000).uri), groups[MediaId(5)])
     }
 
     @Test

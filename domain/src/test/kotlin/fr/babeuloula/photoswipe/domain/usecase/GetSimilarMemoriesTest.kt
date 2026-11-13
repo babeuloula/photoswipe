@@ -36,6 +36,13 @@ class GetSimilarMemoriesTest {
 
             val similar = GetSimilarMemories(SameDayMatcher(), gallery, clock)(today)
 
-            assertEquals(mapOf(MediaId(1) to SimilarGroup(1, 2), MediaId(2) to SimilarGroup(2, 2)), similar)
+            assertEquals(
+                mapOf(MediaId(1) to (1 to 2), MediaId(2) to (2 to 2)),
+                similar.mapValues { (_, it) ->
+                    it.position to
+                        it.size
+                },
+            )
+            assertEquals(null, similar[MediaId(1)]?.previousUri)
         }
 }

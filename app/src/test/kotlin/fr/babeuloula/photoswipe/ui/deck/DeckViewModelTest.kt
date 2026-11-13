@@ -136,7 +136,12 @@ class DeckViewModelTest : DeckViewModelTestBase() {
 
             val cards = (viewModel.uiState.value as DeckUiState.Loaded).cards
 
-            assertEquals(listOf(SimilarGroup(2, 3), SimilarGroup(3, 3), null), cards.map { it.similar })
+            assertEquals(
+                listOf(2 to 3, 3 to 3, null),
+                cards.map { card -> card.similar?.let { it.position to it.size } },
+            )
+            // La photo précédente de la première carte est déjà triée : on peut quand même comparer avec elle.
+            assertEquals(true, cards.first().similar?.previousUri != null)
         }
 
     @Test

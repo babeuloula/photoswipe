@@ -4,6 +4,7 @@ import android.content.Context
 import android.text.format.DateUtils
 import android.text.format.Formatter
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.model.MediaType
 import java.time.Duration
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -65,3 +66,7 @@ private const val BYTES_PER_KILOBYTE = 1000L
  * « 00:32 », « 25:00 », « 1:02:03 ».
  */
 fun durationLabel(duration: Duration): String = DateUtils.formatElapsedTime(duration.seconds)
+
+/** Description TalkBack de l'image d'une carte, selon son type : « Photo du 6 novembre 2023 ». */
+internal fun cardDescription(type: MediaType): Int =
+    if (type == MediaType.VIDEO) R.string.deck_video_description else R.string.deck_photo_description
