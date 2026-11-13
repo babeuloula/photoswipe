@@ -87,6 +87,11 @@ fun ProgressScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             StreakSection(state.streak)
+                            CalendarSection(
+                                calendar = state.calendar,
+                                today = state.today,
+                                onOpenDay = { onEvent(ProgressEvent.OpenDay(it)) },
+                            )
                             StatisticsSection(state.statistics)
                             ActivitySection(state.activity)
                         }

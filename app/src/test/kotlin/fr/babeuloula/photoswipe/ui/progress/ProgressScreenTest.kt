@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.progress
 
 import androidx.activity.compose.setContent
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -13,9 +14,11 @@ import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.ActivityReport
+import fr.babeuloula.photoswipe.domain.model.DayMemories
 import fr.babeuloula.photoswipe.domain.model.MonthlyActivity
 import fr.babeuloula.photoswipe.domain.model.Streak
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
+import fr.babeuloula.photoswipe.domain.model.YearMemories
 import fr.babeuloula.photoswipe.ui.deck.fileSizeLabel
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
@@ -144,6 +147,77 @@ class ProgressScreenTest {
 
         composeRule.onNodeWithText("Triez tous les souvenirs d'aujourd'hui pour en commencer une.").assertIsDisplayed()
         composeRule.onNodeWithText("Aucune pour l'instant").assertIsDisplayed()
+    }
+
+    /** Page avec le calendrier [calendar] ; aujourd'hui, le 15 juillet 2026. */
+    private fun showCalendar(calendar: YearMemories?) {
+        show(
+            ProgressUiState.Loaded(
+                UsageStatistics(LocalDate.of(2026, 3, 2)),
+                EMPTY_ACTIVITY,
+                calendar = calendar,
+                today = LocalDate.of(2026, 7, 15),
+            ),
+        )
+    }
+
+    @Test
+    fun `opens on the month of today and tells each day apart without relying on colour`() {
+        showCalendar(
+            YearMemories(
+                2026,
+                mapOf(
+                    LocalDate.of(2026, 7, 15) to DayMemories(memoryCount = 12, remainingCount = 12),
+                    LocalDate.of(2026, 7, 3) to DayMemories(memoryCount = 2, remainingCount = 0),
+                ),
+            ),
+        )
+
+        composeRule.onNodeWithText("July 2026").performScrollTo().assertIsDisplayed()
+        composeRule
+            .onNodeWithContentDescription(
+                "Today, July 15, 2026, 12 memories to sort",
+            ).performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("July 3, 2026, all sorted").assertExists()
+        composeRule.onNodeWithContentDescription("July 4, 2026, no memories").assertExists().assertHasNoClickAction()
+    }
+
+    @Test
+    fun `opens a day with memories, even ahead of time`() {
+        showCalendar(YearMemories(2026, mapOf(LocalDate.of(2026, 7, 28) to DayMemories(3, 3))))
+
+        composeRule.onNodeWithContentDescription("July 28, 2026, 3 memories to sort").performScrollTo().performClick()
+
+        assertEquals(listOf<ProgressEvent>(ProgressEvent.OpenDay(LocalDate.of(2026, 7, 28))), events)
+    }
+
+    @Test
+    fun `moves from month to month within the year`() {
+        showCalendar(YearMemories(2026, emptyMap()))
+
+        composeRule.onNodeWithContentDescription(text(R.string.progress_calendar_next)).performScrollTo().performClick()
+        composeRule.onNodeWithText("August 2026").assertIsDisplayed()
+        repeat(2) { composeRule.onNodeWithContentDescription(text(R.string.progress_calendar_previous)).performClick() }
+
+        composeRule.onNodeWithText("June 2026").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `shows the calendar in French, weeks starting on Monday`() {
+        showCalendar(YearMemories(2026, mapOf(LocalDate.of(2026, 7, 15) to DayMemories(1, 1))))
+
+        composeRule.onNodeWithText("Juillet 2026").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Aujourd'hui, 15 juillet 2026, 1 média à trier").assertExists()
+    }
+
+    @Test
+    fun `waits for the gallery before showing the calendar`() {
+        showCalendar(null)
+
+        composeRule.onNodeWithText(text(R.string.progress_calendar_section)).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.progress_calendar_hint)).assertDoesNotExist()
     }
 
     @Test

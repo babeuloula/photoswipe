@@ -19,6 +19,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
+import fr.babeuloula.photoswipe.domain.model.DayMemories
 import fr.babeuloula.photoswipe.domain.model.DayOverview
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.OverviewMemory
@@ -29,6 +30,7 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.model.Streak
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
+import fr.babeuloula.photoswipe.domain.model.YearMemories
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.crash.CrashReportDialog
 import fr.babeuloula.photoswipe.ui.dayoverview.DayOverviewScreen
@@ -75,7 +77,9 @@ import java.time.LocalDate
  */
 @HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)
-@Config(application = HiltTestApplication::class)
+// 360 dp de large, celle des téléphones courants : le calendrier de la page « Progression » y tient
+// sept cases de 48 dp (PS-157), ce que les 320 dp par défaut de Robolectric ne permettent pas.
+@Config(application = HiltTestApplication::class, qualifiers = "w360dp-h800dp")
 class AccessibilityTest {
     @get:Rule(order = 0)
     val hiltRule = HiltAndroidRule(this)
@@ -158,6 +162,15 @@ class AccessibilityTest {
                         UsageStatistics(today, deletedCount = 12, freedBytes = 40_000_000),
                         PREVIEW_ACTIVITY,
                         Streak(current = 4, best = 9),
+                        YearMemories(
+                            today.year,
+                            mapOf(
+                                today to DayMemories(memoryCount = 12, remainingCount = 12),
+                                today.minusDays(1) to DayMemories(memoryCount = 3, remainingCount = 2),
+                                today.minusDays(2) to DayMemories(memoryCount = 1, remainingCount = 0),
+                            ),
+                        ),
+                        today,
                     ),
                 onEvent = {},
             )

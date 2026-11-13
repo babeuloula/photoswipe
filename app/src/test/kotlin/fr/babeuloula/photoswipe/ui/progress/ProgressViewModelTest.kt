@@ -2,18 +2,25 @@ package fr.babeuloula.photoswipe.ui.progress
 
 import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeActivityHistory
+import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
+import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeUsageStatisticsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
+import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.model.ActivityReport
+import fr.babeuloula.photoswipe.domain.model.DayMemories
 import fr.babeuloula.photoswipe.domain.model.MonthlyActivity
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.domain.model.Streak
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
+import fr.babeuloula.photoswipe.domain.model.YearMemories
 import fr.babeuloula.photoswipe.domain.port.UsageStatisticsRepository
+import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetActivityReport
 import fr.babeuloula.photoswipe.domain.usecase.GetStreak
 import fr.babeuloula.photoswipe.domain.usecase.GetUsageStatistics
+import fr.babeuloula.photoswipe.domain.usecase.GetYearMemories
 import fr.babeuloula.photoswipe.domain.usecase.UpdateStreak
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -22,6 +29,7 @@ import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime.NOON
 import java.time.YearMonth
 
 class ProgressViewModelTest {
@@ -45,19 +53,36 @@ class ProgressViewModelTest {
     private val activity = FakeActivityHistory()
     private val settings = FakeSettingsRepository()
 
-    private fun progressViewModel() =
-        ProgressViewModel(GetUsageStatistics(repository), GetActivityReport(activity, clock), GetStreak(settings))
+    private val gallery = FakeMediaSource()
 
-    /** Statistiques [statistics] avec l'activité vide des six derniers mois. */
+    private fun progressViewModel() =
+        ProgressViewModel(
+            GetUsageStatistics(repository),
+            GetActivityReport(activity, clock),
+            GetStreak(settings),
+            GetYearMemories(SameDayMatcher(), gallery, FakeReviewRepository(), clock),
+            clock,
+        )
+
+    /** Statistiques [statistics] avec l'activité vide des six derniers mois et un calendrier sans souvenir. */
     private fun loaded(statistics: UsageStatistics) =
-        ProgressUiState.Loaded(statistics, ActivityReport((2..7).map { MonthlyActivity(YearMonth.of(2026, it)) }))
+        ProgressUiState.Loaded(
+            statistics,
+            ActivityReport((2..7).map { MonthlyActivity(YearMonth.of(2026, it)) }),
+            calendar = YearMemories(2026, emptyMap()),
+            today = LocalDate.of(2026, 7, 15),
+        )
+
+    /** Premier état complet : chiffres lus et calendrier prêt, ou erreur. */
+    private suspend fun ProgressViewModel.settled(): ProgressUiState =
+        uiState.first { it is ProgressUiState.Error || (it as? ProgressUiState.Loaded)?.calendar != null }
 
     @Test
     fun `shows the usage statistics`() =
         runTest {
             statistics.recordDeletion(12, 34_000_000)
 
-            val state = progressViewModel().uiState.first { it !is ProgressUiState.Loading }
+            val state = progressViewModel().settled()
 
             assertEquals(loaded(UsageStatistics(since, 12, 34_000_000)), state)
         }
@@ -113,10 +138,7 @@ class ProgressViewModelTest {
             failing = false
             viewModel.onEvent(ProgressEvent.Retry)
 
-            assertEquals(
-                loaded(UsageStatistics(since)),
-                viewModel.uiState.first { it is ProgressUiState.Loaded },
-            )
+            assertEquals(loaded(UsageStatistics(since)), viewModel.settled())
         }
 
     @Test
@@ -129,6 +151,39 @@ class ProgressViewModelTest {
             viewModel.onEvent(ProgressEvent.Resumed)
 
             assertEquals(loaded, viewModel.uiState.value)
+        }
+
+    @Test
+    fun `fills the calendar with the memories of every day of the year`() =
+        runTest {
+            gallery.add(
+                aMediaItem(
+                    id = 1,
+                    takenAt =
+                        LocalDate
+                            .of(2023, 12, 25)
+                            .atTime(NOON)
+                            .atZone(FixedClock.PARIS)
+                            .toInstant(),
+                ),
+            )
+
+            val state = progressViewModel().settled() as ProgressUiState.Loaded
+
+            assertEquals(
+                DayMemories(memoryCount = 1, remainingCount = 1),
+                state.calendar?.get(LocalDate.of(2026, 12, 25)),
+            )
+        }
+
+    @Test
+    fun `opens the overview of a day touched in the calendar`() =
+        runTest {
+            val viewModel = progressViewModel()
+
+            viewModel.onEvent(ProgressEvent.OpenDay(LocalDate.of(2026, 12, 25)))
+
+            assertEquals(ProgressEffect.OpenOverview(LocalDate.of(2026, 12, 25)), viewModel.uiEffects.first())
         }
 
     @Test

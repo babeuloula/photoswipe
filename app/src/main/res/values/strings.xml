@@ -24,6 +24,16 @@
     <string name="home_open_progress">Progress</string>
     <string name="progress_title">Progress</string>
     <string name="progress_error">Your statistics could not be loaded.</string>
+    <string name="progress_calendar_section">Calendar</string>
+    <string name="progress_calendar_hint">Touch a day to see its memories, even ahead of time.</string>
+    <string name="progress_calendar_previous">Previous month</string>
+    <string name="progress_calendar_next">Next month</string>
+    <string name="progress_calendar_to_sort">To sort</string>
+    <string name="progress_calendar_many_to_sort">10 or more</string>
+    <string name="progress_calendar_sorted">All sorted</string>
+    <string name="progress_calendar_day_sorted">%1$s, all sorted</string>
+    <string name="progress_calendar_day_empty">%1$s, no memories</string>
+    <string name="progress_calendar_today">Today, %1$s</string>
     <string name="progress_streak_section">Streak</string>
     <string name="progress_streak_current">Current streak</string>
     <string name="progress_streak_none">Sort all the memories of today to start one.</string>
