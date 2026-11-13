@@ -19,8 +19,14 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
+import fr.babeuloula.photoswipe.domain.model.Achievements
+import fr.babeuloula.photoswipe.domain.model.Badge
+import fr.babeuloula.photoswipe.domain.model.BadgeStatus
 import fr.babeuloula.photoswipe.domain.model.DayMemories
 import fr.babeuloula.photoswipe.domain.model.DayOverview
+import fr.babeuloula.photoswipe.domain.model.FreeSpaceGoal
+import fr.babeuloula.photoswipe.domain.model.GIGABYTE
+import fr.babeuloula.photoswipe.domain.model.GoalProgress
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.OverviewMemory
 import fr.babeuloula.photoswipe.domain.model.OverviewYear
@@ -48,6 +54,7 @@ import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
 import fr.babeuloula.photoswipe.ui.permission.LimitedAccessBanner
 import fr.babeuloula.photoswipe.ui.permission.MediaAccessDeniedScreen
 import fr.babeuloula.photoswipe.ui.permission.PermissionRationaleScreen
+import fr.babeuloula.photoswipe.ui.progress.GoalDialog
 import fr.babeuloula.photoswipe.ui.progress.PREVIEW_ACTIVITY
 import fr.babeuloula.photoswipe.ui.progress.ProgressScreen
 import fr.babeuloula.photoswipe.ui.progress.ProgressUiState
@@ -171,11 +178,16 @@ class AccessibilityTest {
                             ),
                         ),
                         today,
+                        Achievements(
+                            Badge.entries.map { BadgeStatus(it, earned = it == Badge.FIRST_SORT, remaining = 1) },
+                            goal = GoalProgress(FreeSpaceGoal(5 * GIGABYTE, 0), GIGABYTE),
+                        ),
                     ),
                 onEvent = {},
             )
         }
         check { ProgressScreen(state = ProgressUiState.Error, onEvent = {}) }
+        check { GoalDialog(onEvent = {}) }
     }
 
     private fun everyScreen() {

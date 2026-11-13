@@ -13,8 +13,14 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.model.Achievements
 import fr.babeuloula.photoswipe.domain.model.ActivityReport
+import fr.babeuloula.photoswipe.domain.model.Badge
+import fr.babeuloula.photoswipe.domain.model.BadgeStatus
 import fr.babeuloula.photoswipe.domain.model.DayMemories
+import fr.babeuloula.photoswipe.domain.model.FreeSpaceGoal
+import fr.babeuloula.photoswipe.domain.model.GIGABYTE
+import fr.babeuloula.photoswipe.domain.model.GoalProgress
 import fr.babeuloula.photoswipe.domain.model.MonthlyActivity
 import fr.babeuloula.photoswipe.domain.model.Streak
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
@@ -218,6 +224,78 @@ class ProgressScreenTest {
 
         composeRule.onNodeWithText(text(R.string.progress_calendar_section)).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.progress_calendar_hint)).assertDoesNotExist()
+    }
+
+    /** Page avec les badges et l'objectif [achievements]. */
+    private fun showAchievements(achievements: Achievements) {
+        show(
+            ProgressUiState.Loaded(
+                UsageStatistics(LocalDate.of(2026, 3, 2)),
+                EMPTY_ACTIVITY,
+                achievements = achievements,
+            ),
+        )
+    }
+
+    private val someBadges =
+        listOf(
+            BadgeStatus(Badge.FIRST_SORT, earned = true, remaining = 0),
+            BadgeStatus(Badge.STREAK_7, earned = false, remaining = 3),
+            BadgeStatus(Badge.FREED_5_GB, earned = false, remaining = 2 * GIGABYTE),
+            BadgeStatus(Badge.WEEK_CAUGHT_UP, earned = false, remaining = 1),
+        )
+
+    @Test
+    fun `lists the badges with what is left to earn them`() {
+        showAchievements(Achievements(someBadges))
+
+        composeRule.onNodeWithText("Badges, 1 of 4").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.progress_badge_earned)).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("3 more days in a row").performScrollTo().assertIsDisplayed()
+        composeRule
+            .onNodeWithText("${fileSizeLabel(composeRule.activity, 2 * GIGABYTE)} more to free")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.progress_badge_week_left)).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun `offers to set a goal, then shows how far it is`() {
+        showAchievements(Achievements(someBadges))
+        composeRule.onNodeWithText(text(R.string.progress_goal_none)).performScrollTo().performClick()
+        assertEquals(listOf<ProgressEvent>(ProgressEvent.PickGoal), events)
+
+        events.clear()
+        showAchievements(Achievements(someBadges, goal = GoalProgress(FreeSpaceGoal(5 * GIGABYTE, 0), 2 * GIGABYTE)))
+        composeRule
+            .onNodeWithText(
+                "${fileSizeLabel(composeRule.activity, 2 * GIGABYTE)} freed of ${fileSizeLabel(
+                    composeRule.activity,
+                    5 * GIGABYTE,
+                )}",
+            ).performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.progress_goal_remove)).performScrollTo().performClick()
+        assertEquals(listOf<ProgressEvent>(ProgressEvent.RemoveGoal), events)
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `picks a goal among the sizes offered, in French`() {
+        show(
+            ProgressUiState.Loaded(
+                UsageStatistics(LocalDate.of(2026, 3, 2)),
+                EMPTY_ACTIVITY,
+                achievements = Achievements(someBadges),
+                goalDialogOpen = true,
+            ),
+        )
+
+        composeRule.onNodeWithText("Place à libérer").assertIsDisplayed()
+        composeRule.onNodeWithText(fileSizeLabel(composeRule.activity, 10 * GIGABYTE)).performClick()
+        composeRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf<ProgressEvent>(ProgressEvent.GoalPicked(10 * GIGABYTE)), events)
     }
 
     @Test

@@ -120,4 +120,19 @@
         <item quantity="many">%1$s, %2$d de médias à trier</item>
         <item quantity="other">%1$s, %2$d médias à trier</item>
     </plurals>
+    <plurals name="progress_badge_sorted_left">
+        <item quantity="one">Encore %d média à trier</item>
+        <item quantity="many">Encore %d de médias à trier</item>
+        <item quantity="other">Encore %d médias à trier</item>
+    </plurals>
+    <plurals name="progress_badge_streak_left">
+        <item quantity="one">Encore %d jour de suite</item>
+        <item quantity="many">Encore %d de jours de suite</item>
+        <item quantity="other">Encore %d jours de suite</item>
+    </plurals>
+    <plurals name="progress_badge_new">
+        <item quantity="one">Nouveau badge : %s</item>
+        <item quantity="many">Nouveaux badges : %s</item>
+        <item quantity="other">Nouveaux badges : %s</item>
+    </plurals>
 </resources>
