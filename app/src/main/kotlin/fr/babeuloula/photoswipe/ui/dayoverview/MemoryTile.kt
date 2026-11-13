@@ -240,7 +240,12 @@ private fun SimilarBadge(
             modifier = Modifier.size(12.dp),
         )
         Text(
-            text = stringResource(R.string.deck_similar, similar.position, similar.size),
+            text =
+                stringResource(
+                    if (similar.duplicate) R.string.deck_duplicate else R.string.deck_similar,
+                    similar.position,
+                    similar.size,
+                ),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primaryFixed,
         )
@@ -289,7 +294,13 @@ private fun memoryDescription(memory: OverviewMemory): String {
             },
         )
     val similar =
-        memory.similar?.let { stringResource(R.string.day_overview_similar, it.position, it.size) }
+        memory.similar?.let {
+            stringResource(
+                if (it.duplicate) R.string.day_overview_duplicate else R.string.day_overview_similar,
+                it.position,
+                it.size,
+            )
+        }
     val parts =
         listOfNotNull(
             type,

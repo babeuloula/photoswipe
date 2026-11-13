@@ -14,10 +14,14 @@ enum class QualityHint {
  *
  * @property sharpness variance du laplacien : faible pour une image floue.
  * @property brightness luminance moyenne, de 0 (noir) à 255 (blanc).
+ * @property fingerprint empreinte perceptuelle de 64 bits (PS-165) : deux copies d'une même image,
+ * même réencodées ou redimensionnées, ont des empreintes presque identiques ; `null` pour une
+ * mesure prise avant qu'elle existe.
  */
 data class PhotoMeasure(
     val sharpness: Double,
     val brightness: Double,
+    val fingerprint: Long? = null,
 )
 
 /**

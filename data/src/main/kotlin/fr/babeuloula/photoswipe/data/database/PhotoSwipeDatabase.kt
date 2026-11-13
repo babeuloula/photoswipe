@@ -16,7 +16,7 @@ import androidx.room.RoomDatabase
         DailyActivityEntity::class,
         PhotoMeasureEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
     autoMigrations = [
         // Version 2 (PS-57) : ajout du journal des décisions pour l'undo (ADR 0019).
@@ -28,6 +28,8 @@ import androidx.room.RoomDatabase
         AutoMigration(from = 4, to = 5),
         // Version 6 (PS-164) : mesures des photos peut-être ratées (ADR 0039).
         AutoMigration(from = 5, to = 6),
+        // Version 7 (PS-165) : empreinte des photos, pour repérer les doublons.
+        AutoMigration(from = 6, to = 7),
     ],
 )
 abstract class PhotoSwipeDatabase : RoomDatabase() {

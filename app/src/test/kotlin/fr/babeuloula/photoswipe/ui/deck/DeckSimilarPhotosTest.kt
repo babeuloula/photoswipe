@@ -74,6 +74,13 @@ class DeckSimilarPhotosTest {
     }
 
     @Test
+    fun `says the photo is a duplicate of another one of the day`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(similar = SimilarGroup(2, 2, duplicate = true)))))
+
+        composeRule.onNodeWithContentDescription("Duplicate: photo 2 of 2 of the same image").assertIsDisplayed()
+    }
+
+    @Test
     fun `shows no such chip for a photo taken alone`() {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
 

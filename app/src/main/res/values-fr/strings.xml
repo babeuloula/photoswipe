@@ -296,6 +296,8 @@
     <!-- Photos prises à la suite (PS-140). -->
     <string name="deck_similar">%1$d/%2$d</string>
     <string name="deck_similar_description">Photo %1$d sur %2$d prises à la suite</string>
+    <string name="deck_duplicate">Doublon %1$d/%2$d</string>
+    <string name="deck_duplicate_description">Doublon : photo %1$d sur %2$d de la même image</string>
     <string name="deck_quality_blurry">Floue ?</string>
     <string name="deck_quality_dark">Très sombre ?</string>
     <string name="deck_quality_blurry_description">Cette photo est peut-être floue</string>
@@ -304,6 +306,7 @@
     <string name="deck_compare_action">Comparer avec la photo précédente</string>
     <string name="deck_compare_back">Revenir à cette photo</string>
     <string name="day_overview_similar">%1$d sur %2$d prises à la suite</string>
+    <string name="day_overview_duplicate">doublon, %1$d sur %2$d de la même image</string>
     <string name="day_overview_keep_selected">Garder</string>
     <string name="day_overview_mark_selected">Supprimer</string>
     <string name="day_overview_select">Sélectionner</string>

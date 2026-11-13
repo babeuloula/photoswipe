@@ -307,6 +307,8 @@
     <!-- Photos prises à la suite (PS-140). -->
     <string name="deck_similar">%1$d/%2$d</string>
     <string name="deck_similar_description">Photo %1$d of %2$d taken one after another</string>
+    <string name="deck_duplicate">Duplicate %1$d/%2$d</string>
+    <string name="deck_duplicate_description">Duplicate: photo %1$d of %2$d of the same image</string>
     <string name="deck_quality_blurry">Blurry?</string>
     <string name="deck_quality_dark">Very dark?</string>
     <string name="deck_quality_blurry_description">This photo may be blurry</string>
@@ -315,6 +317,7 @@
     <string name="deck_compare_action">Compare with the previous photo</string>
     <string name="deck_compare_back">Back to this photo</string>
     <string name="day_overview_similar">%1$d of %2$d taken one after another</string>
+    <string name="day_overview_duplicate">duplicate, %1$d of %2$d of the same image</string>
     <string name="day_overview_keep_selected">Keep</string>
     <string name="day_overview_mark_selected">Delete</string>
     <string name="day_overview_select">Select</string>
