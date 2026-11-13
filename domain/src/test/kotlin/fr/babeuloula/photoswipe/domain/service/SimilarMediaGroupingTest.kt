@@ -53,6 +53,32 @@ class SimilarMediaGroupingTest {
     }
 
     @Test
+    fun `joins two copies of the same image taken far apart and calls them duplicates`() {
+        val groups =
+            grouping.groups(
+                listOf(photoAt(1, 0), photoAt(2, 3_600), photoAt(3, 7_200)),
+                fingerprints = mapOf(MediaId(1) to 0b1111L, MediaId(3) to 0b1110L, MediaId(2) to -1L),
+            )
+
+        assertEquals(setOf(MediaId(1), MediaId(3)), groups.keys)
+        assertEquals(SimilarGroup(1, 2, duplicate = true), groups[MediaId(1)])
+        assertEquals(SimilarGroup(2, 2, previousUri = photoAt(1, 0).uri, duplicate = true), groups[MediaId(3)])
+    }
+
+    @Test
+    fun `adds a duplicate to a burst, only the copies being called duplicates`() {
+        val groups =
+            grouping.groups(
+                listOf(photoAt(1, 0), photoAt(2, 10), photoAt(3, 5_000)),
+                fingerprints = mapOf(MediaId(1) to 0L, MediaId(2) to -1L, MediaId(3) to 1L),
+            )
+        val ids = listOf(MediaId(1), MediaId(2), MediaId(3))
+
+        assertEquals(listOf(1, 2, 3), ids.map { groups.getValue(it).position })
+        assertEquals(listOf(true, false, true), ids.map { groups.getValue(it).duplicate })
+    }
+
+    @Test
     fun `leaves videos out of the groups`() {
         val groups = grouping.groups(listOf(photoAt(1, 0), photoAt(2, 5, MediaType.VIDEO), photoAt(3, 60)))
 

@@ -3,7 +3,6 @@ package fr.babeuloula.photoswipe.domain.service
 import fr.babeuloula.photoswipe.domain.fixtures.aCheckerboard
 import fr.babeuloula.photoswipe.domain.fixtures.aFlatImage
 import fr.babeuloula.photoswipe.domain.model.GrayImage
-import fr.babeuloula.photoswipe.domain.model.PhotoMeasure
 import fr.babeuloula.photoswipe.domain.model.QualityHint
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -16,7 +15,10 @@ class PhotoQualityRulesTest {
 
     @Test
     fun `measures no detail and the brightness of a flat image`() {
-        assertEquals(PhotoMeasure(sharpness = 0.0, brightness = 128.0), rules.measure(aFlatImage(128)))
+        val measure = rules.measure(aFlatImage(128))
+
+        assertEquals(0.0, measure.sharpness)
+        assertEquals(128.0, measure.brightness)
     }
 
     @Test

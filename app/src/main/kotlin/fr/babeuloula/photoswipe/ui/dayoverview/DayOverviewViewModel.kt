@@ -344,7 +344,18 @@ class DayOverviewViewModel
                 val loaded = state.value as? DayOverviewUiState.Loaded ?: return@launch
                 val media = loaded.overview.years.flatMap { year -> year.memories.map { it.media } }
                 val quality = runCatching { getQualityHints(media) }.getOrDefault(emptyMap())
-                state.update { if (it is DayOverviewUiState.Loaded) it.copy(quality = quality) else it }
+                // Les empreintes viennent d'être mesurées : les doublons rejoignent leurs groupes (PS-165).
+                val overview = runCatching { getDayOverview(day) }.getOrDefault(loaded.overview)
+                state.update {
+                    if (it is DayOverviewUiState.Loaded) {
+                        it.copy(
+                            overview = overview,
+                            quality = quality,
+                        )
+                    } else {
+                        it
+                    }
+                }
             }
         }
     }

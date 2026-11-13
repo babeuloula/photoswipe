@@ -1,0 +1,318 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 7,
+    "identityHash": "7bc617e889e5b6e69454b11a5b2c931d",
+    "entities": [
+      {
+        "tableName": "review_entry",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`media_id` INTEGER NOT NULL, `review_year` INTEGER NOT NULL, `decision` TEXT NOT NULL, `favorite_pending` INTEGER NOT NULL, `size_bytes` INTEGER NOT NULL, `decided_at` INTEGER NOT NULL, `reopened` INTEGER NOT NULL, PRIMARY KEY(`media_id`, `review_year`))",
+        "fields": [
+          {
+            "fieldPath": "mediaId",
+            "columnName": "media_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reviewYear",
+            "columnName": "review_year",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "decision",
+            "columnName": "decision",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "favoritePending",
+            "columnName": "favorite_pending",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sizeBytes",
+            "columnName": "size_bytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "decidedAt",
+            "columnName": "decided_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reopened",
+            "columnName": "reopened",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "media_id",
+            "review_year"
+          ]
+        }
+      },
+      {
+        "tableName": "decision_journal",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `day` INTEGER NOT NULL, `made_media_id` INTEGER NOT NULL, `made_review_year` INTEGER NOT NULL, `made_decision` TEXT NOT NULL, `made_favorite_pending` INTEGER NOT NULL, `made_size_bytes` INTEGER NOT NULL, `made_decided_at` INTEGER NOT NULL, `made_reopened` INTEGER NOT NULL, `previous_media_id` INTEGER, `previous_review_year` INTEGER, `previous_decision` TEXT, `previous_favorite_pending` INTEGER, `previous_size_bytes` INTEGER, `previous_decided_at` INTEGER, `previous_reopened` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "day",
+            "columnName": "day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "made.mediaId",
+            "columnName": "made_media_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "made.reviewYear",
+            "columnName": "made_review_year",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "made.decision",
+            "columnName": "made_decision",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "made.favoritePending",
+            "columnName": "made_favorite_pending",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "made.sizeBytes",
+            "columnName": "made_size_bytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "made.decidedAt",
+            "columnName": "made_decided_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "made.reopened",
+            "columnName": "made_reopened",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "previous.mediaId",
+            "columnName": "previous_media_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "previous.reviewYear",
+            "columnName": "previous_review_year",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "previous.decision",
+            "columnName": "previous_decision",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "previous.favoritePending",
+            "columnName": "previous_favorite_pending",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "previous.sizeBytes",
+            "columnName": "previous_size_bytes",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "previous.decidedAt",
+            "columnName": "previous_decided_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "previous.reopened",
+            "columnName": "previous_reopened",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_decision_journal_day",
+            "unique": false,
+            "columnNames": [
+              "day"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_decision_journal_day` ON `${TABLE_NAME}` (`day`)"
+          },
+          {
+            "name": "index_decision_journal_made_media_id",
+            "unique": false,
+            "columnNames": [
+              "made_media_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_decision_journal_made_media_id` ON `${TABLE_NAME}` (`made_media_id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "confirmed_deletion",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `media_id` INTEGER NOT NULL, `day` INTEGER, `size_bytes` INTEGER NOT NULL, `confirmed_at` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mediaId",
+            "columnName": "media_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "day",
+            "columnName": "day",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sizeBytes",
+            "columnName": "size_bytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "confirmedAt",
+            "columnName": "confirmed_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_confirmed_deletion_confirmed_at",
+            "unique": false,
+            "columnNames": [
+              "confirmed_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_confirmed_deletion_confirmed_at` ON `${TABLE_NAME}` (`confirmed_at`)"
+          }
+        ]
+      },
+      {
+        "tableName": "daily_activity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`day` INTEGER NOT NULL, `kept_count` INTEGER NOT NULL, `favorite_count` INTEGER NOT NULL, `trashed_count` INTEGER NOT NULL, `freed_bytes` INTEGER NOT NULL, PRIMARY KEY(`day`))",
+        "fields": [
+          {
+            "fieldPath": "day",
+            "columnName": "day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "keptCount",
+            "columnName": "kept_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "favoriteCount",
+            "columnName": "favorite_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "trashedCount",
+            "columnName": "trashed_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "freedBytes",
+            "columnName": "freed_bytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "day"
+          ]
+        }
+      },
+      {
+        "tableName": "photo_measure",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`media_id` INTEGER NOT NULL, `sharpness` REAL NOT NULL, `brightness` REAL NOT NULL, `fingerprint` INTEGER, PRIMARY KEY(`media_id`))",
+        "fields": [
+          {
+            "fieldPath": "mediaId",
+            "columnName": "media_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sharpness",
+            "columnName": "sharpness",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brightness",
+            "columnName": "brightness",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fingerprint",
+            "columnName": "fingerprint",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "media_id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7bc617e889e5b6e69454b11a5b2c931d')"
+    ]
+  }
+}

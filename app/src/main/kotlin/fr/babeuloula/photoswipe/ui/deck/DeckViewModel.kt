@@ -501,7 +501,9 @@ class DeckViewModel
                         render()
                         // Après l'affichage : une photo jamais mesurée lit sa vignette (PS-164).
                         quality = runCatching { loading.getQualityHints(loaded.cards) }.getOrDefault(emptyMap())
-                        if (quality.isNotEmpty() && state.value is DeckUiState.Loaded) render()
+                        // Les empreintes viennent d'être mesurées : les doublons rejoignent leurs groupes (PS-165).
+                        day?.let { similar = runCatching { loading.getSimilarMemories(it) }.getOrDefault(similar) }
+                        if (state.value is DeckUiState.Loaded) render()
                     },
                     onFailure = { if (showLoading) state.value = DeckUiState.Error },
                 )

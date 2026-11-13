@@ -19,12 +19,12 @@ class RoomPhotoMeasureCache
                 .map { it.value }
                 .chunked(ReviewEntryDao.MAX_IDS_PER_QUERY)
                 .flatMap { dao.measuresOf(it) }
-                .associate { MediaId(it.mediaId) to PhotoMeasure(it.sharpness, it.brightness) }
+                .associate { MediaId(it.mediaId) to PhotoMeasure(it.sharpness, it.brightness, it.fingerprint) }
 
         override suspend fun save(measures: Map<MediaId, PhotoMeasure>) {
             dao.save(
                 measures.map { (id, measure) ->
-                    PhotoMeasureEntity(id.value, measure.sharpness, measure.brightness)
+                    PhotoMeasureEntity(id.value, measure.sharpness, measure.brightness, measure.fingerprint)
                 },
             )
         }

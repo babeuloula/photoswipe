@@ -27,6 +27,8 @@ import java.time.Clock
 @Module
 @InstallIn(SingletonComponent::class)
 object DayOverviewModule {
+    // Un paramètre par dépendance du use case, que Hilt fournit : rien à regrouper ici.
+    @Suppress("LongParameterList")
     @Provides
     fun provideGetDayOverview(
         sameDayMatcher: SameDayMatcher,
@@ -34,7 +36,9 @@ object DayOverviewModule {
         reviewRepository: ReviewRepository,
         deckOrdering: DeckOrdering,
         clock: Clock,
-    ): GetDayOverview = GetDayOverview(sameDayMatcher, mediaSource, reviewRepository, deckOrdering, clock)
+        measures: PhotoMeasureCache,
+    ): GetDayOverview =
+        GetDayOverview(sameDayMatcher, mediaSource, reviewRepository, deckOrdering, clock, measures = measures)
 
     @Provides
     fun provideSortInBatch(
@@ -48,7 +52,8 @@ object DayOverviewModule {
         sameDayMatcher: SameDayMatcher,
         mediaSource: MediaSource,
         clock: Clock,
-    ): GetSimilarMemories = GetSimilarMemories(sameDayMatcher, mediaSource, clock)
+        measures: PhotoMeasureCache,
+    ): GetSimilarMemories = GetSimilarMemories(sameDayMatcher, mediaSource, clock, measures = measures)
 
     @Provides
     fun provideGetQualityHints(

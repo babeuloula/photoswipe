@@ -12,6 +12,7 @@ import fr.babeuloula.photoswipe.domain.model.PhotoMeasure
 import fr.babeuloula.photoswipe.domain.model.QualityHint
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 
 class GetQualityHintsTest {
@@ -56,7 +57,7 @@ class GetQualityHintsTest {
             val hints =
                 GetQualityHints(
                     analyzer,
-                    FakePhotoMeasureCache(mapOf(MediaId(3) to PhotoMeasure(1.0, 200.0))),
+                    FakePhotoMeasureCache(mapOf(MediaId(3) to PhotoMeasure(1.0, 200.0, 0L))),
                     settings,
                 )(
                     listOf(aMediaItem(id = 3)),
@@ -76,11 +77,23 @@ class GetQualityHintsTest {
         }
 
     @Test
-    fun `flags nothing once the detection is turned off`() =
+    fun `flags nothing once the detection is turned off, but still measures`() =
         runTest {
             settings.saveQualityHints(false)
 
             assertEquals(emptyMap<MediaId, QualityHint>(), getQualityHints(photos))
-            assertEquals(emptyList<MediaId>(), analyzer.read)
+            // Les photos restent mesurées : leur empreinte sert aux doublons (PS-165).
+            assertEquals(3, cache.measures.size)
+        }
+
+    @Test
+    fun `measures again a photo kept from before the fingerprint, to get one`() =
+        runTest {
+            val old = FakePhotoMeasureCache(mapOf(MediaId(3) to PhotoMeasure(500.0, 120.0)))
+
+            GetQualityHints(analyzer, old, settings)(listOf(aMediaItem(id = 3)))
+
+            assertEquals(listOf(MediaId(3)), analyzer.read)
+            assertNotNull(old.measures.getValue(MediaId(3)).fingerprint)
         }
 }

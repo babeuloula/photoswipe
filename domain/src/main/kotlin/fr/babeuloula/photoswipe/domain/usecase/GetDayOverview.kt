@@ -5,6 +5,7 @@ import fr.babeuloula.photoswipe.domain.model.OverviewMemory
 import fr.babeuloula.photoswipe.domain.model.OverviewYear
 import fr.babeuloula.photoswipe.domain.model.isSorted
 import fr.babeuloula.photoswipe.domain.port.MediaSource
+import fr.babeuloula.photoswipe.domain.port.PhotoMeasureCache
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.service.DeckOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
@@ -29,6 +30,7 @@ class GetDayOverview(
     private val deckOrdering: DeckOrdering,
     private val clock: Clock,
     private val grouping: SimilarMediaGrouping = SimilarMediaGrouping(),
+    private val measures: PhotoMeasureCache? = null,
 ) {
     /** Souvenirs du jour [day], rangés par année, avec leur décision. */
     suspend operator fun invoke(day: LocalDate): DayOverview {
@@ -40,7 +42,14 @@ class GetDayOverview(
             reviewRepository
                 .entriesFor(day.year, memories.mapTo(HashSet()) { it.id })
                 .associateBy { it.mediaId }
-        val similar = grouping.groups(memories)
+        // Les empreintes déjà mesurées rapprochent aussi les copies d'une même image (PS-165).
+        val fingerprints =
+            measures
+                ?.measures(memories.mapTo(HashSet()) { it.id })
+                ?.mapNotNull { (id, measure) -> measure.fingerprint?.let { id to it } }
+                ?.toMap()
+                .orEmpty()
+        val similar = grouping.groups(memories, fingerprints)
         val years =
             deckOrdering
                 .order(memories, zone)

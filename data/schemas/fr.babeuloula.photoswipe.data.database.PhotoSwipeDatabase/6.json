@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 6,
-    "identityHash": "7138f7ab2376294d2c6a365208f9ec8b",
+    "identityHash": "7bc617e889e5b6e69454b11a5b2c931d",
     "entities": [
       {
         "tableName": "review_entry",
@@ -276,7 +276,7 @@
       },
       {
         "tableName": "photo_measure",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`media_id` INTEGER NOT NULL, `sharpness` REAL NOT NULL, `brightness` REAL NOT NULL, PRIMARY KEY(`media_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`media_id` INTEGER NOT NULL, `sharpness` REAL NOT NULL, `brightness` REAL NOT NULL, `fingerprint` INTEGER, PRIMARY KEY(`media_id`))",
         "fields": [
           {
             "fieldPath": "mediaId",
@@ -295,6 +295,11 @@
             "columnName": "brightness",
             "affinity": "REAL",
             "notNull": true
+          },
+          {
+            "fieldPath": "fingerprint",
+            "columnName": "fingerprint",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -307,7 +312,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7138f7ab2376294d2c6a365208f9ec8b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7bc617e889e5b6e69454b11a5b2c931d')"
     ]
   }
 }

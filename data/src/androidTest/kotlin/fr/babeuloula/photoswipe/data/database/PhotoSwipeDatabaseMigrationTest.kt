@@ -171,6 +171,21 @@ class PhotoSwipeDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun `migrates version 6 to 7 with no fingerprint on the measures already taken`() {
+        helper.createDatabase(DATABASE, 6).use { database ->
+            database.execSQL("INSERT INTO photo_measure (media_id, sharpness, brightness) VALUES (42, 120.0, 90.0)")
+        }
+
+        helper.runMigrationsAndValidate(DATABASE, 7, true).use { database ->
+            database.query("SELECT sharpness, fingerprint FROM photo_measure").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(120.0, cursor.getDouble(0), 0.0)
+                assertTrue(cursor.isNull(1))
+            }
+        }
+    }
+
     private companion object {
         const val DATABASE = "migration-test.db"
     }

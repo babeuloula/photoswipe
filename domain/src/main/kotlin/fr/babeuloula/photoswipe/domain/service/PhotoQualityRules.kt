@@ -18,13 +18,14 @@ class PhotoQualityRules(
     private val blurThreshold: Double = DEFAULT_BLUR_THRESHOLD,
     private val darkThreshold: Double = DEFAULT_DARK_THRESHOLD,
 ) {
-    /** Mesure [image] : variance du laplacien à 4 voisins et luminance moyenne. */
+    /** Mesure [image] : variance du laplacien à 4 voisins, luminance moyenne et empreinte (PS-165). */
     fun measure(image: GrayImage): PhotoMeasure {
         val w = image.width
         val h = image.height
         val luma = image.luma
         val brightness = luma.average()
-        if (w < MIN_SIZE || h < MIN_SIZE) return PhotoMeasure(sharpness = 0.0, brightness = brightness)
+        val fingerprint = PhotoFingerprint.of(image)
+        if (w < MIN_SIZE || h < MIN_SIZE) return PhotoMeasure(0.0, brightness, fingerprint)
         var sum = 0.0
         var sumOfSquares = 0.0
         var count = 0
@@ -40,7 +41,7 @@ class PhotoQualityRules(
             }
         }
         val mean = sum / count
-        return PhotoMeasure(sharpness = sumOfSquares / count - mean * mean, brightness = brightness)
+        return PhotoMeasure(sumOfSquares / count - mean * mean, brightness, fingerprint)
     }
 
     /** Indice de [measure] : très sombre d'abord (le flou s'y mesure mal), puis floue ; `null` sinon. */

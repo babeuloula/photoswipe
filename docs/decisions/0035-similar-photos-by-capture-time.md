@@ -17,3 +17,11 @@ Retour d'utilisateur : avant de décider d'une photo, il veut savoir s'il en a d
 - Deux photos semblables prises à plus de 30 secondes d'écart ne sont pas reliées ; deux photos différentes prises coup sur coup le sont. C'est une aide, pas une vérité : la vue d'ensemble permet de vérifier.
 - L'écart se règle dans `SimilarMediaGrouping` (paramètre `maxGap`). Une comparaison du contenu pourra venir plus tard, par une nouvelle ADR, sans changer l'affichage.
 - Une erreur de calcul n'empêche pas d'ouvrir la pile (repli sur aucune photo proche).
+
+## Complément PS-165 : doublons
+- Chaque photo mesurée par PS-164 (ADR 0039) reçoit aussi une **empreinte perceptuelle** de 64 bits (`PhotoFingerprint`, « dHash » sur une grille de 9 × 8 de sa vignette en niveaux de gris), gardée avec sa mesure (colonne `fingerprint` de `photo_measure`, base en version 7, migration automatique 6 → 7).
+- Deux photos du même jour dont les empreintes diffèrent d'au plus 4 bits sont des copies de la même image (réencodée, redimensionnée) : elles rejoignent le même groupe que les photos prises à la suite, même éloignées dans le temps, et sont dites « Doublon » (`SimilarGroup.duplicate`).
+- Une copie exacte et une copie réencodée ne sont pas distinguées : les deux sont « Doublon ».
+- Portée : les souvenirs d'un même jour, toutes années confondues. Une copie qui a perdu sa date de prise de vue tombe un autre jour et n'est pas vue.
+- Les empreintes n'existent qu'une fois les photos mesurées : la première ouverture d'un jour les calcule, puis les groupes sont relus.
+- Jamais de marquage automatique.

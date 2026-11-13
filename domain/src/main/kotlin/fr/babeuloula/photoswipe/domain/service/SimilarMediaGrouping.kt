@@ -25,25 +25,73 @@ class SimilarMediaGrouping(
     /**
      * Place de chaque photo de [media] qui appartient à un groupe d'au moins deux photos proches,
      * avec la photo prise juste avant elle dans le groupe.
+     *
+     * Avec les empreintes [fingerprints] (PS-165), deux copies d'une même image rejoignent le même
+     * groupe même prises à des moments éloignés (copie reçue par une messagerie), et chacune est
+     * dite doublon.
      */
-    fun groups(media: List<MediaItem>): Map<MediaId, SimilarGroup> {
+    fun groups(
+        media: List<MediaItem>,
+        fingerprints: Map<MediaId, Long> = emptyMap(),
+    ): Map<MediaId, SimilarGroup> {
         val photos = media.filter { it.type == MediaType.IMAGE }.distinctBy { it.id }.sortedBy { it.takenAt }
-        val runs = mutableListOf<MutableList<MediaItem>>()
-        photos.forEach { photo ->
-            val last = runs.lastOrNull()?.last()
-            if (last != null && Duration.between(last.takenAt, photo.takenAt) <= maxGap) {
-                runs.last() += photo
-            } else {
-                runs += mutableListOf(photo)
+        val links = Links(photos.size)
+        photos.zipWithNext().forEachIndexed { index, (previous, next) ->
+            if (Duration.between(previous.takenAt, next.takenAt) <= maxGap) links.join(index, index + 1)
+        }
+        val duplicates = HashSet<Int>()
+        for (i in photos.indices) {
+            val a = fingerprints[photos[i].id] ?: continue
+            for (j in i + 1 until photos.size) {
+                val b = fingerprints[photos[j].id] ?: continue
+                if (PhotoFingerprint.sameImage(a, b)) {
+                    links.join(i, j)
+                    duplicates += i
+                    duplicates += j
+                }
             }
         }
-        return runs
+        return photos.indices
+            .groupBy { links.root(it) }
+            .values
             .filter { it.size >= 2 }
-            .flatMap { run ->
-                run.mapIndexed { index, photo ->
-                    photo.id to SimilarGroup(index + 1, run.size, previousUri = run.getOrNull(index - 1)?.uri)
+            .flatMap { group ->
+                group.mapIndexed { position, index ->
+                    photos[index].id to
+                        SimilarGroup(
+                            position = position + 1,
+                            size = group.size,
+                            previousUri = group.getOrNull(position - 1)?.let { photos[it].uri },
+                            duplicate = index in duplicates,
+                        )
                 }
             }.toMap()
+    }
+
+    /** Ensembles de photos reliées (union-find). */
+    private class Links(
+        size: Int,
+    ) {
+        private val parent = IntArray(size) { it }
+
+        fun root(index: Int): Int {
+            var current = index
+            while (parent[current] != current) {
+                parent[current] = parent[parent[current]]
+                current = parent[current]
+            }
+            return current
+        }
+
+        fun join(
+            a: Int,
+            b: Int,
+        ) {
+            val rootA = root(a)
+            val rootB = root(b)
+            // La racine reste la photo la plus ancienne : les groupes gardent l'ordre de prise de vue.
+            if (rootA != rootB) parent[maxOf(rootA, rootB)] = minOf(rootA, rootB)
+        }
     }
 
     companion object {
