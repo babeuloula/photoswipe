@@ -31,6 +31,7 @@ import javax.inject.Inject
  * @property animationsEnabled vrai si les animations de l'application sont actives (PS-146).
  * @property pureBlack vrai si le thème sombre est en noir pur (PS-176).
  * @property celebrationEnabled vrai si la fin de la pile d'un jour est célébrée par des confettis (PS-174).
+ * @property shakeToUndo vrai si secouer le téléphone sur la pile annule la dernière décision (PS-175).
  * @property whatsNewOpen vrai pendant la relecture des nouveautés de toutes les versions (PS-173).
  * @property catchUpWindow durée de la fenêtre de rattrapage (PS-169), `null` tant qu'elle n'est pas lue.
  * @property qualityHints vrai si la pile signale les photos peut-être floues ou très sombres (PS-164).
@@ -42,6 +43,7 @@ data class SettingsUiState(
     val animationsEnabled: Boolean = true,
     val pureBlack: Boolean = false,
     val celebrationEnabled: Boolean = false,
+    val shakeToUndo: Boolean = false,
     val whatsNewOpen: Boolean = false,
     val catchUpWindow: CatchUpWindow? = null,
     val qualityHints: Boolean = true,
@@ -103,6 +105,15 @@ sealed interface SettingsEvent {
      */
     data class CatchUpWindowPicked(
         val window: CatchUpWindow,
+    ) : SettingsEvent
+
+    /**
+     * Interrupteur « Secouer pour annuler » (PS-175), désactivé par défaut.
+     *
+     * @property enabled vrai pour annuler la dernière décision en secouant le téléphone sur la pile.
+     */
+    data class ShakeToUndoToggled(
+        val enabled: Boolean,
     ) : SettingsEvent
 
     /** Action sur le thème de l'application. */
@@ -331,6 +342,12 @@ class SettingsViewModel
             }
             viewModelScope.launch {
                 settingsRepository
+                    .observeShakeToUndo()
+                    .catch { emit(false) }
+                    .collect { enabled -> state.update { it.copy(shakeToUndo = enabled) } }
+            }
+            viewModelScope.launch {
+                settingsRepository
                     .observeCatchUpWindow()
                     .catch { emit(CatchUpWindow.DEFAULT) }
                     .collect { window -> state.update { it.copy(catchUpWindow = window) } }
@@ -375,6 +392,10 @@ class SettingsViewModel
 
                 is SettingsEvent.CatchUpWindowPicked -> {
                     viewModelScope.launch { runCatching { settingsRepository.saveCatchUpWindow(event.window) } }
+                }
+
+                is SettingsEvent.ShakeToUndoToggled -> {
+                    viewModelScope.launch { runCatching { settingsRepository.saveShakeToUndo(event.enabled) } }
                 }
 
                 is SettingsEvent.OpensScreen -> {

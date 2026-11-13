@@ -91,6 +91,13 @@ class DataStoreSettingsRepository
             dataStore.edit { it[CELEBRATION_ENABLED] = enabled }
         }
 
+        override fun observeShakeToUndo(): Flow<Boolean> =
+            preferences().map { it[SHAKE_TO_UNDO] ?: false }.distinctUntilChanged()
+
+        override suspend fun saveShakeToUndo(enabled: Boolean) {
+            dataStore.edit { it[SHAKE_TO_UNDO] = enabled }
+        }
+
         override fun observeCatchUpWindow(): Flow<CatchUpWindow> =
             preferences()
                 .map { preferences ->
@@ -178,6 +185,7 @@ class DataStoreSettingsRepository
             val PURE_BLACK = booleanPreferencesKey("pure_black")
             val QUALITY_HINTS = booleanPreferencesKey("quality_hints")
             val CELEBRATION_ENABLED = booleanPreferencesKey("celebration_enabled")
+            val SHAKE_TO_UNDO = booleanPreferencesKey("shake_to_undo")
             val CATCH_UP_WINDOW = stringPreferencesKey("catch_up_window")
             val MANAGE_MEDIA_TIP = stringPreferencesKey("manage_media_tip")
             val TUTORIAL_VERSION_SEEN = intPreferencesKey("tutorial_version_seen")

@@ -51,11 +51,16 @@ class SettingsScreenTest {
         state: SettingsUiState,
         // Sans l'autorisation par défaut : l'heure du rappel garde son texte « Vers 18:00 ».
         exactAlarmAllowed: Boolean = false,
+        shakeAvailable: Boolean = false,
     ) {
         composeRule.activity.setContent {
             PhotoSwipeTheme {
                 SettingsScreen(
-                    environment = SettingsEnvironment(exactAlarmAllowed = exactAlarmAllowed),
+                    environment =
+                        SettingsEnvironment(
+                            exactAlarmAllowed = exactAlarmAllowed,
+                            shakeAvailable = shakeAvailable,
+                        ),
                     state = state,
                     onEvent = { events += it },
                 )
@@ -331,6 +336,49 @@ class SettingsScreenTest {
             .onNodeWithText(text(R.string.settings_celebration))
             .performScrollTo()
             .assertIsOn()
+    }
+
+    @Test
+    fun `turns shake to undo on from the whole row, announced as a switch, on a phone with an accelerometer`() {
+        show(
+            SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.SYSTEM),
+            shakeAvailable = true,
+        )
+
+        composeRule
+            .onNodeWithText(text(R.string.settings_shake_to_undo_summary))
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule
+            .onNodeWithText(text(R.string.settings_shake_to_undo))
+            .assertIsOff()
+            .performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.ShakeToUndoToggled(true)), events)
+    }
+
+    @Test
+    fun `shows shake to undo turned on`() {
+        show(
+            SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.SYSTEM, shakeToUndo = true),
+            shakeAvailable = true,
+        )
+
+        composeRule
+            .onNodeWithText(text(R.string.settings_shake_to_undo))
+            .performScrollTo()
+            .assertIsOn()
+    }
+
+    @Test
+    fun `does not offer shake to undo on a phone without an accelerometer`() {
+        show(
+            SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.SYSTEM),
+            shakeAvailable = false,
+        )
+
+        composeRule.onNodeWithText(text(R.string.settings_shake_to_undo)).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.settings_gestures_section)).assertDoesNotExist()
     }
 
     @Test

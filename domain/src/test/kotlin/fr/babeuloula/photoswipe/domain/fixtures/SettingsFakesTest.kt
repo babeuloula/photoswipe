@@ -80,6 +80,18 @@ class SettingsFakesTest {
         }
 
     @Test
+    fun `does not undo on a shake until it is turned on`() =
+        runTest {
+            val repository = FakeSettingsRepository()
+            assertEquals(false, repository.observeShakeToUndo().first())
+
+            repository.saveShakeToUndo(true)
+
+            assertEquals(true, repository.observeShakeToUndo().first())
+            assertEquals(true, repository.shakeToUndo)
+        }
+
+    @Test
     fun `gives a one week catch-up window until another duration is saved`() =
         runTest {
             val repository = FakeSettingsRepository()

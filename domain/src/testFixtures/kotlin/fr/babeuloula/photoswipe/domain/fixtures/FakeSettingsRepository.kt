@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * @param whatsNewVersionSeen dernière version des nouveautés vue au départ, `null` pour aucune.
  * @param catchUpWindow durée de la fenêtre de rattrapage au départ.
  * @param celebrationEnabled célébration de fin de pile active au départ.
+ * @param shakeToUndo « Secouer pour annuler » actif au départ.
  */
 class FakeSettingsRepository(
     reminder: ReminderSettings = ReminderSettings.DEFAULT,
@@ -41,7 +42,13 @@ class FakeSettingsRepository(
     whatsNewVersionSeen: String? = null,
     catchUpWindow: CatchUpWindow = CatchUpWindow.DEFAULT,
     celebrationEnabled: Boolean = false,
+    shakeToUndo: Boolean = false,
 ) : SettingsRepository {
+    private val storedShakeToUndo = MutableStateFlow(shakeToUndo)
+
+    /** « Secouer pour annuler » enregistré, pour les vérifications du test. */
+    val shakeToUndo: Boolean get() = storedShakeToUndo.value
+
     private val storedCelebration = MutableStateFlow(celebrationEnabled)
 
     /** Célébration de fin de pile enregistrée, pour les vérifications du test. */
@@ -113,6 +120,12 @@ class FakeSettingsRepository(
 
     override suspend fun saveCelebrationEnabled(enabled: Boolean) {
         storedCelebration.value = enabled
+    }
+
+    override fun observeShakeToUndo(): Flow<Boolean> = storedShakeToUndo.asStateFlow()
+
+    override suspend fun saveShakeToUndo(enabled: Boolean) {
+        storedShakeToUndo.value = enabled
     }
 
     override fun observeCatchUpWindow(): Flow<CatchUpWindow> = storedCatchUpWindow.asStateFlow()
