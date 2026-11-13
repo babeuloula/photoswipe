@@ -69,3 +69,23 @@ internal fun CatchUpSection(
         }
     }
 }
+
+/**
+ * Section « Aide au tri » (PS-164) : signaler ou non les photos peut-être floues ou très sombres,
+ * d'une pastille « Floue ? » ou « Très sombre ? ». Actif par défaut.
+ */
+@Composable
+internal fun SortingHelpSection(
+    qualityHints: Boolean,
+    onEvent: (SettingsEvent) -> Unit,
+) {
+    PreferenceSection(stringResource(R.string.settings_sorting_help_section)) {
+        SwitchRow(
+            shape = segmentShape(0, 1),
+            title = stringResource(R.string.settings_quality_hints),
+            summary = stringResource(R.string.settings_quality_hints_summary),
+            checked = qualityHints,
+            onCheckedChange = { onEvent(SettingsEvent.QualityHintsToggled(it)) },
+        )
+    }
+}

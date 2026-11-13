@@ -96,7 +96,7 @@ internal fun AppearanceSection(
 
 /** Ligne à interrupteur : toute la ligne le bascule, et TalkBack l'annonce comme un interrupteur. */
 @Composable
-private fun SwitchRow(
+internal fun SwitchRow(
     shape: Shape,
     title: String,
     summary: String,

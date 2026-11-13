@@ -9,6 +9,7 @@ import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.GetMarkedDeck
 import fr.babeuloula.photoswipe.domain.usecase.GetPreviousDecisions
+import fr.babeuloula.photoswipe.domain.usecase.GetQualityHints
 import fr.babeuloula.photoswipe.domain.usecase.GetSimilarMemories
 import fr.babeuloula.photoswipe.domain.usecase.MarkedMedia
 import fr.babeuloula.photoswipe.ui.navigation.DeckRoute
@@ -25,6 +26,8 @@ import javax.inject.Inject
  * @property getPreviousDecisions décisions d'avant, à montrer sur les cartes d'un jour rouvert.
  * @property getSimilarMemories photos du jour prises à la suite (PS-140).
  * @property getMarkedDeck pile des médias marqués, ouverte depuis le résumé (PS-112).
+ * @property getQualityHints photos peut-être floues ou très sombres (PS-164), mesurées après
+ * l'affichage de la pile : la première mesure d'une photo lit sa vignette.
  */
 class DeckLoading
     @Inject
@@ -34,6 +37,7 @@ class DeckLoading
         val getPreviousDecisions: GetPreviousDecisions,
         val getMarkedDeck: GetMarkedDeck,
         val getSimilarMemories: GetSimilarMemories,
+        val getQualityHints: GetQualityHints,
     ) {
         /** Pile de [route] : celle de son jour, ou celle des marqués. */
         suspend fun load(route: DeckRoute): LoadedDeck =

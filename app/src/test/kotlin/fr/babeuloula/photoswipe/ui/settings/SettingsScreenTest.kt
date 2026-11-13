@@ -143,6 +143,19 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `turns off the flags on photos that may have failed`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
+
+        composeRule
+            .onNodeWithText(text(R.string.settings_quality_hints))
+            .performScrollTo()
+            .assertIsOn()
+            .performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.QualityHintsToggled(false)), events)
+    }
+
+    @Test
     fun `opens the progress page from the statistics row`() {
         show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
 

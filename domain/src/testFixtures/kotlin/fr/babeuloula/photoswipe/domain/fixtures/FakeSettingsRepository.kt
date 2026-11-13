@@ -145,4 +145,15 @@ class FakeSettingsRepository(
     override suspend fun saveWhatsNewVersionSeen(version: String) {
         whatsNewVersionSeen = version
     }
+
+    private val storedQualityHints = MutableStateFlow(true)
+
+    /** Signalement des photos peut-être ratées enregistré, pour les vérifications du test. */
+    val qualityHints: Boolean get() = storedQualityHints.value
+
+    override fun observeQualityHints(): Flow<Boolean> = storedQualityHints.asStateFlow()
+
+    override suspend fun saveQualityHints(enabled: Boolean) {
+        storedQualityHints.value = enabled
+    }
 }

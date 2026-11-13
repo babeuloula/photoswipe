@@ -11,6 +11,7 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
+import fr.babeuloula.photoswipe.domain.model.QualityHint
 import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -53,6 +54,23 @@ class DeckSimilarPhotosTest {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(similar = SimilarGroup(2, 2)))))
 
         composeRule.onNodeWithContentDescription("Photo 2 sur 2 prises à la suite").assertIsDisplayed()
+    }
+
+    @Test
+    fun `says a photo may be blurry or very dark, without deciding`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(qualityHint = QualityHint.BLURRY))))
+        composeRule.onNodeWithContentDescription("This photo may be blurry").assertIsDisplayed()
+
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(qualityHint = QualityHint.DARK))))
+        composeRule.onNodeWithContentDescription("This photo is very dark").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `says a photo may be blurry in French`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(qualityHint = QualityHint.BLURRY))))
+
+        composeRule.onNodeWithText("Floue ?", useUnmergedTree = true).assertIsDisplayed()
     }
 
     @Test

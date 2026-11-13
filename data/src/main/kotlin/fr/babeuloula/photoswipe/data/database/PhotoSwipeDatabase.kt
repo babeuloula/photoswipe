@@ -14,8 +14,9 @@ import androidx.room.RoomDatabase
         DecisionRecordEntity::class,
         ConfirmedDeletionEntity::class,
         DailyActivityEntity::class,
+        PhotoMeasureEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
     autoMigrations = [
         // Version 2 (PS-57) : ajout du journal des décisions pour l'undo (ADR 0019).
@@ -25,6 +26,8 @@ import androidx.room.RoomDatabase
         AutoMigration(from = 3, to = 4),
         // Version 5 (PS-154) : activité de tri par jour (ADR 0037).
         AutoMigration(from = 4, to = 5),
+        // Version 6 (PS-164) : mesures des photos peut-être ratées (ADR 0039).
+        AutoMigration(from = 5, to = 6),
     ],
 )
 abstract class PhotoSwipeDatabase : RoomDatabase() {
@@ -36,6 +39,9 @@ abstract class PhotoSwipeDatabase : RoomDatabase() {
 
     /** Accès à l'historique des suppressions confirmées. */
     abstract fun confirmedDeletionDao(): ConfirmedDeletionDao
+
+    /** Accès aux mesures des photos. */
+    abstract fun photoMeasureDao(): PhotoMeasureDao
 
     /** Accès à l'activité de tri par jour. */
     abstract fun dailyActivityDao(): DailyActivityDao

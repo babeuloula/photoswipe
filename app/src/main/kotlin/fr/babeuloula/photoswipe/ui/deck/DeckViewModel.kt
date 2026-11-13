@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.domain.model.QualityHint
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
@@ -292,6 +293,9 @@ class DeckViewModel
         /** Place des photos du jour prises à la suite (PS-140). */
         private var similar: Map<MediaId, SimilarGroup> = emptyMap()
 
+        /** Photos peut-être floues ou très sombres (PS-164). */
+        private var quality: Map<MediaId, QualityHint> = emptyMap()
+
         /** Décisions du jour encore annulables, de la plus ancienne à la plus récente. */
         var session: ReviewSession = ReviewSession()
             private set
@@ -471,6 +475,9 @@ class DeckViewModel
                         similar = loaded.similar
                         marked = loaded.marked
                         render()
+                        // Après l'affichage : une photo jamais mesurée lit sa vignette (PS-164).
+                        quality = runCatching { loading.getQualityHints(loaded.cards) }.getOrDefault(emptyMap())
+                        if (quality.isNotEmpty() && state.value is DeckUiState.Loaded) render()
                     },
                     onFailure = { if (showLoading) state.value = DeckUiState.Error },
                 )
@@ -577,6 +584,7 @@ class DeckViewModel
                                             favorite = galleryFavorite.isFavorite(it),
                                             previousDecision = previousDecisions[it.id],
                                             similar = similar[it.id],
+                                            qualityHint = quality[it.id],
                                         )
                                     },
                             remainingCount = deck.size,

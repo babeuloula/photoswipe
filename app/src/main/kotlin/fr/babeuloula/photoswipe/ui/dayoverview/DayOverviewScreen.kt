@@ -211,6 +211,7 @@ private fun LoadedOverview(
                         selection = TileSelection(state.selecting, memory.media.id in state.selected),
                         onOpen = { onEvent(DayOverviewEvent.Open(memory.media.id)) },
                         onToggle = { onEvent(DayOverviewEvent.ToggleSelection(memory.media.id)) },
+                        qualityHint = state.quality[memory.media.id],
                     )
                 }
             }
