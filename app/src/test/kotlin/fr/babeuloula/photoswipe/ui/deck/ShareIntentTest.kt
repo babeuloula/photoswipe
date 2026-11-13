@@ -1,15 +1,19 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Intent
+import android.content.IntentSender
 import android.net.Uri
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.share.ShareTargetReceiver
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 /** Feuille de partage d'un média : contenu, type et droit de lecture accordé au destinataire. */
 @RunWith(RobolectricTestRunner::class)
@@ -43,6 +47,28 @@ class ShareIntentTest {
                 .getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)!!
 
         assertEquals("video/*", view.type)
+    }
+
+    @Test
+    fun `sends the media straight to the app chosen last time, without a share sheet`() {
+        val send = shareWithIntent(photo, MediaType.IMAGE, "com.whatsapp/.ContactPicker")
+
+        assertEquals(Intent.ACTION_SEND, send.action)
+        assertEquals(ComponentName("com.whatsapp", "com.whatsapp.ContactPicker"), send.component)
+        assertEquals(Uri.parse(photo), send.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java))
+        assertTrue(send.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
+    }
+
+    @Test
+    fun `asks Android to report the app chosen in the share sheet`() {
+        val callback = ShareTargetReceiver.callback(RuntimeEnvironment.getApplication())
+
+        val chooser = shareIntent(photo, MediaType.IMAGE, "Share", callback)
+
+        assertEquals(
+            callback,
+            chooser.getParcelableExtra(Intent.EXTRA_CHOSEN_COMPONENT_INTENT_SENDER, IntentSender::class.java),
+        )
     }
 
     @Test

@@ -10,6 +10,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeShareTargetRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
@@ -133,9 +134,13 @@ abstract class DeckViewModelTestBase {
                         DropPendingFavorite(repository),
                     ),
                 ),
+            shareTargets = shareTargets,
         )
 
     protected val settings = FakeSettingsRepository()
+
+    /** Dernière application choisie pour partager (PS-163), aucune par défaut. */
+    protected val shareTargets = FakeShareTargetRepository()
 
     /** Accès « Gestion des médias » simulé, refusé par défaut. */
     protected var mediaManagementGranted = false

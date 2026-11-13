@@ -1,5 +1,8 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import android.content.ComponentName
+import android.content.pm.ActivityInfo
+import android.content.pm.ApplicationInfo
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -17,6 +20,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.time.LocalDate
 
@@ -33,13 +37,16 @@ class CardMenuTest {
 
     private val events = mutableListOf<DeckEvent>()
 
-    private fun showMenu(card: MediaCardUiState) {
+    private fun showMenu(
+        card: MediaCardUiState,
+        shareTarget: String? = null,
+    ) {
         composeRule.activity.setContent {
             CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
                 PhotoSwipeTheme {
                     DeckScreen(
                         day = LocalDate.of(2026, 5, 14),
-                        state = DeckUiState.Loaded(listOf(card), menuOpen = true),
+                        state = DeckUiState.Loaded(listOf(card), menuOpen = true, shareTarget = shareTarget),
                         onEvent = { events += it },
                     )
                 }
@@ -64,6 +71,31 @@ class CardMenuTest {
         composeRule.onNodeWithText("Open with").performClick()
 
         assertEquals(listOf<DeckEvent>(DeckEvent.OpenWith), events)
+    }
+
+    @Test
+    fun `offers to send the card again with the last app chosen, while it is installed`() {
+        val messenger = ComponentName("org.example.messenger", "org.example.messenger.Share")
+        shadowOf(composeRule.activity.packageManager).addOrUpdateActivity(
+            ActivityInfo().apply {
+                packageName = messenger.packageName
+                name = messenger.className
+                nonLocalizedLabel = "Messenger"
+                applicationInfo = ApplicationInfo().apply { packageName = messenger.packageName }
+            },
+        )
+        showMenu(PREVIEW_CARD, shareTarget = messenger.flattenToString())
+
+        composeRule.onNodeWithText("Send again with Messenger").performClick()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.ShareAgain), events)
+    }
+
+    @Test
+    fun `offers nothing to send again once the last app is uninstalled`() {
+        showMenu(PREVIEW_CARD, shareTarget = "org.example.gone/.Share")
+
+        composeRule.onNodeWithText("Send again with", substring = true).assertDoesNotExist()
     }
 
     @Test

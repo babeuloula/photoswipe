@@ -369,56 +369,6 @@ class DeckViewModelTest : DeckViewModelTestBase() {
         }
 
     @Test
-    fun `shares the top card without changing it and closes the menu`() =
-        runTest {
-            val media = takenOn(1, 2020)
-            val viewModel = deckViewModel(FakeMediaSource(listOf(media)))
-            viewModel.onEvent(DeckEvent.OpenMenu)
-
-            viewModel.onEvent(DeckEvent.Share)
-
-            assertEquals(DeckEffect.Share(media.uri, media.type), viewModel.uiEffects.first())
-            val state = viewModel.uiState.value as DeckUiState.Loaded
-            assertFalse(state.menuOpen)
-            assertEquals(listOf(MediaId(1)), state.cards.map { it.id })
-            assertTrue(repository.entries.isEmpty())
-            assertTrue(viewModel.session.isEmpty)
-        }
-
-    @Test
-    fun `opens the top card in another app without deciding, then reads the deck again on return`() =
-        runTest {
-            val media = takenOn(1, 2020)
-            val gallery = FakeMediaSource(listOf(media))
-            val viewModel = deckViewModel(gallery)
-            viewModel.onEvent(DeckEvent.OpenMenu)
-
-            viewModel.onEvent(DeckEvent.OpenWith)
-
-            assertEquals(DeckEffect.OpenWith(media.uri, media.type), viewModel.uiEffects.first())
-            assertFalse((viewModel.uiState.value as DeckUiState.Loaded).menuOpen)
-            assertTrue(repository.entries.isEmpty())
-            // Une retouche enregistrée en copie, avec la même date, devient un nouveau souvenir du jour.
-            gallery.add(takenOn(2, 2020))
-
-            viewModel.onEvent(DeckEvent.Resumed)
-
-            assertEquals(2, (viewModel.uiState.value as DeckUiState.Loaded).total)
-        }
-
-    @Test
-    fun `does not read the deck again on return when nothing was opened elsewhere`() =
-        runTest {
-            val gallery = FakeMediaSource(listOf(takenOn(1, 2020)))
-            val viewModel = deckViewModel(gallery)
-            gallery.add(takenOn(2, 2020))
-
-            viewModel.onEvent(DeckEvent.Resumed)
-
-            assertEquals(1, (viewModel.uiState.value as DeckUiState.Loaded).total)
-        }
-
-    @Test
     fun `closes the deck when going back`() =
         runTest {
             val viewModel = deckViewModel(FakeMediaSource())

@@ -13,6 +13,7 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
 import fr.babeuloula.photoswipe.domain.model.SimilarGroup
+import fr.babeuloula.photoswipe.domain.port.ShareTargetRepository
 import fr.babeuloula.photoswipe.domain.usecase.MarkedMedia
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
 import fr.babeuloula.photoswipe.ui.navigation.DeckRoute
@@ -59,6 +60,8 @@ sealed interface DeckUiState {
      * @property returningFrom côté d'où revient la carte du dessus après un undo, celui par lequel
      * elle était sortie ; `null` si elle ne revient pas.
      * @property menuOpen vrai quand le menu favori / partage de la carte du dessus est ouvert.
+     * @property shareTarget dernière application choisie pour partager (PS-163), `null` avant un
+     * premier partage : le menu propose alors « Renvoyer avec … ».
      * @property yearPosition rang de la carte du dessus parmi les souvenirs de son année (PS-138) :
      * la pile va d'une année à l'autre, de la plus récente à la plus ancienne.
      * @property yearTotal souvenirs de l'année de la carte du dessus dans la pile, triés ou non.
@@ -72,6 +75,7 @@ sealed interface DeckUiState {
         val canUndo: Boolean = false,
         val returningFrom: CardSide? = null,
         val menuOpen: Boolean = false,
+        val shareTarget: String? = null,
         val yearPosition: Int = 1,
         val yearTotal: Int = 1,
         val yearSegments: List<YearSegment> = emptyList(),
@@ -168,12 +172,18 @@ sealed interface DeckEvent {
     /** « Ouvrir avec » du menu : voir ou retoucher le média du dessus dans une autre application (PS-162). */
     data object OpenWith : ElsewhereEvent
 
+    /** « Renvoyer avec … » du menu : partager directement avec la dernière application choisie (PS-163). */
+    data object ShareAgain : ElsewhereEvent
+
     /** Retour sur la pile : après « Ouvrir avec », le média a pu être retouché, copié ou supprimé ailleurs. */
     data object Resumed : ElsewhereEvent
 }
 
 /** Navigation demandée par la pile. */
 sealed interface DeckEffect {
+    /** Confier le média du dessus à une autre application : partage, « Ouvrir avec », « Renvoyer avec ». */
+    sealed interface ElsewhereEffect : DeckEffect
+
     /** Ouvrir le résumé (SPEC §3.5), qui lit lui-même le tri du jour (ADR 0024). */
     data object OpenSummary : DeckEffect
 
@@ -189,7 +199,7 @@ sealed interface DeckEffect {
     data class Share(
         val uri: String,
         val type: MediaType,
-    ) : DeckEffect
+    ) : ElsewhereEffect
 
     /**
      * Ouvrir le sélecteur d'Android pour voir ou retoucher un média ailleurs (PS-162).
@@ -200,7 +210,20 @@ sealed interface DeckEffect {
     data class OpenWith(
         val uri: String,
         val type: MediaType,
-    ) : DeckEffect
+    ) : ElsewhereEffect
+
+    /**
+     * Partager directement avec l'application [component], sans feuille de partage (PS-163).
+     *
+     * @property uri URI de contenu du média.
+     * @property type photo ou vidéo.
+     * @property component application choisie au dernier partage (`paquet/classe`).
+     */
+    data class ShareWith(
+        val uri: String,
+        val type: MediaType,
+        val component: String,
+    ) : ElsewhereEffect
 
     /**
      * Lancer la demande de favori de la galerie ; la réponse revient par [DeckEvent.FavoriteRequestAnswered].
@@ -238,6 +261,7 @@ class DeckViewModel
         private val decisions: DeckDecisions,
         private val clock: Clock,
         private val galleryFavorite: GalleryFavorite,
+        private val shareTargets: ShareTargetRepository,
     ) : ViewModel() {
         private val route: DeckRoute = savedStateHandle.toRoute<DeckRoute>()
 
@@ -280,6 +304,7 @@ class DeckViewModel
 
         init {
             load()
+            readShareTarget()
         }
 
         /** Traite une action de l'utilisateur. */
@@ -317,11 +342,11 @@ class DeckViewModel
                 }
 
                 DeckEvent.OpenMenu -> {
-                    setMenuOpen(true)
+                    state.setMenuOpen(true)
                 }
 
                 DeckEvent.CloseMenu -> {
-                    setMenuOpen(false)
+                    state.setMenuOpen(false)
                 }
 
                 is DeckEvent.ElsewhereEvent -> {
@@ -334,23 +359,37 @@ class DeckViewModel
         private fun onElsewhereEvent(event: DeckEvent.ElsewhereEvent) {
             when (event) {
                 DeckEvent.Share -> {
-                    // Partage du média du dessus, sans changer son état (SPEC §2).
+                    // Partage du média du dessus, sans changer son état (SPEC §2) ; l'application
+                    // choisie sera relue au retour, pour « Renvoyer avec … » (PS-163).
                     deck.firstOrNull()?.let { media ->
-                        setMenuOpen(false)
+                        state.setMenuOpen(false)
+                        sharedElsewhere = true
                         effects.trySend(DeckEffect.Share(media.uri, media.type))
+                    }
+                }
+
+                DeckEvent.ShareAgain -> {
+                    val target = shareTarget
+                    deck.firstOrNull()?.takeIf { target != null }?.let { media ->
+                        state.setMenuOpen(false)
+                        effects.trySend(DeckEffect.ShareWith(media.uri, media.type, target!!))
                     }
                 }
 
                 DeckEvent.OpenWith -> {
                     // La carte reste en place, sans décision ; la pile se relira au retour (PS-162).
                     deck.firstOrNull()?.let { media ->
-                        setMenuOpen(false)
+                        state.setMenuOpen(false)
                         openedElsewhere = true
                         effects.trySend(DeckEffect.OpenWith(media.uri, media.type))
                     }
                 }
 
                 DeckEvent.Resumed -> {
+                    if (sharedElsewhere) {
+                        sharedElsewhere = false
+                        readShareTarget()
+                    }
                     if (openedElsewhere) {
                         openedElsewhere = false
                         load(showLoading = false)
@@ -377,7 +416,7 @@ class DeckViewModel
                     // Retrait du favori de la carte du dessus (PS-124), sans décision de tri : un favori
                     // seulement en attente est oublié aussitôt, un favori de la galerie passe par sa demande.
                     val media = deck.firstOrNull() ?: return
-                    setMenuOpen(false)
+                    state.setMenuOpen(false)
                     viewModelScope.launch {
                         galleryFavorite
                             .unfavorite(
@@ -398,6 +437,20 @@ class DeckViewModel
 
         /** Vrai après « Ouvrir avec » : la pile se relit au retour, le média ayant pu changer ailleurs. */
         private var openedElsewhere = false
+
+        /** Vrai après un partage : l'application choisie se relit au retour (PS-163). */
+        private var sharedElsewhere = false
+
+        /** Dernière application choisie pour partager (PS-163), `null` avant un premier partage. */
+        private var shareTarget: String? = null
+
+        /** Relit la dernière application choisie pour partager, puis met l'écran à jour. */
+        private fun readShareTarget() {
+            viewModelScope.launch {
+                shareTarget = runCatching { shareTargets.lastTarget() }.getOrNull()
+                if (state.value is DeckUiState.Loaded) render()
+            }
+        }
 
         /**
          * Lit la pile ; au retour d'une autre application ([showLoading] faux), l'ancienne reste
@@ -503,11 +556,6 @@ class DeckViewModel
             return first
         }
 
-        /** Ouvre ou ferme le menu de la carte du dessus ; sans carte, il n'y a pas de menu. */
-        private fun setMenuOpen(open: Boolean) {
-            state.update { current -> if (current is DeckUiState.Loaded) current.copy(menuOpen = open) else current }
-        }
-
         /** Publie l'état de la pile : seules les deux premières cartes sont préparées. */
         private fun render(returningFrom: CardSide? = null) {
             val canUndo = !session.isEmpty
@@ -535,6 +583,7 @@ class DeckViewModel
                             sortedCount = session.decisions.distinctBy { it.media.id }.size,
                             canUndo = canUndo,
                             returningFrom = returningFrom,
+                            shareTarget = shareTarget,
                         ).withYearProgress(deck, session.decisions.map { it.media }, clock.zone)
                 }
         }
@@ -577,3 +626,8 @@ private fun SessionDecision.exitSide(): CardSide =
         made.favoritePending -> CardSide.TOP
         else -> CardSide.RIGHT
     }
+
+/** Ouvre ou ferme le menu de la carte du dessus ; sans carte, il n'y a pas de menu. */
+private fun MutableStateFlow<DeckUiState>.setMenuOpen(open: Boolean) {
+    update { current -> if (current is DeckUiState.Loaded) current.copy(menuOpen = open) else current }
+}

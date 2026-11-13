@@ -19,6 +19,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.share.ShareTargetReceiver
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -37,10 +38,6 @@ fun DeckRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val shareTitle = stringResource(R.string.deck_share)
-    val shareFailed = stringResource(R.string.deck_share_failed)
-    val openWithTitle = stringResource(R.string.deck_open_with)
-    val openWithFailed = stringResource(R.string.deck_open_with_failed)
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onEvent(DeckEvent.Resumed) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -71,15 +68,9 @@ fun DeckRoute(
                     unfavoriteRequest.launch(IntentSenderRequest.Builder(effect.intentSender).build())
                 }
 
-                is DeckEffect.Share -> {
-                    val shared = launchShare(shareIntent(effect.uri, effect.type, shareTitle), context::startActivity)
-                    if (!shared) scope.launch { snackbarHostState.showSnackbar(shareFailed) }
-                }
-
-                is DeckEffect.OpenWith -> {
-                    val opened =
-                        launchShare(openWithIntent(effect.uri, effect.type, openWithTitle), context::startActivity)
-                    if (!opened) scope.launch { snackbarHostState.showSnackbar(openWithFailed) }
+                is DeckEffect.ElsewhereEffect -> {
+                    val failure = launchElsewhere(context, effect)
+                    if (failure != null) scope.launch { snackbarHostState.showSnackbar(failure) }
                 }
             }
         }

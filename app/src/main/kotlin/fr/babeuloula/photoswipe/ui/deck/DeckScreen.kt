@@ -4,6 +4,7 @@ import android.content.Context
 import android.text.format.DateFormat
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -295,6 +296,7 @@ internal fun LoadedDeck(
                 requestedExit = CardSide.TOP
             },
             onEvent = onEvent,
+            shareTarget = state.shareTarget,
         )
     }
 }
@@ -375,6 +377,7 @@ private fun CardMenu(
     card: MediaCardUiState,
     onFavorite: () -> Unit,
     onEvent: (DeckEvent) -> Unit,
+    shareTarget: String? = null,
 ) {
     ModalBottomSheet(onDismissRequest = { onEvent(DeckEvent.CloseMenu) }) {
         MenuPreview(card)
@@ -397,6 +400,14 @@ private fun CardMenu(
             leadingContent = { Icon(painterResource(R.drawable.ic_share), contentDescription = null) },
             modifier = Modifier.clickable { onEvent(DeckEvent.Share) },
         )
+        // Dernière application choisie pour partager, si elle est encore installée (PS-163).
+        rememberShareTargetApp(shareTarget)?.let { app ->
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.deck_share_again, app.label)) },
+                leadingContent = { Image(app.icon, contentDescription = null, modifier = Modifier.size(24.dp)) },
+                modifier = Modifier.clickable { onEvent(DeckEvent.ShareAgain) },
+            )
+        }
         ListItem(
             headlineContent = { Text(stringResource(R.string.deck_open_with)) },
             supportingContent = { Text(stringResource(R.string.deck_open_with_summary)) },
