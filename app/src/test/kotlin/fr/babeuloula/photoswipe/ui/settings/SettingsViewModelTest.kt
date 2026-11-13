@@ -339,6 +339,17 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `does not undo on a shake by default, then saves and shows the choice`() {
+        val viewModel = settingsViewModel()
+        assertFalse(viewModel.uiState.value.shakeToUndo)
+
+        viewModel.onEvent(SettingsEvent.ShakeToUndoToggled(true))
+
+        assertTrue(repository.shakeToUndo)
+        assertTrue(viewModel.uiState.value.shakeToUndo)
+    }
+
+    @Test
     fun `catches up one week by default, then saves and shows the chosen duration`() {
         val viewModel = settingsViewModel()
         assertEquals(CatchUpWindow.WEEK, viewModel.uiState.value.catchUpWindow)

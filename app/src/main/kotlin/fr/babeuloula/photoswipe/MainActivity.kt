@@ -28,6 +28,7 @@ import fr.babeuloula.photoswipe.ui.common.CelebrationHost
 import fr.babeuloula.photoswipe.ui.common.LocalAnimationsDisabled
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.common.RotationPolicy
+import fr.babeuloula.photoswipe.ui.deck.LocalShakeToUndo
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.isDark
 import fr.babeuloula.photoswipe.widget.WidgetRefresher
@@ -86,11 +87,13 @@ class MainActivity : ComponentActivity() {
         val savedPureBlack = runBlocking { pureBlackChoices.first() }
         val animations = settingsRepository.observeAnimationsEnabled().catch { emit(true) }
         val celebrations = settingsRepository.observeCelebrationEnabled().catch { emit(false) }
+        val shakes = settingsRepository.observeShakeToUndo().catch { emit(false) }
         setContent {
             val themeMode by remember { themeModes }.collectAsStateWithLifecycle(savedThemeMode)
             val pureBlack by remember { pureBlackChoices }.collectAsStateWithLifecycle(savedPureBlack)
             val animationsEnabled by remember { animations }.collectAsStateWithLifecycle(true)
             val celebrationEnabled by remember { celebrations }.collectAsStateWithLifecycle(false)
+            val shakeToUndo by remember { shakes }.collectAsStateWithLifecycle(false)
             val darkTheme = themeMode.isDark(isSystemInDarkTheme())
             val pureBlackBars = darkTheme && pureBlack
             DisposableEffect(darkTheme, pureBlackBars) {
@@ -110,6 +113,8 @@ class MainActivity : ComponentActivity() {
                 LocalImageLoader provides imageLoader,
                 // Animations coupées dans les réglages, pour les téléphones anciens (PS-146).
                 LocalAnimationsDisabled provides !animationsEnabled,
+                // Secouer pour annuler sur la pile (PS-175).
+                LocalShakeToUndo provides shakeToUndo,
             ) {
                 PhotoSwipeTheme(darkTheme = darkTheme, pureBlack = pureBlack) {
                     // Portrait, sauf le plein écran vidéo et la photo en grand (ADR 0028).

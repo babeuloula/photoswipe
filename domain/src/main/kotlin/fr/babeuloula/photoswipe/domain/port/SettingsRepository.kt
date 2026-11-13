@@ -70,6 +70,16 @@ interface SettingsRepository {
     suspend fun saveCelebrationEnabled(enabled: Boolean)
 
     /**
+     * « Secouer pour annuler » (PS-175), observé par l'activité et les réglages : la valeur actuelle
+     * dès la collecte (`false` si rien n'est enregistré, pour ne rien annuler sans le vouloir dans les
+     * transports), puis chaque nouvelle valeur.
+     */
+    fun observeShakeToUndo(): Flow<Boolean>
+
+    /** Enregistre si secouer le téléphone annule la dernière décision. */
+    suspend fun saveShakeToUndo(enabled: Boolean)
+
+    /**
      * Durée de la fenêtre de rattrapage (PS-169), observée par la fenêtre de revue et les réglages :
      * la valeur actuelle dès la collecte ([CatchUpWindow.DEFAULT] si rien n'est enregistré), puis
      * chaque nouvelle valeur.

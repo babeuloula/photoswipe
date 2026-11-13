@@ -105,6 +105,8 @@ fun SettingsScreen(
                         state.catchUpWindow?.let { CatchUpSection(it, onEvent) }
                         SortingHelpSection(state.qualityHints, onEvent)
                         LanguageSection(environment.languageLabel, onEvent)
+                        // Seulement avec un accéléromètre (PS-175).
+                        if (environment.shakeAvailable) ShakeSection(state.shakeToUndo, onEvent)
                         state.themeMode?.let {
                             AppearanceSection(
                                 it,
@@ -192,11 +194,14 @@ private const val REMINDER_ROWS = 2
  * @property showDeveloperTools vrai si la variante a des outils développeur (debug, SPEC §10).
  * @property exactAlarmAllowed vrai si les alarmes exactes sont autorisées : le rappel arrive à
  * l'heure pile (PS-125).
+ * @property shakeAvailable vrai si le téléphone a un accéléromètre : « Secouer pour annuler » est
+ * proposé (PS-175).
  */
 data class SettingsEnvironment(
     val languageLabel: String = "",
     val showDeveloperTools: Boolean = false,
     val exactAlarmAllowed: Boolean = true,
+    val shakeAvailable: Boolean = false,
 )
 
 /** Section « Langue » : la langue de l'application, choisie dans les réglages d'Android (SPEC §9). */

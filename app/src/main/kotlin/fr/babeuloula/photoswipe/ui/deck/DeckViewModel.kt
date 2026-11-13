@@ -107,6 +107,15 @@ sealed interface DeckUiState {
     }
 }
 
+/** Vrai si la dernière décision de la pile peut être annulée : « Annuler », ou une secousse (PS-175). */
+val DeckUiState.undoAvailable: Boolean
+    get() =
+        when (this) {
+            is DeckUiState.Loaded -> canUndo
+            is DeckUiState.Empty -> canUndo
+            DeckUiState.Loading, DeckUiState.Error -> false
+        }
+
 /** Action de l'utilisateur sur la pile. */
 sealed interface DeckEvent {
     /** « Réessayer » après une erreur. */

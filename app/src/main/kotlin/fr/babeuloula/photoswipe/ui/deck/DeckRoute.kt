@@ -14,7 +14,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -46,6 +48,7 @@ fun DeckRoute(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val celebration = LocalCelebration.current
+    ShakeToUndo(undoAvailable = state.undoAvailable, onUndo = { viewModel.onEvent(DeckEvent.Undo) })
     val favoriteRequest = rememberSystemRequest { viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(it)) }
     val unfavoriteRequest = rememberSystemRequest { viewModel.onEvent(DeckEvent.UnfavoriteRequestAnswered(it)) }
     // Photo dont la carte postale est en aperçu (PS-177), `null` hors de l'aperçu.
@@ -111,3 +114,18 @@ private fun rememberSystemRequest(onAnswer: (Boolean) -> Unit) =
     rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         onAnswer(result.resultCode == Activity.RESULT_OK)
     }
+
+/** Secouer pour annuler (PS-175) : comme « Annuler », seulement s'il y a une décision à annuler. */
+@Composable
+private fun ShakeToUndo(
+    undoAvailable: Boolean,
+    onUndo: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    ShakeEffect(enabled = LocalShakeToUndo.current) {
+        if (undoAvailable) {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            onUndo()
+        }
+    }
+}

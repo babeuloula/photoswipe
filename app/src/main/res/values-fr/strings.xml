@@ -325,6 +325,9 @@
     <string name="settings_pure_black_summary">Fonds noirs en thème sombre, pour économiser la batterie d\'un écran OLED</string>
     <string name="settings_celebration">Célébrer la fin d\'une pile</string>
     <string name="settings_celebration_summary">Des confettis une fois le dernier souvenir d\'un jour trié</string>
+    <string name="settings_gestures_section">Gestes</string>
+    <string name="settings_shake_to_undo">Secouer pour annuler</string>
+    <string name="settings_shake_to_undo_summary">Secouez le téléphone pendant le tri pour annuler la dernière décision</string>
     <!-- Raccourcis de l'appui long sur l'icône (PS-171). -->
     <string name="shortcut_sort_today_short">Trier</string>
     <string name="shortcut_sort_today_long">Trier aujourd\'hui</string>

@@ -134,6 +134,18 @@ class DataStoreSettingsRepositoryTest {
         }
 
     @Test
+    fun `does not undo on a shake when nothing is stored, then reads the choice back`() =
+        runTest {
+            val repository = DataStoreSettingsRepository(dataStore())
+            assertEquals(false, repository.observeShakeToUndo().first())
+
+            repository.saveShakeToUndo(true)
+
+            assertEquals(true, repository.observeShakeToUndo().first())
+            assertEquals(false, repository.observeCelebrationEnabled().first())
+        }
+
+    @Test
     fun `has no seen what's new version until one is saved`() =
         runTest {
             val repository = DataStoreSettingsRepository(dataStore())

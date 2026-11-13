@@ -32,6 +32,7 @@ import fr.babeuloula.photoswipe.locale.nativeName
 import fr.babeuloula.photoswipe.permission.ExactAlarmPermissionReader
 import fr.babeuloula.photoswipe.permission.NOTIFICATION_PERMISSION
 import fr.babeuloula.photoswipe.ui.common.SupportLinks
+import fr.babeuloula.photoswipe.ui.deck.hasAccelerometer
 import kotlinx.coroutines.launch
 
 /**
@@ -198,7 +199,10 @@ private fun otherScreenIntent(
         }
     }
 
-/** Ce que les réglages lisent hors de leur ViewModel : langue, outils développeur, alarmes exactes. */
+/**
+ * Ce que les réglages lisent hors de leur ViewModel : langue, outils développeur, alarmes exactes,
+ * présence d'un accéléromètre.
+ */
 @Composable
 private fun rememberEnvironment(viewModel: SettingsViewModel): SettingsEnvironment {
     val context = LocalContext.current
@@ -206,6 +210,7 @@ private fun rememberEnvironment(viewModel: SettingsViewModel): SettingsEnvironme
         languageLabel = rememberLanguageLabel(),
         showDeveloperTools = remember(viewModel) { viewModel.developerTools.intent(context) != null },
         exactAlarmAllowed = rememberExactAlarmAllowed(viewModel.exactAlarms),
+        shakeAvailable = remember(context) { hasAccelerometer(context) },
     )
 }
 

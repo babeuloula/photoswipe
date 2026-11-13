@@ -336,6 +336,9 @@
     <string name="settings_pure_black_summary">Black backgrounds in the dark theme, to save battery on an OLED screen</string>
     <string name="settings_celebration">Celebrate the end of a deck</string>
     <string name="settings_celebration_summary">Confetti once the last memory of a day is sorted</string>
+    <string name="settings_gestures_section">Gestures</string>
+    <string name="settings_shake_to_undo">Shake to undo</string>
+    <string name="settings_shake_to_undo_summary">Shake the phone while sorting to undo the last decision</string>
     <!-- Raccourcis de l'appui long sur l'icône (PS-171). -->
     <string name="shortcut_sort_today_short">Sort today</string>
     <string name="shortcut_sort_today_long">Sort today</string>
