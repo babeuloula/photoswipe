@@ -37,7 +37,7 @@ Un lien invalide ouvre l'accueil. Comme un lancement ordinaire, le lien passe d'
 adb shell am start -a android.intent.action.VIEW -d "photoswipe://today"
 ```
 
-L'appui long sur l'icône propose les raccourcis « Trier aujourd'hui » et « Résumé ». Décision : [ADR 0038](docs/decisions/0038-deep-links-and-shortcuts.md).
+L'appui long sur l'icône propose les raccourcis « Trier aujourd'hui » et « Résumé ». La tuile « PhotoSwipe », à ajouter dans les réglages rapides, ouvre la pile du jour (après déverrouillage si le téléphone est verrouillé). Décision : [ADR 0038](docs/decisions/0038-deep-links-and-shortcuts.md).
 
 ## Lancer les tests
 

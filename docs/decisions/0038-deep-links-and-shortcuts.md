@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-11-13
-- **Tickets** : PS-171 (liens profonds et raccourcis de l'icône)
+- **Tickets** : PS-171 (liens profonds et raccourcis de l'icône), PS-172 (tuile des réglages rapides)
 
 ## Contexte
 Seule la notification du rappel ouvrait directement la pile du jour (`MainActivity.openDeckIntent`, par un extra privé). On veut lancer le tri depuis l'icône de l'application (appui long) et depuis une routine d'automatisation (Tasker, Raccourcis, `adb`), sans permission nouvelle, sans `INTERNET`, et sans rien exposer aux autres applications.
@@ -19,10 +19,12 @@ Seule la notification du rappel ouvrait directement la pile du jour (`MainActivi
 - **Un lien invalide ouvre l'accueil** : schéma, écran ou date inconnus (`photoswipe://day/2026-02-30`), segments en trop. Aucun lien ne plante l'application.
 - **L'écran demandé s'empile au-dessus de l'accueil** (`popUpTo<HomeRoute>`, `launchSingleTop`) : « Retour » ramène toujours à l'accueil, même si l'application était déjà ouverte ailleurs.
 - **Raccourcis statiques** dans `res/xml/shortcuts.xml` (méta-donnée `android.app.shortcuts` de l'activité de lancement) : « Trier aujourd'hui » (`photoswipe://today`) et « Résumé » (`photoswipe://summary`), intents explicites vers `MainActivity`. Icônes adaptatives `shortcut_*.xml` : le symbole Material Symbols Rounded (`ic_swipe`, `ic_summarize`) blanc sur le fond ambre de l'icône, avec couche monochrome.
+- **Tuile des réglages rapides** (PS-172) : `SortTodayTileService` (`TileService`, package `tile`), libellé « PhotoSwipe », icône `ic_notification`, sous-titre fixe « Trier aujourd'hui ». Un appui ferme le volet et ouvre `photoswipe://today` dans `MainActivity` (`startActivityAndCollapse`, par `PendingIntent` sur Android 14+) ; téléphone verrouillé, le déverrouillage est demandé d'abord (`unlockAndRun`). La tuile reste inactive : c'est une action, pas un interrupteur.
 
 ## Conséquences
 - Un lien ne fait qu'ouvrir un écran : il ne prend aucune décision, n'en annule aucune et ne renvoie rien. Aucun `ContentProvider`, aucun résultat d'activité, aucun compteur dans les raccourcis (statiques, sans libellé dynamique) : rien n'est exposé aux autres applications.
 - `BROWSABLE` permet d'ouvrir un lien depuis une page web ou une application de notes. Le risque se limite à ouvrir un écran de l'application, ce qu'un appui sur l'icône permet déjà.
 - `MainActivity` garde son mode de lancement `standard` : un lien envoyé alors que l'application est ouverte peut empiler une seconde instance selon les drapeaux de l'expéditeur (les raccourcis, eux, relancent la tâche). Sans conséquence sur les données.
 - Le schéma est public : le README le documente. Le changer casserait les routines des utilisateurs.
+- La tuile n'affiche aucun compteur : elle ne lit ni la galerie ni la base, et rien n'apparaît sur l'écran verrouillé.
 - Les raccourcis sont statiques : pas de raccourci dynamique « jour à rattraper », qui demanderait de publier des données (nombres, dates) au lanceur.

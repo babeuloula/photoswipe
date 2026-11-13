@@ -287,4 +287,6 @@
     <string name="shortcut_sort_today_short">Trier</string>
     <string name="shortcut_sort_today_long">Trier aujourd\'hui</string>
     <string name="shortcut_summary">Résumé</string>
+    <!-- Tuile des réglages rapides (PS-172). -->
+    <string name="tile_subtitle">Trier aujourd\'hui</string>
 </resources>
