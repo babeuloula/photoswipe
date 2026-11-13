@@ -7,7 +7,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -130,12 +129,12 @@ internal fun FullscreenVideoContent(
             Modifier
                 .fillMaxSize()
                 .background(Color.Black)
-                .clickable(
-                    interactionSource = null,
-                    indication = null,
-                    onClickLabel = stringResource(R.string.deck_video_toggle_controls),
-                ) { controlsVisible = !controlsVisible }
-                .semantics { contentDescription = description }
+                .holdToFastForward(
+                    fast = videoPlayer.fastForward,
+                    onFast = { videoPlayer.setFastForward(card.uri, it) },
+                    onTap = { controlsVisible = !controlsVisible },
+                    onTapLabel = stringResource(R.string.deck_video_toggle_controls),
+                ).semantics { contentDescription = description }
                 .testTag(FULLSCREEN_VIDEO_TAG),
         contentAlignment = Alignment.Center,
     ) {
@@ -149,6 +148,7 @@ internal fun FullscreenVideoContent(
                 modifier = Modifier.resizeWithContentScale(ContentScale.Fit, presentation.videoSizeDp),
             )
         }
+        if (videoPlayer.fastForward) FastForwardChip(Modifier.align(Alignment.TopCenter).padding(top = 48.dp))
         AnimatedVisibility(visible = controlsVisible, enter = fadeIn(), exit = fadeOut()) {
             FullscreenControls(
                 card = card,

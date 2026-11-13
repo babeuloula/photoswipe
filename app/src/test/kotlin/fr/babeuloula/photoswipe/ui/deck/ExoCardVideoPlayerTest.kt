@@ -39,6 +39,33 @@ class ExoCardVideoPlayerTest {
     }
 
     @Test
+    fun `plays twice as fast while held, starting a paused video without turning the sound on`() {
+        videoPlayer.setFastForward(first, fast = true)
+
+        assertEquals(FAST_FORWARD_SPEED, player.playbackParameters.speed)
+        assertTrue(player.playWhenReady)
+        assertEquals(first, videoPlayer.playingUri)
+        assertTrue(videoPlayer.muted)
+        assertTrue(videoPlayer.fastForward)
+
+        videoPlayer.setFastForward(first, fast = false)
+
+        assertEquals(1f, player.playbackParameters.speed)
+        assertTrue(player.playWhenReady)
+        assertFalse(videoPlayer.fastForward)
+    }
+
+    @Test
+    fun `goes back to normal speed when the video stops`() {
+        videoPlayer.setFastForward(first, fast = true)
+
+        videoPlayer.stop(first)
+
+        assertEquals(1f, player.playbackParameters.speed)
+        assertFalse(videoPlayer.fastForward)
+    }
+
+    @Test
     fun `stops at the end and offers to play from the start`() {
         videoPlayer.play(first)
 

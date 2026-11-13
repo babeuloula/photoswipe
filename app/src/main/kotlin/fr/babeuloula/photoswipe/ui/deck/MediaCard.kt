@@ -222,6 +222,8 @@ private fun BoxScope.activeVideo(
         playing = playing,
         onToggle = { if (playing) videoPlayer.pauseByUser(card.uri) else videoPlayer.playByUser(card.uri) },
         modifier = Modifier.matchParentSize(),
+        fast = videoPlayer.fastForward,
+        onFast = { videoPlayer.setFastForward(card.uri, it) },
     )
     return ActiveVideoState(
         uri = card.uri,

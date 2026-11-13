@@ -46,8 +46,20 @@ interface CardVideoPlayer {
     /** Vrai tant que le son est coupé ; il l'est au départ (SPEC §4.3). Lu par Compose. */
     val muted: Boolean
 
+    /** Vrai pendant la lecture accélérée du maintien du doigt (PS-161). Lu par Compose. */
+    val fastForward: Boolean
+
     /** Active ou coupe le son ; le réglage vaut pour les vidéos suivantes de la pile. */
     fun toggleSound()
+
+    /**
+     * Lit [uri] en ×2 tant que [fast] est vrai (maintien du doigt, PS-161) : une vidéo en pause ou
+     * pas encore démarrée se lance, sans toucher au son ; [fast] faux revient à la vitesse normale.
+     */
+    fun setFastForward(
+        uri: String,
+        fast: Boolean,
+    )
 
     /**
      * Vrai si [uri] était en lecture avant que l'écran soit recréé : elle reprend tout de suite,
@@ -153,6 +165,19 @@ class ExoCardVideoPlayer(
     /** Lecture à reprendre après la recréation de l'écran, consommée par le prochain [play] de sa vidéo. */
     private var pendingResume: VideoPlaybackState? = null
 
+    override var fastForward: Boolean by mutableStateOf(false)
+        private set
+
+    override fun setFastForward(
+        uri: String,
+        fast: Boolean,
+    ) {
+        if (fast && playingUri != uri) play(uri)
+        if (!fast && uri != currentUri) return
+        exoPlayer.setPlaybackSpeed(if (fast) FAST_FORWARD_SPEED else 1f)
+        fastForward = fast
+    }
+
     override fun toggleSound() {
         muted = !muted
         exoPlayer.volume = if (muted) 0f else 1f
@@ -238,6 +263,8 @@ class ExoCardVideoPlayer(
 
     override fun stop(uri: String) {
         if (uri != currentUri) return
+        exoPlayer.setPlaybackSpeed(1f)
+        fastForward = false
         currentUri = null
         pausedByUser = false
         endedUri = null
@@ -390,3 +417,6 @@ data class VideoPlaybackState(
             )
     }
 }
+
+/** Vitesse de la lecture accélérée du maintien du doigt (PS-161). */
+internal const val FAST_FORWARD_SPEED: Float = 2f

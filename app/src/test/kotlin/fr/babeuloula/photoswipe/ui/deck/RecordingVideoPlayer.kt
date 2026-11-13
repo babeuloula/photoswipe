@@ -21,6 +21,16 @@ internal class RecordingVideoPlayer(
     override var endedUri: String? by mutableStateOf(null)
     override var muted: Boolean by mutableStateOf(true)
 
+    override var fastForward: Boolean by mutableStateOf(false)
+
+    override fun setFastForward(
+        uri: String,
+        fast: Boolean,
+    ) {
+        calls += if (fast) "fast $uri" else "normal speed $uri"
+        fastForward = fast
+    }
+
     override fun toggleSound() {
         calls += "sound"
         muted = !muted
