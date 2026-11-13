@@ -161,6 +161,15 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `opens the trash page from its row, next to the progress page`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
+
+        composeRule.onNodeWithText(text(R.string.settings_trash_summary)).performScrollTo().performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenTrash), events)
+    }
+
+    @Test
     fun `opens the progress page from the statistics row`() {
         show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
 

@@ -132,6 +132,9 @@ sealed interface HomeEvent {
     /** Bouton « Progression » de la barre du haut (PS-153). */
     data object OpenProgress : HomeEvent
 
+    /** Bouton « Corbeille » de la barre du haut : les suppressions encore restaurables (PS-168). */
+    data object OpenTrash : HomeEvent
+
     /** Tap sur la bannière des suppressions en attente. */
     data object OpenPendingDeletions : HomeEvent
 
@@ -174,6 +177,9 @@ sealed interface HomeEffect {
 
     /** Ouvrir la page « Progression » (PS-153). */
     data object OpenProgress : HomeEffect
+
+    /** Ouvrir la page « Corbeille » (PS-168). */
+    data object OpenTrash : HomeEffect
 
     /** Ouvrir le résumé, pour confirmer les suppressions en attente (SPEC §3.5). */
     data object OpenSummary : HomeEffect
@@ -297,6 +303,10 @@ class HomeViewModel
 
                 HomeEvent.OpenProgress -> {
                     effects.trySend(HomeEffect.OpenProgress)
+                }
+
+                HomeEvent.OpenTrash -> {
+                    effects.trySend(HomeEffect.OpenTrash)
                 }
 
                 HomeEvent.OpenPendingDeletions -> {

@@ -109,12 +109,14 @@ fun SettingsRoute(
  * @property openLicenses ouvre les licences.
  * @property openTutorial rouvre le tutoriel.
  * @property openProgress ouvre la page « Progression » (PS-153).
+ * @property openTrash ouvre la page « Corbeille » (PS-168).
  */
 class SettingsNavigation(
     val back: () -> Unit,
     val openLicenses: () -> Unit = {},
     val openTutorial: () -> Unit = {},
     val openProgress: () -> Unit = {},
+    val openTrash: () -> Unit = {},
 )
 
 /** Exécute [effect] s'il mène à un autre écran de l'application ; renvoie `false` sinon. */
@@ -124,6 +126,7 @@ private fun SettingsNavigation.navigate(effect: SettingsEffect): Boolean {
         SettingsEffect.OpenLicenses -> openLicenses()
         SettingsEffect.OpenTutorial -> openTutorial()
         SettingsEffect.OpenProgress -> openProgress()
+        SettingsEffect.OpenTrash -> openTrash()
         else -> return false
     }
     return true
