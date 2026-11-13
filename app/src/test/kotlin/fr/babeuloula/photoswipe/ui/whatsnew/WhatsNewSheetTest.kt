@@ -7,6 +7,7 @@ import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -83,11 +84,26 @@ class WhatsNewSheetTest {
 
         val oldest = composeRule.activity.getString(R.string.whats_new_version, "1.2.0")
         composeRule
-            .onNode(
-                hasScrollToNodeAction() and hasAnyDescendant(hasText(text(R.string.whats_new_1_4_0_progress_title))),
-            ).performScrollToNode(hasText(oldest))
+            .onNodeWithTag(WHATS_NEW_LIST_TAG)
+            .performScrollToNode(hasText(oldest))
 
         composeRule.onNodeWithText(oldest).assertExists()
+    }
+
+    @Test
+    fun `tells about batch sorting, flagged photos and the widget in 1_4_0`() {
+        show(WHATS_NEW)
+
+        listOf(
+            R.string.whats_new_1_4_0_batch_title,
+            R.string.whats_new_1_4_0_quality_title,
+            R.string.whats_new_1_4_0_widget_title,
+        ).forEach { title ->
+            composeRule
+                .onNodeWithTag(WHATS_NEW_LIST_TAG)
+                .performScrollToNode(hasText(text(title)))
+            composeRule.onNodeWithText(text(title)).assertExists()
+        }
     }
 
     @Test

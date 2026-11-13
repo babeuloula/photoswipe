@@ -264,9 +264,9 @@
     <string name="tutorial_swipe_up_title">Favorite or share</string>
     <string name="tutorial_swipe_up_body">Swipe up to open the menu: add the memory to your favorites, which also keeps it, or share it.</string>
     <string name="tutorial_catch_up_title">Catch up on missed days</string>
-    <string name="tutorial_catch_up_body">Missed a day? On the home screen, below today\'s card, the “Catch up” list keeps the previous days (a week by default, up to 30 days in the settings), and a day already sorted can be sorted again. A daily reminder, which you can turn on in the settings, lets you know only when memories are left to sort.</string>
+    <string name="tutorial_catch_up_body">Missed a day? On the home screen, below today\'s card, the “Catch up” list keeps the previous days (a week by default, up to 30 days in the settings), and a day already sorted can be sorted again. Tap the thumbnails of a day to see all its memories, then long press to sort several at once. A daily reminder, which you can turn on in the settings, lets you know only when memories are left to sort.</string>
     <string name="tutorial_confirmation_title">Nothing is final</string>
-    <string name="tutorial_confirmation_body">Marked media are deleted together, once you confirm at the end of sorting; tap them in the summary to review them full size first. They go to the system trash, where you can restore them for about 30 days.</string>
+    <string name="tutorial_confirmation_body">Marked media are deleted together, once you confirm at the end of sorting; tap them in the summary to review them full size first. They go to the system trash, where you can restore them for about 30 days, from the “Trash” page (icon at the top of the home screen).</string>
     <string name="tutorial_practice_title">Give it a try</string>
     <string name="tutorial_practice_body">These sample cards are not your photos: swipe them or use the buttons, nothing is saved.</string>
     <string name="tutorial_practice_kept">Kept: it would come back next year.</string>
@@ -367,6 +367,12 @@
     <string name="whats_new_1_4_0_calendar_text">See how many memories wait on each day of the year, and tap any day to open it, even outside this week.</string>
     <string name="whats_new_1_4_0_goals_title">Badges and a space goal</string>
     <string name="whats_new_1_4_0_goals_text">Earn badges as you sort, and set yourself an amount of space to free.</string>
+    <string name="whats_new_1_4_0_batch_title">Sort several memories at once</string>
+    <string name="whats_new_1_4_0_batch_text">In the overview of a day, long press a memory, tick the others, then keep or delete them all in one go. Tap a year to select it whole.</string>
+    <string name="whats_new_1_4_0_quality_title">Blurry photos and duplicates spotted</string>
+    <string name="whats_new_1_4_0_quality_text">A label points out photos that may be blurry or very dark, and copies of the same picture. It only flags them: the choice stays yours.</string>
+    <string name="whats_new_1_4_0_widget_title">A “This day” widget</string>
+    <string name="whats_new_1_4_0_widget_text">Add it to your home screen: a memory of the day and how many are left to sort. Tap it to start sorting.</string>
     <!-- Widget « Ce jour-là » de l'écran d'accueil (PS-170). -->
     <string name="widget_name">This day</string>
     <string name="widget_description">A memory from this day in past years, and how many are left to sort</string>

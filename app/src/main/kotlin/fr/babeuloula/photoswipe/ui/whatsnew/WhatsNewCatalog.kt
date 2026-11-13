@@ -64,6 +64,21 @@ val WHATS_NEW: List<WhatsNewRelease> =
                         R.string.whats_new_1_4_0_goals_text,
                         R.drawable.ic_emoji_events,
                     ),
+                    WhatsNewItem(
+                        R.string.whats_new_1_4_0_batch_title,
+                        R.string.whats_new_1_4_0_batch_text,
+                        R.drawable.ic_done_all,
+                    ),
+                    WhatsNewItem(
+                        R.string.whats_new_1_4_0_quality_title,
+                        R.string.whats_new_1_4_0_quality_text,
+                        R.drawable.ic_blur_on,
+                    ),
+                    WhatsNewItem(
+                        R.string.whats_new_1_4_0_widget_title,
+                        R.string.whats_new_1_4_0_widget_text,
+                        R.drawable.ic_widgets,
+                    ),
                 ),
         ),
     )
