@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.ui.postcard
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -93,6 +94,28 @@ class PostcardRendererTest {
 
         assertTrue(inkInBrandArea(render(1600, 1200), layout) > 0)
         assertEquals(0, inkInBrandArea(render(1600, 1200, brand = null), layout))
+    }
+
+    @Test
+    fun `puts the app icon before the mention, and leaves it out with the mention`() {
+        val logoStyle = style.copy(logo = ColorDrawable(Color.RED))
+        val photo = photo(1600, 1200)
+        val footer = PostcardLayout.of(1600, 1200).footer
+
+        fun redInFooter(brand: String?): Int {
+            val card = renderPostcard(photo, "5 years ago · Nov 6, 2021", brand, logoStyle)
+            return (footer.left until footer.right).sumOf { x ->
+                (footer.top until footer.bottom).count { y -> card.getPixel(x, y) == Color.RED }
+            }
+        }
+
+        assertTrue(redInFooter("PhotoSwipe") > 0)
+        assertEquals(0, redInFooter(null))
+    }
+
+    @Test
+    fun `reads the app icon for the postcard`() {
+        assertTrue(style.logo != null)
     }
 
     /** Pixels qui ne sont pas du papier dans le dernier cinquième du pied de carte, où se pose la mention. */
