@@ -19,6 +19,33 @@ class ShareIntentTest {
     private fun Intent.sent(): Intent = getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)!!
 
     @Test
+    fun `opens a chooser of viewers and editors that may read and write only this media`() {
+        val chooser = openWithIntent(photo, MediaType.IMAGE, "Open with")
+        val view = chooser.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)!!
+        val edit = chooser.getParcelableArrayExtra(Intent.EXTRA_ALTERNATE_INTENTS, Intent::class.java)!!.single()
+
+        assertEquals(Intent.ACTION_CHOOSER, chooser.action)
+        assertEquals("Open with", chooser.getCharSequenceExtra(Intent.EXTRA_TITLE))
+        assertEquals(Intent.ACTION_VIEW, view.action)
+        assertEquals(Intent.ACTION_EDIT, edit.action)
+        listOf(view, edit).forEach { intent ->
+            assertEquals(Uri.parse(photo), intent.data)
+            assertEquals("image/*", intent.type)
+            assertTrue(intent.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
+            assertTrue(intent.flags and Intent.FLAG_GRANT_WRITE_URI_PERMISSION != 0)
+        }
+    }
+
+    @Test
+    fun `opens a video as a video`() {
+        val view =
+            openWithIntent("content://media/external/video/media/8", MediaType.VIDEO, "Open with")
+                .getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)!!
+
+        assertEquals("video/*", view.type)
+    }
+
+    @Test
     fun `opens the Android share sheet with its title`() {
         val chooser = shareIntent(photo, MediaType.IMAGE, "Share")
 

@@ -294,9 +294,7 @@ internal fun LoadedDeck(
                 onEvent(DeckEvent.CloseMenu)
                 requestedExit = CardSide.TOP
             },
-            onUnfavorite = { onEvent(DeckEvent.Unfavorite) },
-            onShare = { onEvent(DeckEvent.Share) },
-            onDismiss = { onEvent(DeckEvent.CloseMenu) },
+            onEvent = onEvent,
         )
     }
 }
@@ -368,26 +366,24 @@ private fun CardStack(
 
 /**
  * Menu de la carte du dessus (SPEC §2), en feuille du bas Material 3 : « Ajouter aux favoris », ou
- * « Retirer des favoris » pour une carte déjà en favori (PS-124), et « Partager » ; le fermer sans
- * choisir laisse la carte en place.
+ * « Retirer des favoris » pour une carte déjà en favori (PS-124), « Partager » et « Ouvrir avec »
+ * (PS-162) ; le fermer sans choisir laisse la carte en place.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CardMenu(
     card: MediaCardUiState,
     onFavorite: () -> Unit,
-    onUnfavorite: () -> Unit,
-    onShare: () -> Unit,
-    onDismiss: () -> Unit,
+    onEvent: (DeckEvent) -> Unit,
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(onDismissRequest = { onEvent(DeckEvent.CloseMenu) }) {
         MenuPreview(card)
         // Carte déjà en favori (cœur) : le menu propose de l'en retirer, sans trier la carte (PS-124).
         if (card.favorite) {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.deck_unfavorite)) },
                 leadingContent = { Icon(painterResource(R.drawable.ic_favorite_filled), contentDescription = null) },
-                modifier = Modifier.clickable(onClick = onUnfavorite),
+                modifier = Modifier.clickable { onEvent(DeckEvent.Unfavorite) },
             )
         } else {
             ListItem(
@@ -399,9 +395,15 @@ private fun CardMenu(
         ListItem(
             headlineContent = { Text(stringResource(R.string.deck_share)) },
             leadingContent = { Icon(painterResource(R.drawable.ic_share), contentDescription = null) },
+            modifier = Modifier.clickable { onEvent(DeckEvent.Share) },
+        )
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.deck_open_with)) },
+            supportingContent = { Text(stringResource(R.string.deck_open_with_summary)) },
+            leadingContent = { Icon(painterResource(R.drawable.ic_open_in_new), contentDescription = null) },
             modifier =
                 Modifier
-                    .clickable(onClick = onShare)
+                    .clickable { onEvent(DeckEvent.OpenWith) }
                     .padding(bottom = 24.dp),
         )
     }

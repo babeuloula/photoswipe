@@ -119,6 +119,9 @@
     <string name="deck_unfavorite">Remove from favorites</string>
     <string name="deck_share">Share</string>
     <string name="deck_share_failed">This media can\'t be shared.</string>
+    <string name="deck_open_with">Open with</string>
+    <string name="deck_open_with_summary">View or edit it in another app</string>
+    <string name="deck_open_with_failed">This media can\'t be opened in another app.</string>
     <string name="summary_title">Summary</string>
     <!-- Résumé avant confirmation (SPEC §3.5). -->
     <string name="summary_freed_space">Estimated space freed</string>

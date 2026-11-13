@@ -58,6 +58,15 @@ class CardMenuTest {
     }
 
     @Test
+    fun `offers to open the card in another app`() {
+        showMenu(PREVIEW_CARD)
+
+        composeRule.onNodeWithText("Open with").performClick()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.OpenWith), events)
+    }
+
+    @Test
     fun `offers to add a card that is not a favorite yet`() {
         showMenu(PREVIEW_CARD)
 

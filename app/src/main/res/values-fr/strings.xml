@@ -111,6 +111,9 @@
     <string name="deck_unfavorite">Retirer des favoris</string>
     <string name="deck_share">Partager</string>
     <string name="deck_share_failed">Ce média ne peut pas être partagé.</string>
+    <string name="deck_open_with">Ouvrir avec</string>
+    <string name="deck_open_with_summary">Le voir ou le retoucher dans une autre application</string>
+    <string name="deck_open_with_failed">Ce média ne peut pas être ouvert dans une autre application.</string>
     <string name="summary_title">Résumé</string>
     <string name="summary_freed_space">Espace libéré estimé</string>
     <string name="summary_nothing_deleted_yet">Rien n\'est encore supprimé : vos choix sont enregistrés et attendent votre confirmation.</string>
