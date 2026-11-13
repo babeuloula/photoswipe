@@ -180,7 +180,7 @@ class PhotoSwipeNavHostTest {
     fun `opens the progress page from home and comes back`() {
         awaitText(text(R.string.home_today))
         composeRule.onNodeWithContentDescription(text(R.string.home_open_progress)).performClick()
-        awaitText(text(R.string.settings_statistics_since))
+        awaitText(text(R.string.progress_streak_section))
 
         goBack()
 
@@ -193,7 +193,7 @@ class PhotoSwipeNavHostTest {
         composeRule.onNodeWithContentDescription(text(R.string.home_open_settings)).performClick()
         awaitText(text(R.string.settings_title))
         composeRule.onNodeWithText(text(R.string.settings_progress)).performScrollTo().performClick()
-        awaitText(text(R.string.settings_statistics_since))
+        awaitText(text(R.string.progress_streak_section))
 
         goBack()
 

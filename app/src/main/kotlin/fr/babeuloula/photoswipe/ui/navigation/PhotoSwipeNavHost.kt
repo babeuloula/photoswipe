@@ -146,7 +146,10 @@ private fun NavGraphBuilder.settingsDestinations(navController: NavHostControlle
         )
     }
     composable<ProgressRoute> {
-        ProgressDestination(onBack = navController::popBackStack)
+        ProgressDestination(
+            onBack = navController::popBackStack,
+            onOpenOverview = { day -> navController.navigate(DayOverviewRoute.of(day)) },
+        )
     }
     composable<TutorialRoute> {
         // Revu depuis les réglages : terminé ou passé, on y revient, sans toucher à l'état « vu ».
