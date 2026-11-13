@@ -29,6 +29,7 @@ import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.common.RotationPolicy
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.isDark
+import fr.babeuloula.photoswipe.widget.WidgetRefresher
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -60,6 +61,10 @@ class MainActivity : ComponentActivity() {
     /** Réglages, lus pour le thème de l'application. */
     @Inject
     lateinit var settingsRepository: SettingsRepository
+
+    /** Mise à jour du widget « Ce jour-là » en quittant l'application, après un tri (PS-170). */
+    @Inject
+    lateinit var widgetRefresher: WidgetRefresher
 
     /** Traduit l'écran demandé au lancement en route de navigation. */
     @Inject
@@ -115,6 +120,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // L'écran d'accueil du téléphone va réapparaître : le widget y montre les tris qui viennent d'être faits.
+        widgetRefresher.refresh()
     }
 
     override fun onNewIntent(intent: Intent) {

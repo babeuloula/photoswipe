@@ -160,4 +160,10 @@
         <item quantity="many">Voir les %d jours plus anciens</item>
         <item quantity="other">Voir les %d jours plus anciens</item>
     </plurals>
+    <!-- Widget « Ce jour-là » : souvenirs du jour qui restent à trier (PS-170). -->
+    <plurals name="widget_to_sort">
+        <item quantity="one">%d à trier</item>
+        <item quantity="many">%d à trier</item>
+        <item quantity="other">%d à trier</item>
+    </plurals>
 </resources>

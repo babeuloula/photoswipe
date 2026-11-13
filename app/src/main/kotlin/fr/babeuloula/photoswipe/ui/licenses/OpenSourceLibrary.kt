@@ -38,6 +38,7 @@ val OPEN_SOURCE_LIBRARIES: List<OpenSourceLibrary> =
         OpenSourceLibrary("AndroidX DataStore", "The Android Open Source Project"),
         OpenSourceLibrary("AndroidX WorkManager", "The Android Open Source Project"),
         OpenSourceLibrary("AndroidX Media3", "The Android Open Source Project"),
+        OpenSourceLibrary("Jetpack Glance", "The Android Open Source Project"),
         OpenSourceLibrary("Jetpack Compose (UI, Material 3)", "The Android Open Source Project"),
         OpenSourceLibrary("Material Symbols", "Google LLC"),
         OpenSourceLibrary("Dagger Hilt", "Google LLC"),

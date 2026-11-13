@@ -103,6 +103,31 @@
             android:name="fr.babeuloula.photoswipe.data.reminder.ReminderAlarmReceiver"
             android:exported="false" />
 
+        <!-- Widget « Ce jour-là » de l'écran d'accueil (PS-170) et son réglage « montrer une photo »,
+             ouvert à la pose du widget puis par « Réglages du widget ». -->
+        <receiver
+            android:name=".widget.ThisDayWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/this_day_widget_info" />
+        </receiver>
+
+        <activity
+            android:name=".widget.ThisDayWidgetConfigureActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/widget_settings_title"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <!-- WorkManager est configuré par PhotoSwipeApplication (fabrique Hilt des tâches) : son initialisation automatique est retirée. -->
         <provider
             android:name="androidx.startup.InitializationProvider"

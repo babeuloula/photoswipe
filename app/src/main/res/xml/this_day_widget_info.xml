@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Widget « Ce jour-là » (PS-170) : petit (2 × 2) par défaut, redimensionnable jusqu'au moyen (4 × 2).
+    Pas de mise à jour périodique d'Android : WorkManager le redessine après minuit et après un tri.
+    Le réglage « montrer une photo » s'ouvre à la pose, puis par « Réglages du widget ».
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="fr.babeuloula.photoswipe.widget.ThisDayWidgetConfigureActivity"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:maxResizeHeight="220dp"
+    android:maxResizeWidth="320dp"
+    android:minHeight="110dp"
+    android:minResizeHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minWidth="110dp"
+    android:previewLayout="@layout/widget_this_day_preview"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable" />

@@ -50,6 +50,13 @@ Rapports : `<module>/build/reports/tests/<tâche>/index.html` (HTML lisible) et 
 
 Les modules Android restent sur JUnit 4 en attendant une décision ADR sur JUnit 5/6 côté Android.
 
+### Widget « Ce jour-là » (`:app`, package `widget`, PS-170)
+
+- `GetTodayWidgetTest` (`:domain`) : état du widget sur les fakes (sans accès, à trier avec vignette, à trier d'abord en vignette, tout trié, jour vidé, aucun souvenir).
+- `ThisDayWidgetContentTest` : rendu Glance par `runGlanceAppWidgetUnitTest` (glance-appwidget-testing) sous Robolectric, en français : date, « 23 à trier » et années en taille moyenne, date abrégée en petite taille, sans photo, appui qui ouvre la pile du jour ou l'accueil, états tout trié, aucun souvenir et sans accès.
+- `ThisDayWidgetUpdatesTest` (WorkManager de test) : mise à jour quotidienne juste après minuit, mise à jour après un tri seulement si un widget est posé, annulation. `ThisDayWidgetManifestTest` : récepteur et réglage déclarés. `HomeViewModelTest` : widget rafraîchi à chaque lecture des jours. `AccessibilityTest` : écran de réglage du widget.
+- Non couvert sur la JVM : la pose réelle sur un écran d'accueil et l'aperçu du sélecteur, à vérifier sur l'émulateur.
+
 ### Robolectric (`:app`, `:data`)
 
 - Il simule Android sur la JVM. Il est réglé sur l'**API 34** (`src/test/resources/robolectric.properties` de chaque module) : les API 35 et plus demandent Java 21 (ADR [0002](decisions/0002-robolectric-api-level.md)).

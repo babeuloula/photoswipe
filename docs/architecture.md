@@ -112,7 +112,8 @@ Parcours principaux :
 1. **Accueil** : `HomeViewModel` observe `GetReviewDays` (MediaStore × décisions Room) : nombre à trier d'aujourd'hui et des 6 jours précédents, suppressions en attente (`GetSessionSummary`).
 2. **Pile** : `DeckViewModel` charge le paquet du jour (`GetDeckForDay`) et l'historique d'annulation (`GetDaySession`, journal Room) ; chaque geste écrit une décision (`KeepMedia`, `MarkForDeletion`, `FavoriteMedia`) et son entrée de journal dans une transaction ; « Annuler » passe par `UndoLastDecision`. Rien n'est supprimé à ce stade.
 3. **Résumé et confirmation** : `SummaryViewModel` prépare les demandes de corbeille par lots de 500 (`PrepareTrash`) ; `SummaryRoute` lance chaque dialogue Android (`StartIntentSenderForResult`) et renvoie la réponse, enregistrée par `RecordTrashResult` (ADR 0018). Seul Android supprime, après l'accord de l'utilisateur ; avec l'accès « Gestion des médias », PhotoSwipe demande sa propre confirmation (ADR 0023). Les favoris ne passent plus par le résumé : la pile les demande aussitôt (`GalleryFavorite` : `RequestFavorite`, puis `RecordFavoriteResult`).
-4. **Rappel** : `WorkManagerReminderScheduler` planifie `ReminderWorker`, qui lance `SendDailyReminder` ; `AndroidReminderNotifier` publie la notification, dont l'appui ouvre la pile du jour (`MainActivity.openDeckIntent`).
+4. **Widget « Ce jour-là »** (PS-170) : `ThisDayWidget` (Glance, `widget`) lit `GetTodayWidget` par `ThisDayWidgetLoader` ; `ThisDayWidgetUpdates` le redessine par WorkManager après minuit et après un tri (retour à l'accueil, sortie de l'application).
+5. **Rappel** : `WorkManagerReminderScheduler` planifie `ReminderWorker`, qui lance `SendDailyReminder` ; `AndroidReminderNotifier` publie la notification, dont l'appui ouvre la pile du jour (`MainActivity.openDeckIntent`).
 
 ## 4. Configuration Android
 
@@ -161,6 +162,7 @@ Relevées le 2026-11-03 sur les sources officielles (Google Maven, Maven Central
 | detekt | 1.23.8 | Dernière stable ; la 2.0 n'est qu'en alpha (ADR 0003) |
 | Coil (`coil-compose-core`, `coil-video`) | 3.6.3 | Chargement des images et miniatures vidéo (ADR 0016) |
 | Media3 (`exoplayer`, `ui-compose`) | 1.11.1 | Lecture des vidéos de la pile |
+| Jetpack Glance (`appwidget`, `material3`, `appwidget-testing`) | 1.2.0 | Relevée le 2026-11-13 sur Google Maven, dernière stable (1.3.0 en alpha) ; widget « Ce jour-là » (PS-170) |
 | Polices Atkinson Hyperlegible Next (variable) et IBM Plex Mono (400, 500) | dépôt `google/fonts`, relevé le 2026-11-06 | Fichiers `.ttf` dans `app/src/main/res/font`, hors catalogue Gradle |
 | GitHub Actions | `checkout@v7`, `setup-java@v6`, `gradle/actions/setup-gradle@v6`, `upload-artifact@v7`, `mikepenz/action-junit-report@v6` | CI |
 
@@ -194,6 +196,9 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | Coil Video (`coil-video`) | `:app` | Miniatures des vidéos sur leur carte (SPEC §4.3) : `VideoFrameDecoder` tire une image de la vidéo, ajouté au chargeur de l'ADR 0016 |
 | Media3 ExoPlayer | `:app` | Lecture des vidéos imposée par la SPEC §7 : un seul lecteur pour toute la pile, réutilisé de carte en carte et libéré en quittant l'écran |
 | Media3 UI Compose | `:app` | Surface vidéo et état de présentation (première image rendue, taille de la vidéo) en Compose, sans `PlayerView` |
+| Jetpack Glance (`glance-appwidget`, `glance-material3`) | `:app` | Widget « Ce jour-là » de l'écran d'accueil (PS-170) écrit en Compose plutôt qu'en `RemoteViews` à la main, aux couleurs du thème clair et sombre (`ColorProviders`) ; Glance planifie ses rendus par WorkManager, déjà présent |
+| Glance AppWidget Testing | `:app` (tests) | `runGlanceAppWidgetUnitTest` : rendu du widget vérifié sur la JVM (Robolectric), sans écran d'accueil |
+| WorkManager Testing | `:app` (tests) | Planification des mises à jour du widget (`ThisDayWidgetUpdates`) vérifiée sur le WorkManager de test |
 | Compose Material 3 | `:app` | Material 3 imposé par la SPEC §8 : thème, composants standards |
 | Material Symbols Rounded (vecteurs de `res/drawable`) | `:app` | Une seule famille d'icônes, arrondie, 24 dp (ADR 0025) : fichiers XML tirés du dépôt `google/material-design-icons`, sans bibliothèque d'icônes Compose |
 | Atkinson Hyperlegible Next, IBM Plex Mono (polices, SIL OFL 1.1) | `:app` (`res/font`) | Typographie de la refonte (ADR 0025) : police d'interface conçue pour la lisibilité, et chasse fixe pour les grands nombres et le repère « Il y a 3 ans » ; embarquées, car l'app n'a pas accès à internet |
