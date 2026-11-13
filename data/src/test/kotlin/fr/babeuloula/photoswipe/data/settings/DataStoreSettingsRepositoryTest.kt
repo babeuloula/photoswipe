@@ -109,6 +109,18 @@ class DataStoreSettingsRepositoryTest {
         }
 
     @Test
+    fun `keeps the dark theme in grays when nothing is stored, then reads back pure black`() =
+        runTest {
+            val repository = DataStoreSettingsRepository(dataStore())
+            assertEquals(false, repository.observePureBlack().first())
+
+            repository.savePureBlack(true)
+
+            assertEquals(true, repository.observePureBlack().first())
+            assertEquals(true, repository.observeAnimationsEnabled().first())
+        }
+
+    @Test
     fun `follows the phone theme when no theme is stored`() =
         runTest {
             assertEquals(ThemeMode.SYSTEM, DataStoreSettingsRepository(dataStore()).observeThemeMode().first())

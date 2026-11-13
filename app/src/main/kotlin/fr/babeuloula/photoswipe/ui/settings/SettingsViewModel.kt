@@ -28,12 +28,14 @@ import javax.inject.Inject
  * @property timePickerOpen vrai pendant le choix de l'heure du rappel.
  * @property themeMode thème de l'application, `null` tant qu'il n'est pas lu.
  * @property animationsEnabled vrai si les animations de l'application sont actives (PS-146).
+ * @property pureBlack vrai si le thème sombre est en noir pur (PS-176).
  */
 data class SettingsUiState(
     val reminder: ReminderSettings? = null,
     val timePickerOpen: Boolean = false,
     val themeMode: ThemeMode? = null,
     val animationsEnabled: Boolean = true,
+    val pureBlack: Boolean = false,
 )
 
 /** Action de l'utilisateur sur les réglages. */
@@ -103,6 +105,15 @@ sealed interface SettingsEvent {
      * @property enabled vrai pour garder les animations.
      */
     data class AnimationsToggled(
+        val enabled: Boolean,
+    ) : ThemeEvent
+
+    /**
+     * Interrupteur « Noir pur » (PS-176) : fonds noirs en thème sombre, pour les écrans OLED.
+     *
+     * @property enabled vrai pour le noir pur.
+     */
+    data class PureBlackToggled(
         val enabled: Boolean,
     ) : ThemeEvent
 
@@ -255,6 +266,12 @@ class SettingsViewModel
                     .catch { emit(true) }
                     .collect { enabled -> state.update { it.copy(animationsEnabled = enabled) } }
             }
+            viewModelScope.launch {
+                settingsRepository
+                    .observePureBlack()
+                    .catch { emit(false) }
+                    .collect { enabled -> state.update { it.copy(pureBlack = enabled) } }
+            }
         }
 
         /** Traite une action de l'utilisateur. */
@@ -295,13 +312,14 @@ class SettingsViewModel
             }
         }
 
-        /** Enregistre le thème choisi ou le choix des animations, dans la section « Apparence ». */
+        /** Enregistre le thème choisi, le noir pur ou le choix des animations, dans la section « Apparence ». */
         private fun onThemeEvent(event: SettingsEvent.ThemeEvent) {
             viewModelScope.launch {
                 runCatching {
                     when (event) {
                         is SettingsEvent.ThemePicked -> settingsRepository.saveThemeMode(event.mode)
                         is SettingsEvent.AnimationsToggled -> settingsRepository.saveAnimationsEnabled(event.enabled)
+                        is SettingsEvent.PureBlackToggled -> settingsRepository.savePureBlack(event.enabled)
                     }
                 }
             }

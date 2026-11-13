@@ -55,6 +55,18 @@ class SettingsFakesTest {
         }
 
     @Test
+    fun `keeps the dark theme in grays until pure black is turned on`() =
+        runTest {
+            val repository = FakeSettingsRepository()
+            assertEquals(false, repository.observePureBlack().first())
+
+            repository.savePureBlack(true)
+
+            assertEquals(true, repository.observePureBlack().first())
+            assertEquals(true, repository.pureBlack)
+        }
+
+    @Test
     fun `gives the media management tip as never offered until another state is saved`() =
         runTest {
             val repository = FakeSettingsRepository()

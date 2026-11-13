@@ -67,6 +67,13 @@ class DataStoreSettingsRepository
             dataStore.edit { it[ANIMATIONS_ENABLED] = enabled }
         }
 
+        override fun observePureBlack(): Flow<Boolean> =
+            preferences().map { it[PURE_BLACK] ?: false }.distinctUntilChanged()
+
+        override suspend fun savePureBlack(enabled: Boolean) {
+            dataStore.edit { it[PURE_BLACK] = enabled }
+        }
+
         override fun observeManageMediaTip(): Flow<ManageMediaTip> =
             preferences()
                 .map { preferences ->
@@ -135,6 +142,7 @@ class DataStoreSettingsRepository
             val REMINDER_MINUTE_OF_DAY = intPreferencesKey("reminder_minute_of_day")
             val THEME_MODE = stringPreferencesKey("theme_mode")
             val ANIMATIONS_ENABLED = booleanPreferencesKey("animations_enabled")
+            val PURE_BLACK = booleanPreferencesKey("pure_black")
             val MANAGE_MEDIA_TIP = stringPreferencesKey("manage_media_tip")
             val TUTORIAL_VERSION_SEEN = intPreferencesKey("tutorial_version_seen")
             val RATING_SORTED_DAYS = intPreferencesKey("rating_sorted_days")

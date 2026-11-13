@@ -43,6 +43,33 @@ class PhotoSwipeThemeTest {
     }
 
     @Test
+    fun `turns the dark backgrounds pure black, raised surfaces still apart from them`() {
+        val colors = colorSchemeOf { PhotoSwipeTheme(darkTheme = true, pureBlack = true, content = it) }
+
+        assertEquals(PureBlackColorScheme, colors)
+        listOf(colors.background, colors.surface, colors.surfaceDim, colors.surfaceContainerLowest).forEach {
+            assertEquals(Color.Black, it)
+        }
+        listOf(
+            colors.surfaceContainerLow,
+            colors.surfaceContainer,
+            colors.surfaceContainerHigh,
+            colors.surfaceContainerHighest,
+        ).zipWithNext()
+            .forEach { (lower, higher) -> assertNotEquals(lower, higher) }
+        assertNotEquals(Color.Black, colors.surfaceContainerLow)
+        assertEquals(DarkColorScheme.surfaceContainer, colors.surfaceContainer)
+        assertEquals(DarkColorScheme.primary, colors.primary)
+    }
+
+    @Test
+    fun `keeps the light palette when pure black is on`() {
+        val colors = colorSchemeOf { PhotoSwipeTheme(darkTheme = false, pureBlack = true, content = it) }
+
+        assertEquals(LightColorScheme, colors)
+    }
+
+    @Test
     fun `builds the fallback palettes from the amber seed, fixed roles included`() {
         assertEquals(Color(0xFF785A0B), LightColorScheme.primary)
         assertEquals(Color(0xFFEAC16C), DarkColorScheme.primary)

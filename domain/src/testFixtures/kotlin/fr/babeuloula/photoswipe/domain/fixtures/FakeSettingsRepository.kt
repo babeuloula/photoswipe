@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.asStateFlow
  * @param manageMediaTip état du conseil « Gestion des médias » au départ.
  * @param tutorialVersionSeen version du tutoriel vue au départ.
  * @param ratingInvitation invitation à noter l'application au départ.
+ * @param animationsEnabled animations actives au départ.
+ * @param pureBlack noir pur du thème sombre au départ.
  */
 class FakeSettingsRepository(
     reminder: ReminderSettings = ReminderSettings.DEFAULT,
@@ -31,8 +33,13 @@ class FakeSettingsRepository(
     tutorialVersionSeen: Int = Tutorial.NEVER_SEEN,
     ratingInvitation: RatingInvitation = RatingInvitation.DEFAULT,
     animationsEnabled: Boolean = true,
+    pureBlack: Boolean = false,
 ) : SettingsRepository {
     private val storedAnimations = MutableStateFlow(animationsEnabled)
+    private val storedPureBlack = MutableStateFlow(pureBlack)
+
+    /** Noir pur du thème sombre enregistré, pour les vérifications du test. */
+    val pureBlack: Boolean get() = storedPureBlack.value
 
     /** Animations actives enregistrées, pour les vérifications du test. */
     val animationsEnabled: Boolean get() = storedAnimations.value
@@ -77,6 +84,12 @@ class FakeSettingsRepository(
 
     override suspend fun saveAnimationsEnabled(enabled: Boolean) {
         storedAnimations.value = enabled
+    }
+
+    override fun observePureBlack(): Flow<Boolean> = storedPureBlack.asStateFlow()
+
+    override suspend fun savePureBlack(enabled: Boolean) {
+        storedPureBlack.value = enabled
     }
 
     override fun observeManageMediaTip(): Flow<ManageMediaTip> = storedTip.asStateFlow()

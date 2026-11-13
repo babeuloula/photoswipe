@@ -69,6 +69,21 @@ class ContrastTest {
     }
 
     @Test
+    fun `keeps every text readable in the pure black theme`() {
+        assertSchemeReadable(PureBlackColorScheme, darkTheme = true)
+        val scheme = PureBlackColorScheme
+        assertReadable("pure black onSurface on the low container", scheme.onSurface, scheme.surfaceContainerLow)
+        assertReadable("pure black onSurface on cards", scheme.onSurface, scheme.surfaceContainer)
+        assertReadable("pure black onSurfaceVariant on cards", scheme.onSurfaceVariant, scheme.surfaceContainer)
+        assertReadable(
+            "pure black onSurfaceVariant on raised cards",
+            scheme.onSurfaceVariant,
+            scheme.surfaceContainerHigh,
+        )
+        assertReadable("pure black outline", scheme.outline, scheme.surface)
+    }
+
+    @Test
     fun `measures the contrast like the WCAG`() {
         assertTrue(contrast(Color.Black, Color.White) > 20.9)
         assertTrue(contrast(Color.Gray, Color.Gray) < 1.01)

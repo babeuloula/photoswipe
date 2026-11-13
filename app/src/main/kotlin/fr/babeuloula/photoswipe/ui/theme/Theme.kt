@@ -14,13 +14,21 @@ import androidx.compose.runtime.CompositionLocalProvider
  * utilisées, à la demande de Jérémy (PS-102).
  *
  * @param darkTheme `true` pour le thème sombre ; suit le réglage du système par défaut.
+ * @param pureBlack `true` pour le thème sombre en noir pur ([PureBlackColorScheme], PS-176) ; sans
+ *   effet sur le thème clair.
  */
 @Composable
 fun PhotoSwipeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    pureBlack: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val colorScheme =
+        when {
+            !darkTheme -> LightColorScheme
+            pureBlack -> PureBlackColorScheme
+            else -> DarkColorScheme
+        }
 
     CompositionLocalProvider(
         LocalSwipeColors provides swipeColors(colorScheme, darkTheme),

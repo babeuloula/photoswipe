@@ -291,4 +291,7 @@
     <!-- Réglage des animations (PS-146). -->
     <string name="settings_animations">Animations</string>
     <string name="settings_animations_summary">Turn them off to lighten the app on an older phone</string>
+    <!-- Réglage du noir pur du thème sombre (PS-176). -->
+    <string name="settings_pure_black">Pure black</string>
+    <string name="settings_pure_black_summary">Black backgrounds in the dark theme, to save battery on an OLED screen</string>
 </resources>

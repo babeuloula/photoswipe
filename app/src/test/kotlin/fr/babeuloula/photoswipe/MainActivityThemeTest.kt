@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe
 
+import android.graphics.Color
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.core.view.WindowCompat
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -9,6 +10,7 @@ import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -61,6 +63,20 @@ class MainActivityThemeTest {
     fun `switches to the dark theme as soon as it is chosen, system bars included`() {
         choose(ThemeMode.DARK)
 
+        assertTrue(lightSystemBarIcons())
+    }
+
+    @Test
+    fun `blackens the navigation bar as soon as pure black is chosen, in the dark theme only`() {
+        runBlocking { settings.savePureBlack(true) }
+        composeRule.waitForIdle()
+        assertNotEquals(Color.BLACK, composeRule.activity.window.navigationBarColor)
+
+        choose(ThemeMode.DARK)
+        composeRule.waitUntil { composeRule.activity.window.navigationBarColor == Color.BLACK }
+
+        runBlocking { settings.savePureBlack(false) }
+        composeRule.waitUntil { composeRule.activity.window.navigationBarColor != Color.BLACK }
         assertTrue(lightSystemBarIcons())
     }
 
