@@ -60,4 +60,14 @@ internal class DecisionRecorder(
             .filter { it.mediaId == media.id && it.reviewYear != day.year }
             .sortedBy { it.reviewYear }
             .map { record(media, sameDayMatcher.reviewDay(media, it.reviewYear, clock.zone), ReviewDecision.KEPT) }
+
+    /**
+     * Décision [decision] pour le fichier RAW de [media] s'il en a un (PS-166), à empiler avant
+     * celle de la photo : la carte s'annule alors d'un bloc. Vide sans RAW.
+     */
+    suspend fun recordCompanion(
+        media: MediaItem,
+        day: LocalDate,
+        decision: ReviewDecision,
+    ): List<SessionDecision> = listOfNotNull(media.rawCompanion?.let { record(it, day, decision) })
 }

@@ -36,5 +36,6 @@ class FavoriteMedia(
         day: LocalDate,
     ): List<SessionDecision> =
         recorder.keepOtherMarkings(media, day) +
+            recorder.recordCompanion(media, day, ReviewDecision.KEPT) +
             recorder.record(media, day, ReviewDecision.KEPT, favoritePending = true)
 }

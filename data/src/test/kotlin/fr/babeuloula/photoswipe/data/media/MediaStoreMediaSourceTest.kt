@@ -31,6 +31,34 @@ class MediaStoreMediaSourceTest {
     private val july15th2025 = Instant.parse("2025-07-15T10:00:00Z")
 
     @Test
+    fun `reads a raw and jpeg pair as the jpeg carrying its raw`() =
+        runTest {
+            val taken = july15th2025.toEpochMilli()
+            provider.addImage(
+                id = 1,
+                dateTaken = taken,
+                size = 3_000,
+                fileName = "IMG_0042.JPG",
+                folder = "DCIM/Camera/",
+            )
+            provider.addImage(
+                id = 2,
+                dateTaken = taken,
+                size = 25_000,
+                fileName = "IMG_0042.DNG",
+                folder = "DCIM/Camera/",
+            )
+
+            val media = source.mediaTakenIn(listOf(july15th2025..<july15th2025.plusSeconds(1))).single()
+
+            assertEquals(1L, media.id.value)
+            assertEquals("IMG_0042.JPG", media.fileName)
+            assertEquals("DCIM/Camera/", media.folder)
+            assertEquals(2L, media.rawCompanion?.id?.value)
+            assertEquals(28_000, media.totalSizeBytes)
+        }
+
+    @Test
     fun `reads the photos taken within the requested ranges`() =
         runTest {
             val start = Instant.parse("2025-07-14T22:00:00Z")

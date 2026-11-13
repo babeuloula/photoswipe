@@ -36,5 +36,8 @@ class KeepMedia(
     suspend operator fun invoke(
         media: MediaItem,
         day: LocalDate,
-    ): List<SessionDecision> = recorder.keepOtherMarkings(media, day) + recorder.record(media, day, ReviewDecision.KEPT)
+    ): List<SessionDecision> =
+        recorder.keepOtherMarkings(media, day) +
+            recorder.recordCompanion(media, day, ReviewDecision.KEPT) +
+            recorder.record(media, day, ReviewDecision.KEPT)
 }

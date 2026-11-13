@@ -307,6 +307,8 @@
     <!-- Photos prises à la suite (PS-140). -->
     <string name="deck_similar">%1$d/%2$d</string>
     <string name="deck_similar_description">Photo %1$d of %2$d taken one after another</string>
+    <string name="deck_raw_pair">RAW + JPEG</string>
+    <string name="deck_raw_pair_description">RAW and JPEG files of the same photo, sorted together</string>
     <string name="deck_duplicate">Duplicate %1$d/%2$d</string>
     <string name="deck_duplicate_description">Duplicate: photo %1$d of %2$d of the same image</string>
     <string name="deck_quality_blurry">Blurry?</string>

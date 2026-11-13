@@ -267,6 +267,7 @@ private fun CardBottom(
             playing = video?.playing == true,
             similar = card.similar,
             qualityHint = card.qualityHint,
+            raw = card.raw,
         )
     }
 }
@@ -438,6 +439,7 @@ private fun BottomChips(
     modifier: Modifier = Modifier,
     similar: SimilarGroup? = null,
     qualityHint: QualityHint? = null,
+    raw: Boolean = false,
 ) {
     val context = LocalContext.current
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -457,6 +459,13 @@ private fun BottomChips(
             }
         }
         FilmEdgeChip { Text(fileSizeLabel(context, sizeBytes)) }
+        // Paire RAW + JPEG (PS-166) : une photo, deux fichiers, que le poids ci-dessus additionne.
+        if (raw) {
+            val description = stringResource(R.string.deck_raw_pair_description)
+            FilmEdgeChip(modifier = Modifier.clearAndSetSemantics { contentDescription = description }) {
+                Text(stringResource(R.string.deck_raw_pair))
+            }
+        }
         similar?.let { SimilarChip(it) }
         qualityHint?.let { QualityHintChip(it) }
     }

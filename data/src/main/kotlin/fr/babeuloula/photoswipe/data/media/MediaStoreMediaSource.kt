@@ -11,6 +11,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.port.MediaSource
+import fr.babeuloula.photoswipe.domain.service.RawPairing
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.time.Duration
@@ -37,7 +38,8 @@ class MediaStoreMediaSource
         @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : MediaSource {
         override suspend fun mediaTakenIn(ranges: List<OpenEndRange<Instant>>): List<MediaItem> =
-            if (ranges.isEmpty()) emptyList() else query(takenInSelection(ranges)).distinctBy { it.id }
+            // Une paire RAW + JPEG devient une seule photo (PS-166).
+            if (ranges.isEmpty()) emptyList() else RawPairing.pair(query(takenInSelection(ranges)).distinctBy { it.id })
 
         override suspend fun mediaByIds(ids: Set<MediaId>): List<MediaItem> =
             ids.map { it.value }.chunked(MAX_IDS_PER_QUERY).flatMap { batch -> query(idsSelection(batch)) }
@@ -79,6 +81,8 @@ class MediaStoreMediaSource
                             sizeBytes = nonNegativeLong(columns.size) ?: 0,
                             duration = columns.duration?.let { nonNegativeLong(it) }?.let { Duration.ofMillis(it) },
                             isFavorite = getInt(columns.favorite) == 1,
+                            fileName = columns.fileName?.takeUnless { isNull(it) }?.let { getString(it) },
+                            folder = columns.folder?.takeUnless { isNull(it) }?.let { getString(it) },
                         ),
                     )
                 }
@@ -117,6 +121,8 @@ class MediaStoreMediaSource
             val size = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)
             val favorite = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.IS_FAVORITE)
             val duration = cursor.getColumnIndex(MediaStore.MediaColumns.DURATION).takeIf { it >= 0 }
+            val fileName = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME).takeIf { it >= 0 }
+            val folder = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH).takeIf { it >= 0 }
         }
 
         /** Collections MediaStore lues, avec leurs colonnes. */
@@ -151,4 +157,6 @@ private val COMMON_PROJECTION =
         MediaStore.MediaColumns.DATE_ADDED,
         MediaStore.MediaColumns.SIZE,
         MediaStore.MediaColumns.IS_FAVORITE,
+        MediaStore.MediaColumns.DISPLAY_NAME,
+        MediaStore.MediaColumns.RELATIVE_PATH,
     )

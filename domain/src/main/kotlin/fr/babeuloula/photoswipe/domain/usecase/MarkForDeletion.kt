@@ -34,4 +34,14 @@ class MarkForDeletion(
         media: MediaItem,
         day: LocalDate,
     ): SessionDecision = recorder.record(media, day, ReviewDecision.MARKED_FOR_DELETION)
+
+    /**
+     * Marque [media] et, s'il en a un, son fichier RAW (PS-166) ; renvoie les décisions à empiler
+     * pour l'undo, celle de la photo en dernier.
+     */
+    suspend fun withCompanion(
+        media: MediaItem,
+        day: LocalDate,
+    ): List<SessionDecision> =
+        recorder.recordCompanion(media, day, ReviewDecision.MARKED_FOR_DELETION) + invoke(media, day)
 }
