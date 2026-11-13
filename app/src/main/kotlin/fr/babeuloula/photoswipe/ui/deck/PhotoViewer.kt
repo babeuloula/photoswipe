@@ -1,14 +1,17 @@
 package fr.babeuloula.photoswipe.ui.deck
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -39,7 +42,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -193,23 +199,60 @@ private fun Modifier.zoomOrDismiss(
         }
     }
 
-/** Appui sur une photo : l'ouvre en grand (PS-117), annoncé « Voir en grand » par TalkBack. */
+/**
+ * Appui sur une photo de la carte : [onOpen] l'ouvre en grand (PS-117). Sur la carte du dessus
+ * d'un groupe de photos proches ([compare], PS-160), le maintien du doigt montre la photo
+ * précédente jusqu'au relâchement, sans ouvrir ni décider ; TalkBack propose la même chose par une
+ * action, qui bascule entre les deux photos.
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun Modifier.openOnTap(
     type: MediaType,
     onOpen: (() -> Unit)?,
-): Modifier =
-    if (onOpen != null && type == MediaType.IMAGE) {
-        clickable(
+    compare: CompareState? = null,
+): Modifier {
+    if (type != MediaType.IMAGE || (onOpen == null && compare?.available != true)) return this
+    val comparing = compare?.takeIf { it.available }
+    val compareLabel =
+        stringResource(if (comparing?.showing == true) R.string.deck_compare_back else R.string.deck_compare_action)
+    return this
+        .then(
+            if (comparing == null) {
+                Modifier
+            } else {
+                // Relâcher le doigt, ou le glisser assez pour lancer un geste, termine la comparaison.
+                Modifier.pointerInput(comparing) {
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false)
+                        waitForUpOrCancellation()
+                        comparing.showing = false
+                    }
+                }
+            },
+        ).combinedClickable(
             interactionSource = null,
             indication = null,
-            onClickLabel = stringResource(R.string.photo_viewer_open),
+            onClickLabel = stringResource(R.string.photo_viewer_open).takeIf { onOpen != null },
             role = Role.Image,
-            onClick = onOpen,
+            onLongClick = comparing?.let { { it.showing = true } },
+            onClick = { onOpen?.invoke() },
+        ).then(
+            if (comparing == null) {
+                Modifier
+            } else {
+                Modifier.semantics {
+                    customActions =
+                        listOf(
+                            CustomAccessibilityAction(compareLabel) {
+                                comparing.showing = !comparing.showing
+                                true
+                            },
+                        )
+                }
+            },
         )
-    } else {
-        this
-    }
+}
 
 /** Part de la hauteur à glisser vers le bas pour fermer la vue. */
 private const val DISMISS_FRACTION = 0.2f

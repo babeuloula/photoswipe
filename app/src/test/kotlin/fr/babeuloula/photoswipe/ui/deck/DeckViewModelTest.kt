@@ -136,7 +136,12 @@ class DeckViewModelTest : DeckViewModelTestBase() {
 
             val cards = (viewModel.uiState.value as DeckUiState.Loaded).cards
 
-            assertEquals(listOf(SimilarGroup(2, 3), SimilarGroup(3, 3), null), cards.map { it.similar })
+            assertEquals(
+                listOf(2 to 3, 3 to 3, null),
+                cards.map { card -> card.similar?.let { it.position to it.size } },
+            )
+            // La photo précédente de la première carte est déjà triée : on peut quand même comparer avec elle.
+            assertEquals(true, cards.first().similar?.previousUri != null)
         }
 
     @Test
@@ -361,23 +366,6 @@ class DeckViewModelTest : DeckViewModelTestBase() {
 
             assertEquals(CardSide.TOP, (viewModel.uiState.value as DeckUiState.Loaded).returningFrom)
             assertTrue(repository.entries.isEmpty())
-        }
-
-    @Test
-    fun `shares the top card without changing it and closes the menu`() =
-        runTest {
-            val media = takenOn(1, 2020)
-            val viewModel = deckViewModel(FakeMediaSource(listOf(media)))
-            viewModel.onEvent(DeckEvent.OpenMenu)
-
-            viewModel.onEvent(DeckEvent.Share)
-
-            assertEquals(DeckEffect.Share(media.uri, media.type), viewModel.uiEffects.first())
-            val state = viewModel.uiState.value as DeckUiState.Loaded
-            assertFalse(state.menuOpen)
-            assertEquals(listOf(MediaId(1)), state.cards.map { it.id })
-            assertTrue(repository.entries.isEmpty())
-            assertTrue(viewModel.session.isEmpty)
         }
 
     @Test

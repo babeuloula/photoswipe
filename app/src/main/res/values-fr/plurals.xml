@@ -135,4 +135,19 @@
         <item quantity="many">Nouveaux badges : %s</item>
         <item quantity="other">Nouveaux badges : %s</item>
     </plurals>
+    <plurals name="day_overview_selected">
+        <item quantity="one">%d sélectionné</item>
+        <item quantity="many">%d de sélectionnés</item>
+        <item quantity="other">%d sélectionnés</item>
+    </plurals>
+    <plurals name="day_overview_batch_kept">
+        <item quantity="one">%d souvenir gardé</item>
+        <item quantity="many">%d de souvenirs gardés</item>
+        <item quantity="other">%d souvenirs gardés</item>
+    </plurals>
+    <plurals name="day_overview_batch_marked">
+        <item quantity="one">%d souvenir marqué pour suppression</item>
+        <item quantity="many">%d de souvenirs marqués pour suppression</item>
+        <item quantity="other">%d souvenirs marqués pour suppression</item>
+    </plurals>
 </resources>

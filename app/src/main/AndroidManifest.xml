@@ -82,6 +82,11 @@
 
         <!-- Replanifie le rappel quotidien après un changement d'heure ou de fuseau, un redémarrage,
              ou un changement de l'autorisation des alarmes exactes (SPEC §3.6, PS-125). -->
+        <!-- Application choisie dans la feuille de partage, pour « Renvoyer avec … » (PS-163). -->
+        <receiver
+            android:name=".share.ShareTargetReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".reminder.ReminderRescheduleReceiver"
             android:exported="false">

@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FilledIconButton
@@ -100,13 +101,16 @@ internal const val VIDEO_PROGRESS_TAG = "video_progress"
 /**
  * Zone de tap de la vidéo et son gros bouton central : ▶ tant qu'elle ne joue pas ; au démarrage,
  * ⏸ qui s'efface en fondu. Toute la carte réagit au tap, sans ondulation ; un glissement reste un
- * geste de tri. TalkBack lit l'action : « Lire la vidéo » ou « Mettre la vidéo en pause ».
+ * geste de tri. TalkBack lit l'action : « Lire la vidéo » ou « Mettre la vidéo en pause ». Le
+ * maintien du doigt lit la vidéo en ×2 ([fast], [onFast], PS-161), avec une puce « ×2 ».
  */
 @Composable
 internal fun PlayPauseOverlay(
     playing: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    fast: Boolean = false,
+    onFast: (Boolean) -> Unit = {},
 ) {
     val buttonAlpha = remember { Animatable(1f) }
     // Fondu du thème (SPEC §8) : effet lent, sans rebond.
@@ -123,7 +127,7 @@ internal fun PlayPauseOverlay(
     Box(
         modifier =
             modifier
-                .clickable(interactionSource = null, indication = null, onClick = onToggle)
+                .holdToFastForward(fast = fast, onFast = onFast, onTap = onToggle)
                 .semantics {
                     contentDescription = action
                     role = Role.Button
@@ -155,6 +159,7 @@ internal fun PlayPauseOverlay(
                 )
             }
         }
+        if (fast) FastForwardChip(Modifier.align(Alignment.TopCenter).padding(top = 64.dp))
     }
 }
 

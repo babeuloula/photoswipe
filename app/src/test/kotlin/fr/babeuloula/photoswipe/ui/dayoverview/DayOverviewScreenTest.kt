@@ -2,12 +2,16 @@ package fr.babeuloula.photoswipe.ui.dayoverview
 
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -107,6 +111,47 @@ class DayOverviewScreenTest {
         composeRule.onNodeWithText("Sort the 2 left").performClick()
 
         assertEquals(listOf(DayOverviewEvent.Open(MediaId(1)), DayOverviewEvent.StartSorting), events)
+    }
+
+    @Test
+    fun `selects a memory by a long press, or by the TalkBack action`() {
+        show(DayOverviewUiState.Loaded(overview))
+
+        composeRule.onNodeWithTag("${MEMORY_TILE_TAG}1").performTouchInput { longClick() }
+        composeRule
+            .onNodeWithTag("${MEMORY_TILE_TAG}2")
+            .fetchSemanticsNode()
+            .config[SemanticsActions.CustomActions]
+            .single { it.label == "Select" }
+            .action()
+
+        assertEquals(
+            listOf(DayOverviewEvent.ToggleSelection(MediaId(1)), DayOverviewEvent.ToggleSelection(MediaId(2))),
+            events,
+        )
+    }
+
+    @Test
+    fun `shows the selection, selects a year and sorts the batch`() {
+        show(DayOverviewUiState.Loaded(overview, selected = setOf(MediaId(1), MediaId(3))))
+
+        composeRule.onNodeWithText("2 selected").assertIsDisplayed()
+        composeRule.onNodeWithTag("${MEMORY_TILE_TAG}1").assertContentDescriptionEquals("Photo, to sort, selected")
+        composeRule.onNodeWithText("Sort the 2 left").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Select all of 2024").performClick()
+        composeRule.onNodeWithText("Keep").performClick()
+        composeRule.onNodeWithText("Delete").performClick()
+        composeRule.onNodeWithContentDescription("Cancel the selection").performClick()
+
+        assertEquals(
+            listOf(
+                DayOverviewEvent.ToggleYear(2024),
+                DayOverviewEvent.KeepSelected,
+                DayOverviewEvent.MarkSelected,
+                DayOverviewEvent.Back,
+            ),
+            events,
+        )
     }
 
     @Test

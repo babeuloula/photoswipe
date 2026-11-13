@@ -94,7 +94,11 @@ class GetDayOverviewTest {
 
             val memories = getDayOverview(media)(today).years.single().memories
 
-            assertEquals(listOf(SimilarGroup(1, 2), SimilarGroup(2, 2), null), memories.map { it.similar })
+            assertEquals(
+                listOf(1 to 2, 2 to 2, null),
+                memories.map { memory -> memory.similar?.let { it.position to it.size } },
+            )
+            assertEquals(memories[0].media.uri, memories[1].similar?.previousUri)
         }
 
     private fun getDayOverview(

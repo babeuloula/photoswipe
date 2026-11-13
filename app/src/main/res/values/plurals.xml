@@ -118,4 +118,16 @@
         <item quantity="one">New badge: %s</item>
         <item quantity="other">New badges: %s</item>
     </plurals>
+    <plurals name="day_overview_selected">
+        <item quantity="one">%d selected</item>
+        <item quantity="other">%d selected</item>
+    </plurals>
+    <plurals name="day_overview_batch_kept">
+        <item quantity="one">%d memory kept</item>
+        <item quantity="other">%d memories kept</item>
+    </plurals>
+    <plurals name="day_overview_batch_marked">
+        <item quantity="one">%d memory marked for deletion</item>
+        <item quantity="other">%d memories marked for deletion</item>
+    </plurals>
 </resources>

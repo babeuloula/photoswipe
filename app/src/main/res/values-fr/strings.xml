@@ -87,6 +87,10 @@
     <string name="deck_video_fullscreen">Plein écran</string>
     <string name="deck_video_exit_fullscreen">Quitter le plein écran</string>
     <string name="deck_video_toggle_controls">afficher ou masquer les commandes</string>
+    <string name="deck_video_fast_forward">Lire deux fois plus vite</string>
+    <string name="deck_video_normal_speed">Revenir à la vitesse normale</string>
+    <string name="deck_video_fast_forward_on">Lecture deux fois plus rapide</string>
+    <string name="deck_video_speed_chip">×2</string>
     <string name="deck_media_unavailable">Aperçu indisponible</string>
     <string name="deck_error">Les souvenirs de ce jour n\'ont pas pu être chargés.</string>
     <string name="deck_retry">Réessayer</string>
@@ -107,6 +111,10 @@
     <string name="deck_unfavorite">Retirer des favoris</string>
     <string name="deck_share">Partager</string>
     <string name="deck_share_failed">Ce média ne peut pas être partagé.</string>
+    <string name="deck_share_again">Renvoyer avec %1$s</string>
+    <string name="deck_open_with">Ouvrir avec</string>
+    <string name="deck_open_with_summary">Le voir ou le retoucher dans une autre application</string>
+    <string name="deck_open_with_failed">Ce média ne peut pas être ouvert dans une autre application.</string>
     <string name="summary_title">Résumé</string>
     <string name="summary_freed_space">Espace libéré estimé</string>
     <string name="summary_nothing_deleted_yet">Rien n\'est encore supprimé : vos choix sont enregistrés et attendent votre confirmation.</string>
@@ -274,7 +282,18 @@
     <!-- Photos prises à la suite (PS-140). -->
     <string name="deck_similar">%1$d/%2$d</string>
     <string name="deck_similar_description">Photo %1$d sur %2$d prises à la suite</string>
+    <string name="deck_compare_previous">Photo précédente · %1$d sur %2$d</string>
+    <string name="deck_compare_action">Comparer avec la photo précédente</string>
+    <string name="deck_compare_back">Revenir à cette photo</string>
     <string name="day_overview_similar">%1$d sur %2$d prises à la suite</string>
+    <string name="day_overview_keep_selected">Garder</string>
+    <string name="day_overview_mark_selected">Supprimer</string>
+    <string name="day_overview_select">Sélectionner</string>
+    <string name="day_overview_unselect">Désélectionner</string>
+    <string name="day_overview_selected_state">sélectionné</string>
+    <string name="day_overview_clear_selection">Annuler la sélection</string>
+    <string name="day_overview_select_year">Sélectionner tout %1$d</string>
+    <string name="day_overview_unselect_year">Désélectionner tout %1$d</string>
     <!-- Barre de progression coupée par année, lue par TalkBack (PS-144). -->
     <string name="deck_progress_with_years">%1$s, sur %2$s</string>
     <!-- Réglage des animations (PS-146). -->
