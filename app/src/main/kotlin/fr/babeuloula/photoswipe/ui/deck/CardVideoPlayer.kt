@@ -19,10 +19,12 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import java.time.Duration
 
 /**
@@ -129,9 +131,15 @@ class ExoCardVideoPlayer(
     internal val events =
         object : Player.Listener {
             override fun onPlayerError(error: PlaybackException) {
-                if (error.errorCode !in DECODER_ERRORS || codecSelector.preferSoftware || currentUri == null) return
-                codecSelector.preferSoftware = true
-                exoPlayer.prepare()
+                if (error.errorCode in DECODER_ERRORS && !codecSelector.preferSoftware && currentUri != null) {
+                    codecSelector.preferSoftware = true
+                    exoPlayer.prepare()
+                    return
+                }
+                // Lecture impossible (photo animée illisible, fichier abîmé…) : rien ne reste « en
+                // lecture », la carte revient à son image sans afficher d'erreur.
+                exoPlayer.playWhenReady = false
+                playingUri = null
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -306,7 +314,13 @@ class ExoCardVideoPlayer(
                 DefaultRenderersFactory(context)
                     .setMediaCodecSelector(codecSelector)
                     .setEnableDecoderFallback(true)
-            return ExoCardVideoPlayer(ExoPlayer.Builder(context, renderers).build(), codecSelector, restoredState)
+            // La vidéo d'une photo animée se lit dans le fichier de la photo (PS-167, ADR 0040).
+            val sources = DefaultMediaSourceFactory(MotionPhotoDataSource.Factory(DefaultDataSource.Factory(context)))
+            return ExoCardVideoPlayer(
+                ExoPlayer.Builder(context, renderers, sources).build(),
+                codecSelector,
+                restoredState,
+            )
         }
     }
 }

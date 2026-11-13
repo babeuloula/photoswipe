@@ -29,6 +29,8 @@ import java.time.ZoneId
  * @property similar place de la photo parmi des photos du jour prises à la suite (PS-140), `null` sinon.
  * @property qualityHint photo peut-être floue ou très sombre (PS-164), `null` sinon.
  * @property raw vrai pour une paire RAW + JPEG (PS-166) : [sizeBytes] compte alors les deux fichiers.
+ * @property motionVideo URI de la vidéo d'une photo animée (PS-167), à donner au lecteur de la
+ * pile ; `null` pour une photo ordinaire ou une vidéo.
  */
 data class MediaCardUiState(
     val id: MediaId,
@@ -43,6 +45,7 @@ data class MediaCardUiState(
     val similar: SimilarGroup? = null,
     val qualityHint: QualityHint? = null,
     val raw: Boolean = false,
+    val motionVideo: String? = null,
 ) {
     companion object {
         /**

@@ -80,7 +80,8 @@ import fr.babeuloula.photoswipe.ui.theme.swipeColors
 import java.time.LocalDate
 
 /**
- * Un souvenir : sa vignette carrée, une pastille de son état en bas à droite et ▶ pour une vidéo.
+ * Un souvenir : sa vignette carrée, une pastille de son état en bas à droite, ▶ pour une vidéo et
+ * le cercle des photos animées (PS-167) pour une photo animée.
  * Un média marqué pour suppression est estompé. TalkBack lit « Photo, gardée, en favori ».
  *
  * Un appui long le sélectionne pour un tri par lot (PS-159) ; TalkBack propose la même chose par
@@ -95,10 +96,12 @@ internal fun MemoryTile(
     onOpen: () -> Unit,
     onToggle: () -> Unit,
     qualityHint: QualityHint? = null,
+    motionPhoto: Boolean = false,
 ) {
     val description =
         listOfNotNull(
             memoryDescription(memory),
+            stringResource(R.string.deck_motion_photo).takeIf { motionPhoto },
             qualityHint?.let { stringResource(qualityHintDescription(it)) },
             stringResource(R.string.day_overview_selected_state).takeIf { selection.selected },
         ).joinToString(", ")
@@ -145,6 +148,14 @@ internal fun MemoryTile(
         MemoryTileContent(memory, selection.selected)
         // Photo peut-être floue ou très sombre (PS-164), dans le coin libre de la case.
         qualityHint?.let { QualityHintBadge(it, Modifier.align(Alignment.BottomStart)) }
+        // Photo animée (PS-167), dans le coin du ▶ des vidéos, libre sur une photo.
+        if (motionPhoto) {
+            StateBadge(
+                R.drawable.ic_motion_photos_on,
+                MaterialTheme.colorScheme.primaryFixed,
+                Modifier.align(Alignment.TopStart),
+            )
+        }
     }
 }
 

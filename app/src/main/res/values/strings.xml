@@ -315,6 +315,10 @@
     <string name="deck_quality_dark">Very dark?</string>
     <string name="deck_quality_blurry_description">This photo may be blurry</string>
     <string name="deck_quality_dark_description">This photo is very dark</string>
+    <!-- Photo animée (PS-167) : pastille, bouton qui joue l'animation, puis l'arrête -->
+    <string name="deck_motion_photo">Motion photo</string>
+    <string name="deck_motion_photo_play">Play motion photo</string>
+    <string name="deck_motion_photo_stop">Stop motion photo</string>
     <string name="deck_compare_previous">Previous photo · %1$d of %2$d</string>
     <string name="deck_compare_action">Compare with the previous photo</string>
     <string name="deck_compare_back">Back to this photo</string>

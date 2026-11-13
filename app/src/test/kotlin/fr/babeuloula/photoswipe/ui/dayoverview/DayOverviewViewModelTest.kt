@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
+import fr.babeuloula.photoswipe.domain.fixtures.FakeMotionPhotoReader
 import fr.babeuloula.photoswipe.domain.fixtures.FakePhotoAnalyzer
 import fr.babeuloula.photoswipe.domain.fixtures.FakePhotoMeasureCache
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
@@ -11,6 +12,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aFlatImage
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
+import fr.babeuloula.photoswipe.domain.fixtures.aMotionPhoto
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
@@ -21,11 +23,13 @@ import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetDayOverview
+import fr.babeuloula.photoswipe.domain.usecase.GetMotionPhotos
 import fr.babeuloula.photoswipe.domain.usecase.GetQualityHints
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import fr.babeuloula.photoswipe.domain.usecase.SortInBatch
 import fr.babeuloula.photoswipe.domain.usecase.UndoLastDecision
+import fr.babeuloula.photoswipe.ui.deck.CardHints
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -77,11 +81,17 @@ class DayOverviewViewModelTest {
                 UndoLastDecision(repository, journal),
             ),
             clock,
-            GetQualityHints(photoAnalyzer, FakePhotoMeasureCache(), FakeSettingsRepository()),
+            CardHints(
+                GetQualityHints(photoAnalyzer, FakePhotoMeasureCache(), FakeSettingsRepository()),
+                GetMotionPhotos(motionPhotoReader),
+            ),
         )
 
     /** Vignettes des photos à mesurer (PS-164) : aucune par défaut, rien n'est signalé. */
     private var photoAnalyzer = FakePhotoAnalyzer()
+
+    /** Photos animées (PS-167) : aucune par défaut. */
+    private var motionPhotoReader = FakeMotionPhotoReader()
 
     private suspend fun decisionOf(id: Long): ReviewDecision? =
         repository.entriesFor(2026, setOf(MediaId(id))).singleOrNull()?.decision
@@ -97,6 +107,16 @@ class DayOverviewViewModelTest {
                 mapOf(MediaId(1) to QualityHint.BLURRY, MediaId(2) to QualityHint.DARK),
                 viewModel.loaded().quality,
             )
+        }
+
+    @Test
+    fun `marks the motion photos of the day`() =
+        runTest {
+            motionPhotoReader = FakeMotionPhotoReader(mapOf(MediaId(2) to aMotionPhoto()))
+
+            val viewModel = viewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2024))))
+
+            assertEquals(setOf(MediaId(2)), viewModel.loaded().motionPhotos)
         }
 
     @Test

@@ -304,6 +304,10 @@
     <string name="deck_quality_dark">Très sombre ?</string>
     <string name="deck_quality_blurry_description">Cette photo est peut-être floue</string>
     <string name="deck_quality_dark_description">Cette photo est très sombre</string>
+    <!-- Photo animée (PS-167) : pastille, bouton qui joue l'animation, puis l'arrête -->
+    <string name="deck_motion_photo">Photo animée</string>
+    <string name="deck_motion_photo_play">Lire la photo animée</string>
+    <string name="deck_motion_photo_stop">Arrêter la photo animée</string>
     <string name="deck_compare_previous">Photo précédente · %1$d sur %2$d</string>
     <string name="deck_compare_action">Comparer avec la photo précédente</string>
     <string name="deck_compare_back">Revenir à cette photo</string>

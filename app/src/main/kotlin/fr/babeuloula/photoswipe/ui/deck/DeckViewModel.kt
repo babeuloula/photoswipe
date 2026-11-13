@@ -332,6 +332,9 @@ class DeckViewModel
         /** Photos peut-être floues ou très sombres (PS-164). */
         private var quality: Map<MediaId, QualityHint> = emptyMap()
 
+        /** URI de la vidéo des photos animées (PS-167). */
+        private var motionVideos: Map<MediaId, String> = emptyMap()
+
         /** Décisions du jour encore annulables, de la plus ancienne à la plus récente. */
         var session: ReviewSession = ReviewSession()
             private set
@@ -521,7 +524,9 @@ class DeckViewModel
                         marked = loaded.marked
                         render()
                         // Après l'affichage : une photo jamais mesurée lit sa vignette (PS-164).
-                        quality = runCatching { loading.getQualityHints(loaded.cards) }.getOrDefault(emptyMap())
+                        quality = loading.hints.quality(loaded.cards)
+                        // Photos animées (PS-167) : le début et la fin de chaque fichier, lus une fois.
+                        motionVideos = loading.hints.motionVideos(loaded.cards)
                         // Les empreintes viennent d'être mesurées : les doublons rejoignent leurs groupes (PS-165).
                         day?.let { similar = runCatching { loading.getSimilarMemories(it) }.getOrDefault(similar) }
                         if (state.value is DeckUiState.Loaded) render()
@@ -630,15 +635,16 @@ class DeckViewModel
                                     .take(
                                         DeckUiState.Loaded.VISIBLE_CARDS,
                                     ).map {
-                                        MediaCardUiState.of(
-                                            media = it,
-                                            day = day ?: marked.getValue(it.id).reviewDays.first(),
-                                            zone = clock.zone,
-                                            favorite = galleryFavorite.isFavorite(it),
-                                            previousDecision = previousDecisions[it.id],
-                                            similar = similar[it.id],
-                                            qualityHint = quality[it.id],
-                                        )
+                                        MediaCardUiState
+                                            .of(
+                                                media = it,
+                                                day = day ?: marked.getValue(it.id).reviewDays.first(),
+                                                zone = clock.zone,
+                                                favorite = galleryFavorite.isFavorite(it),
+                                                previousDecision = previousDecisions[it.id],
+                                                similar = similar[it.id],
+                                                qualityHint = quality[it.id],
+                                            ).copy(motionVideo = motionVideos[it.id])
                                     },
                             remainingCount = deck.size,
                             sortedCount = session.cards().size,

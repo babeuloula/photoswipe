@@ -212,6 +212,7 @@ private fun LoadedOverview(
                         onOpen = { onEvent(DayOverviewEvent.Open(memory.media.id)) },
                         onToggle = { onEvent(DayOverviewEvent.ToggleSelection(memory.media.id)) },
                         qualityHint = state.quality[memory.media.id],
+                        motionPhoto = memory.media.id in state.motionPhotos,
                     )
                 }
             }

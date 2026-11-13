@@ -95,6 +95,9 @@ import java.time.LocalDate
  *
  * [onOpen], s'il est donné, est appelé par un appui sur une photo : la pile l'ouvre en grand
  * (PS-117). Sur une vidéo, l'appui garde son rôle de lecture et de pause.
+ *
+ * Une photo animée (PS-167) porte la pastille « Photo animée » ; sur la carte du dessus, un bouton
+ * dans le coin joue son animation une fois, par le même lecteur que les vidéos.
  */
 @Composable
 fun MediaCard(
@@ -139,13 +142,8 @@ fun MediaCard(
                 if (failed) {
                     Unavailable(type = card.type, modifier = Modifier.align(Alignment.Center))
                 }
-                val videoPlayer = LocalCardVideoPlayer.current
-                val video =
-                    if (active && card.type == MediaType.VIDEO && videoPlayer != null) {
-                        activeVideo(card = card, videoPlayer = videoPlayer)
-                    } else {
-                        null
-                    }
+                val playback = cardPlayback(card, active)
+                val video = playback.video
                 // Repère et pastilles : pas sur les cartes du dessous de la pile, dont seuls les bords dépassent.
                 if (details) {
                     TopRow(
@@ -153,6 +151,7 @@ fun MediaCard(
                         modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(CARD_PADDING),
                     ) {
                         if (video != null) VideoCornerButtons(video)
+                        playback.motionPhoto?.let { MotionPhotoButton(it) }
                     }
                     CardBottom(
                         card = card,
@@ -179,7 +178,7 @@ fun MediaCard(
  */
 @OptIn(UnstableApi::class)
 @Composable
-private fun BoxScope.activeVideo(
+internal fun BoxScope.activeVideo(
     card: MediaCardUiState,
     videoPlayer: CardVideoPlayer,
 ): ActiveVideoState {
@@ -268,6 +267,7 @@ private fun CardBottom(
             similar = card.similar,
             qualityHint = card.qualityHint,
             raw = card.raw,
+            motionPhoto = card.motionVideo != null,
         )
     }
 }
@@ -292,7 +292,7 @@ private fun shownDuration(
  * @property duration durée totale, si elle est connue.
  * @property openFullscreen ouvre la vidéo en plein écran (PS-119).
  */
-private class ActiveVideoState(
+internal class ActiveVideoState(
     val uri: String,
     private val positionState: MutableState<Duration>,
     val duration: Duration?,
@@ -440,6 +440,7 @@ private fun BottomChips(
     similar: SimilarGroup? = null,
     qualityHint: QualityHint? = null,
     raw: Boolean = false,
+    motionPhoto: Boolean = false,
 ) {
     val context = LocalContext.current
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -466,6 +467,7 @@ private fun BottomChips(
                 Text(stringResource(R.string.deck_raw_pair))
             }
         }
+        if (motionPhoto) MotionPhotoChip()
         similar?.let { SimilarChip(it) }
         qualityHint?.let { QualityHintChip(it) }
     }

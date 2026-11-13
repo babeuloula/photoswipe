@@ -407,6 +407,16 @@ class ExoCardVideoPlayerTest {
     }
 
     @Test
+    fun `stops showing the video as playing when it cannot be read`() {
+        videoPlayer.play(first)
+
+        videoPlayer.events.onPlayerError(error(PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED))
+
+        assertNull(videoPlayer.playingUri)
+        assertFalse(player.playWhenReady)
+    }
+
+    @Test
     fun `does not retry without a video`() {
         videoPlayer.events.onPlayerError(error(PlaybackException.ERROR_CODE_DECODING_FAILED))
 

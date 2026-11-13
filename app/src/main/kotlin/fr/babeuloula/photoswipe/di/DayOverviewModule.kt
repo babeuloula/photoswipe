@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.domain.port.MediaSource
+import fr.babeuloula.photoswipe.domain.port.MotionPhotoReader
 import fr.babeuloula.photoswipe.domain.port.PhotoAnalyzer
 import fr.babeuloula.photoswipe.domain.port.PhotoMeasureCache
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
@@ -12,6 +13,7 @@ import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.service.DeckOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetDayOverview
+import fr.babeuloula.photoswipe.domain.usecase.GetMotionPhotos
 import fr.babeuloula.photoswipe.domain.usecase.GetQualityHints
 import fr.babeuloula.photoswipe.domain.usecase.GetSimilarMemories
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
@@ -22,7 +24,8 @@ import java.time.Clock
 
 /**
  * Fournit les use cases qui regardent tous les souvenirs d'un jour : sa vue d'ensemble (PS-139) et
- * ses photos prises à la suite (PS-140) et son tri par lot (PS-159), à part de ceux du tri (`DomainModule`).
+ * ses photos prises à la suite (PS-140), son tri par lot (PS-159) et ses photos animées (PS-167), à
+ * part de ceux du tri (`DomainModule`).
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -61,4 +64,7 @@ object DayOverviewModule {
         cache: PhotoMeasureCache,
         settingsRepository: SettingsRepository,
     ): GetQualityHints = GetQualityHints(analyzer, cache, settingsRepository)
+
+    @Provides
+    fun provideGetMotionPhotos(reader: MotionPhotoReader): GetMotionPhotos = GetMotionPhotos(reader)
 }
