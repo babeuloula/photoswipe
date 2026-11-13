@@ -75,7 +75,7 @@ class TrashInstrumentedTest {
     }
 
     @Test
-    fun `reads the size and the purge date of a trashed photo, which the gallery no longer sees`() {
+    fun `reads the size and the purge date of a trashed photo that the gallery no longer sees`() {
         val trashed = runBlocking { systemTrash.trashed(setOf(MediaId(photoId))) }.single()
 
         assertEquals(MediaId(photoId), trashed.media.id)
