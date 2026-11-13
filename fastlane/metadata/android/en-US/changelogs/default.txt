@@ -1,9 +1,10 @@
-• Keep showing what was deleted today once confirmed
-• Keep a trace of what was deleted on each day of the week
-• Show the catch up days as the vertical list of the home screen
-• Make clear that memories come from every past year
-• Show every memory of a day at a glance, grouped by year
-• Flag photos taken one after another
-• Shape the card to the photo and give it a soft shadow
-• Grow the day into its deck and fade screens through with a zoom
+• Add the progress page, opened from the home top bar
+• Chart the sorting activity of the last six months
+• Show the streak of sorted days
+• Count the memories of every day of the year
+• Add a year calendar that opens any day
+• Add badges and a space goal
+• Add a pure black option for the dark theme
+• Liens profonds et raccourcis vers la pile du jour
+• Tuile des réglages rapides vers la pile du jour
 • And more: see the release notes on GitHub.
