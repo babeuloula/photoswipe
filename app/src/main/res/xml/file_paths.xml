@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fichiers confiés aux autres applications par le FileProvider : seulement les cartes postales
+     du cache (PS-177), jamais la galerie ni les données de l'application. -->
+<paths>
+    <cache-path
+        name="postcards"
+        path="postcards/" />
+</paths>

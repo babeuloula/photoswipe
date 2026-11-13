@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui
 
+import android.graphics.Bitmap
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.hasClickAction
@@ -59,6 +61,8 @@ import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
 import fr.babeuloula.photoswipe.ui.permission.LimitedAccessBanner
 import fr.babeuloula.photoswipe.ui.permission.MediaAccessDeniedScreen
 import fr.babeuloula.photoswipe.ui.permission.PermissionRationaleScreen
+import fr.babeuloula.photoswipe.ui.postcard.PostcardPreview
+import fr.babeuloula.photoswipe.ui.postcard.PostcardPreviewDialog
 import fr.babeuloula.photoswipe.ui.progress.GoalDialog
 import fr.babeuloula.photoswipe.ui.progress.PREVIEW_ACTIVITY
 import fr.babeuloula.photoswipe.ui.progress.ProgressScreen
@@ -155,6 +159,20 @@ class AccessibilityTest {
             )
         }
         videoPlayer.release()
+        // Aperçu de la carte postale (PS-177), prête puis en préparation.
+        val postcard = Bitmap.createBitmap(300, 240, Bitmap.Config.ARGB_8888).asImageBitmap()
+        val ready = PostcardPreview.Ready(postcard, "5 years ago · Nov 6, 2021")
+        listOf(ready, PostcardPreview.Loading).forEach { preview ->
+            check {
+                PostcardPreviewDialog(
+                    preview = preview,
+                    withBrand = true,
+                    onWithBrandChange = {},
+                    onShare = {},
+                    onDismiss = {},
+                )
+            }
+        }
     }
 
     /** Réglages, rappel activé. */

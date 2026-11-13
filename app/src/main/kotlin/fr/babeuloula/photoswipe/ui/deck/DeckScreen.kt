@@ -368,8 +368,8 @@ private fun CardStack(
 
 /**
  * Menu de la carte du dessus (SPEC §2), en feuille du bas Material 3 : « Ajouter aux favoris », ou
- * « Retirer des favoris » pour une carte déjà en favori (PS-124), « Partager » et « Ouvrir avec »
- * (PS-162) ; le fermer sans choisir laisse la carte en place.
+ * « Retirer des favoris » pour une carte déjà en favori (PS-124), « Partager », « Partager en
+ * carte postale » pour une photo (PS-177) et « Ouvrir avec » (PS-162) ; le fermer sans choisir laisse la carte en place.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -400,6 +400,15 @@ private fun CardMenu(
             leadingContent = { Icon(painterResource(R.drawable.ic_share), contentDescription = null) },
             modifier = Modifier.clickable { onEvent(DeckEvent.Share) },
         )
+        // Carte postale : la photo dans un cadre, avec son repère « Il y a 5 ans » (PS-177).
+        if (card.type == MediaType.IMAGE) {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.deck_postcard)) },
+                supportingContent = { Text(stringResource(R.string.deck_postcard_summary)) },
+                leadingContent = { Icon(painterResource(R.drawable.ic_photo_frame), contentDescription = null) },
+                modifier = Modifier.clickable { onEvent(DeckEvent.SharePostcard) },
+            )
+        }
         // Dernière application choisie pour partager, si elle est encore installée (PS-163).
         rememberShareTargetApp(shareTarget)?.let { app ->
             ListItem(

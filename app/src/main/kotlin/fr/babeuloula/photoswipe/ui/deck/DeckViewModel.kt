@@ -176,6 +176,12 @@ sealed interface DeckEvent {
     /** « Renvoyer avec … » du menu : partager directement avec la dernière application choisie (PS-163). */
     data object ShareAgain : ElsewhereEvent
 
+    /**
+     * « Partager en carte postale » du menu d'une photo (PS-177) : la photo du dessus dans un cadre,
+     * avec son repère « Il y a 5 ans », sans changer son état.
+     */
+    data object SharePostcard : ElsewhereEvent
+
     /** Retour sur la pile : après « Ouvrir avec », le média a pu être retouché, copié ou supprimé ailleurs. */
     data object Resumed : ElsewhereEvent
 }
@@ -225,6 +231,15 @@ sealed interface DeckEffect {
         val type: MediaType,
         val component: String,
     ) : ElsewhereEffect
+
+    /**
+     * Composer la carte postale d'une photo, la montrer en aperçu puis la partager (PS-177).
+     *
+     * @property card carte du dessus, dont la photo et le repère « Il y a N ans » font la carte postale.
+     */
+    data class SharePostcard(
+        val card: MediaCardUiState,
+    ) : DeckEffect
 
     /**
      * Lancer la demande de favori de la galerie ; la réponse revient par [DeckEvent.FavoriteRequestAnswered].
@@ -386,6 +401,15 @@ class DeckViewModel
                         state.setMenuOpen(false)
                         openedElsewhere = true
                         effects.trySend(DeckEffect.OpenWith(media.uri, media.type))
+                    }
+                }
+
+                DeckEvent.SharePostcard -> {
+                    // Carte postale de la photo du dessus (PS-177) : composée et partagée par l'écran,
+                    // la carte reste en place, sans décision.
+                    (state.value as? DeckUiState.Loaded)?.current?.takeIf { it.type == MediaType.IMAGE }?.let { card ->
+                        state.setMenuOpen(false)
+                        effects.trySend(DeckEffect.SharePostcard(card))
                     }
                 }
 

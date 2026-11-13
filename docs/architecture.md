@@ -123,6 +123,7 @@ Parcours principaux :
 |---|---|---|
 | `applicationId` | `fr.babeuloula.photoswipe` | SPEC §7 |
 | Liens profonds | schéma `photoswipe://` sur `MainActivity` (`VIEW`, `BROWSABLE`), raccourcis statiques `res/xml/shortcuts.xml`, tuile `SortTodayTileService` (`BIND_QUICK_SETTINGS_TILE`) | Ouvrir un écran depuis l'icône, les réglages rapides ou une automatisation, sans permission ni donnée exposée (ADR [0038](decisions/0038-deep-links-and-shortcuts.md)) |
+| `FileProvider` | `androidx.core.content.FileProvider`, autorité `${applicationId}.postcards`, racine `res/xml/file_paths.xml` limitée au dossier `postcards/` du cache | Cartes postales (PS-177) composées dans `ui/postcard` (`renderPostcard` sur un `Canvas`, photo lue à taille bornée par `ImageDecoder`, `PostcardFiles` qui efface les anciennes cartes), confiées à l'application choisie au partage avec un droit de lecture temporaire, sans permission ni copie dans la galerie |
 | `minSdk` | 33 (Android 13) | SPEC §2 : permissions médias granulaires, choix de langue par application |
 | `compileSdk` / `targetSdk` | 37 (Android 17) | Dernière version stable, et le Play Store impose une cible récente |
 | JVM cible | 17 (toolchain) | Minimum requis par AGP 9.5. AGP déduit `compileOptions` du toolchain |

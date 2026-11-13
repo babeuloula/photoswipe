@@ -123,6 +123,13 @@
     <string name="deck_open_with">Open with</string>
     <string name="deck_open_with_summary">View or edit it in another app</string>
     <string name="deck_open_with_failed">This media can\'t be opened in another app.</string>
+    <string name="deck_postcard">Share as a postcard</string>
+    <string name="deck_postcard_summary">With the date it was taken</string>
+    <string name="postcard_title">Postcard</string>
+    <string name="postcard_preview">Postcard: %1$s</string>
+    <string name="postcard_brand">Mention PhotoSwipe</string>
+    <string name="postcard_cancel">Cancel</string>
+    <string name="postcard_failed">This photo can\'t be made into a postcard.</string>
     <string name="summary_title">Summary</string>
     <!-- Résumé avant confirmation (SPEC §3.5). -->
     <string name="summary_freed_space">Space to free up</string>

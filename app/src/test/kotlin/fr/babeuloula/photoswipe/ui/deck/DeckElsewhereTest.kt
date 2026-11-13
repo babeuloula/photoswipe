@@ -17,6 +17,7 @@ import fr.babeuloula.photoswipe.domain.model.DecisionRecord
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
+import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import fr.babeuloula.photoswipe.domain.model.SimilarGroup
@@ -139,5 +140,42 @@ class DeckElsewhereTest : DeckViewModelTestBase() {
             assertEquals(listOf(MediaId(1)), state.cards.map { it.id })
             assertTrue(repository.entries.isEmpty())
             assertTrue(viewModel.session.isEmpty)
+        }
+
+    @Test
+    fun `asks for a postcard of the top photo without deciding, and closes the menu`() =
+        runTest {
+            val media = takenOn(1, 2020)
+            val viewModel = deckViewModel(FakeMediaSource(listOf(media)))
+            viewModel.onEvent(DeckEvent.OpenMenu)
+            val card = (viewModel.uiState.value as DeckUiState.Loaded).current
+
+            viewModel.onEvent(DeckEvent.SharePostcard)
+
+            assertEquals(DeckEffect.SharePostcard(card), viewModel.uiEffects.first())
+            assertEquals(day.year - 2020, card.yearsAgo)
+            val state = viewModel.uiState.value as DeckUiState.Loaded
+            assertFalse(state.menuOpen)
+            assertEquals(listOf(MediaId(1)), state.cards.map { it.id })
+            assertTrue(repository.entries.isEmpty())
+            assertTrue(viewModel.session.isEmpty)
+        }
+
+    @Test
+    fun `asks for no postcard of a video`() =
+        runTest {
+            val video = takenOn(1, 2020).copy(type = MediaType.VIDEO)
+            val viewModel = deckViewModel(FakeMediaSource(listOf(video)))
+            val effects = mutableListOf<DeckEffect>()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                viewModel.uiEffects.collect {
+                    effects +=
+                        it
+                }
+            }
+
+            viewModel.onEvent(DeckEvent.SharePostcard)
+
+            assertTrue(effects.isEmpty())
         }
 }

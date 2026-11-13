@@ -13,6 +13,7 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
+import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
@@ -22,6 +23,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.time.Duration
 import java.time.LocalDate
 
 /** Menu « Plus d'actions » de la carte du dessus : ajouter ou retirer le favori (PS-124). */
@@ -104,5 +106,21 @@ class CardMenuTest {
 
         composeRule.onNodeWithText("Remove from favorites").assertDoesNotExist()
         composeRule.onNodeWithText("Add to favorites").assertExists()
+    }
+
+    @Test
+    fun `offers to share a photo as a postcard`() {
+        showMenu(PREVIEW_CARD.copy(type = MediaType.IMAGE))
+
+        composeRule.onNodeWithText("Share as a postcard").performClick()
+
+        assertEquals(listOf<DeckEvent>(DeckEvent.SharePostcard), events)
+    }
+
+    @Test
+    fun `offers no postcard for a video`() {
+        showMenu(PREVIEW_CARD.copy(type = MediaType.VIDEO, duration = Duration.ofSeconds(12)))
+
+        composeRule.onNodeWithText("Share as a postcard").assertDoesNotExist()
     }
 }
