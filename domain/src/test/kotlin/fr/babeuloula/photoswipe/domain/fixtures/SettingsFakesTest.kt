@@ -68,6 +68,18 @@ class SettingsFakesTest {
         }
 
     @Test
+    fun `does not celebrate the end of a deck until it is turned on`() =
+        runTest {
+            val repository = FakeSettingsRepository()
+            assertEquals(false, repository.observeCelebrationEnabled().first())
+
+            repository.saveCelebrationEnabled(true)
+
+            assertEquals(true, repository.observeCelebrationEnabled().first())
+            assertEquals(true, repository.celebrationEnabled)
+        }
+
+    @Test
     fun `gives a one week catch-up window until another duration is saved`() =
         runTest {
             val repository = FakeSettingsRepository()

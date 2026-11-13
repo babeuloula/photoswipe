@@ -24,6 +24,7 @@ import fr.babeuloula.photoswipe.link.DeepLinks
 import fr.babeuloula.photoswipe.link.LaunchRequest
 import fr.babeuloula.photoswipe.link.LaunchRequestResolver
 import fr.babeuloula.photoswipe.ui.PhotoSwipeApp
+import fr.babeuloula.photoswipe.ui.common.CelebrationHost
 import fr.babeuloula.photoswipe.ui.common.LocalAnimationsDisabled
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.common.RotationPolicy
@@ -84,10 +85,12 @@ class MainActivity : ComponentActivity() {
         // Lu avec le thème, pour que le noir pur s'affiche dès la première image (PS-176).
         val savedPureBlack = runBlocking { pureBlackChoices.first() }
         val animations = settingsRepository.observeAnimationsEnabled().catch { emit(true) }
+        val celebrations = settingsRepository.observeCelebrationEnabled().catch { emit(false) }
         setContent {
             val themeMode by remember { themeModes }.collectAsStateWithLifecycle(savedThemeMode)
             val pureBlack by remember { pureBlackChoices }.collectAsStateWithLifecycle(savedPureBlack)
             val animationsEnabled by remember { animations }.collectAsStateWithLifecycle(true)
+            val celebrationEnabled by remember { celebrations }.collectAsStateWithLifecycle(false)
             val darkTheme = themeMode.isDark(isSystemInDarkTheme())
             val pureBlackBars = darkTheme && pureBlack
             DisposableEffect(darkTheme, pureBlackBars) {
@@ -111,11 +114,14 @@ class MainActivity : ComponentActivity() {
                 PhotoSwipeTheme(darkTheme = darkTheme, pureBlack = pureBlack) {
                     // Portrait, sauf le plein écran vidéo et la photo en grand (ADR 0028).
                     RotationPolicy {
-                        PhotoSwipeApp(
-                            launchRequest = launchRequest,
-                            resolveLaunch = launchRequestResolver::routeFor,
-                            onLaunchHandled = { launchRequest = null },
-                        )
+                        // Confettis de fin de pile par-dessus tous les écrans, si activés (PS-174).
+                        CelebrationHost(enabled = celebrationEnabled) {
+                            PhotoSwipeApp(
+                                launchRequest = launchRequest,
+                                resolveLaunch = launchRequestResolver::routeFor,
+                                onLaunchHandled = { launchRequest = null },
+                            )
+                        }
                     }
                 }
             }

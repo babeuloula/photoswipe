@@ -194,6 +194,12 @@ sealed interface DeckEffect {
     /** Ouvrir le résumé (SPEC §3.5), qui lit lui-même le tri du jour (ADR 0024). */
     data object OpenSummary : DeckEffect
 
+    /**
+     * La dernière carte de la pile d'un jour vient d'être triée : célébrer si l'utilisateur l'a
+     * choisi (PS-174), puis ouvrir aussitôt le résumé, comme [OpenSummary].
+     */
+    data object DayCompleted : DeckEffect
+
     /** Quitter la pile, vers l'écran précédent. */
     data object Close : DeckEffect
 
@@ -284,8 +290,14 @@ class DeckViewModel
         /** Jour cible de la pile ; `null` pour la pile des médias marqués (PS-112). */
         val day: LocalDate? = route.day
 
-        /** Fin de la pile : le résumé, ou le retour au résumé d'où la pile des marqués a été ouverte. */
+        /** « Terminer » : le résumé, ou le retour au résumé d'où la pile des marqués a été ouverte. */
         private val doneEffect: DeckEffect = if (route.isMarked) DeckEffect.Close else DeckEffect.OpenSummary
+
+        /**
+         * Dernière carte triée : la pile d'un jour se termine en célébrant (PS-174), pas celle des
+         * marqués, qui retourne simplement au résumé.
+         */
+        private val completedEffect: DeckEffect = if (route.isMarked) DeckEffect.Close else DeckEffect.DayCompleted
 
         /** Médias de la pile des marqués, avec les jours de revue de leurs marquages ; vide sinon. */
         private var marked: Map<MediaId, MarkedMedia> = emptyMap()
@@ -547,7 +559,7 @@ class DeckViewModel
          */
         private fun openSummaryWhenDone() {
             if (deck.isEmpty() && !galleryFavorite.isPending) {
-                effects.trySend(doneEffect)
+                effects.trySend(completedEffect)
             }
         }
 

@@ -302,6 +302,38 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `turns the end of deck celebration on from the whole row, announced as a switch`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.SYSTEM))
+
+        composeRule
+            .onNodeWithText(text(R.string.settings_celebration_summary))
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule
+            .onNodeWithText(text(R.string.settings_celebration))
+            .assertIsOff()
+            .performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.CelebrationToggled(true)), events)
+    }
+
+    @Test
+    fun `shows the end of deck celebration turned on`() {
+        show(
+            SettingsUiState(
+                reminder = ReminderSettings.DEFAULT,
+                themeMode = ThemeMode.SYSTEM,
+                celebrationEnabled = true,
+            ),
+        )
+
+        composeRule
+            .onNodeWithText(text(R.string.settings_celebration))
+            .performScrollTo()
+            .assertIsOn()
+    }
+
+    @Test
     fun `shows pure black turned on`() {
         show(SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.DARK, pureBlack = true))
 

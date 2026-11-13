@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.share.ShareTargetReceiver
+import fr.babeuloula.photoswipe.ui.common.LocalCelebration
 import fr.babeuloula.photoswipe.ui.postcard.PostcardDialog
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -44,14 +45,9 @@ fun DeckRoute(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onEvent(DeckEvent.Resumed) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val favoriteRequest =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-            viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = result.resultCode == Activity.RESULT_OK))
-        }
-    val unfavoriteRequest =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-            viewModel.onEvent(DeckEvent.UnfavoriteRequestAnswered(confirmed = result.resultCode == Activity.RESULT_OK))
-        }
+    val celebration = LocalCelebration.current
+    val favoriteRequest = rememberSystemRequest { viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(it)) }
+    val unfavoriteRequest = rememberSystemRequest { viewModel.onEvent(DeckEvent.UnfavoriteRequestAnswered(it)) }
     // Photo dont la carte postale est en aperçu (PS-177), `null` hors de l'aperçu.
     var postcard by remember { mutableStateOf<MediaCardUiState?>(null) }
     postcard?.let { card ->
@@ -64,6 +60,12 @@ fun DeckRoute(
         viewModel.uiEffects.collect { effect ->
             when (effect) {
                 DeckEffect.OpenSummary -> {
+                    onOpenSummary()
+                }
+
+                DeckEffect.DayCompleted -> {
+                    // Confettis par-dessus le résumé, ouvert sans attendre (PS-174).
+                    celebration?.celebrate()
                     onOpenSummary()
                 }
 
@@ -102,3 +104,10 @@ fun DeckRoute(
         )
     }
 }
+
+/** Lanceur d'une demande système (favori de la galerie) ; [onAnswer] reçoit vrai si elle est acceptée. */
+@Composable
+private fun rememberSystemRequest(onAnswer: (Boolean) -> Unit) =
+    rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        onAnswer(result.resultCode == Activity.RESULT_OK)
+    }

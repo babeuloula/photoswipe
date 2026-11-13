@@ -109,8 +109,7 @@ fun SettingsScreen(
                             AppearanceSection(
                                 it,
                                 onEvent,
-                                state.animationsEnabled,
-                                state.pureBlack,
+                                AppearanceToggles(state.animationsEnabled, state.pureBlack, state.celebrationEnabled),
                             )
                         }
                         ProgressSection(onEvent)

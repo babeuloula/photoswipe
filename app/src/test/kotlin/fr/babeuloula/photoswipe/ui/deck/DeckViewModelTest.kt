@@ -454,7 +454,7 @@ class DeckViewModelTest : DeckViewModelTestBase() {
             assertTrue(effects.isEmpty())
 
             viewModel.onEvent(DeckEvent.MarkForDeletion)
-            assertEquals(listOf<DeckEffect>(DeckEffect.OpenSummary), effects)
+            assertEquals(listOf<DeckEffect>(DeckEffect.DayCompleted), effects)
         }
 
     @Test
@@ -673,7 +673,7 @@ class DeckViewModelTest : DeckViewModelTestBase() {
 
             viewModel.onEvent(DeckEvent.FavoriteRequestAnswered(confirmed = true))
 
-            assertEquals(DeckEffect.OpenSummary, effects.last())
+            assertEquals(DeckEffect.DayCompleted, effects.last())
         }
 
     @Test

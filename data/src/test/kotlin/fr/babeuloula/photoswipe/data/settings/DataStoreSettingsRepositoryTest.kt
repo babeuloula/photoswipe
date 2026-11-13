@@ -122,6 +122,18 @@ class DataStoreSettingsRepositoryTest {
         }
 
     @Test
+    fun `does not celebrate the end of a deck when nothing is stored, then reads the choice back`() =
+        runTest {
+            val repository = DataStoreSettingsRepository(dataStore())
+            assertEquals(false, repository.observeCelebrationEnabled().first())
+
+            repository.saveCelebrationEnabled(true)
+
+            assertEquals(true, repository.observeCelebrationEnabled().first())
+            assertEquals(false, repository.observePureBlack().first())
+        }
+
+    @Test
     fun `has no seen what's new version until one is saved`() =
         runTest {
             val repository = DataStoreSettingsRepository(dataStore())
