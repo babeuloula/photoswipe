@@ -19,6 +19,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -64,7 +65,7 @@ internal fun WhatsNewContent(
             modifier = Modifier.semantics { heading() },
         )
         LazyColumn(
-            modifier = Modifier.weight(1f, fill = false).padding(vertical = 16.dp),
+            modifier = Modifier.weight(1f, fill = false).padding(vertical = 16.dp).testTag(WHATS_NEW_LIST_TAG),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             releases.forEach { release ->
@@ -118,3 +119,6 @@ private fun WhatsNewContentPreview() {
         Surface { WhatsNewContent(releases = WHATS_NEW, onClose = {}) }
     }
 }
+
+/** Étiquette de test de la liste des nouveautés, qui défile. */
+internal const val WHATS_NEW_LIST_TAG = "whats_new_list"

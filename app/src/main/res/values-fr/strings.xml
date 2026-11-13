@@ -253,9 +253,9 @@
     <string name="tutorial_swipe_up_title">Favori ou partage</string>
     <string name="tutorial_swipe_up_body">Glissez vers le haut pour ouvrir le menu : ajoutez le souvenir à vos favoris, ce qui le garde aussi, ou partagez-le.</string>
     <string name="tutorial_catch_up_title">Rattrapez les jours manqués</string>
-    <string name="tutorial_catch_up_body">Un jour de manqué ? Sur l\'accueil, sous la carte d\'aujourd\'hui, la liste « À rattraper » garde les jours précédents (une semaine par défaut, jusqu\'à 30 jours dans les réglages), et un jour déjà trié peut être retrié. Un rappel quotidien, à activer dans les réglages, vous prévient seulement s\'il reste des souvenirs à trier.</string>
+    <string name="tutorial_catch_up_body">Un jour de manqué ? Sur l\'accueil, sous la carte d\'aujourd\'hui, la liste « À rattraper » garde les jours précédents (une semaine par défaut, jusqu\'à 30 jours dans les réglages), et un jour déjà trié peut être retrié. Touchez les vignettes d\'un jour pour voir tous ses souvenirs, puis faites un appui long pour en trier plusieurs d\'un coup. Un rappel quotidien, à activer dans les réglages, vous prévient seulement s\'il reste des souvenirs à trier.</string>
     <string name="tutorial_confirmation_title">Rien n\'est définitif</string>
-    <string name="tutorial_confirmation_body">Les médias marqués sont supprimés ensemble, quand vous confirmez à la fin du tri ; touchez-les dans le résumé pour les revoir en grand avant. Ils partent dans la corbeille du système, d\'où vous pouvez les restaurer pendant environ 30 jours.</string>
+    <string name="tutorial_confirmation_body">Les médias marqués sont supprimés ensemble, quand vous confirmez à la fin du tri ; touchez-les dans le résumé pour les revoir en grand avant. Ils partent dans la corbeille du système, d\'où vous pouvez les restaurer pendant environ 30 jours, depuis la page « Corbeille » (icône en haut de l\'accueil).</string>
     <string name="tutorial_practice_title">Essayez</string>
     <string name="tutorial_practice_body">Ces cartes d\'exemple ne sont pas vos photos : glissez-les ou utilisez les boutons, rien n\'est enregistré.</string>
     <string name="tutorial_practice_kept">Gardée : elle reviendrait l\'année prochaine.</string>
@@ -356,6 +356,12 @@
     <string name="whats_new_1_4_0_calendar_text">Voyez combien de souvenirs attendent chaque jour de l\'année, et touchez n\'importe quel jour pour l\'ouvrir, même hors de la semaine.</string>
     <string name="whats_new_1_4_0_goals_title">Badges et objectif</string>
     <string name="whats_new_1_4_0_goals_text">Gagnez des badges au fil du tri et fixez-vous une place à libérer.</string>
+    <string name="whats_new_1_4_0_batch_title">Triez plusieurs souvenirs d\'un coup</string>
+    <string name="whats_new_1_4_0_batch_text">Dans la vue d\'ensemble d\'un jour, faites un appui long sur un souvenir, cochez les autres, puis gardez-les ou supprimez-les tous ensemble. Touchez une année pour la sélectionner en entier.</string>
+    <string name="whats_new_1_4_0_quality_title">Photos floues et doublons repérés</string>
+    <string name="whats_new_1_4_0_quality_text">Une pastille signale les photos peut-être floues ou très sombres, et les copies d\'une même image. Elle ne fait que les signaler : le choix reste le vôtre.</string>
+    <string name="whats_new_1_4_0_widget_title">Un widget « Ce jour-là »</string>
+    <string name="whats_new_1_4_0_widget_text">Posez-le sur l\'écran d\'accueil : un souvenir du jour et le nombre à trier. Touchez-le pour commencer le tri.</string>
     <!-- Widget « Ce jour-là » de l'écran d'accueil (PS-170). -->
     <string name="widget_name">Ce jour-là</string>
     <string name="widget_description">Un souvenir de ce jour, les années passées, et le nombre qu\'il reste à trier</string>

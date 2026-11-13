@@ -2,7 +2,7 @@
 
 Le tutoriel (SPEC §4, epic 11) est fait en dernier pour couvrir les fonctionnalités réellement livrées. Cette liste les compare à son contenu ; elle se relit à chaque nouvelle fonctionnalité visible. Si le contenu du tutoriel change fortement, `Tutorial.CURRENT_VERSION` (`domain/model/Tutorial.kt`) est incrémenté pour le proposer de nouveau.
 
-Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été incrémentée : le tutoriel n'a encore été livré à personne, la version 1 est ce contenu.
+Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été incrémentée : le tutoriel n'a encore été livré à personne, la version 1 est ce contenu. Le 2026-11-13, deux phrases ajoutées (tri par lot page 4, page « Corbeille » page 5) sans incrémenter la version : simples précisions, qu'on retrouve aussi dans les nouveautés de la 1.4.0.
 
 | Fonctionnalité livrée | Tickets | Où dans le tutoriel |
 |---|---|---|
@@ -17,7 +17,7 @@ Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été inc
 | Résumé de fin de tri, espace libéré estimé | PS-53, PS-88 | Page 5 « Rien n'est définitif » (animation) |
 | Confirmation groupée, corbeille du système restaurable environ 30 jours | PS-54, PS-55 | Page 5 (animation du dialogue et texte) ; aucune promesse sur Google Photos (SPEC §16.7) |
 | Revoir les médias marqués en grand depuis le résumé | PS-112 | Page 5 (texte) |
-| Page « Corbeille » : restaurer ou supprimer définitivement ce que PhotoSwipe a supprimé | PS-168 | Page 5 (texte : restaurable environ 30 jours) ; la page elle-même n'est pas montrée, elle s'ouvre depuis le résumé, l'icône de la barre de l'accueil ou les réglages |
+| Page « Corbeille » : restaurer ou supprimer définitivement ce que PhotoSwipe a supprimé | PS-168 | Page 5 (texte : restaurable environ 30 jours, depuis la page « Corbeille », icône en haut de l'accueil, 2026-11-13) ; la page elle-même n'est pas montrée, elle s'ouvre depuis le résumé, l'icône de la barre de l'accueil ou les réglages |
 | Essai sans risque des gestes | PS-80 | Page 6 « Essayez » (cartes d'exemple) |
 | Accès aux photos, accès partiel d'Android 14+ | epic 4 | Hors tutoriel : écrans d'accès, juste après lui |
 | Lecture des vidéos (muette au départ, son au ▶) | epic 6, PS-105 | Non détaillé : découvert sur la carte même, sans risque |
@@ -38,7 +38,7 @@ Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été inc
 | Langue, thème (dont le noir pur du thème sombre), animations, licences, revoir le tutoriel | epic 9, PS-81, PS-87, PS-146, PS-176 | Hors tutoriel : réglages |
 | Secouer le téléphone pour annuler la dernière décision (désactivé par défaut, proposé seulement avec un accéléromètre) | PS-175 | Hors tutoriel : réglage de la section « Gestes » ; le tutoriel présente le bouton « Annuler » (page 2), que la secousse ne fait que doubler, et l'entraînement ne l'écoute pas |
 | Célébration de fin de pile (confettis à la dernière carte triée d'un jour, désactivée par défaut) | PS-174 | Hors tutoriel : réglage de la section « Apparence », une surprise qu'on découvre en l'activant ; pas de confettis dans l'entraînement |
-| Vue d'ensemble d'un jour (tous ses souvenirs par année), avec tri par lot (appui long, garder ou supprimer plusieurs souvenirs, « Annuler ») | PS-139, PS-159 | Hors tutoriel : ouverte en touchant les vignettes de la carte du jour ou l'icône de grille de la pile, découverte sans risque |
+| Vue d'ensemble d'un jour (tous ses souvenirs par année), avec tri par lot (appui long, garder ou supprimer plusieurs souvenirs, « Annuler ») | PS-139, PS-159 | Page 4 (texte : toucher les vignettes d'un jour, puis appui long pour en trier plusieurs d'un coup, 2026-11-13) ; ouverte en touchant les vignettes de la carte du jour ou l'icône de grille de la pile, découverte sans risque |
 | Page « Progression » (statistiques d'utilisation, graphiques des six derniers mois, série de jours), ouverte par le bouton de la barre de l'accueil, qui porte la série en pastille | PS-153, PS-154, PS-155 | Hors tutoriel : découverte depuis l'accueil ou les réglages, sans risque |
 | Langue, thème, licences, revoir le tutoriel | epic 9, PS-81, PS-87 | Hors tutoriel : réglages |
 | Nouveautés après une mise à jour, relues dans « À propos » des réglages | PS-173 | Hors tutoriel : la feuille ne s'affiche qu'après une mise à jour, jamais à la première installation, où le tutoriel présente déjà tout |
