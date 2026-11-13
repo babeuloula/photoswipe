@@ -23,7 +23,7 @@ Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été inc
 | Accès « Gestion des médias » | PS-84 | Hors tutoriel : conseil de l'accueil, proposé au bon moment |
 | Vue d'ensemble d'un jour (tous ses souvenirs par année) | PS-139 | Hors tutoriel : ouverte en touchant les vignettes de la carte du jour ou l'icône de grille de la pile, découverte sans risque |
 | Page « Progression » (statistiques d'utilisation, graphiques des six derniers mois, série de jours, calendrier de l'année qui ouvre n'importe quel jour, même à l'avance, objectif de place à libérer, badges), ouverte par le bouton de la barre de l'accueil, qui porte la série en pastille | PS-153 à PS-158 | Hors tutoriel : découverte depuis l'accueil ou les réglages, sans risque |
-| Liens profonds `photoswipe://` et raccourcis de l'icône (« Trier aujourd'hui », « Résumé ») | PS-171 | Hors tutoriel : raccourcis découverts par l'appui long habituel sur l'icône, liens documentés dans le README pour les automatisations |
+| Liens profonds `photoswipe://`, raccourcis de l'icône (« Trier aujourd'hui », « Résumé ») et tuile des réglages rapides | PS-171, PS-172 | Hors tutoriel : raccourcis découverts par l'appui long habituel sur l'icône, tuile proposée par Android dans l'édition des réglages rapides, liens documentés dans le README pour les automatisations |
 | Langue, thème (dont le noir pur du thème sombre), animations, licences, revoir le tutoriel | epic 9, PS-81, PS-87, PS-146, PS-176 | Hors tutoriel : réglages |
 
 ## Écart connu

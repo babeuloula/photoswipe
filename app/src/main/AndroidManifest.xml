@@ -56,6 +56,19 @@
                 android:resource="@xml/shortcuts" />
         </activity>
 
+        <!-- Tuile « PhotoSwipe » des réglages rapides (PS-172, ADR 0038) : ouvre la pile du jour,
+             sans compteur. -->
+        <service
+            android:name=".tile.SortTodayTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
         <!-- Reprogrammation du rappel d'aujourd'hui, ouverte par l'action de la notification : un
              sélecteur d'heure par-dessus l'écran, hors de la tâche de l'application (SPEC §3.6). -->
         <activity
