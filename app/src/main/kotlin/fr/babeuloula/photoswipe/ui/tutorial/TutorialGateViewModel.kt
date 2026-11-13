@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.usecase.MarkTutorialSeen
+import fr.babeuloula.photoswipe.domain.usecase.RecordFirstInstall
 import fr.babeuloula.photoswipe.domain.usecase.ShouldShowTutorial
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +31,10 @@ enum class TutorialGateState {
  *
  * Le ViewModel vit avec l'activité : une recréation (changement de langue) garde l'étape. Une
  * lecture des réglages qui échoue ne bloque pas l'application : le tutoriel n'est pas montré.
+ *
+ * Avant d'afficher le tutoriel, il retient une première installation ([RecordFirstInstall]), donc
+ * avant de pouvoir le marquer comme vu : le tutoriel jamais vu la distingue d'une mise à jour, qui annoncera
+ * ses nouveautés sur l'accueil (PS-173).
  */
 @HiltViewModel
 class TutorialGateViewModel
@@ -37,6 +42,7 @@ class TutorialGateViewModel
     constructor(
         private val shouldShowTutorial: ShouldShowTutorial,
         private val markTutorialSeen: MarkTutorialSeen,
+        private val recordFirstInstall: RecordFirstInstall,
     ) : ViewModel() {
         private val state = MutableStateFlow(TutorialGateState.CHECKING)
 
@@ -46,6 +52,9 @@ class TutorialGateViewModel
         init {
             viewModelScope.launch {
                 val show = runCatching { shouldShowTutorial() }.getOrDefault(false)
+                // Avant d'afficher le tutoriel : il ne peut donc pas être marqué vu avant que la
+                // première installation soit retenue, ce qui la ferait prendre pour une mise à jour.
+                if (show) runCatching { recordFirstInstall() }
                 state.value = if (show) TutorialGateState.SHOWING else TutorialGateState.DONE
             }
         }

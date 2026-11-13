@@ -80,6 +80,7 @@ import fr.babeuloula.photoswipe.ui.theme.IbmPlexMono
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.monoLabel
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
+import fr.babeuloula.photoswipe.ui.whatsnew.WhatsNewSheet
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -146,6 +147,8 @@ fun HomeScreen(
                             onSupport = { onEvent(HomeEvent.SupportDeveloper) },
                             onDismiss = { onEvent(HomeEvent.DismissRatingInvitation) },
                         )
+                    } else if (state.whatsNew.isNotEmpty()) {
+                        WhatsNewSheet(releases = state.whatsNew, onDismiss = { onEvent(HomeEvent.DismissWhatsNew) })
                     }
                 }
             }

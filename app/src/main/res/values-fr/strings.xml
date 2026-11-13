@@ -308,4 +308,18 @@
     <string name="shortcut_summary">Résumé</string>
     <!-- Tuile des réglages rapides (PS-172). -->
     <string name="tile_subtitle">Trier aujourd\'hui</string>
+    <!-- Nouveautés après une mise à jour (PS-173) : une clé par version, ce que l'utilisateur voit ou peut faire de nouveau. -->
+    <string name="whats_new_title">Nouveautés</string>
+    <string name="whats_new_version">Version %1$s</string>
+    <string name="whats_new_close">Compris</string>
+    <string name="settings_about_whats_new">Nouveautés</string>
+    <string name="settings_about_whats_new_summary">Ce que chaque mise à jour vous a apporté</string>
+    <string name="whats_new_1_4_0_progress_title">Votre progression en un coup d\'œil</string>
+    <string name="whats_new_1_4_0_progress_text">Touchez l\'icône du graphique en haut de l\'accueil : ce que vous avez trié, gardé et supprimé, et la place libérée sur les 6 derniers mois.</string>
+    <string name="whats_new_1_4_0_streak_title">Entretenez votre série</string>
+    <string name="whats_new_1_4_0_streak_text">Chaque jour où vous triez tous les souvenirs du jour allonge votre série, affichée sur l\'icône du graphique de l\'accueil.</string>
+    <string name="whats_new_1_4_0_calendar_title">Toute l\'année en calendrier</string>
+    <string name="whats_new_1_4_0_calendar_text">Voyez combien de souvenirs attendent chaque jour de l\'année, et touchez n\'importe quel jour pour l\'ouvrir, même hors de la semaine.</string>
+    <string name="whats_new_1_4_0_goals_title">Badges et objectif</string>
+    <string name="whats_new_1_4_0_goals_text">Gagnez des badges au fil du tri et fixez-vous une place à libérer.</string>
 </resources>

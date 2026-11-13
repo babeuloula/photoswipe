@@ -16,15 +16,15 @@ import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
+import fr.babeuloula.photoswipe.domain.model.Tutorial
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
-import fr.babeuloula.photoswipe.domain.usecase.MarkRatingAsked
-import fr.babeuloula.photoswipe.domain.usecase.RecordTodaySorted
 import fr.babeuloula.photoswipe.domain.usecase.ReopenDay
-import fr.babeuloula.photoswipe.domain.usecase.UpdateStreak
+import fr.babeuloula.photoswipe.ui.whatsnew.WHATS_NEW
+import fr.babeuloula.photoswipe.ui.whatsnew.WhatsNewRelease
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -278,6 +278,69 @@ class HomeViewModelTest {
         }
 
     @Test
+    fun `shows the news missed since the last update, then never again once closed`() =
+        runTest {
+            settings =
+                FakeSettingsRepository(tutorialVersionSeen = Tutorial.CURRENT_VERSION, whatsNewVersionSeen = "1.3.0")
+            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+            val state = viewModel.uiState.first { it is HomeUiState.Loaded && it.whatsNew.isNotEmpty() }
+            assertEquals(WHATS_NEW, (state as HomeUiState.Loaded).whatsNew)
+
+            viewModel.onEvent(HomeEvent.DismissWhatsNew)
+
+            assertEquals(emptyList<WhatsNewRelease>(), (viewModel.uiState.value as HomeUiState.Loaded).whatsNew)
+            assertEquals("1.4.0", settings.whatsNewVersionSeen)
+            val reopened = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
+            assertEquals(emptyList<WhatsNewRelease>(), (loaded(reopened) as HomeUiState.Loaded).whatsNew)
+        }
+
+    @Test
+    fun `shows no news on the first install`() =
+        runTest {
+            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+            assertEquals(emptyList<WhatsNewRelease>(), (loaded(viewModel) as HomeUiState.Loaded).whatsNew)
+            assertEquals("1.4.0", settings.whatsNewVersionSeen)
+        }
+
+    @Test
+    fun `shows the news only after the rating invitation, never with it`() =
+        runTest {
+            settings =
+                FakeSettingsRepository(
+                    tutorialVersionSeen = Tutorial.CURRENT_VERSION,
+                    whatsNewVersionSeen = "1.3.0",
+                    ratingInvitation = RatingInvitation(sortedDays = 2, lastSortedDay = today.minusDays(1)),
+                )
+            repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
+            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
+            var dismissed = false
+            var newsTooEarly = false
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                viewModel.uiState.collect {
+                    if (!dismissed && it is HomeUiState.Loaded &&
+                        it.whatsNew.isNotEmpty()
+                    ) {
+                        newsTooEarly = true
+                    }
+                }
+            }
+
+            val invited = viewModel.uiState.first { it is HomeUiState.Loaded && it.showRatingInvitation }
+            assertEquals(emptyList<WhatsNewRelease>(), (invited as HomeUiState.Loaded).whatsNew)
+
+            dismissed = true
+            viewModel.onEvent(HomeEvent.DismissRatingInvitation)
+
+            assertEquals(WHATS_NEW, (viewModel.uiState.value as HomeUiState.Loaded).whatsNew)
+            // Rien des nouveautés avant que l'invitation soit fermée : ni avant elle, ni avec elle.
+            assertFalse(newsTooEarly)
+        }
+
+    @Test
     fun `counts the streak of days, today sorted included, and saves it`() =
         runTest {
             repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
@@ -368,12 +431,7 @@ class HomeViewModelTest {
             settings,
             mediaManagement = { mediaManagementGranted },
             reopenDay = ReopenDay(SameDayMatcher(), source, repository, FakeDecisionJournal(repository), clock),
-            sortedDay =
-                SortedDayActions(
-                    RecordTodaySorted(settings, clock),
-                    MarkRatingAsked(settings),
-                    UpdateStreak(settings, clock),
-                ),
+            announcements = homeAnnouncements(settings, clock),
         )
 
     private suspend fun loaded(viewModel: HomeViewModel): HomeUiState =

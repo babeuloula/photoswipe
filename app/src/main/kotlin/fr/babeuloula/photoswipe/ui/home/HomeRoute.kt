@@ -73,9 +73,19 @@ fun HomeRoute(
             }
         }
     }
-    // L'invitation à noter l'application attend la fin de l'annonce de la confirmation (PS-121).
+    // L'invitation à noter l'application (PS-121) et les nouveautés (PS-173) attendent la fin de
+    // l'annonce de la confirmation.
     val announcing = confirmed != null || snackbarHostState.currentSnackbarData != null
-    val shown = state.let { if (announcing && it is HomeUiState.Loaded) it.copy(showRatingInvitation = false) else it }
+    val shown =
+        state.let {
+            if (announcing &&
+                it is HomeUiState.Loaded
+            ) {
+                it.copy(showRatingInvitation = false, whatsNew = emptyList())
+            } else {
+                it
+            }
+        }
     HomeScreen(state = shown, onEvent = viewModel::onEvent, modifier = modifier, snackbarHostState = snackbarHostState)
 }
 
