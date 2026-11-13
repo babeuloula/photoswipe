@@ -4,18 +4,24 @@ import androidx.lifecycle.SavedStateHandle
 import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
+import fr.babeuloula.photoswipe.domain.fixtures.FakePhotoAnalyzer
+import fr.babeuloula.photoswipe.domain.fixtures.FakePhotoMeasureCache
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
+import fr.babeuloula.photoswipe.domain.fixtures.aFlatImage
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.domain.model.QualityHint
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetDayOverview
+import fr.babeuloula.photoswipe.domain.usecase.GetQualityHints
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
 import fr.babeuloula.photoswipe.domain.usecase.SortInBatch
@@ -71,10 +77,27 @@ class DayOverviewViewModelTest {
                 UndoLastDecision(repository, journal),
             ),
             clock,
+            GetQualityHints(photoAnalyzer, FakePhotoMeasureCache(), FakeSettingsRepository()),
         )
+
+    /** Vignettes des photos à mesurer (PS-164) : aucune par défaut, rien n'est signalé. */
+    private var photoAnalyzer = FakePhotoAnalyzer()
 
     private suspend fun decisionOf(id: Long): ReviewDecision? =
         repository.entriesFor(2026, setOf(MediaId(id))).singleOrNull()?.decision
+
+    @Test
+    fun `flags the photos of the day that may be blurry or very dark`() =
+        runTest {
+            photoAnalyzer = FakePhotoAnalyzer(mapOf(MediaId(1) to aFlatImage(150), MediaId(2) to aFlatImage(5)))
+
+            val viewModel = viewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2024))))
+
+            assertEquals(
+                mapOf(MediaId(1) to QualityHint.BLURRY, MediaId(2) to QualityHint.DARK),
+                viewModel.loaded().quality,
+            )
+        }
 
     @Test
     fun `selects memories by a long press, then a press toggles instead of opening`() =

@@ -2,11 +2,13 @@ package fr.babeuloula.photoswipe.domain.usecase
 
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
+import fr.babeuloula.photoswipe.domain.fixtures.FakePhotoMeasureCache
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.MediaAccess
 import fr.babeuloula.photoswipe.domain.model.MediaId
+import fr.babeuloula.photoswipe.domain.model.PhotoMeasure
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.TRASHED
@@ -60,6 +62,18 @@ class CleanOrphanEntriesTest {
             CleanOrphanEntries(repository, gallery, FakeDecisionJournal(repository))(MediaAccess.FULL)
 
             assertEquals(listOf(MediaId(2)), repository.entries.map { it.mediaId })
+        }
+
+    @Test
+    fun `forgets the photo measures of the media that have disappeared`() =
+        runTest {
+            val repository = FakeReviewRepository(listOf(aReviewEntry(mediaId = 1), aReviewEntry(mediaId = 9)))
+            val measures =
+                FakePhotoMeasureCache(mapOf(MediaId(1) to PhotoMeasure(1.0, 1.0), MediaId(9) to PhotoMeasure(1.0, 1.0)))
+
+            CleanOrphanEntries(repository, gallery, FakeDecisionJournal(repository), measures)(MediaAccess.FULL)
+
+            assertEquals(setOf(MediaId(1)), measures.measures.keys)
         }
 
     @Test

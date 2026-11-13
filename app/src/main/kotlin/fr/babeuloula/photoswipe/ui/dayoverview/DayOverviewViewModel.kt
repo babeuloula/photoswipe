@@ -8,8 +8,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.DayOverview
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.domain.model.QualityHint
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.usecase.GetDayOverview
+import fr.babeuloula.photoswipe.domain.usecase.GetQualityHints
 import fr.babeuloula.photoswipe.domain.usecase.SortInBatch
 import fr.babeuloula.photoswipe.ui.deck.MediaCardUiState
 import fr.babeuloula.photoswipe.ui.navigation.DayOverviewRoute
@@ -39,11 +41,13 @@ sealed interface DayOverviewUiState {
      * @property overview souvenirs rangés par année, avec leur décision.
      * @property openPhoto photo déjà triée ouverte en grand, `null` sinon.
      * @property selected souvenirs sélectionnés pour un tri par lot (PS-159) ; vide hors sélection.
+     * @property quality photos peut-être floues ou très sombres (PS-164).
      */
     data class Loaded(
         val overview: DayOverview,
         val openPhoto: MediaCardUiState? = null,
         val selected: Set<MediaId> = emptySet(),
+        val quality: Map<MediaId, QualityHint> = emptyMap(),
     ) : DayOverviewUiState {
         /** Vrai pendant une sélection : un appui coche ou décoche au lieu d'ouvrir. */
         val selecting: Boolean get() = selected.isNotEmpty()
@@ -155,6 +159,7 @@ class DayOverviewViewModel
         private val getDayOverview: GetDayOverview,
         private val sortInBatch: SortInBatch,
         private val clock: Clock,
+        private val getQualityHints: GetQualityHints,
     ) : ViewModel() {
         /** Jour affiché. */
         val day: LocalDate = savedStateHandle.toRoute<DayOverviewRoute>().day
@@ -320,16 +325,26 @@ class DayOverviewViewModel
         private fun load(showLoading: Boolean) {
             if (showLoading) state.value = DayOverviewUiState.Loading
             viewModelScope.launch {
-                val selected = (state.value as? DayOverviewUiState.Loaded)?.selected.orEmpty()
+                val previous = state.value as? DayOverviewUiState.Loaded
+                val selected = previous?.selected.orEmpty()
                 state.value =
                     runCatching { getDayOverview(day) }.fold(
                         // Une sélection en cours survit à la relecture, sans les souvenirs disparus.
                         onSuccess = { overview ->
                             val ids = overview.years.flatMap { it.memories }.mapTo(HashSet()) { it.media.id }
-                            DayOverviewUiState.Loaded(overview, selected = selected intersect ids)
+                            DayOverviewUiState.Loaded(
+                                overview,
+                                selected = selected intersect ids,
+                                quality = previous?.quality.orEmpty(),
+                            )
                         },
                         onFailure = { DayOverviewUiState.Error },
                     )
+                // Après l'affichage : une photo jamais mesurée lit sa vignette (PS-164).
+                val loaded = state.value as? DayOverviewUiState.Loaded ?: return@launch
+                val media = loaded.overview.years.flatMap { year -> year.memories.map { it.media } }
+                val quality = runCatching { getQualityHints(media) }.getOrDefault(emptyMap())
+                state.update { if (it is DayOverviewUiState.Loaded) it.copy(quality = quality) else it }
             }
         }
     }

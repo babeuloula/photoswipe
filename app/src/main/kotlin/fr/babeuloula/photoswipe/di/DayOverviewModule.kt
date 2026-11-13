@@ -5,10 +5,14 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.domain.port.MediaSource
+import fr.babeuloula.photoswipe.domain.port.PhotoAnalyzer
+import fr.babeuloula.photoswipe.domain.port.PhotoMeasureCache
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
+import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.service.DeckOrdering
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetDayOverview
+import fr.babeuloula.photoswipe.domain.usecase.GetQualityHints
 import fr.babeuloula.photoswipe.domain.usecase.GetSimilarMemories
 import fr.babeuloula.photoswipe.domain.usecase.KeepMedia
 import fr.babeuloula.photoswipe.domain.usecase.MarkForDeletion
@@ -45,4 +49,11 @@ object DayOverviewModule {
         mediaSource: MediaSource,
         clock: Clock,
     ): GetSimilarMemories = GetSimilarMemories(sameDayMatcher, mediaSource, clock)
+
+    @Provides
+    fun provideGetQualityHints(
+        analyzer: PhotoAnalyzer,
+        cache: PhotoMeasureCache,
+        settingsRepository: SettingsRepository,
+    ): GetQualityHints = GetQualityHints(analyzer, cache, settingsRepository)
 }

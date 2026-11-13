@@ -65,6 +65,7 @@ import coil3.compose.AsyncImage
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.domain.model.QualityHint
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeChip
@@ -265,6 +266,7 @@ private fun CardBottom(
             isVideo = card.type == MediaType.VIDEO && video?.ended != true,
             playing = video?.playing == true,
             similar = card.similar,
+            qualityHint = card.qualityHint,
         )
     }
 }
@@ -435,6 +437,7 @@ private fun BottomChips(
     playing: Boolean,
     modifier: Modifier = Modifier,
     similar: SimilarGroup? = null,
+    qualityHint: QualityHint? = null,
 ) {
     val context = LocalContext.current
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -455,6 +458,7 @@ private fun BottomChips(
         }
         FilmEdgeChip { Text(fileSizeLabel(context, sizeBytes)) }
         similar?.let { SimilarChip(it) }
+        qualityHint?.let { QualityHintChip(it) }
     }
 }
 

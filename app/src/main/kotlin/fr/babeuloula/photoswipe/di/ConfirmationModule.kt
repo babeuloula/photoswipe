@@ -9,6 +9,7 @@ import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.DeletionHistory
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.port.MediaSource
+import fr.babeuloula.photoswipe.domain.port.PhotoMeasureCache
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.port.UsageStatisticsRepository
@@ -83,7 +84,8 @@ object ConfirmationModule {
         reviewRepository: ReviewRepository,
         mediaSource: MediaSource,
         journal: DecisionJournal,
-    ): CleanOrphanEntries = CleanOrphanEntries(reviewRepository, mediaSource, journal)
+        measures: PhotoMeasureCache,
+    ): CleanOrphanEntries = CleanOrphanEntries(reviewRepository, mediaSource, journal, measures)
 
     @Provides
     fun provideOfferManageMediaTip(settingsRepository: SettingsRepository): OfferManageMediaTip =

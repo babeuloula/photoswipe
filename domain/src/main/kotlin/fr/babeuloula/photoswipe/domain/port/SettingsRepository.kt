@@ -107,4 +107,13 @@ interface SettingsRepository {
 
     /** Enregistre la dernière version dont les nouveautés ont été vues. */
     suspend fun saveWhatsNewVersionSeen(version: String)
+
+    /**
+     * Vrai si la pile signale les photos peut-être floues ou très sombres (PS-164) ; vrai tant que
+     * rien n'est enregistré.
+     */
+    fun observeQualityHints(): Flow<Boolean>
+
+    /** Enregistre le choix de signaler ou non les photos peut-être ratées. */
+    suspend fun saveQualityHints(enabled: Boolean)
 }

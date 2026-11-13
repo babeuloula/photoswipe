@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.domain.model.QualityHint
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.model.SessionDecision
@@ -175,6 +176,12 @@ sealed interface DeckEvent {
     /** « Renvoyer avec … » du menu : partager directement avec la dernière application choisie (PS-163). */
     data object ShareAgain : ElsewhereEvent
 
+    /**
+     * « Partager en carte postale » du menu d'une photo (PS-177) : la photo du dessus dans un cadre,
+     * avec son repère « Il y a 5 ans », sans changer son état.
+     */
+    data object SharePostcard : ElsewhereEvent
+
     /** Retour sur la pile : après « Ouvrir avec », le média a pu être retouché, copié ou supprimé ailleurs. */
     data object Resumed : ElsewhereEvent
 }
@@ -224,6 +231,15 @@ sealed interface DeckEffect {
         val type: MediaType,
         val component: String,
     ) : ElsewhereEffect
+
+    /**
+     * Composer la carte postale d'une photo, la montrer en aperçu puis la partager (PS-177).
+     *
+     * @property card carte du dessus, dont la photo et le repère « Il y a N ans » font la carte postale.
+     */
+    data class SharePostcard(
+        val card: MediaCardUiState,
+    ) : DeckEffect
 
     /**
      * Lancer la demande de favori de la galerie ; la réponse revient par [DeckEvent.FavoriteRequestAnswered].
@@ -291,6 +307,9 @@ class DeckViewModel
 
         /** Place des photos du jour prises à la suite (PS-140). */
         private var similar: Map<MediaId, SimilarGroup> = emptyMap()
+
+        /** Photos peut-être floues ou très sombres (PS-164). */
+        private var quality: Map<MediaId, QualityHint> = emptyMap()
 
         /** Décisions du jour encore annulables, de la plus ancienne à la plus récente. */
         var session: ReviewSession = ReviewSession()
@@ -385,6 +404,15 @@ class DeckViewModel
                     }
                 }
 
+                DeckEvent.SharePostcard -> {
+                    // Carte postale de la photo du dessus (PS-177) : composée et partagée par l'écran,
+                    // la carte reste en place, sans décision.
+                    (state.value as? DeckUiState.Loaded)?.current?.takeIf { it.type == MediaType.IMAGE }?.let { card ->
+                        state.setMenuOpen(false)
+                        effects.trySend(DeckEffect.SharePostcard(card))
+                    }
+                }
+
                 DeckEvent.Resumed -> {
                     if (sharedElsewhere) {
                         sharedElsewhere = false
@@ -471,6 +499,9 @@ class DeckViewModel
                         similar = loaded.similar
                         marked = loaded.marked
                         render()
+                        // Après l'affichage : une photo jamais mesurée lit sa vignette (PS-164).
+                        quality = runCatching { loading.getQualityHints(loaded.cards) }.getOrDefault(emptyMap())
+                        if (quality.isNotEmpty() && state.value is DeckUiState.Loaded) render()
                     },
                     onFailure = { if (showLoading) state.value = DeckUiState.Error },
                 )
@@ -577,6 +608,7 @@ class DeckViewModel
                                             favorite = galleryFavorite.isFavorite(it),
                                             previousDecision = previousDecisions[it.id],
                                             similar = similar[it.id],
+                                            qualityHint = quality[it.id],
                                         )
                                     },
                             remainingCount = deck.size,

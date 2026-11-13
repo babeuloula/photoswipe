@@ -65,6 +65,7 @@ import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.OverviewMemory
 import fr.babeuloula.photoswipe.domain.model.OverviewYear
+import fr.babeuloula.photoswipe.domain.model.QualityHint
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import fr.babeuloula.photoswipe.ui.common.SharedScreenKey
@@ -72,6 +73,8 @@ import fr.babeuloula.photoswipe.ui.common.Thumbnail
 import fr.babeuloula.photoswipe.ui.common.sharedScreen
 import fr.babeuloula.photoswipe.ui.deck.PhotoViewer
 import fr.babeuloula.photoswipe.ui.deck.dayAndMonth
+import fr.babeuloula.photoswipe.ui.deck.qualityHintDescription
+import fr.babeuloula.photoswipe.ui.deck.qualityHintLabel
 import fr.babeuloula.photoswipe.ui.theme.monoLabel
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
 import java.time.LocalDate
@@ -91,10 +94,12 @@ internal fun MemoryTile(
     selection: TileSelection,
     onOpen: () -> Unit,
     onToggle: () -> Unit,
+    qualityHint: QualityHint? = null,
 ) {
     val description =
         listOfNotNull(
             memoryDescription(memory),
+            qualityHint?.let { stringResource(qualityHintDescription(it)) },
             stringResource(R.string.day_overview_selected_state).takeIf { selection.selected },
         ).joinToString(", ")
     val openable = selection.active || memory.decision == null || memory.media.type == MediaType.IMAGE
@@ -138,6 +143,8 @@ internal fun MemoryTile(
                 },
     ) {
         MemoryTileContent(memory, selection.selected)
+        // Photo peut-être floue ou très sombre (PS-164), dans le coin libre de la case.
+        qualityHint?.let { QualityHintBadge(it, Modifier.align(Alignment.BottomStart)) }
     }
 }
 
@@ -189,6 +196,25 @@ private fun BoxScope.MemoryTileContent(
             ReviewDecision.TRASHED, null -> Unit
         }
     }
+}
+
+/** « Floue ? » ou « Très sombre ? » (PS-164), décrit par la case elle-même pour TalkBack. */
+@Composable
+private fun QualityHintBadge(
+    hint: QualityHint,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = stringResource(qualityHintLabel(hint)),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.primaryFixed,
+        modifier =
+            modifier
+                .padding(4.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.onPrimaryFixed)
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+    )
 }
 
 /** « ⧉ 2/3 » : la photo a des voisines prises à la suite (PS-140). */

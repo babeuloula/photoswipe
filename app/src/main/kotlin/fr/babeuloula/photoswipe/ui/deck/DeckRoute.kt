@@ -9,8 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -20,6 +22,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.share.ShareTargetReceiver
+import fr.babeuloula.photoswipe.ui.postcard.PostcardDialog
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -49,6 +52,14 @@ fun DeckRoute(
         rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
             viewModel.onEvent(DeckEvent.UnfavoriteRequestAnswered(confirmed = result.resultCode == Activity.RESULT_OK))
         }
+    // Photo dont la carte postale est en aperçu (PS-177), `null` hors de l'aperçu.
+    var postcard by remember { mutableStateOf<MediaCardUiState?>(null) }
+    postcard?.let { card ->
+        PostcardDialog(uri = card.uri, label = memoryLabel(context, card.yearsAgo, card.takenOn)) { failure ->
+            postcard = null
+            if (failure != null) scope.launch { snackbarHostState.showSnackbar(failure) }
+        }
+    }
     LaunchedEffect(viewModel) {
         viewModel.uiEffects.collect { effect ->
             when (effect) {
@@ -66,6 +77,10 @@ fun DeckRoute(
 
                 is DeckEffect.LaunchUnfavoriteRequest -> {
                     unfavoriteRequest.launch(IntentSenderRequest.Builder(effect.intentSender).build())
+                }
+
+                is DeckEffect.SharePostcard -> {
+                    postcard = effect.card
                 }
 
                 is DeckEffect.ElsewhereEffect -> {

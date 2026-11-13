@@ -70,6 +70,13 @@ class DataStoreSettingsRepository
             dataStore.edit { it[ANIMATIONS_ENABLED] = enabled }
         }
 
+        override fun observeQualityHints(): Flow<Boolean> =
+            preferences().map { it[QUALITY_HINTS] ?: true }.distinctUntilChanged()
+
+        override suspend fun saveQualityHints(enabled: Boolean) {
+            dataStore.edit { it[QUALITY_HINTS] = enabled }
+        }
+
         override fun observePureBlack(): Flow<Boolean> =
             preferences().map { it[PURE_BLACK] ?: false }.distinctUntilChanged()
 
@@ -162,6 +169,7 @@ class DataStoreSettingsRepository
             val THEME_MODE = stringPreferencesKey("theme_mode")
             val ANIMATIONS_ENABLED = booleanPreferencesKey("animations_enabled")
             val PURE_BLACK = booleanPreferencesKey("pure_black")
+            val QUALITY_HINTS = booleanPreferencesKey("quality_hints")
             val CATCH_UP_WINDOW = stringPreferencesKey("catch_up_window")
             val MANAGE_MEDIA_TIP = stringPreferencesKey("manage_media_tip")
             val TUTORIAL_VERSION_SEEN = intPreferencesKey("tutorial_version_seen")

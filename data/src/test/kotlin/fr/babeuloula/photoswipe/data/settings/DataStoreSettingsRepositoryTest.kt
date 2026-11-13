@@ -197,6 +197,17 @@ class DataStoreSettingsRepositoryTest {
         }
 
     @Test
+    fun `flags possibly failed photos by default, until turned off`() =
+        runTest {
+            val repository = DataStoreSettingsRepository(dataStore())
+            assertEquals(true, repository.observeQualityHints().first())
+
+            repository.saveQualityHints(false)
+
+            assertEquals(false, repository.observeQualityHints().first())
+        }
+
+    @Test
     fun `stores the streak of days, empty by default`() =
         runTest {
             val repository = DataStoreSettingsRepository(dataStore())

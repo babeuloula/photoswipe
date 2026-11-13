@@ -32,6 +32,7 @@ import javax.inject.Inject
  * @property pureBlack vrai si le thème sombre est en noir pur (PS-176).
  * @property whatsNewOpen vrai pendant la relecture des nouveautés de toutes les versions (PS-173).
  * @property catchUpWindow durée de la fenêtre de rattrapage (PS-169), `null` tant qu'elle n'est pas lue.
+ * @property qualityHints vrai si la pile signale les photos peut-être floues ou très sombres (PS-164).
  */
 data class SettingsUiState(
     val reminder: ReminderSettings? = null,
@@ -41,6 +42,7 @@ data class SettingsUiState(
     val pureBlack: Boolean = false,
     val whatsNewOpen: Boolean = false,
     val catchUpWindow: CatchUpWindow? = null,
+    val qualityHints: Boolean = true,
 )
 
 /** Action de l'utilisateur sur les réglages. */
@@ -128,6 +130,15 @@ sealed interface SettingsEvent {
      * @property enabled vrai pour le noir pur.
      */
     data class PureBlackToggled(
+        val enabled: Boolean,
+    ) : ThemeEvent
+
+    /**
+     * Interrupteur « Signaler les photos ratées » (PS-164).
+     *
+     * @property enabled vrai pour montrer « Floue ? » et « Très sombre ? » sur les photos concernées.
+     */
+    data class QualityHintsToggled(
         val enabled: Boolean,
     ) : ThemeEvent
 
@@ -297,6 +308,12 @@ class SettingsViewModel
             }
             viewModelScope.launch {
                 settingsRepository
+                    .observeQualityHints()
+                    .catch { emit(true) }
+                    .collect { enabled -> state.update { it.copy(qualityHints = enabled) } }
+            }
+            viewModelScope.launch {
+                settingsRepository
                     .observeCatchUpWindow()
                     .catch { emit(CatchUpWindow.DEFAULT) }
                     .collect { window -> state.update { it.copy(catchUpWindow = window) } }
@@ -357,6 +374,7 @@ class SettingsViewModel
                         is SettingsEvent.ThemePicked -> settingsRepository.saveThemeMode(event.mode)
                         is SettingsEvent.AnimationsToggled -> settingsRepository.saveAnimationsEnabled(event.enabled)
                         is SettingsEvent.PureBlackToggled -> settingsRepository.savePureBlack(event.enabled)
+                        is SettingsEvent.QualityHintsToggled -> settingsRepository.saveQualityHints(event.enabled)
                     }
                 }
             }

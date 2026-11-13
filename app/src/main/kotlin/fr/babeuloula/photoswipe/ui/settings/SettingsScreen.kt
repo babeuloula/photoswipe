@@ -103,6 +103,7 @@ fun SettingsScreen(
                     ) {
                         ReminderSection(reminder, environment.exactAlarmAllowed, onEvent)
                         state.catchUpWindow?.let { CatchUpSection(it, onEvent) }
+                        SortingHelpSection(state.qualityHints, onEvent)
                         LanguageSection(environment.languageLabel, onEvent)
                         state.themeMode?.let {
                             AppearanceSection(

@@ -204,6 +204,18 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `saves the choice of flagging photos that may have failed`() =
+        runTest {
+            val viewModel = settingsViewModel()
+            assertTrue(viewModel.uiState.value.qualityHints)
+
+            viewModel.onEvent(SettingsEvent.QualityHintsToggled(false))
+
+            assertFalse(repository.qualityHints)
+            assertFalse(viewModel.uiState.first { !it.qualityHints }.qualityHints)
+        }
+
+    @Test
     fun `opens the progress page`() =
         runTest {
             val viewModel = settingsViewModel()

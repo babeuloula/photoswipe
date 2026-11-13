@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.ui.deck
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaType
+import fr.babeuloula.photoswipe.domain.model.QualityHint
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SimilarGroup
 import java.time.Duration
@@ -26,6 +27,7 @@ import java.time.ZoneId
  * @property previousDecision décision d'avant (gardé, marqué pour suppression), sur un jour rouvert
  * pour être retrié (ADR 0026) ; `null` sinon.
  * @property similar place de la photo parmi des photos du jour prises à la suite (PS-140), `null` sinon.
+ * @property qualityHint photo peut-être floue ou très sombre (PS-164), `null` sinon.
  */
 data class MediaCardUiState(
     val id: MediaId,
@@ -38,6 +40,7 @@ data class MediaCardUiState(
     val favorite: Boolean = false,
     val previousDecision: ReviewDecision? = null,
     val similar: SimilarGroup? = null,
+    val qualityHint: QualityHint? = null,
 ) {
     companion object {
         /**
@@ -53,6 +56,7 @@ data class MediaCardUiState(
             favorite: Boolean = media.isFavorite,
             previousDecision: ReviewDecision? = null,
             similar: SimilarGroup? = null,
+            qualityHint: QualityHint? = null,
         ): MediaCardUiState {
             val takenOn = media.takenAt.atZone(zone).toLocalDate()
             return MediaCardUiState(
@@ -66,6 +70,7 @@ data class MediaCardUiState(
                 favorite = favorite,
                 previousDecision = previousDecision,
                 similar = similar,
+                qualityHint = qualityHint,
             )
         }
     }

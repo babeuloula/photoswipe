@@ -115,6 +115,13 @@
     <string name="deck_open_with">Ouvrir avec</string>
     <string name="deck_open_with_summary">Le voir ou le retoucher dans une autre application</string>
     <string name="deck_open_with_failed">Ce média ne peut pas être ouvert dans une autre application.</string>
+    <string name="deck_postcard">Partager en carte postale</string>
+    <string name="deck_postcard_summary">Avec la date du souvenir</string>
+    <string name="postcard_title">Carte postale</string>
+    <string name="postcard_preview">Carte postale : %1$s</string>
+    <string name="postcard_brand">Mentionner PhotoSwipe</string>
+    <string name="postcard_cancel">Annuler</string>
+    <string name="postcard_failed">Impossible de faire une carte postale de cette photo.</string>
     <string name="summary_title">Résumé</string>
     <string name="summary_freed_space">Espace à libérer</string>
     <string name="summary_nothing_deleted_yet">Rien n\'est encore supprimé : vos choix sont enregistrés et attendent votre confirmation.</string>
@@ -142,6 +149,9 @@
     <string name="settings_language_system">Langue du téléphone (%1$s)</string>
     <string name="settings_appearance_section">Apparence</string>
     <string name="settings_catch_up_section">Rattrapage</string>
+    <string name="settings_sorting_help_section">Aide au tri</string>
+    <string name="settings_quality_hints">Signaler les photos ratées</string>
+    <string name="settings_quality_hints_summary">Affiche « Floue ? » ou « Très sombre ? », sans jamais décider à votre place</string>
     <string name="settings_catch_up_days">Jours à rattraper</string>
     <string name="settings_catch_up_days_summary">Jours passés proposés sur l\'accueil, dans le rappel et dans le résumé. Choisissez-en plus après une absence.</string>
     <string name="home_hide_older_days">Masquer les jours plus anciens</string>
@@ -286,6 +296,10 @@
     <!-- Photos prises à la suite (PS-140). -->
     <string name="deck_similar">%1$d/%2$d</string>
     <string name="deck_similar_description">Photo %1$d sur %2$d prises à la suite</string>
+    <string name="deck_quality_blurry">Floue ?</string>
+    <string name="deck_quality_dark">Très sombre ?</string>
+    <string name="deck_quality_blurry_description">Cette photo est peut-être floue</string>
+    <string name="deck_quality_dark_description">Cette photo est très sombre</string>
     <string name="deck_compare_previous">Photo précédente · %1$d sur %2$d</string>
     <string name="deck_compare_action">Comparer avec la photo précédente</string>
     <string name="deck_compare_back">Revenir à cette photo</string>

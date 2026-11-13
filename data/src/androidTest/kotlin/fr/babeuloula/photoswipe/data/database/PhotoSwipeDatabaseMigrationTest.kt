@@ -150,6 +150,27 @@ class PhotoSwipeDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun `migrates version 5 to 6 with no photo measure and keeps the activity`() {
+        helper.createDatabase(DATABASE, 5).use { database ->
+            database.execSQL(
+                "INSERT INTO daily_activity (day, kept_count, favorite_count, trashed_count, freed_bytes) " +
+                    "VALUES (20649, 3, 1, 2, 500)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DATABASE, 6, true).use { database ->
+            database.query("SELECT kept_count FROM daily_activity").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(3, cursor.getInt(0))
+            }
+            database.query("SELECT COUNT(*) FROM photo_measure").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(0, cursor.getInt(0))
+            }
+        }
+    }
+
     private companion object {
         const val DATABASE = "migration-test.db"
     }

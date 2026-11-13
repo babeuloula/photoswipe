@@ -123,6 +123,13 @@
     <string name="deck_open_with">Open with</string>
     <string name="deck_open_with_summary">View or edit it in another app</string>
     <string name="deck_open_with_failed">This media can\'t be opened in another app.</string>
+    <string name="deck_postcard">Share as a postcard</string>
+    <string name="deck_postcard_summary">With the date it was taken</string>
+    <string name="postcard_title">Postcard</string>
+    <string name="postcard_preview">Postcard: %1$s</string>
+    <string name="postcard_brand">Mention PhotoSwipe</string>
+    <string name="postcard_cancel">Cancel</string>
+    <string name="postcard_failed">This photo can\'t be made into a postcard.</string>
     <string name="summary_title">Summary</string>
     <!-- Résumé avant confirmation (SPEC §3.5). -->
     <string name="summary_freed_space">Space to free up</string>
@@ -151,6 +158,9 @@
     <string name="settings_language_system">Phone language (%1$s)</string>
     <string name="settings_appearance_section">Appearance</string>
     <string name="settings_catch_up_section">Catch-up</string>
+    <string name="settings_sorting_help_section">Sorting help</string>
+    <string name="settings_quality_hints">Flag photos that may have failed</string>
+    <string name="settings_quality_hints_summary">Shows “Blurry?” or “Very dark?” on them, without ever deciding for you</string>
     <string name="settings_catch_up_days">Days to catch up</string>
     <string name="settings_catch_up_days_summary">Previous days offered on the home screen, in the reminder and in the summary. Choose more after time away.</string>
     <string name="home_hide_older_days">Hide older days</string>
@@ -297,6 +307,10 @@
     <!-- Photos prises à la suite (PS-140). -->
     <string name="deck_similar">%1$d/%2$d</string>
     <string name="deck_similar_description">Photo %1$d of %2$d taken one after another</string>
+    <string name="deck_quality_blurry">Blurry?</string>
+    <string name="deck_quality_dark">Very dark?</string>
+    <string name="deck_quality_blurry_description">This photo may be blurry</string>
+    <string name="deck_quality_dark_description">This photo is very dark</string>
     <string name="deck_compare_previous">Previous photo · %1$d of %2$d</string>
     <string name="deck_compare_action">Compare with the previous photo</string>
     <string name="deck_compare_back">Back to this photo</string>

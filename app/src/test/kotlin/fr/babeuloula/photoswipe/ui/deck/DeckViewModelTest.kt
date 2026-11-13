@@ -8,15 +8,18 @@ import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
+import fr.babeuloula.photoswipe.domain.fixtures.FakePhotoAnalyzer
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
+import fr.babeuloula.photoswipe.domain.fixtures.aFlatImage
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.DecisionRecord
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
+import fr.babeuloula.photoswipe.domain.model.QualityHint
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
 import fr.babeuloula.photoswipe.domain.model.SimilarGroup
@@ -64,6 +67,23 @@ class DeckViewModelTest : DeckViewModelTestBase() {
         when (val state = uiState.value) {
             is DeckUiState.Loaded -> state.cards.map { it.id }
             else -> emptyList()
+        }
+
+    @Test
+    fun `flags the cards that may be blurry, once their photo is measured`() =
+        runTest {
+            photoAnalyzer = FakePhotoAnalyzer(mapOf(MediaId(1) to aFlatImage(150)))
+
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2021))))
+
+            val cards = (viewModel.uiState.value as DeckUiState.Loaded).cards
+            assertEquals(
+                mapOf(MediaId(1) to QualityHint.BLURRY),
+                cards.associate { it.id to it.qualityHint }.filterValues {
+                    it !=
+                        null
+                },
+            )
         }
 
     @Test
