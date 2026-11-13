@@ -1,4 +1,4 @@
-package fr.babeuloula.photoswipe.ui.settings
+package fr.babeuloula.photoswipe.ui.progress
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,11 +14,13 @@ import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.ui.common.segmentShape
 import fr.babeuloula.photoswipe.ui.deck.fileSizeLabel
+import fr.babeuloula.photoswipe.ui.settings.PreferenceRow
+import fr.babeuloula.photoswipe.ui.settings.PreferenceSection
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 /**
- * Section « Statistiques » des réglages (PS-122) : depuis quand l'application sert, combien de
+ * Section « Statistiques » de la page « Progression » (PS-122, déplacée des réglages par PS-153) : depuis quand l'application sert, combien de
  * médias ont été envoyés à la corbeille et la place libérée. Avant toute suppression, une seule
  * ligne le dit. Chaque ligne est lue d'un bloc par TalkBack.
  */

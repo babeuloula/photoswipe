@@ -370,6 +370,15 @@ class HomeScreenTest {
     }
 
     @Test
+    fun `opens the progress page from the top bar`() {
+        show(HomeUiState.Loading)
+
+        composeRule.onNodeWithContentDescription(text(R.string.home_open_progress)).performClick()
+
+        assertEquals(listOf<HomeEvent>(HomeEvent.OpenProgress), events)
+    }
+
+    @Test
     @Config(qualifiers = "fr")
     fun `shows the today card in french`() {
         show(loaded(todayCount = 12))

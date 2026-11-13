@@ -177,6 +177,30 @@ class PhotoSwipeNavHostTest {
     }
 
     @Test
+    fun `opens the progress page from home and comes back`() {
+        awaitText(text(R.string.home_today))
+        composeRule.onNodeWithContentDescription(text(R.string.home_open_progress)).performClick()
+        awaitText(text(R.string.settings_statistics_since))
+
+        goBack()
+
+        awaitText(text(R.string.home_today))
+    }
+
+    @Test
+    fun `opens the progress page from the settings and comes back to them`() {
+        awaitText(text(R.string.home_today))
+        composeRule.onNodeWithContentDescription(text(R.string.home_open_settings)).performClick()
+        awaitText(text(R.string.settings_title))
+        composeRule.onNodeWithText(text(R.string.settings_progress)).performScrollTo().performClick()
+        awaitText(text(R.string.settings_statistics_since))
+
+        goBack()
+
+        awaitText(text(R.string.settings_title))
+    }
+
+    @Test
     fun `stays on the settings when a language change recreates the app`() {
         awaitText(text(R.string.home_today))
         composeRule.onNodeWithContentDescription(text(R.string.home_open_settings)).performClick()

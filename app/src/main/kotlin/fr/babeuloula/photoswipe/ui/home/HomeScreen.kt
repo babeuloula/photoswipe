@@ -104,6 +104,12 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
+                    IconButton(onClick = { onEvent(HomeEvent.OpenProgress) }) {
+                        Icon(
+                            painterResource(R.drawable.ic_progress),
+                            contentDescription = stringResource(R.string.home_open_progress),
+                        )
+                    }
                     IconButton(onClick = { onEvent(HomeEvent.OpenSettings) }) {
                         Icon(
                             painterResource(R.drawable.ic_settings),

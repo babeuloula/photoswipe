@@ -21,6 +21,9 @@
     <!-- Coquilles des écrans, remplacées par les écrans réels (epics 4, 5, 7 et 9). -->
     <string name="navigate_back">Back</string>
     <string name="home_open_settings">Settings</string>
+    <string name="home_open_progress">Progress</string>
+    <string name="progress_title">Progress</string>
+    <string name="progress_error">Your statistics could not be loaded.</string>
     <string name="deck_marked_title">Marked for deletion</string>
     <string name="deck_title">Memories of %1$s</string>
     <string name="deck_finish">Finish</string>
@@ -103,6 +106,8 @@
     <string name="settings_support_donate">Support the developer</string>
     <string name="settings_support_donate_summary">Make a donation with PayPal</string>
     <string name="settings_statistics_section">Statistics</string>
+    <string name="settings_progress">Progress</string>
+    <string name="settings_progress_summary">What you have sorted and the space you freed</string>
     <string name="settings_statistics_since">Using PhotoSwipe since</string>
     <string name="settings_statistics_nothing_deleted">No media deleted yet</string>
     <string name="settings_statistics_deleted">Media deleted</string>

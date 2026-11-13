@@ -105,6 +105,9 @@ sealed interface HomeEvent {
     /** Bouton des réglages. */
     data object OpenSettings : HomeEvent
 
+    /** Bouton « Progression » de la barre du haut (PS-153). */
+    data object OpenProgress : HomeEvent
+
     /** Tap sur la bannière des suppressions en attente. */
     data object OpenPendingDeletions : HomeEvent
 
@@ -138,6 +141,9 @@ sealed interface HomeEffect {
 
     /** Ouvrir les réglages. */
     data object OpenSettings : HomeEffect
+
+    /** Ouvrir la page « Progression » (PS-153). */
+    data object OpenProgress : HomeEffect
 
     /** Ouvrir le résumé, pour confirmer les suppressions en attente (SPEC §3.5). */
     data object OpenSummary : HomeEffect
@@ -223,6 +229,10 @@ class HomeViewModel
 
                 HomeEvent.OpenSettings -> {
                     effects.trySend(HomeEffect.OpenSettings)
+                }
+
+                HomeEvent.OpenProgress -> {
+                    effects.trySend(HomeEffect.OpenProgress)
                 }
 
                 HomeEvent.OpenPendingDeletions -> {

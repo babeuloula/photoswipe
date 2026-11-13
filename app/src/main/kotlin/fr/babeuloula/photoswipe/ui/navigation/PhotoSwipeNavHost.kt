@@ -23,17 +23,19 @@ import fr.babeuloula.photoswipe.ui.common.rememberReducedMotion
 import fr.babeuloula.photoswipe.ui.home.ConfirmationAnnouncement
 import fr.babeuloula.photoswipe.ui.home.HomeNavigation
 import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
+import fr.babeuloula.photoswipe.ui.settings.SettingsNavigation
 import fr.babeuloula.photoswipe.ui.tutorial.TutorialScreen
 import java.time.LocalDate
 import fr.babeuloula.photoswipe.ui.dayoverview.DayOverviewRoute as DayOverviewDestination
 import fr.babeuloula.photoswipe.ui.deck.DeckRoute as DeckDestination
 import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
+import fr.babeuloula.photoswipe.ui.progress.ProgressRoute as ProgressDestination
 import fr.babeuloula.photoswipe.ui.settings.SettingsRoute as SettingsDestination
 import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
 
 /**
  * Graphe de navigation de l'application (SPEC §5.4), en routes typées : accueil, pile d'un jour,
- * vue d'ensemble d'un jour, résumé, réglages, licences, tutoriel revu depuis les réglages. Le rappel quotidien peut demander d'ouvrir directement une pile
+ * vue d'ensemble d'un jour, résumé, progression, réglages, licences, tutoriel revu depuis les réglages. Le rappel quotidien peut demander d'ouvrir directement une pile
  * ([deckToOpen]), qui s'empile au-dessus de l'accueil. Les écrans s'enchaînent en axe partagé
  * avec zoom ([ScreenTransitions]), et les photos passent d'un écran à l'autre en grandissant
  * (éléments partagés, `SharedTransitionLayout`, PS-141).
@@ -109,20 +111,7 @@ private fun PhotoSwipeGraph(
                 onOpenMarkedDeck = { first -> navController.navigate(DeckRoute.marked(first)) },
             )
         }
-        composable<SettingsRoute> {
-            SettingsDestination(
-                onBack = navController::popBackStack,
-                onOpenLicenses = { navController.navigate(LicensesRoute) },
-                onOpenTutorial = { navController.navigate(TutorialRoute) },
-            )
-        }
-        composable<TutorialRoute> {
-            // Revu depuis les réglages : terminé ou passé, on y revient, sans toucher à l'état « vu ».
-            TutorialScreen(onDone = navController::popBackStack, modifier = Modifier.safeDrawingPadding())
-        }
-        composable<LicensesRoute> {
-            LicensesScreen(onBack = navController::popBackStack)
-        }
+        settingsDestinations(navController)
     }
 }
 
@@ -144,6 +133,30 @@ private fun OpenRequestedDeck(
     }
 }
 
+/** Réglages et ce qu'ils ouvrent : progression, tutoriel revu, licences. */
+private fun NavGraphBuilder.settingsDestinations(navController: NavHostController) {
+    composable<SettingsRoute> {
+        SettingsDestination(
+            SettingsNavigation(
+                back = navController::popBackStack,
+                openLicenses = { navController.navigate(LicensesRoute) },
+                openTutorial = { navController.navigate(TutorialRoute) },
+                openProgress = { navController.navigate(ProgressRoute) },
+            ),
+        )
+    }
+    composable<ProgressRoute> {
+        ProgressDestination(onBack = navController::popBackStack)
+    }
+    composable<TutorialRoute> {
+        // Revu depuis les réglages : terminé ou passé, on y revient, sans toucher à l'état « vu ».
+        TutorialScreen(onDone = navController::popBackStack, modifier = Modifier.safeDrawingPadding())
+    }
+    composable<LicensesRoute> {
+        LicensesScreen(onBack = navController::popBackStack)
+    }
+}
+
 /** Accueil : il ouvre les autres écrans et annonce ce que la confirmation du résumé a changé. */
 private fun NavGraphBuilder.homeDestination(navController: NavHostController) {
     composable<HomeRoute> { entry ->
@@ -156,6 +169,7 @@ private fun NavGraphBuilder.homeDestination(navController: NavHostController) {
                         openOverview = { day -> navController.navigate(DayOverviewRoute.of(day)) },
                         openSettings = { navController.navigate(SettingsRoute) },
                         openSummary = { navController.navigate(SummaryRoute) },
+                        openProgress = { navController.navigate(ProgressRoute) },
                     ),
                 confirmed =
                     if (trashedCount > 0) {

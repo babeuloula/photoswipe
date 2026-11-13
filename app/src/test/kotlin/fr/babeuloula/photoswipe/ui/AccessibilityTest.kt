@@ -45,6 +45,8 @@ import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
 import fr.babeuloula.photoswipe.ui.permission.LimitedAccessBanner
 import fr.babeuloula.photoswipe.ui.permission.MediaAccessDeniedScreen
 import fr.babeuloula.photoswipe.ui.permission.PermissionRationaleScreen
+import fr.babeuloula.photoswipe.ui.progress.ProgressScreen
+import fr.babeuloula.photoswipe.ui.progress.ProgressUiState
 import fr.babeuloula.photoswipe.ui.settings.SettingsEnvironment
 import fr.babeuloula.photoswipe.ui.settings.SettingsScreen
 import fr.babeuloula.photoswipe.ui.settings.SettingsUiState
@@ -131,19 +133,30 @@ class AccessibilityTest {
         videoPlayer.release()
     }
 
-    /** Réglages, rappel activé et statistiques remplies. */
+    /** Réglages, rappel activé. */
     private fun settingsScreen() {
         check {
             SettingsScreen(
                 state =
                     SettingsUiState(
                         reminder = ReminderSettings.DEFAULT.copy(enabled = true),
-                        statistics = UsageStatistics(today, deletedCount = 12, freedBytes = 40_000_000),
                     ),
                 onEvent = {},
                 environment = SettingsEnvironment(languageLabel = "English"),
             )
         }
+    }
+
+    /** Page « Progression », statistiques remplies, puis en erreur. */
+    private fun progressScreen() {
+        check {
+            ProgressScreen(
+                state =
+                    ProgressUiState.Loaded(UsageStatistics(today, deletedCount = 12, freedBytes = 40_000_000)),
+                onEvent = {},
+            )
+        }
+        check { ProgressScreen(state = ProgressUiState.Error, onEvent = {}) }
     }
 
     private fun everyScreen() {
@@ -199,6 +212,7 @@ class AccessibilityTest {
             )
         }
         settingsScreen()
+        progressScreen()
         check { LicensesScreen(onBack = {}, licenseText = "Apache License, Version 2.0") }
         check { CrashReportDialog(onEvent = {}) }
     }

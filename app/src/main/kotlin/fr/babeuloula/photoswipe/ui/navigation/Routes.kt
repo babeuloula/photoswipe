@@ -67,6 +67,10 @@ data object SummaryRoute
 @Serializable
 data object SettingsRoute
 
+/** Progression (PS-153) : statistiques d'utilisation, ouverte depuis l'accueil ou les réglages. */
+@Serializable
+data object ProgressRoute
+
 /** Licences de l'application et de ses bibliothèques (« À propos » des réglages). */
 @Serializable
 data object LicensesRoute

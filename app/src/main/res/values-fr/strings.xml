@@ -16,6 +16,9 @@
     <string name="limited_access_manage">Gérer l\'accès</string>
     <string name="navigate_back">Retour</string>
     <string name="home_open_settings">Réglages</string>
+    <string name="home_open_progress">Progression</string>
+    <string name="progress_title">Progression</string>
+    <string name="progress_error">Impossible de charger vos statistiques.</string>
     <string name="deck_marked_title">Marqués pour suppression</string>
     <string name="deck_title">Souvenirs du %1$s</string>
     <string name="deck_finish">Terminer</string>
@@ -94,6 +97,8 @@
     <string name="settings_support_donate">Soutenir le développeur</string>
     <string name="settings_support_donate_summary">Faire un don avec PayPal</string>
     <string name="settings_statistics_section">Statistiques</string>
+    <string name="settings_progress">Progression</string>
+    <string name="settings_progress_summary">Ce que vous avez trié et la place libérée</string>
     <string name="settings_statistics_since">PhotoSwipe utilisée depuis le</string>
     <string name="settings_statistics_nothing_deleted">Aucun média supprimé pour l\'instant</string>
     <string name="settings_statistics_deleted">Médias supprimés</string>

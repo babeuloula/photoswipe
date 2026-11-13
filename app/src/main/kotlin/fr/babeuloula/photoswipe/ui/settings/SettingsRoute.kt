@@ -42,10 +42,8 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun SettingsRoute(
-    onBack: () -> Unit,
-    onOpenLicenses: () -> Unit,
+    navigation: SettingsNavigation,
     modifier: Modifier = Modifier,
-    onOpenTutorial: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -61,11 +59,8 @@ fun SettingsRoute(
         }
     LaunchedEffect(viewModel) {
         viewModel.uiEffects.collect { effect ->
+            if (navigation.navigate(effect)) return@collect
             when (effect) {
-                SettingsEffect.Close -> {
-                    onBack()
-                }
-
                 SettingsEffect.OpenLanguageSettings,
                 SettingsEffect.OpenExactAlarmSettings,
                 SettingsEffect.OpenDeveloperTools,
@@ -79,14 +74,6 @@ fun SettingsRoute(
                     }
                 }
 
-                SettingsEffect.OpenLicenses -> {
-                    onOpenLicenses()
-                }
-
-                SettingsEffect.OpenTutorial -> {
-                    onOpenTutorial()
-                }
-
                 SettingsEffect.RequestNotificationPermission -> {
                     permissionRequest.launch(NOTIFICATION_PERMISSION)
                 }
@@ -98,6 +85,10 @@ fun SettingsRoute(
                         }
                     }
                 }
+
+                else -> {
+                    Unit
+                }
             }
         }
     }
@@ -108,6 +99,33 @@ fun SettingsRoute(
         environment = rememberEnvironment(viewModel),
         snackbarHostState = snackbarHostState,
     )
+}
+
+/**
+ * Navigations demandées par les réglages, exécutées par le graphe de navigation.
+ *
+ * @property back revient à l'écran précédent.
+ * @property openLicenses ouvre les licences.
+ * @property openTutorial rouvre le tutoriel.
+ * @property openProgress ouvre la page « Progression » (PS-153).
+ */
+class SettingsNavigation(
+    val back: () -> Unit,
+    val openLicenses: () -> Unit = {},
+    val openTutorial: () -> Unit = {},
+    val openProgress: () -> Unit = {},
+)
+
+/** Exécute [effect] s'il mène à un autre écran de l'application ; renvoie `false` sinon. */
+private fun SettingsNavigation.navigate(effect: SettingsEffect): Boolean {
+    when (effect) {
+        SettingsEffect.Close -> back()
+        SettingsEffect.OpenLicenses -> openLicenses()
+        SettingsEffect.OpenTutorial -> openTutorial()
+        SettingsEffect.OpenProgress -> openProgress()
+        else -> return false
+    }
+    return true
 }
 
 /**
