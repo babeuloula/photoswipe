@@ -50,11 +50,6 @@ val WHATS_NEW: List<WhatsNewRelease> =
                         R.drawable.ic_progress,
                     ),
                     WhatsNewItem(
-                        R.string.whats_new_1_4_0_streak_title,
-                        R.string.whats_new_1_4_0_streak_text,
-                        R.drawable.ic_local_fire_department,
-                    ),
-                    WhatsNewItem(
                         R.string.whats_new_1_4_0_calendar_title,
                         R.string.whats_new_1_4_0_calendar_text,
                         R.drawable.ic_calendar_today,

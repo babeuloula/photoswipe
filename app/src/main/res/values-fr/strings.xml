@@ -350,8 +350,6 @@
     <string name="settings_about_whats_new_summary">Ce que chaque mise à jour vous a apporté</string>
     <string name="whats_new_1_4_0_progress_title">Votre progression en un coup d\'œil</string>
     <string name="whats_new_1_4_0_progress_text">Touchez l\'icône du graphique en haut de l\'accueil : ce que vous avez trié, gardé et supprimé, et la place libérée sur les 6 derniers mois.</string>
-    <string name="whats_new_1_4_0_streak_title">Entretenez votre série</string>
-    <string name="whats_new_1_4_0_streak_text">Chaque jour où vous triez tous les souvenirs du jour allonge votre série, affichée sur l\'icône du graphique de l\'accueil.</string>
     <string name="whats_new_1_4_0_calendar_title">Toute l\'année en calendrier</string>
     <string name="whats_new_1_4_0_calendar_text">Voyez combien de souvenirs attendent chaque jour de l\'année, et touchez n\'importe quel jour pour l\'ouvrir, même hors de la semaine.</string>
     <string name="whats_new_1_4_0_goals_title">Badges et objectif</string>
