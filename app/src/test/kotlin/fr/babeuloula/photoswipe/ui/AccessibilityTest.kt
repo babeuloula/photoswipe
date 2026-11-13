@@ -45,6 +45,7 @@ import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
 import fr.babeuloula.photoswipe.ui.permission.LimitedAccessBanner
 import fr.babeuloula.photoswipe.ui.permission.MediaAccessDeniedScreen
 import fr.babeuloula.photoswipe.ui.permission.PermissionRationaleScreen
+import fr.babeuloula.photoswipe.ui.progress.PREVIEW_ACTIVITY
 import fr.babeuloula.photoswipe.ui.progress.ProgressScreen
 import fr.babeuloula.photoswipe.ui.progress.ProgressUiState
 import fr.babeuloula.photoswipe.ui.settings.SettingsEnvironment
@@ -152,7 +153,10 @@ class AccessibilityTest {
         check {
             ProgressScreen(
                 state =
-                    ProgressUiState.Loaded(UsageStatistics(today, deletedCount = 12, freedBytes = 40_000_000)),
+                    ProgressUiState.Loaded(
+                        UsageStatistics(today, deletedCount = 12, freedBytes = 40_000_000),
+                        PREVIEW_ACTIVITY,
+                    ),
                 onEvent = {},
             )
         }

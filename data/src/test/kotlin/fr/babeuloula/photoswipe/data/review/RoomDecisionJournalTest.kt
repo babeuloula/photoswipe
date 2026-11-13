@@ -2,12 +2,14 @@ package fr.babeuloula.photoswipe.data.review
 
 import android.content.Context
 import androidx.room.Room
+import fr.babeuloula.photoswipe.data.activity.RoomActivityHistory
 import fr.babeuloula.photoswipe.data.database.PhotoSwipeDatabase
 import fr.babeuloula.photoswipe.data.database.ReviewEntryDao
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
+import fr.babeuloula.photoswipe.domain.model.DailyActivity
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.KEPT
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision.MARKED_FOR_DELETION
@@ -25,6 +27,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -34,6 +37,7 @@ class RoomDecisionJournalTest {
     private val context: Context = RuntimeEnvironment.getApplication()
     private val day = LocalDate.of(2026, 7, 15)
     private val opened = mutableListOf<PhotoSwipeDatabase>()
+    private val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 0))
 
     private fun inMemory(): PhotoSwipeDatabase =
         Room.inMemoryDatabaseBuilder(context, PhotoSwipeDatabase::class.java).build().also { opened += it }
@@ -51,7 +55,7 @@ class RoomDecisionJournalTest {
     fun `writes the decision with its record and lists a day in order`() =
         runTest {
             val database = inMemory()
-            val journal = RoomDecisionJournal(database.decisionJournalDao())
+            val journal = RoomDecisionJournal(database.decisionJournalDao(), clock)
             val reviews = RoomReviewRepository(database.reviewEntryDao())
             val replaced = aReviewEntry(mediaId = 2, decision = KEPT)
             reviews.save(replaced)
@@ -69,7 +73,7 @@ class RoomDecisionJournalTest {
     fun `undo restores a reopened entry as reopened, and a missing one as missing`() =
         runTest {
             val database = inMemory()
-            val journal = RoomDecisionJournal(database.decisionJournalDao())
+            val journal = RoomDecisionJournal(database.decisionJournalDao(), clock)
             val reviews = RoomReviewRepository(database.reviewEntryDao())
             val reopened = aReviewEntry(mediaId = 1, decision = MARKED_FOR_DELETION, reopened = true)
             reviews.save(reopened)
@@ -87,7 +91,7 @@ class RoomDecisionJournalTest {
     fun `undo restores the replaced entry or deletes it, and leaves the journal`() =
         runTest {
             val database = inMemory()
-            val journal = RoomDecisionJournal(database.decisionJournalDao())
+            val journal = RoomDecisionJournal(database.decisionJournalDao(), clock)
             val reviews = RoomReviewRepository(database.reviewEntryDao())
             val kept = aReviewEntry(mediaId = 1, decision = KEPT)
             reviews.save(kept)
@@ -104,7 +108,7 @@ class RoomDecisionJournalTest {
     @Test
     fun `forgets the records of many media and of the days before a date`() =
         runTest {
-            val journal = RoomDecisionJournal(inMemory().decisionJournalDao())
+            val journal = RoomDecisionJournal(inMemory().decisionJournalDao(), clock)
             val manyIds = (1L..(ReviewEntryDao.MAX_IDS_PER_QUERY * 2L + 1))
             manyIds.forEach { journal.record(day, aReviewEntry(mediaId = it), previous = null) }
             journal.record(day, aReviewEntry(mediaId = 9_999), previous = null)
@@ -120,18 +124,17 @@ class RoomDecisionJournalTest {
     @Test
     fun `undoes the decisions of a day after the database is closed and reopened`() =
         runTest {
-            val clock = FixedClock.at(LocalDateTime.of(2026, 7, 15, 21, 0))
             val gallery = FakeMediaSource((1L..3L).map { aMediaItem(id = it) })
             val before = onDisk()
             val reviewsBefore = RoomReviewRepository(before.reviewEntryDao())
-            val journalBefore = RoomDecisionJournal(before.decisionJournalDao())
+            val journalBefore = RoomDecisionJournal(before.decisionJournalDao(), clock)
             KeepMedia(reviewsBefore, journalBefore, clock)(aMediaItem(id = 1), day)
             MarkForDeletion(reviewsBefore, journalBefore, clock)(aMediaItem(id = 2), day)
             before.close()
 
             val after = onDisk()
             val reviews = RoomReviewRepository(after.reviewEntryDao())
-            val journal = RoomDecisionJournal(after.decisionJournalDao())
+            val journal = RoomDecisionJournal(after.decisionJournalDao(), clock)
             val session = GetDaySession(journal, reviews, gallery, ReviewWindowProvider(clock))(day)
             val undone = UndoLastDecision(reviews, journal)(session) as UndoLastDecision.Result.Undone
 
@@ -139,6 +142,75 @@ class RoomDecisionJournalTest {
             assertEquals(MediaId(2), undone.decision.media.id)
             assertEquals(listOf(MediaId(1)), reviews.entriesFor(2026, setOf(MediaId(1), MediaId(2))).map { it.mediaId })
             assertEquals(listOf(MediaId(1)), journal.recordsFor(day).map { it.mediaId })
+        }
+
+    @Test
+    fun `counts a kept media in the activity of the day it is decided, and a favorite as both`() =
+        runTest {
+            val database = inMemory()
+            val journal = RoomDecisionJournal(database.decisionJournalDao(), clock)
+            val activity = RoomActivityHistory(database.dailyActivityDao())
+            // Décisions prises le 15 juillet au soir (heure de Paris) sur des jours de revue différents.
+            journal.record(day, aReviewEntry(mediaId = 1, decision = KEPT, decidedAt = clock.instant()), null)
+            journal.record(
+                day.minusDays(3),
+                aReviewEntry(mediaId = 2, decision = KEPT, decidedAt = clock.instant(), favoritePending = true),
+                null,
+            )
+            journal.record(
+                day,
+                aReviewEntry(mediaId = 3, decision = MARKED_FOR_DELETION, decidedAt = clock.instant()),
+                null,
+            )
+
+            assertEquals(
+                listOf(DailyActivity(LocalDate.of(2026, 7, 15), keptCount = 2, favoriteCount = 1)),
+                activity.since(LocalDate.MIN),
+            )
+        }
+
+    @Test
+    fun `takes an undone kept media out of the activity of its day, never below zero`() =
+        runTest {
+            val database = inMemory()
+            val journal = RoomDecisionJournal(database.decisionJournalDao(), clock)
+            val activity = RoomActivityHistory(database.dailyActivityDao())
+            val kept =
+                journal.record(
+                    day,
+                    aReviewEntry(mediaId = 1, decision = KEPT, decidedAt = clock.instant()),
+                    null,
+                )
+            val favorite =
+                journal.record(
+                    day,
+                    aReviewEntry(mediaId = 2, decision = KEPT, decidedAt = clock.instant(), favoritePending = true),
+                    null,
+                )
+
+            journal.undo(favorite)
+            assertEquals(listOf(DailyActivity(LocalDate.of(2026, 7, 15), keptCount = 1)), activity.since(LocalDate.MIN))
+
+            journal.undo(kept)
+            // Une décision d'avant la version 5, jamais comptée, s'annule sans passer sous zéro.
+            journal.undo(kept)
+            assertEquals(listOf(DailyActivity(LocalDate.of(2026, 7, 15))), activity.since(LocalDate.MIN))
+        }
+
+    @Test
+    fun `counts a decision taken just after midnight in the device time zone on the new day`() =
+        runTest {
+            val database = inMemory()
+            val journal = RoomDecisionJournal(database.decisionJournalDao(), clock)
+            // 22 h 30 UTC le 15 juillet : déjà le 16 à Paris.
+            val decidedAt = Instant.parse("2026-07-15T22:30:00Z")
+
+            journal.record(day, aReviewEntry(mediaId = 1, decision = KEPT, decidedAt = decidedAt), null)
+
+            assertEquals(
+                listOf(LocalDate.of(2026, 7, 16)),
+                RoomActivityHistory(database.dailyActivityDao()).since(LocalDate.MIN).map { it.day },
+            )
         }
 
     private companion object {

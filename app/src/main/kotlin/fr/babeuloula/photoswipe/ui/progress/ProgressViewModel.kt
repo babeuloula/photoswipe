@@ -3,7 +3,9 @@ package fr.babeuloula.photoswipe.ui.progress
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import fr.babeuloula.photoswipe.domain.model.ActivityReport
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
+import fr.babeuloula.photoswipe.domain.usecase.GetActivityReport
 import fr.babeuloula.photoswipe.domain.usecase.GetUsageStatistics
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -26,9 +28,11 @@ sealed interface ProgressUiState {
      * Progression lue.
      *
      * @property statistics statistiques d'utilisation depuis l'installation (PS-122).
+     * @property activity activité de tri des derniers mois, pour les graphiques (PS-154).
      */
     data class Loaded(
         val statistics: UsageStatistics,
+        val activity: ActivityReport,
     ) : ProgressUiState
 }
 
@@ -51,8 +55,8 @@ sealed interface ProgressEffect {
 }
 
 /**
- * ViewModel de la page « Progression » (PS-153) : il lit les statistiques d'utilisation, et les
- * relit à chaque retour sur l'écran. Les prochains blocs de la page (série, calendrier, badges)
+ * ViewModel de la page « Progression » (PS-153) : il lit les statistiques d'utilisation et
+ * l'activité des derniers mois (PS-154), et les relit à chaque retour sur l'écran. Les prochains blocs de la page (série, calendrier, badges)
  * s'y ajouteront.
  */
 @HiltViewModel
@@ -60,6 +64,7 @@ class ProgressViewModel
     @Inject
     constructor(
         private val getUsageStatistics: GetUsageStatistics,
+        private val getActivityReport: GetActivityReport,
     ) : ViewModel() {
         private val state = MutableStateFlow<ProgressUiState>(ProgressUiState.Loading)
         private val effects = Channel<ProgressEffect>(Channel.BUFFERED)
@@ -92,11 +97,11 @@ class ProgressViewModel
             }
         }
 
-        /** Lit les statistiques ; une erreur ne remplace pas des chiffres déjà affichés. */
+        /** Lit les statistiques et l'activité ; une erreur ne remplace pas des chiffres déjà affichés. */
         private fun load() {
             viewModelScope.launch {
-                runCatching { getUsageStatistics() }
-                    .onSuccess { state.value = ProgressUiState.Loaded(it) }
+                runCatching { ProgressUiState.Loaded(getUsageStatistics(), getActivityReport()) }
+                    .onSuccess { state.value = it }
                     .onFailure { if (state.value !is ProgressUiState.Loaded) state.value = ProgressUiState.Error }
             }
         }

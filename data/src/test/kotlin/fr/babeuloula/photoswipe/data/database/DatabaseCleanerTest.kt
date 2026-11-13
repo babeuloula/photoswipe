@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.data.database
 
 import androidx.room.Room
+import fr.babeuloula.photoswipe.data.activity.RoomActivityHistory
 import fr.babeuloula.photoswipe.data.review.RoomDecisionJournal
 import fr.babeuloula.photoswipe.data.review.RoomReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
@@ -13,6 +14,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.time.Clock
 import java.time.LocalDate
 
 /** [DatabaseCleaner] sur une base Room en mémoire (Robolectric). */
@@ -30,7 +32,7 @@ class DatabaseCleanerTest {
     fun `forgets every decision and the whole undo history`() =
         runTest {
             val reviews = RoomReviewRepository(database.reviewEntryDao())
-            val journal = RoomDecisionJournal(database.decisionJournalDao())
+            val journal = RoomDecisionJournal(database.decisionJournalDao(), Clock.systemUTC())
             val day = LocalDate.of(2026, 11, 6)
             journal.record(day, aReviewEntry(mediaId = 1), previous = null)
             reviews.save(aReviewEntry(mediaId = 2, reviewYear = 2025))
@@ -39,5 +41,6 @@ class DatabaseCleanerTest {
 
             assertEquals(emptySet<MediaId>(), reviews.knownMediaIds())
             assertEquals(emptyList<Any>(), journal.recordsFor(day))
+            assertEquals(emptyList<Any>(), RoomActivityHistory(database.dailyActivityDao()).since(LocalDate.MIN))
         }
 }

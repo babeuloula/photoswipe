@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.IntentSender
 import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.DEFAULT_SIZE_BYTES
+import fr.babeuloula.photoswipe.domain.fixtures.FakeActivityHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
@@ -94,6 +95,7 @@ class SummaryViewModelTest {
                             FakeDecisionJournal(repository),
                             FakeUsageStatisticsRepository(),
                             history,
+                            FakeActivityHistory(),
                             ReviewWindowProvider(clock),
                             clock,
                         ),
