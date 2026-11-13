@@ -20,7 +20,7 @@ class ReviewMarkedMedia(
 
     /** Laisse [marked] marqué pour suppression (la décision est réécrite, pour pouvoir l'annuler). */
     suspend fun markForDeletion(marked: MarkedMedia): List<SessionDecision> =
-        marked.reviewDays.map { markForDeletion(marked.media, it) }
+        marked.reviewDays.flatMap { markForDeletion.withCompanion(marked.media, it) }
 
     /** Garde [marked] en favori : le favori sur son année la plus récente, gardé pour les autres. */
     suspend fun favorite(marked: MarkedMedia): List<SessionDecision> =

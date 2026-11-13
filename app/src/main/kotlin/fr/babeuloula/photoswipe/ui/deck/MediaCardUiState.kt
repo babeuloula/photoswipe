@@ -28,6 +28,7 @@ import java.time.ZoneId
  * pour être retrié (ADR 0026) ; `null` sinon.
  * @property similar place de la photo parmi des photos du jour prises à la suite (PS-140), `null` sinon.
  * @property qualityHint photo peut-être floue ou très sombre (PS-164), `null` sinon.
+ * @property raw vrai pour une paire RAW + JPEG (PS-166) : [sizeBytes] compte alors les deux fichiers.
  */
 data class MediaCardUiState(
     val id: MediaId,
@@ -41,6 +42,7 @@ data class MediaCardUiState(
     val previousDecision: ReviewDecision? = null,
     val similar: SimilarGroup? = null,
     val qualityHint: QualityHint? = null,
+    val raw: Boolean = false,
 ) {
     companion object {
         /**
@@ -65,12 +67,13 @@ data class MediaCardUiState(
                 type = media.type,
                 takenOn = takenOn,
                 yearsAgo = day.year - takenOn.year,
-                sizeBytes = media.sizeBytes,
+                sizeBytes = media.totalSizeBytes,
                 duration = media.duration,
                 favorite = favorite,
                 previousDecision = previousDecision,
                 similar = similar,
                 qualityHint = qualityHint,
+                raw = media.rawCompanion != null,
             )
         }
     }

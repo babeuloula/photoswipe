@@ -35,7 +35,9 @@ class FakeMediaStoreProvider : ContentProvider() {
                     "${MediaStore.MediaColumns.SIZE} INTEGER, " +
                     "${MediaStore.MediaColumns.DURATION} INTEGER, " +
                     "${MediaStore.MediaColumns.IS_TRASHED} INTEGER NOT NULL DEFAULT 0, " +
-                    "${MediaStore.MediaColumns.IS_FAVORITE} INTEGER NOT NULL DEFAULT 0)",
+                    "${MediaStore.MediaColumns.IS_FAVORITE} INTEGER NOT NULL DEFAULT 0, " +
+                    "${MediaStore.MediaColumns.DISPLAY_NAME} TEXT, " +
+                    "${MediaStore.MediaColumns.RELATIVE_PATH} TEXT)",
             )
         }
         return true
@@ -49,8 +51,17 @@ class FakeMediaStoreProvider : ContentProvider() {
         size: Long? = 1_000,
         trashed: Boolean = false,
         favorite: Boolean = false,
+        fileName: String? = null,
+        folder: String? = null,
     ) {
         insert(IMAGES, id, dateTaken, dateAdded, size, duration = null, trashed, favorite)
+        if (fileName != null || folder != null) {
+            database.execSQL(
+                "UPDATE $IMAGES SET ${MediaStore.MediaColumns.DISPLAY_NAME} = ?, " +
+                    "${MediaStore.MediaColumns.RELATIVE_PATH} = ? WHERE ${MediaStore.MediaColumns._ID} = ?",
+                arrayOf<Any?>(fileName, folder, id),
+            )
+        }
     }
 
     /** Ajoute une vidéo ; [duration] en millisecondes. */

@@ -4,6 +4,7 @@ import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
+import fr.babeuloula.photoswipe.domain.service.RawPairing
 import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import java.time.Clock
 import java.time.LocalDate
@@ -32,7 +33,8 @@ class GetMarkedDeck(
         if (marked.isEmpty()) return emptyList()
 
         val yearsById = marked.groupBy({ it.mediaId }, { it.reviewYear })
-        val media = mediaSource.mediaByIds(yearsById.keys).associateBy { it.id }
+        // Une paire RAW + JPEG marquée revient en une seule carte, celle du JPEG (PS-166).
+        val media = RawPairing.pair(mediaSource.mediaByIds(yearsById.keys)).associateBy { it.id }
         val ordered = yearsById.keys.sortedByDescending { it == first }
         return ordered.mapNotNull { id ->
             media[id]?.let { item ->

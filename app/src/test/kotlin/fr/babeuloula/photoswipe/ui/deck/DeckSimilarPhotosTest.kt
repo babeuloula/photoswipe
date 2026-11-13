@@ -74,6 +74,32 @@ class DeckSimilarPhotosTest {
     }
 
     @Test
+    fun `says a raw and jpeg pair is sorted as one photo`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(raw = true))))
+
+        composeRule
+            .onNodeWithContentDescription("RAW and JPEG files of the same photo, sorted together")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `says a raw and jpeg pair is sorted as one photo, in French`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(raw = true))))
+
+        composeRule
+            .onNodeWithContentDescription("Fichiers RAW et JPEG d'une même photo, triés ensemble")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `shows no raw chip on a single file photo`() {
+        show(DeckUiState.Loaded(listOf(PREVIEW_CARD)))
+
+        composeRule.onNodeWithText("RAW + JPEG", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
     fun `says the photo is a duplicate of another one of the day`() {
         show(DeckUiState.Loaded(listOf(PREVIEW_CARD.copy(similar = SimilarGroup(2, 2, duplicate = true)))))
 

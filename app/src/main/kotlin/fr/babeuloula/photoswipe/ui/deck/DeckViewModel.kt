@@ -368,7 +368,7 @@ class DeckViewModel
 
                 DeckEvent.MarkForDeletion -> {
                     decideTopCard(
-                        { media, day -> listOf(decisions.markForDeletion(media, day)) },
+                        { media, day -> decisions.markForDeletion.withCompanion(media, day) },
                         decisions.reviewMarkedMedia::markForDeletion,
                     )
                 }
@@ -602,8 +602,14 @@ class DeckViewModel
             val first = decisions.undoLastDecision(session)
             if (first !is UndoLastDecision.Result.Undone) return first
             session = first.session
-            val mediaId = first.decision.media.id
-            while (session.lastDecision?.media?.id == mediaId) {
+            // La carte, c'est la photo et son fichier RAW s'il en a un (PS-166).
+            val card =
+                setOfNotNull(
+                    first.decision.media.id,
+                    first.decision.media.rawCompanion
+                        ?.id,
+                )
+            while (session.lastDecision?.media?.id in card) {
                 val next = decisions.undoLastDecision(session) as? UndoLastDecision.Result.Undone ?: break
                 session = next.session
             }
@@ -635,11 +641,11 @@ class DeckViewModel
                                         )
                                     },
                             remainingCount = deck.size,
-                            sortedCount = session.decisions.distinctBy { it.media.id }.size,
+                            sortedCount = session.cards().size,
                             canUndo = canUndo,
                             returningFrom = returningFrom,
                             shareTarget = shareTarget,
-                        ).withYearProgress(deck, session.decisions.map { it.media }, clock.zone)
+                        ).withYearProgress(deck, session.cards(), clock.zone)
                 }
         }
     }
@@ -685,4 +691,14 @@ private fun SessionDecision.exitSide(): CardSide =
 /** Ouvre ou ferme le menu de la carte du dessus ; sans carte, il n'y a pas de menu. */
 private fun MutableStateFlow<DeckUiState>.setMenuOpen(open: Boolean) {
     update { current -> if (current is DeckUiState.Loaded) current.copy(menuOpen = open) else current }
+}
+
+/**
+ * Cartes triées de la session, une par média : le fichier RAW d'une paire (PS-166) n'est pas une
+ * carte de plus.
+ */
+private fun ReviewSession.cards(): List<MediaItem> {
+    val media = decisions.map { it.media }
+    val companions = media.mapNotNullTo(HashSet()) { it.rawCompanion?.id }
+    return media.filterNot { it.id in companions }.distinctBy { it.id }
 }

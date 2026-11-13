@@ -27,7 +27,8 @@ class SortInBatch(
     suspend fun mark(
         media: List<MediaItem>,
         day: LocalDate,
-    ): ReviewSession = media.fold(ReviewSession()) { session, item -> session.record(markForDeletion(item, day)) }
+    ): ReviewSession =
+        media.fold(ReviewSession()) { session, item -> session.record(markForDeletion.withCompanion(item, day)) }
 
     /**
      * Annule toutes les décisions du lot [batch], de la plus récente à la plus ancienne. Une
