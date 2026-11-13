@@ -328,6 +328,17 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `does not celebrate the end of a deck by default, then saves and shows the choice`() {
+        val viewModel = settingsViewModel()
+        assertFalse(viewModel.uiState.value.celebrationEnabled)
+
+        viewModel.onEvent(SettingsEvent.CelebrationToggled(true))
+
+        assertTrue(repository.celebrationEnabled)
+        assertTrue(viewModel.uiState.value.celebrationEnabled)
+    }
+
+    @Test
     fun `catches up one week by default, then saves and shows the chosen duration`() {
         val viewModel = settingsViewModel()
         assertEquals(CatchUpWindow.WEEK, viewModel.uiState.value.catchUpWindow)

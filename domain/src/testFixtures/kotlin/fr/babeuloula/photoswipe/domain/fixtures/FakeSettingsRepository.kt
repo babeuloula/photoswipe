@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * @param pureBlack noir pur du thème sombre au départ.
  * @param whatsNewVersionSeen dernière version des nouveautés vue au départ, `null` pour aucune.
  * @param catchUpWindow durée de la fenêtre de rattrapage au départ.
+ * @param celebrationEnabled célébration de fin de pile active au départ.
  */
 class FakeSettingsRepository(
     reminder: ReminderSettings = ReminderSettings.DEFAULT,
@@ -39,7 +40,13 @@ class FakeSettingsRepository(
     pureBlack: Boolean = false,
     whatsNewVersionSeen: String? = null,
     catchUpWindow: CatchUpWindow = CatchUpWindow.DEFAULT,
+    celebrationEnabled: Boolean = false,
 ) : SettingsRepository {
+    private val storedCelebration = MutableStateFlow(celebrationEnabled)
+
+    /** Célébration de fin de pile enregistrée, pour les vérifications du test. */
+    val celebrationEnabled: Boolean get() = storedCelebration.value
+
     private val storedCatchUpWindow = MutableStateFlow(catchUpWindow)
 
     /** Durée de la fenêtre de rattrapage enregistrée, pour les vérifications du test. */
@@ -100,6 +107,12 @@ class FakeSettingsRepository(
 
     override suspend fun savePureBlack(enabled: Boolean) {
         storedPureBlack.value = enabled
+    }
+
+    override fun observeCelebrationEnabled(): Flow<Boolean> = storedCelebration.asStateFlow()
+
+    override suspend fun saveCelebrationEnabled(enabled: Boolean) {
+        storedCelebration.value = enabled
     }
 
     override fun observeCatchUpWindow(): Flow<CatchUpWindow> = storedCatchUpWindow.asStateFlow()

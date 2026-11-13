@@ -37,15 +37,15 @@ import fr.babeuloula.photoswipe.ui.common.segmentShape
 /**
  * Section « Apparence » : le thème de l'application, en boutons radio dans la liste (ADR 0025) :
  * « Celui du téléphone », « Clair », « Sombre », appliqué dès qu'on touche un thème ; puis
- * l'interrupteur « Noir pur » (PS-176), qui ne change que le thème sombre, et l'interrupteur
- * « Animations » (PS-146), à couper sur un téléphone ancien.
+ * l'interrupteur « Noir pur » (PS-176), qui ne change que le thème sombre, l'interrupteur
+ * « Animations » (PS-146), à couper sur un téléphone ancien, et « Célébrer la fin d'une pile »
+ * (PS-174), désactivé par défaut.
  */
 @Composable
 internal fun AppearanceSection(
     themeMode: ThemeMode,
     onEvent: (SettingsEvent) -> Unit,
-    animationsEnabled: Boolean = true,
-    pureBlack: Boolean = false,
+    toggles: AppearanceToggles = AppearanceToggles(),
 ) {
     PreferenceSection(stringResource(R.string.settings_appearance_section)) {
         Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -77,22 +77,45 @@ internal fun AppearanceSection(
         Spacer(Modifier.height(8.dp))
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             SwitchRow(
-                shape = segmentShape(0, 2),
+                shape = segmentShape(0, APPEARANCE_SWITCHES),
                 title = stringResource(R.string.settings_pure_black),
                 summary = stringResource(R.string.settings_pure_black_summary),
-                checked = pureBlack,
+                checked = toggles.pureBlack,
                 onCheckedChange = { onEvent(SettingsEvent.PureBlackToggled(it)) },
             )
             SwitchRow(
-                shape = segmentShape(1, 2),
+                shape = segmentShape(1, APPEARANCE_SWITCHES),
                 title = stringResource(R.string.settings_animations),
                 summary = stringResource(R.string.settings_animations_summary),
-                checked = animationsEnabled,
+                checked = toggles.animationsEnabled,
                 onCheckedChange = { onEvent(SettingsEvent.AnimationsToggled(it)) },
+            )
+            SwitchRow(
+                shape = segmentShape(2, APPEARANCE_SWITCHES),
+                title = stringResource(R.string.settings_celebration),
+                summary = stringResource(R.string.settings_celebration_summary),
+                checked = toggles.celebrationEnabled,
+                onCheckedChange = { onEvent(SettingsEvent.CelebrationToggled(it)) },
             )
         }
     }
 }
+
+/**
+ * Interrupteurs de la section « Apparence ».
+ *
+ * @property animationsEnabled vrai si les animations sont actives (PS-146).
+ * @property pureBlack vrai si le thème sombre est en noir pur (PS-176).
+ * @property celebrationEnabled vrai si la fin de la pile d'un jour est célébrée (PS-174).
+ */
+internal data class AppearanceToggles(
+    val animationsEnabled: Boolean = true,
+    val pureBlack: Boolean = false,
+    val celebrationEnabled: Boolean = false,
+)
+
+/** Interrupteurs de la section « Apparence » : noir pur, animations, célébration de fin de pile. */
+private const val APPEARANCE_SWITCHES = 3
 
 /** Ligne à interrupteur : toute la ligne le bascule, et TalkBack l'annonce comme un interrupteur. */
 @Composable

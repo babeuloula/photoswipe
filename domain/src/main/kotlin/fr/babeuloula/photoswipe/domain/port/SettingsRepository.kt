@@ -60,6 +60,16 @@ interface SettingsRepository {
     suspend fun savePureBlack(enabled: Boolean)
 
     /**
+     * Célébration de fin de pile (PS-174), observée par l'activité et les réglages : la valeur
+     * actuelle dès la collecte (`false` si rien n'est enregistré), puis chaque nouvelle valeur. Active,
+     * des confettis saluent la dernière carte triée de la pile d'un jour.
+     */
+    fun observeCelebrationEnabled(): Flow<Boolean>
+
+    /** Enregistre si la fin d'une pile est célébrée. */
+    suspend fun saveCelebrationEnabled(enabled: Boolean)
+
+    /**
      * Durée de la fenêtre de rattrapage (PS-169), observée par la fenêtre de revue et les réglages :
      * la valeur actuelle dès la collecte ([CatchUpWindow.DEFAULT] si rien n'est enregistré), puis
      * chaque nouvelle valeur.

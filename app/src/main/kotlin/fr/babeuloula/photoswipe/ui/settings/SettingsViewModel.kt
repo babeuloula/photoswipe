@@ -30,6 +30,7 @@ import javax.inject.Inject
  * @property themeMode thème de l'application, `null` tant qu'il n'est pas lu.
  * @property animationsEnabled vrai si les animations de l'application sont actives (PS-146).
  * @property pureBlack vrai si le thème sombre est en noir pur (PS-176).
+ * @property celebrationEnabled vrai si la fin de la pile d'un jour est célébrée par des confettis (PS-174).
  * @property whatsNewOpen vrai pendant la relecture des nouveautés de toutes les versions (PS-173).
  * @property catchUpWindow durée de la fenêtre de rattrapage (PS-169), `null` tant qu'elle n'est pas lue.
  * @property qualityHints vrai si la pile signale les photos peut-être floues ou très sombres (PS-164).
@@ -40,6 +41,7 @@ data class SettingsUiState(
     val themeMode: ThemeMode? = null,
     val animationsEnabled: Boolean = true,
     val pureBlack: Boolean = false,
+    val celebrationEnabled: Boolean = false,
     val whatsNewOpen: Boolean = false,
     val catchUpWindow: CatchUpWindow? = null,
     val qualityHints: Boolean = true,
@@ -139,6 +141,15 @@ sealed interface SettingsEvent {
      * @property enabled vrai pour montrer « Floue ? » et « Très sombre ? » sur les photos concernées.
      */
     data class QualityHintsToggled(
+        val enabled: Boolean,
+    ) : ThemeEvent
+
+    /**
+     * Interrupteur « Célébrer la fin d'une pile » (PS-174) : des confettis à la dernière carte triée.
+     *
+     * @property enabled vrai pour célébrer.
+     */
+    data class CelebrationToggled(
         val enabled: Boolean,
     ) : ThemeEvent
 
@@ -314,6 +325,12 @@ class SettingsViewModel
             }
             viewModelScope.launch {
                 settingsRepository
+                    .observeCelebrationEnabled()
+                    .catch { emit(false) }
+                    .collect { enabled -> state.update { it.copy(celebrationEnabled = enabled) } }
+            }
+            viewModelScope.launch {
+                settingsRepository
                     .observeCatchUpWindow()
                     .catch { emit(CatchUpWindow.DEFAULT) }
                     .collect { window -> state.update { it.copy(catchUpWindow = window) } }
@@ -366,7 +383,10 @@ class SettingsViewModel
             }
         }
 
-        /** Enregistre le thème choisi, le noir pur ou le choix des animations, dans la section « Apparence ». */
+        /**
+         * Enregistre le thème choisi, le noir pur, le choix des animations ou de la célébration de fin
+         * de pile, dans la section « Apparence ».
+         */
         private fun onThemeEvent(event: SettingsEvent.ThemeEvent) {
             viewModelScope.launch {
                 runCatching {
@@ -375,6 +395,7 @@ class SettingsViewModel
                         is SettingsEvent.AnimationsToggled -> settingsRepository.saveAnimationsEnabled(event.enabled)
                         is SettingsEvent.PureBlackToggled -> settingsRepository.savePureBlack(event.enabled)
                         is SettingsEvent.QualityHintsToggled -> settingsRepository.saveQualityHints(event.enabled)
+                        is SettingsEvent.CelebrationToggled -> settingsRepository.saveCelebrationEnabled(event.enabled)
                     }
                 }
             }
