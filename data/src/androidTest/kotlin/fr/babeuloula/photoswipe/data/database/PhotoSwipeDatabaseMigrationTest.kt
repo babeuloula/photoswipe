@@ -128,6 +128,28 @@ class PhotoSwipeDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun `migrates version 4 to 5 with an empty activity history and keeps the deletion history`() {
+        helper.createDatabase(DATABASE, 4).use { database ->
+            database.execSQL(
+                "INSERT INTO confirmed_deletion (id, media_id, day, size_bytes, confirmed_at) " +
+                    "VALUES (1, 42, 20649, 3500000, 1784138400000)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(DATABASE, 5, true).use { database ->
+            database.query("SELECT media_id, size_bytes FROM confirmed_deletion").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(42L, cursor.getLong(0))
+                assertEquals(3_500_000L, cursor.getLong(1))
+            }
+            database.query("SELECT COUNT(*) FROM daily_activity").use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(0, cursor.getInt(0))
+            }
+        }
+    }
+
     private companion object {
         const val DATABASE = "migration-test.db"
     }

@@ -25,14 +25,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.model.ActivityReport
+import fr.babeuloula.photoswipe.domain.model.MonthlyActivity
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import java.time.LocalDate
+import java.time.YearMonth
 
 /**
  * Page « Progression » (PS-153), ouverte par le bouton de la barre du haut de l'accueil ou depuis
- * les réglages : les statistiques d'utilisation, sorties des réglages. Le contenu est centré sur
+ * les réglages : les statistiques d'utilisation, sorties des réglages, puis l'activité des derniers
+ * mois en graphiques (PS-154). Le contenu est centré sur
  * grand écran. Gère le chargement et l'erreur.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,6 +87,7 @@ fun ProgressScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             StatisticsSection(state.statistics)
+                            ActivitySection(state.activity)
                         }
                     }
                 }
@@ -111,6 +116,26 @@ private fun ProgressError(
     }
 }
 
+/** Activité fixe des aperçus : six mois, dont un sans tri. */
+internal val PREVIEW_ACTIVITY =
+    ActivityReport(
+        months =
+            listOf(
+                MonthlyActivity(YearMonth.parse("2026-06"), keptCount = 12, trashedCount = 3, freedBytes = 120_000_000),
+                MonthlyActivity(YearMonth.parse("2026-07")),
+                MonthlyActivity(
+                    YearMonth.parse("2026-08"),
+                    keptCount = 30,
+                    trashedCount = 18,
+                    freedBytes = 720_000_000,
+                ),
+                MonthlyActivity(YearMonth.parse("2026-09"), keptCount = 8, trashedCount = 1, freedBytes = 40_000_000),
+                MonthlyActivity(YearMonth.parse("2026-10"), keptCount = 22, trashedCount = 9, freedBytes = 360_000_000),
+                MonthlyActivity(YearMonth.parse("2026-11"), keptCount = 5, trashedCount = 2, freedBytes = 80_000_000),
+            ),
+        since = LocalDate.parse("2026-06-04"),
+    )
+
 @PreviewLightDark
 @Composable
 private fun ProgressScreenPreview() {
@@ -119,6 +144,7 @@ private fun ProgressScreenPreview() {
             state =
                 ProgressUiState.Loaded(
                     UsageStatistics(LocalDate.parse("2026-03-02"), deletedCount = 128, freedBytes = 1_200_000_000),
+                    PREVIEW_ACTIVITY,
                 ),
             onEvent = {},
         )

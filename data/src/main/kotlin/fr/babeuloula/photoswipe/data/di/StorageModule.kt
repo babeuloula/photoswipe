@@ -14,6 +14,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import fr.babeuloula.photoswipe.data.database.ConfirmedDeletionDao
+import fr.babeuloula.photoswipe.data.database.DailyActivityDao
 import fr.babeuloula.photoswipe.data.database.DecisionJournalDao
 import fr.babeuloula.photoswipe.data.database.MIGRATION_2_3
 import fr.babeuloula.photoswipe.data.database.PhotoSwipeDatabase
@@ -49,6 +50,9 @@ object StorageModule {
     @Provides
     fun provideConfirmedDeletionDao(database: PhotoSwipeDatabase): ConfirmedDeletionDao =
         database.confirmedDeletionDao()
+
+    @Provides
+    fun provideDailyActivityDao(database: PhotoSwipeDatabase): DailyActivityDao = database.dailyActivityDao()
 
     @Provides
     @Singleton

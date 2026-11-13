@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import fr.babeuloula.photoswipe.domain.port.ActivityHistory
 import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.DeletionHistory
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequestFactory
@@ -60,9 +61,10 @@ object ConfirmationModule {
         journal: DecisionJournal,
         statistics: UsageStatisticsRepository,
         history: DeletionHistory,
+        activity: ActivityHistory,
         window: ReviewWindowProvider,
         clock: Clock,
-    ): RecordTrashResult = RecordTrashResult(reviewRepository, journal, statistics, history, window, clock)
+    ): RecordTrashResult = RecordTrashResult(reviewRepository, journal, statistics, history, activity, window, clock)
 
     @Provides
     fun provideGetPendingFavorites(reviewRepository: ReviewRepository): GetPendingFavorites =

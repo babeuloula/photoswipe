@@ -9,8 +9,13 @@ import androidx.room.RoomDatabase
  * compilation et versionné : toute évolution passe par une nouvelle version et une migration testée.
  */
 @Database(
-    entities = [ReviewEntryEntity::class, DecisionRecordEntity::class, ConfirmedDeletionEntity::class],
-    version = 4,
+    entities = [
+        ReviewEntryEntity::class,
+        DecisionRecordEntity::class,
+        ConfirmedDeletionEntity::class,
+        DailyActivityEntity::class,
+    ],
+    version = 5,
     exportSchema = true,
     autoMigrations = [
         // Version 2 (PS-57) : ajout du journal des décisions pour l'undo (ADR 0019).
@@ -18,6 +23,8 @@ import androidx.room.RoomDatabase
         // Version 3 (PS-108) : colonne `reopened`, par la migration manuelle [MIGRATION_2_3].
         // Version 4 (PS-135) : historique des suppressions confirmées (ADR 0034).
         AutoMigration(from = 3, to = 4),
+        // Version 5 (PS-154) : activité de tri par jour (ADR 0037).
+        AutoMigration(from = 4, to = 5),
     ],
 )
 abstract class PhotoSwipeDatabase : RoomDatabase() {
@@ -29,6 +36,9 @@ abstract class PhotoSwipeDatabase : RoomDatabase() {
 
     /** Accès à l'historique des suppressions confirmées. */
     abstract fun confirmedDeletionDao(): ConfirmedDeletionDao
+
+    /** Accès à l'activité de tri par jour. */
+    abstract fun dailyActivityDao(): DailyActivityDao
 
     companion object {
         /** Nom du fichier de la base sur l'appareil. */

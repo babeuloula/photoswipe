@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.usecase
 
+import fr.babeuloula.photoswipe.domain.fixtures.FakeActivityHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
@@ -86,6 +87,7 @@ class GetDaySessionTest {
                 journal,
                 FakeUsageStatisticsRepository(),
                 FakeDeletionHistory(),
+                FakeActivityHistory(),
                 ReviewWindowProvider(clock),
                 clock,
             )(request, confirmed = true)
