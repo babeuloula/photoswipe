@@ -14,9 +14,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -45,9 +48,11 @@ fun ProgressScreen(
     state: ProgressUiState,
     onEvent: (ProgressEvent) -> Unit,
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.progress_title)) },
@@ -81,23 +86,37 @@ fun ProgressScreen(
                 }
 
                 is ProgressUiState.Loaded -> {
-                    CenteredContent {
-                        Column(
-                            modifier = Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            StreakSection(state.streak)
-                            CalendarSection(
-                                calendar = state.calendar,
-                                today = state.today,
-                                onOpenDay = { onEvent(ProgressEvent.OpenDay(it)) },
-                            )
-                            StatisticsSection(state.statistics)
-                            ActivitySection(state.activity)
-                        }
-                    }
+                    ProgressContent(state, onEvent)
                 }
             }
+        }
+    }
+}
+
+/** Sections de la page, de la plus motivante à la plus détaillée, et le choix de l'objectif ouvert. */
+@Composable
+private fun ProgressContent(
+    state: ProgressUiState.Loaded,
+    onEvent: (ProgressEvent) -> Unit,
+) {
+    if (state.goalDialogOpen) GoalDialog(onEvent)
+    CenteredContent {
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            StreakSection(state.streak)
+            CalendarSection(
+                calendar = state.calendar,
+                today = state.today,
+                onOpenDay = { onEvent(ProgressEvent.OpenDay(it)) },
+            )
+            state.achievements?.let { achievements ->
+                GoalSection(achievements.goal, onEvent)
+                BadgesSection(achievements.badges)
+            }
+            StatisticsSection(state.statistics)
+            ActivitySection(state.activity)
         }
     }
 }

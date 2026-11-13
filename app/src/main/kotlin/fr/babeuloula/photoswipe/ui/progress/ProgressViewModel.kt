@@ -3,14 +3,13 @@ package fr.babeuloula.photoswipe.ui.progress
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import fr.babeuloula.photoswipe.domain.model.Achievements
 import fr.babeuloula.photoswipe.domain.model.ActivityReport
+import fr.babeuloula.photoswipe.domain.model.Badge
 import fr.babeuloula.photoswipe.domain.model.Streak
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.domain.model.YearMemories
-import fr.babeuloula.photoswipe.domain.usecase.GetActivityReport
-import fr.babeuloula.photoswipe.domain.usecase.GetStreak
-import fr.babeuloula.photoswipe.domain.usecase.GetUsageStatistics
-import fr.babeuloula.photoswipe.domain.usecase.GetYearMemories
+import fr.babeuloula.photoswipe.domain.usecase.SetFreeSpaceGoal
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +40,8 @@ sealed interface ProgressUiState {
      * @property calendar souvenirs de chaque jour de l'année (PS-157), `null` tant qu'ils sont lus
      * ou s'ils n'ont pas pu l'être : la galerie entière est lue, plus lentement que le reste.
      * @property today jour courant, repéré dans le calendrier.
+     * @property achievements badges et objectif (PS-158), `null` s'ils n'ont pas pu être lus.
+     * @property goalDialogOpen vrai pendant le choix de l'objectif.
      */
     data class Loaded(
         val statistics: UsageStatistics,
@@ -48,6 +49,8 @@ sealed interface ProgressUiState {
         val streak: Streak = Streak(),
         val calendar: YearMemories? = null,
         val today: LocalDate? = null,
+        val achievements: Achievements? = null,
+        val goalDialogOpen: Boolean = false,
     ) : ProgressUiState
 }
 
@@ -70,6 +73,27 @@ sealed interface ProgressEvent {
     data class OpenDay(
         val day: LocalDate,
     ) : ProgressEvent
+
+    /** Objectif de place à libérer (PS-158). */
+    sealed interface GoalEvent : ProgressEvent
+
+    /** « Se fixer un objectif » ou « Changer » : ouvrir le choix. */
+    data object PickGoal : GoalEvent
+
+    /**
+     * Objectif choisi.
+     *
+     * @property targetBytes octets à libérer à partir de maintenant.
+     */
+    data class GoalPicked(
+        val targetBytes: Long,
+    ) : GoalEvent
+
+    /** Choix fermé sans rien changer. */
+    data object GoalDialogDismissed : GoalEvent
+
+    /** « Retirer » l'objectif. */
+    data object RemoveGoal : GoalEvent
 }
 
 /** Navigation demandée par la page « Progression ». */
@@ -85,6 +109,15 @@ sealed interface ProgressEffect {
     data class OpenOverview(
         val day: LocalDate,
     ) : ProgressEffect
+
+    /**
+     * Annoncer les badges qui viennent d'être obtenus (PS-158), une seule fois.
+     *
+     * @property badges badges obtenus.
+     */
+    data class AnnounceBadges(
+        val badges: List<Badge>,
+    ) : ProgressEffect
 }
 
 /**
@@ -96,10 +129,8 @@ sealed interface ProgressEffect {
 class ProgressViewModel
     @Inject
     constructor(
-        private val getUsageStatistics: GetUsageStatistics,
-        private val getActivityReport: GetActivityReport,
-        private val getStreak: GetStreak,
-        private val getYearMemories: GetYearMemories,
+        private val reads: ProgressReads,
+        private val setFreeSpaceGoal: SetFreeSpaceGoal,
         private val clock: Clock,
     ) : ViewModel() {
         private val state = MutableStateFlow<ProgressUiState>(ProgressUiState.Loading)
@@ -134,6 +165,45 @@ class ProgressViewModel
                 is ProgressEvent.OpenDay -> {
                     effects.trySend(ProgressEffect.OpenOverview(event.day))
                 }
+
+                is ProgressEvent.GoalEvent -> {
+                    onGoalEvent(event)
+                }
+            }
+        }
+
+        /** Ouvre ou ferme le choix de l'objectif, puis fixe ou retire l'objectif et relit les badges. */
+        private fun onGoalEvent(event: ProgressEvent.GoalEvent) {
+            state.update {
+                if (it is ProgressUiState.Loaded) {
+                    it.copy(
+                        goalDialogOpen = event == ProgressEvent.PickGoal,
+                    )
+                } else {
+                    it
+                }
+            }
+            val target =
+                when (event) {
+                    is ProgressEvent.GoalPicked -> event.targetBytes
+                    ProgressEvent.RemoveGoal -> null
+                    else -> return
+                }
+            viewModelScope.launch {
+                runCatching { setFreeSpaceGoal(target) }
+                readAchievements()
+            }
+        }
+
+        /** Lit les badges et l'objectif, et annonce les badges qui viennent d'être obtenus. */
+        private suspend fun readAchievements() {
+            runCatching { reads.getAchievements() }.onSuccess { achievements ->
+                state.update { if (it is ProgressUiState.Loaded) it.copy(achievements = achievements) else it }
+                if (achievements.newlyEarned.isNotEmpty()) {
+                    effects.trySend(
+                        ProgressEffect.AnnounceBadges(achievements.newlyEarned),
+                    )
+                }
             }
         }
 
@@ -141,7 +211,7 @@ class ProgressViewModel
         private var calendar: YearMemories? = null
 
         /**
-         * Lit les statistiques, l'activité et la série, puis le calendrier, plus lent, qui complète
+         * Lit les statistiques, l'activité et la série, puis les badges, puis le calendrier, plus lent, qui complète
          * la page une fois prêt. Une erreur ne remplace pas des chiffres déjà affichés ; un
          * calendrier illisible reste absent.
          */
@@ -149,15 +219,17 @@ class ProgressViewModel
             viewModelScope.launch {
                 runCatching {
                     ProgressUiState.Loaded(
-                        getUsageStatistics(),
-                        getActivityReport(),
-                        getStreak(),
+                        reads.getUsageStatistics(),
+                        reads.getActivityReport(),
+                        reads.getStreak(),
                         calendar,
                         LocalDate.now(clock),
+                        achievements = (state.value as? ProgressUiState.Loaded)?.achievements,
                     )
                 }.onSuccess { state.value = it }
                     .onFailure { if (state.value !is ProgressUiState.Loaded) state.value = ProgressUiState.Error }
-                runCatching { getYearMemories().first() }.onSuccess { year ->
+                readAchievements()
+                runCatching { reads.getYearMemories().first() }.onSuccess { year ->
                     calendar = year
                     state.update { if (it is ProgressUiState.Loaded) it.copy(calendar = year) else it }
                 }

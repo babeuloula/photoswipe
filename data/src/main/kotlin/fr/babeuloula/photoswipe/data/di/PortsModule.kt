@@ -4,6 +4,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import fr.babeuloula.photoswipe.data.achievements.DataStoreAchievementsRepository
 import fr.babeuloula.photoswipe.data.activity.RoomActivityHistory
 import fr.babeuloula.photoswipe.data.deletion.RoomDeletionHistory
 import fr.babeuloula.photoswipe.data.media.MediaStoreActionRequestFactory
@@ -12,6 +13,7 @@ import fr.babeuloula.photoswipe.data.review.RoomDecisionJournal
 import fr.babeuloula.photoswipe.data.review.RoomReviewRepository
 import fr.babeuloula.photoswipe.data.settings.DataStoreSettingsRepository
 import fr.babeuloula.photoswipe.data.statistics.DataStoreUsageStatisticsRepository
+import fr.babeuloula.photoswipe.domain.port.AchievementsRepository
 import fr.babeuloula.photoswipe.domain.port.ActivityHistory
 import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.DeletionHistory
@@ -37,6 +39,10 @@ abstract class PortsModule {
     @Binds
     @Singleton
     abstract fun bindDecisionJournal(implementation: RoomDecisionJournal): DecisionJournal
+
+    @Binds
+    @Singleton
+    abstract fun bindAchievementsRepository(implementation: DataStoreAchievementsRepository): AchievementsRepository
 
     @Binds
     @Singleton
