@@ -89,6 +89,17 @@ class SettingsFakesTest {
         }
 
     @Test
+    fun `has no seen what's new version until one is saved`() =
+        runTest {
+            val repository = FakeSettingsRepository()
+            assertEquals(null, repository.whatsNewVersionSeen())
+
+            repository.saveWhatsNewVersionSeen("1.4.0")
+
+            assertEquals("1.4.0", repository.whatsNewVersionSeen())
+        }
+
+    @Test
     fun `stores the rating invitation, nothing sorted by default`() =
         runTest {
             val repository = FakeSettingsRepository()

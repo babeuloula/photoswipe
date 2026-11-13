@@ -45,6 +45,8 @@ import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.common.segmentShape
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import fr.babeuloula.photoswipe.ui.whatsnew.WHATS_NEW
+import fr.babeuloula.photoswipe.ui.whatsnew.WhatsNewSheet
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -55,7 +57,7 @@ import java.util.Date
  * activé ou non, et son heure, choisie dans le sélecteur d'heure Material 3 ; la langue de
  * l'application ([SettingsEnvironment.languageLabel]), choisie dans le réglage de langue par application d'Android ;
  * le thème (celui du téléphone, clair ou sombre) ; les statistiques d'utilisation ; « Soutenir PhotoSwipe » (noter l'application, faire un don) ;
- * puis « À propos » : version de l'application et licences.
+ * puis « À propos » : version de l'application, nouveautés de chaque version et licences.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,6 +116,9 @@ fun SettingsScreen(
                     }
                 }
                 if (state.timePickerOpen) ReminderTimeDialog(reminder.time, onEvent)
+                if (state.whatsNewOpen) {
+                    WhatsNewSheet(releases = WHATS_NEW, onDismiss = { onEvent(SettingsEvent.WhatsNewToggled(false)) })
+                }
             }
         }
     }
@@ -210,13 +215,13 @@ private fun LanguageSection(
     }
 }
 
-/** Section « À propos » : version de l'application, tutoriel à revoir, licences et code source. */
+/** Section « À propos » : version de l'application, nouveautés, tutoriel à revoir, licences et code source. */
 @Composable
 private fun AboutSection(
     onEvent: (SettingsEvent) -> Unit,
     showDeveloperTools: Boolean,
 ) {
-    // Version, tutoriel, licences, code source et, en debug, les outils développeur.
+    // Version, nouveautés, tutoriel, licences, code source et, en debug, les outils développeur.
     val count = if (showDeveloperTools) ABOUT_ROWS + 1 else ABOUT_ROWS
     PreferenceSection(stringResource(R.string.settings_about_section)) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -227,13 +232,20 @@ private fun AboutSection(
             )
             PreferenceRow(
                 shape = segmentShape(1, count),
+                title = stringResource(R.string.settings_about_whats_new),
+                summary = stringResource(R.string.settings_about_whats_new_summary),
+                trailing = { TrailingIcon(R.drawable.ic_chevron_right) },
+                modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.WhatsNewToggled(true)) },
+            )
+            PreferenceRow(
+                shape = segmentShape(2, count),
                 title = stringResource(R.string.settings_about_tutorial),
                 summary = stringResource(R.string.settings_about_tutorial_summary),
                 trailing = { TrailingIcon(R.drawable.ic_chevron_right) },
                 modifier = Modifier.clickable(role = Role.Button) { onEvent(SettingsEvent.OpenTutorial) },
             )
             PreferenceRow(
-                shape = segmentShape(2, count),
+                shape = segmentShape(ABOUT_ROWS - 2, count),
                 title = stringResource(R.string.settings_about_licenses),
                 summary = stringResource(R.string.settings_about_licenses_summary),
                 trailing = { TrailingIcon(R.drawable.ic_chevron_right) },
@@ -259,8 +271,8 @@ private fun AboutSection(
     }
 }
 
-/** Lignes de « À propos » dans toutes les variantes : version et licences. */
-private const val ABOUT_ROWS = 4
+/** Lignes de « À propos » dans toutes les variantes : version, nouveautés, tutoriel, licences et code source. */
+private const val ABOUT_ROWS = 5
 
 /** Version de l'application installée (`versionName`). */
 @Composable

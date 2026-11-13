@@ -105,6 +105,17 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `opens then closes the news of every version`() {
+        val viewModel = settingsViewModel()
+
+        viewModel.onEvent(SettingsEvent.WhatsNewToggled(true))
+        assertTrue(viewModel.uiState.value.whatsNewOpen)
+        viewModel.onEvent(SettingsEvent.WhatsNewToggled(false))
+
+        assertFalse(viewModel.uiState.value.whatsNewOpen)
+    }
+
+    @Test
     fun `closes the time picker without saving`() {
         val viewModel = settingsViewModel()
         viewModel.onEvent(SettingsEvent.PickReminderTime)

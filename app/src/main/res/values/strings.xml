@@ -319,4 +319,18 @@
     <string name="shortcut_summary">Summary</string>
     <!-- Tuile des réglages rapides (PS-172). -->
     <string name="tile_subtitle">Sort today</string>
+    <!-- Nouveautés après une mise à jour (PS-173) : une clé par version, ce que l'utilisateur voit ou peut faire de nouveau. -->
+    <string name="whats_new_title">What\'s new</string>
+    <string name="whats_new_version">Version %1$s</string>
+    <string name="whats_new_close">Got it</string>
+    <string name="settings_about_whats_new">What\'s new</string>
+    <string name="settings_about_whats_new_summary">What each update brought you</string>
+    <string name="whats_new_1_4_0_progress_title">Your progress at a glance</string>
+    <string name="whats_new_1_4_0_progress_text">Tap the chart icon at the top of the home screen: what you sorted, kept and deleted, and the space freed over the last 6 months.</string>
+    <string name="whats_new_1_4_0_streak_title">Keep your streak going</string>
+    <string name="whats_new_1_4_0_streak_text">Each day you sort all of the day\'s memories adds one to your streak, shown on the chart icon of the home screen.</string>
+    <string name="whats_new_1_4_0_calendar_title">Your whole year in a calendar</string>
+    <string name="whats_new_1_4_0_calendar_text">See how many memories wait on each day of the year, and tap any day to open it, even outside this week.</string>
+    <string name="whats_new_1_4_0_goals_title">Badges and a space goal</string>
+    <string name="whats_new_1_4_0_goals_text">Earn badges as you sort, and set yourself an amount of space to free.</string>
 </resources>

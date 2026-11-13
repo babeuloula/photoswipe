@@ -35,7 +35,8 @@ import javax.inject.Inject
  * le conseil « Gestion des médias » ([ManageMediaTip.DEFAULT]). La version du tutoriel vue vaut
  * [Tutorial.NEVER_SEEN] tant que rien n'est enregistré, l'invitation à noter l'application
  * [RatingInvitation.DEFAULT] (jour trié stocké en jours depuis l'epoch). La série de jours (PS-155)
- * est lue et écrite par `StreakPreferences.kt`.
+ * est lue et écrite par `StreakPreferences.kt`. La dernière version des nouveautés vue (PS-173) est
+ * stockée telle quelle (`X.Y.Z`), absente tant que rien n'est enregistré.
  *
  * @param dataStore magasin de préférences, unique pour son fichier : il est fourni par l'injection
  * de dépendances, jamais créé ici.
@@ -115,6 +116,12 @@ class DataStoreSettingsRepository
             dataStore.edit { preferences -> preferences.putStreakState(state) }
         }
 
+        override suspend fun whatsNewVersionSeen(): String? = preferences().first()[WHATS_NEW_VERSION_SEEN]
+
+        override suspend fun saveWhatsNewVersionSeen(version: String) {
+            dataStore.edit { it[WHATS_NEW_VERSION_SEEN] = version }
+        }
+
         /** Préférences enregistrées ; un fichier illisible se lit comme vide. */
         private fun preferences(): Flow<Preferences> =
             dataStore.data.catch { error -> if (error is IOException) emit(emptyPreferences()) else throw error }
@@ -148,6 +155,7 @@ class DataStoreSettingsRepository
             val RATING_SORTED_DAYS = intPreferencesKey("rating_sorted_days")
             val RATING_LAST_SORTED_DAY = longPreferencesKey("rating_last_sorted_day")
             val RATING_ASKED = booleanPreferencesKey("rating_asked")
+            val WHATS_NEW_VERSION_SEEN = stringPreferencesKey("whats_new_version_seen")
             const val MINUTES_PER_HOUR = 60
             const val MINUTES_PER_DAY = 24 * MINUTES_PER_HOUR
         }

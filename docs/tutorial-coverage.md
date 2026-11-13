@@ -32,6 +32,7 @@ Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été inc
 | Vue d'ensemble d'un jour (tous ses souvenirs par année), avec tri par lot (appui long, garder ou supprimer plusieurs souvenirs, « Annuler ») | PS-139, PS-159 | Hors tutoriel : ouverte en touchant les vignettes de la carte du jour ou l'icône de grille de la pile, découverte sans risque |
 | Page « Progression » (statistiques d'utilisation, graphiques des six derniers mois, série de jours), ouverte par le bouton de la barre de l'accueil, qui porte la série en pastille | PS-153, PS-154, PS-155 | Hors tutoriel : découverte depuis l'accueil ou les réglages, sans risque |
 | Langue, thème, licences, revoir le tutoriel | epic 9, PS-81, PS-87 | Hors tutoriel : réglages |
+| Nouveautés après une mise à jour, relues dans « À propos » des réglages | PS-173 | Hors tutoriel : la feuille ne s'affiche qu'après une mise à jour, jamais à la première installation, où le tutoriel présente déjà tout |
 
 ## Écart connu
 Aucun : l'animation de la page « Garder ou supprimer » (PS-76) est livrée.

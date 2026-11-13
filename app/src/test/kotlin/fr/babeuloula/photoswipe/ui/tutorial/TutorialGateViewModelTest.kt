@@ -5,6 +5,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.model.Tutorial
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.usecase.MarkTutorialSeen
+import fr.babeuloula.photoswipe.domain.usecase.RecordFirstInstall
 import fr.babeuloula.photoswipe.domain.usecase.ShouldShowTutorial
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -15,7 +16,11 @@ class TutorialGateViewModelTest {
     val mainDispatcher = MainDispatcherRule()
 
     private fun viewModel(settings: SettingsRepository) =
-        TutorialGateViewModel(ShouldShowTutorial(settings), MarkTutorialSeen(settings))
+        TutorialGateViewModel(
+            ShouldShowTutorial(settings),
+            MarkTutorialSeen(settings),
+            RecordFirstInstall(settings, "1.4.0"),
+        )
 
     @Test
     fun `shows the tutorial on the first launch, without marking it seen yet`() {
@@ -43,6 +48,25 @@ class TutorialGateViewModelTest {
 
         assertEquals(TutorialGateState.DONE, viewModel.uiState.value)
         assertEquals(Tutorial.CURRENT_VERSION, settings.tutorialVersionSeen)
+    }
+
+    @Test
+    fun `records the installed version before the first tutorial, so a first install announces nothing`() {
+        val settings = FakeSettingsRepository()
+
+        val viewModel = viewModel(settings)
+        viewModel.onTutorialDone()
+
+        assertEquals("1.4.0", settings.whatsNewVersionSeen)
+    }
+
+    @Test
+    fun `leaves the news of an update to the home screen when the tutorial was already seen`() {
+        val settings = FakeSettingsRepository(tutorialVersionSeen = Tutorial.CURRENT_VERSION)
+
+        viewModel(settings)
+
+        assertEquals(null, settings.whatsNewVersionSeen)
     }
 
     @Test

@@ -11,6 +11,7 @@ import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.ReopenDay
 import fr.babeuloula.photoswipe.permission.MediaManagementReader
+import fr.babeuloula.photoswipe.ui.whatsnew.WhatsNewRelease
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
@@ -51,6 +53,9 @@ sealed interface HomeUiState {
      * @property showRatingInvitation vrai pour inviter, une seule fois, à noter l'application et à
      * soutenir son développeur, au troisième jour où la pile du jour est entièrement triée (PS-121).
      * @property streak série de jours en cours (PS-155), rappelée sur le bouton « Progression ».
+     * @property whatsNew nouveautés des versions manquées depuis la dernière mise à jour (PS-173),
+     * de la plus récente à la plus ancienne ; vide pour ne pas afficher la feuille. Jamais en même
+     * temps que l'invitation à noter l'application, qui passe avant.
      */
     data class Loaded(
         val today: ReviewDay,
@@ -59,6 +64,7 @@ sealed interface HomeUiState {
         val showManageMediaTip: Boolean = false,
         val showRatingInvitation: Boolean = false,
         val streak: Int = 0,
+        val whatsNew: List<WhatsNewRelease> = emptyList(),
     ) : HomeUiState {
         /**
          * Vrai si au moins un souvenir existe sur la fenêtre, trié ou non, ou si un jour a été vidé
@@ -119,14 +125,20 @@ sealed interface HomeEvent {
     /** Croix du conseil « Gestion des médias » : ne plus le proposer. */
     data object DismissManageMediaTip : HomeEvent
 
+    /** Réponse à ce que l'accueil annonce de lui-même : invitation à noter l'application, nouveautés. */
+    sealed interface NoticeEvent : HomeEvent
+
     /** « Noter l'application » de l'invitation (PS-121). */
-    data object RateApp : HomeEvent
+    data object RateApp : NoticeEvent
 
     /** « Soutenir » de l'invitation : la page de don (PS-121). */
-    data object SupportDeveloper : HomeEvent
+    data object SupportDeveloper : NoticeEvent
 
     /** Invitation fermée sans choisir : elle ne reviendra pas. */
-    data object DismissRatingInvitation : HomeEvent
+    data object DismissRatingInvitation : NoticeEvent
+
+    /** Feuille des nouveautés fermée : elle ne reviendra pas avant la prochaine mise à jour (PS-173). */
+    data object DismissWhatsNew : NoticeEvent
 }
 
 /** Navigation demandée par l'accueil. */
@@ -167,6 +179,9 @@ sealed interface HomeEffect {
  * Les nombres suivent les décisions en direct (`GetReviewDays` est un flux). Ils sont recalculés
  * depuis le début à chaque retour au premier plan et après « Réessayer » : la galerie, le jour ou
  * les permissions ont pu changer entre-temps.
+ *
+ * Après une mise à jour, il annonce les nouveautés des versions manquées (PS-173), une fois
+ * l'invitation à noter l'application passée.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -178,10 +193,15 @@ class HomeViewModel
         private val settingsRepository: SettingsRepository,
         private val mediaManagement: MediaManagementReader,
         private val reopenDay: ReopenDay,
-        private val sortedDay: SortedDayActions,
+        private val announcements: HomeAnnouncements,
     ) : ViewModel() {
-        /** Invitation à noter l'application à montrer (PS-121). */
-        private val ratingInvitation = MutableStateFlow(false)
+        private val sortedDay = announcements.sortedDay
+
+        /**
+         * Invitation à noter l'application (PS-121) et nouveautés (PS-173), dans un seul état pour
+         * que l'une passe toujours avant les autres, sans état intermédiaire.
+         */
+        private val notices = MutableStateFlow(HomeNotices())
 
         /** Série de jours en cours (PS-155), recomptée à chaque lecture des jours. */
         private val streak = MutableStateFlow(0)
@@ -205,14 +225,26 @@ class HomeViewModel
                         countTodaySorted(state.today)
                         countStreak(listOf(state.today) + state.previousDays)
                     }
-                }.combine(ratingInvitation) { state, invite ->
-                    if (state is HomeUiState.Loaded) state.copy(showRatingInvitation = invite) else state
+                }.combine(notices) { state, shown ->
+                    if (state is HomeUiState.Loaded) {
+                        state.copy(showRatingInvitation = shown.ratingInvitation, whatsNew = shown.whatsNewShown)
+                    } else {
+                        state
+                    }
                 }.combine(streak) { state, days ->
                     if (state is HomeUiState.Loaded) state.copy(streak = days) else state
                 }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), HomeUiState.Loading)
 
         /** Navigations à exécuter, chacune livrée une seule fois. */
         val uiEffects: Flow<HomeEffect> = effects.receiveAsFlow()
+
+        init {
+            // Un échec de lecture des réglages n'annonce rien.
+            viewModelScope.launch {
+                val missed = runCatching { announcements.whatsNew.missed() }.getOrDefault(emptyList())
+                notices.update { it.copy(whatsNew = missed) }
+            }
+        }
 
         /** Traite une action de l'utilisateur ou du système. */
         fun onEvent(event: HomeEvent) {
@@ -257,18 +289,8 @@ class HomeViewModel
                     effects.trySend(HomeEffect.OpenManageMediaSettings)
                 }
 
-                HomeEvent.RateApp -> {
-                    closeRatingInvitation()
-                    effects.trySend(HomeEffect.OpenRating)
-                }
-
-                HomeEvent.SupportDeveloper -> {
-                    closeRatingInvitation()
-                    effects.trySend(HomeEffect.OpenDonation)
-                }
-
-                HomeEvent.DismissRatingInvitation -> {
-                    closeRatingInvitation()
+                is HomeEvent.NoticeEvent -> {
+                    onNoticeEvent(event)
                 }
 
                 HomeEvent.DismissManageMediaTip -> {
@@ -318,13 +340,20 @@ class HomeViewModel
         /**
          * Pile d'aujourd'hui entièrement triée : un jour de plus vers l'invitation à noter
          * l'application (PS-121), qui s'affiche au troisième jour différent. Un échec de lecture
-         * ou d'écriture des réglages ne montre rien.
+         * ou d'écriture des réglages ne montre rien. Une fois la réponse connue, les nouveautés
+         * peuvent s'afficher.
          */
         private fun countTodaySorted(today: ReviewDay) {
-            if (today.memoryCount == 0 || today.remainingCount > 0 || countedDay == today.date) return
+            // Jour déjà compté : la réponse est connue, ou le sera à la fin du compte en cours.
+            if (countedDay == today.date) return
+            if (today.memoryCount == 0 || today.remainingCount > 0) {
+                notices.update { it.copy(ratingSettled = true) }
+                return
+            }
             countedDay = today.date
             viewModelScope.launch {
-                if (runCatching { sortedDay.recordTodaySorted() }.getOrDefault(false)) ratingInvitation.value = true
+                val invite = runCatching { sortedDay.recordTodaySorted() }.getOrDefault(false)
+                notices.update { it.copy(ratingInvitation = it.ratingInvitation || invite, ratingSettled = true) }
             }
         }
 
@@ -344,9 +373,33 @@ class HomeViewModel
             }
         }
 
+        /** Réponse à l'invitation à noter l'application ou à la feuille des nouveautés. */
+        private fun onNoticeEvent(event: HomeEvent.NoticeEvent) {
+            when (event) {
+                HomeEvent.RateApp -> {
+                    closeRatingInvitation()
+                    effects.trySend(HomeEffect.OpenRating)
+                }
+
+                HomeEvent.SupportDeveloper -> {
+                    closeRatingInvitation()
+                    effects.trySend(HomeEffect.OpenDonation)
+                }
+
+                HomeEvent.DismissRatingInvitation -> {
+                    closeRatingInvitation()
+                }
+
+                HomeEvent.DismissWhatsNew -> {
+                    notices.update { it.copy(whatsNew = emptyList()) }
+                    viewModelScope.launch { runCatching { announcements.whatsNew.markSeen() } }
+                }
+            }
+        }
+
         /** Ferme l'invitation pour de bon, quel que soit le choix. */
         private fun closeRatingInvitation() {
-            ratingInvitation.value = false
+            notices.update { it.copy(ratingInvitation = false) }
             viewModelScope.launch { runCatching { sortedDay.markRatingAsked() } }
         }
 
@@ -358,3 +411,21 @@ class HomeViewModel
             const val STOP_TIMEOUT_MILLIS = 5_000L
         }
     }
+
+/**
+ * Ce que l'accueil annonce de lui-même, par-dessus les jours.
+ *
+ * @property ratingInvitation vrai pour montrer l'invitation à noter l'application (PS-121).
+ * @property ratingSettled vrai une fois su si l'invitation est due : les nouveautés attendent
+ * jusque-là, pour ne pas s'afficher puis s'effacer devant elle.
+ * @property whatsNew nouveautés à annoncer (PS-173), lues une fois à l'ouverture de l'accueil.
+ */
+private data class HomeNotices(
+    val ratingInvitation: Boolean = false,
+    val ratingSettled: Boolean = false,
+    val whatsNew: List<WhatsNewRelease> = emptyList(),
+) {
+    /** Nouveautés à afficher : seulement l'invitation connue et fermée, jamais avec elle. */
+    val whatsNewShown: List<WhatsNewRelease>
+        get() = if (ratingSettled && !ratingInvitation) whatsNew else emptyList()
+}

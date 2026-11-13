@@ -191,6 +191,25 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `offers to read the news of every version again from the about section`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
+
+        composeRule.onNodeWithText(text(R.string.settings_about_whats_new)).performScrollTo().performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.WhatsNewToggled(true)), events)
+    }
+
+    @Test
+    fun `shows the news of every version, and closes them`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT, whatsNewOpen = true))
+
+        composeRule.onNodeWithText(text(R.string.whats_new_1_4_0_progress_title)).assertExists()
+        composeRule.onNodeWithText(text(R.string.whats_new_close)).performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.WhatsNewToggled(false)), events)
+    }
+
+    @Test
     fun `opens the source code from the about section`() {
         show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
 

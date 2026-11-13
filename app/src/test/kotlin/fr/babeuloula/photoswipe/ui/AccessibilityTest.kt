@@ -67,6 +67,8 @@ import fr.babeuloula.photoswipe.ui.summary.SummaryUiState
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.tutorial.PracticePage
 import fr.babeuloula.photoswipe.ui.tutorial.TutorialScreen
+import fr.babeuloula.photoswipe.ui.whatsnew.WHATS_NEW
+import fr.babeuloula.photoswipe.ui.whatsnew.WhatsNewContent
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -197,6 +199,7 @@ class AccessibilityTest {
         check { PermissionRationaleScreen(onContinue = {}) }
         check { MediaAccessDeniedScreen(canAskAgain = false, onOpenSettings = {}, onTryAgain = {}) }
         check { LimitedAccessBanner(onManageAccess = {}) }
+        check { WhatsNewContent(releases = WHATS_NEW, onClose = {}) }
         check {
             HomeScreen(
                 state =

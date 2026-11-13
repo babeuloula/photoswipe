@@ -121,6 +121,17 @@ class DataStoreSettingsRepositoryTest {
         }
 
     @Test
+    fun `has no seen what's new version until one is saved`() =
+        runTest {
+            val repository = DataStoreSettingsRepository(dataStore())
+            assertEquals(null, repository.whatsNewVersionSeen())
+
+            repository.saveWhatsNewVersionSeen("1.4.0")
+
+            assertEquals("1.4.0", repository.whatsNewVersionSeen())
+        }
+
+    @Test
     fun `follows the phone theme when no theme is stored`() =
         runTest {
             assertEquals(ThemeMode.SYSTEM, DataStoreSettingsRepository(dataStore()).observeThemeMode().first())

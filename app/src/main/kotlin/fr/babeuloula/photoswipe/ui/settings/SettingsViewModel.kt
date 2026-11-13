@@ -29,6 +29,7 @@ import javax.inject.Inject
  * @property themeMode thème de l'application, `null` tant qu'il n'est pas lu.
  * @property animationsEnabled vrai si les animations de l'application sont actives (PS-146).
  * @property pureBlack vrai si le thème sombre est en noir pur (PS-176).
+ * @property whatsNewOpen vrai pendant la relecture des nouveautés de toutes les versions (PS-173).
  */
 data class SettingsUiState(
     val reminder: ReminderSettings? = null,
@@ -36,6 +37,7 @@ data class SettingsUiState(
     val themeMode: ThemeMode? = null,
     val animationsEnabled: Boolean = true,
     val pureBlack: Boolean = false,
+    val whatsNewOpen: Boolean = false,
 )
 
 /** Action de l'utilisateur sur les réglages. */
@@ -136,6 +138,15 @@ sealed interface SettingsEvent {
     data object OpenTutorial : OpensScreen {
         override val effect: SettingsEffect get() = SettingsEffect.OpenTutorial
     }
+
+    /**
+     * « Nouveautés » de la section « À propos » (PS-173), ouvertes ([open] vrai) ou refermées.
+     *
+     * @property open vrai pour afficher la feuille, faux quand elle se ferme.
+     */
+    data class WhatsNewToggled(
+        val open: Boolean,
+    ) : SettingsEvent
 
     /** « Licences » de la section « À propos ». */
     data object OpenLicenses : OpensScreen {
@@ -300,6 +311,10 @@ class SettingsViewModel
 
                 SettingsEvent.TimePickerDismissed -> {
                     state.update { it.copy(timePickerOpen = false) }
+                }
+
+                is SettingsEvent.WhatsNewToggled -> {
+                    state.update { it.copy(whatsNewOpen = event.open) }
                 }
 
                 is SettingsEvent.ThemeEvent -> {

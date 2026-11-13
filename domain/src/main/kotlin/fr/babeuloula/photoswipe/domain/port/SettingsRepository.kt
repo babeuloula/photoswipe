@@ -87,4 +87,13 @@ interface SettingsRepository {
 
     /** Enregistre la série de jours [state]. */
     suspend fun saveStreakState(state: StreakState)
+
+    /**
+     * Dernière version dont les nouveautés ont été vues (PS-173), écrite `X.Y.Z` ; `null` tant que
+     * rien n'est enregistré (première installation, ou version qui ne l'enregistrait pas encore).
+     */
+    suspend fun whatsNewVersionSeen(): String?
+
+    /** Enregistre la dernière version dont les nouveautés ont été vues. */
+    suspend fun saveWhatsNewVersionSeen(version: String)
 }

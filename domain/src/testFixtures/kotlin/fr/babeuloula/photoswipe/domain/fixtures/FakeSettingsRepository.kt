@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * @param ratingInvitation invitation à noter l'application au départ.
  * @param animationsEnabled animations actives au départ.
  * @param pureBlack noir pur du thème sombre au départ.
+ * @param whatsNewVersionSeen dernière version des nouveautés vue au départ, `null` pour aucune.
  */
 class FakeSettingsRepository(
     reminder: ReminderSettings = ReminderSettings.DEFAULT,
@@ -34,6 +35,7 @@ class FakeSettingsRepository(
     ratingInvitation: RatingInvitation = RatingInvitation.DEFAULT,
     animationsEnabled: Boolean = true,
     pureBlack: Boolean = false,
+    whatsNewVersionSeen: String? = null,
 ) : SettingsRepository {
     private val storedAnimations = MutableStateFlow(animationsEnabled)
     private val storedPureBlack = MutableStateFlow(pureBlack)
@@ -118,5 +120,15 @@ class FakeSettingsRepository(
 
     override suspend fun saveStreakState(state: StreakState) {
         streakState = state
+    }
+
+    /** Dernière version des nouveautés vue, pour les vérifications du test. */
+    var whatsNewVersionSeen: String? = whatsNewVersionSeen
+        private set
+
+    override suspend fun whatsNewVersionSeen(): String? = whatsNewVersionSeen
+
+    override suspend fun saveWhatsNewVersionSeen(version: String) {
+        whatsNewVersionSeen = version
     }
 }
