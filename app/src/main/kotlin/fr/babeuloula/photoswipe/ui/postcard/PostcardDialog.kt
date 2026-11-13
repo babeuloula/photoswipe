@@ -18,6 +18,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -59,10 +60,15 @@ fun PostcardDialog(
         value =
             withContext(Dispatchers.IO) { runCatching { decodePostcardPhoto(context.contentResolver, Uri.parse(uri)) } }
     }
-    val postcard by produceState<Bitmap?>(null, photo, withBrand) {
-        value = null
-        val source = photo?.getOrNull() ?: return@produceState
-        value = withContext(Dispatchers.Default) { renderPostcard(source, label, brand.takeIf { withBrand }, style) }
+    // La carte précédente reste affichée pendant qu'on redessine : sans ou avec la mention, elle a la
+    // même taille, et l'aperçu ne repasse pas par la roue de chargement (la fenêtre ne saute pas).
+    var postcard by remember { mutableStateOf<Bitmap?>(null) }
+    var rendering by remember { mutableStateOf(true) }
+    LaunchedEffect(photo, withBrand) {
+        val source = photo?.getOrNull() ?: return@LaunchedEffect
+        rendering = true
+        postcard = withContext(Dispatchers.Default) { renderPostcard(source, label, brand.takeIf { withBrand }, style) }
+        rendering = false
     }
     val preview =
         when {
@@ -75,8 +81,9 @@ fun PostcardDialog(
         preview = preview,
         withBrand = withBrand,
         onWithBrandChange = { withBrand = it },
+        rendering = rendering,
         onShare = {
-            val ready = postcard ?: return@PostcardPreviewDialog
+            val ready = postcard?.takeUnless { rendering } ?: return@PostcardPreviewDialog
             scope.launch {
                 val shared =
                     runCatching {
@@ -95,7 +102,8 @@ fun PostcardDialog(
 
 /**
  * Aperçu de la carte postale avant l'envoi : la carte, l'interrupteur de la mention « PhotoSwipe »
- * et « Partager ». Sans état, pour les aperçus et les tests.
+ * et « Partager », grisé tant que la carte est en train d'être redessinée ([rendering]). Sans état,
+ * pour les aperçus et les tests.
  */
 @Composable
 fun PostcardPreviewDialog(
@@ -104,6 +112,7 @@ fun PostcardPreviewDialog(
     onWithBrandChange: (Boolean) -> Unit,
     onShare: () -> Unit,
     onDismiss: () -> Unit,
+    rendering: Boolean = false,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -130,7 +139,7 @@ fun PostcardPreviewDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onShare, enabled = preview is PostcardPreview.Ready) {
+            TextButton(onClick = onShare, enabled = preview is PostcardPreview.Ready && !rendering) {
                 Text(stringResource(R.string.deck_share))
             }
         },
