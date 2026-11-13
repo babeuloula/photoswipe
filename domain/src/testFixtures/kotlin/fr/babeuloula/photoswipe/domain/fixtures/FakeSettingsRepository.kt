@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.domain.fixtures
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.domain.model.StreakState
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.model.Tutorial
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
@@ -94,5 +95,15 @@ class FakeSettingsRepository(
 
     override suspend fun saveRatingInvitation(invitation: RatingInvitation) {
         ratingInvitation = invitation
+    }
+
+    /** Série de jours enregistrée, pour les vérifications du test. */
+    var streakState: StreakState = StreakState()
+        private set
+
+    override suspend fun streakState(): StreakState = streakState
+
+    override suspend fun saveStreakState(state: StreakState) {
+        streakState = state
     }
 }

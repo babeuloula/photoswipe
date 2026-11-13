@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.domain.port
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.domain.model.StreakState
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 
@@ -70,4 +71,10 @@ interface SettingsRepository {
 
     /** Enregistre l'invitation à noter l'application. */
     suspend fun saveRatingInvitation(invitation: RatingInvitation)
+
+    /** Série de jours enregistrée (PS-155) ; un état vide tant que l'accueil ne l'a jamais comptée. */
+    suspend fun streakState(): StreakState
+
+    /** Enregistre la série de jours [state]. */
+    suspend fun saveStreakState(state: StreakState)
 }

@@ -24,6 +24,12 @@
     <string name="home_open_progress">Progress</string>
     <string name="progress_title">Progress</string>
     <string name="progress_error">Your statistics could not be loaded.</string>
+    <string name="progress_streak_section">Streak</string>
+    <string name="progress_streak_current">Current streak</string>
+    <string name="progress_streak_none">Sort all the memories of today to start one.</string>
+    <string name="progress_streak_rule">It holds as long as no day is left unsorted. A day without memories does not break it.</string>
+    <string name="progress_streak_best">Best streak</string>
+    <string name="progress_streak_best_none">None yet</string>
     <string name="progress_activity_section">The last %1$d months</string>
     <string name="progress_activity_empty">What you sort will show up here, month by month.</string>
     <string name="progress_activity_sorted">Media sorted</string>

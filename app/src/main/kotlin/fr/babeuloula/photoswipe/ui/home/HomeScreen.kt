@@ -26,6 +26,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -104,12 +106,10 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
-                    IconButton(onClick = { onEvent(HomeEvent.OpenProgress) }) {
-                        Icon(
-                            painterResource(R.drawable.ic_progress),
-                            contentDescription = stringResource(R.string.home_open_progress),
-                        )
-                    }
+                    ProgressButton(
+                        streak = (state as? HomeUiState.Loaded)?.streak ?: 0,
+                        onClick = { onEvent(HomeEvent.OpenProgress) },
+                    )
                     IconButton(onClick = { onEvent(HomeEvent.OpenSettings) }) {
                         Icon(
                             painterResource(R.drawable.ic_settings),
@@ -225,6 +225,41 @@ private fun HomeDays(
         }
     }
 }
+
+/**
+ * Bouton « Progression » de la barre du haut (PS-153). À partir de [MIN_STREAK_SHOWN] jours de
+ * suite, une pastille rappelle la série en cours (PS-155), que TalkBack lit avec le bouton.
+ */
+@Composable
+private fun ProgressButton(
+    streak: Int,
+    onClick: () -> Unit,
+) {
+    val label =
+        if (streak >= MIN_STREAK_SHOWN) {
+            pluralStringResource(R.plurals.home_open_progress_streak, streak, streak)
+        } else {
+            stringResource(R.string.home_open_progress)
+        }
+    IconButton(onClick = onClick, modifier = Modifier.semantics { contentDescription = label }) {
+        BadgedBox(
+            badge = {
+                if (streak >= MIN_STREAK_SHOWN) {
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.clearAndSetSemantics {},
+                    ) { Text(streak.toString()) }
+                }
+            },
+        ) {
+            Icon(painterResource(R.drawable.ic_progress), contentDescription = null)
+        }
+    }
+}
+
+/** Série à partir de laquelle la pastille s'affiche : un seul jour n'est pas encore une série. */
+private const val MIN_STREAK_SHOWN = 2
 
 /** Part de la largeur du volet de liste, en deux volets. */
 private const val LIST_PANE_WEIGHT = 1f

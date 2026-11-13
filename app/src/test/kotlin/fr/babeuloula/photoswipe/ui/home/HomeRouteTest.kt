@@ -27,6 +27,7 @@ import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.MarkRatingAsked
 import fr.babeuloula.photoswipe.domain.usecase.RecordTodaySorted
 import fr.babeuloula.photoswipe.domain.usecase.ReopenDay
+import fr.babeuloula.photoswipe.domain.usecase.UpdateStreak
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import kotlinx.coroutines.runBlocking
@@ -76,7 +77,12 @@ class HomeRouteTest {
                 mediaManagement = { false },
                 reopenDay =
                     ReopenDay(SameDayMatcher(), FakeMediaSource(), repository, FakeDecisionJournal(repository), clock),
-                rating = RatingInvitationActions(RecordTodaySorted(settings, clock), MarkRatingAsked(settings)),
+                sortedDay =
+                    SortedDayActions(
+                        RecordTodaySorted(settings, clock),
+                        MarkRatingAsked(settings),
+                        UpdateStreak(settings, clock),
+                    ),
             )
         composeRule.activity.setContent {
             CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
