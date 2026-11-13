@@ -24,6 +24,7 @@ import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.MarkRatingAsked
 import fr.babeuloula.photoswipe.domain.usecase.RecordTodaySorted
 import fr.babeuloula.photoswipe.domain.usecase.ReopenDay
+import fr.babeuloula.photoswipe.domain.usecase.UpdateStreak
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -277,6 +278,30 @@ class HomeViewModelTest {
         }
 
     @Test
+    fun `counts the streak of days, today sorted included, and saves it`() =
+        runTest {
+            repository.save(aReviewEntry(mediaId = 1, reviewYear = 2026))
+            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+            val state = viewModel.uiState.first { it is HomeUiState.Loaded && it.streak > 0 } as HomeUiState.Loaded
+
+            // Aujourd'hui trié, les six jours précédents sans souvenir : un seul jour de série.
+            assertEquals(1, state.streak)
+            assertEquals(1, settings.streakState.streak.best)
+        }
+
+    @Test
+    fun `has no streak while today is left to sort and nothing else was sorted`() =
+        runTest {
+            val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
+
+            val state = loaded(viewModel) as HomeUiState.Loaded
+
+            assertEquals(0, state.streak)
+        }
+
+    @Test
     fun `does not count today while memories are left to sort`() =
         runTest {
             settings =
@@ -343,7 +368,12 @@ class HomeViewModelTest {
             settings,
             mediaManagement = { mediaManagementGranted },
             reopenDay = ReopenDay(SameDayMatcher(), source, repository, FakeDecisionJournal(repository), clock),
-            rating = RatingInvitationActions(RecordTodaySorted(settings, clock), MarkRatingAsked(settings)),
+            sortedDay =
+                SortedDayActions(
+                    RecordTodaySorted(settings, clock),
+                    MarkRatingAsked(settings),
+                    UpdateStreak(settings, clock),
+                ),
         )
 
     private suspend fun loaded(viewModel: HomeViewModel): HomeUiState =

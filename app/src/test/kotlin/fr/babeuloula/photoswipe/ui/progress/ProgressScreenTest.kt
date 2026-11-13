@@ -14,6 +14,7 @@ import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.ActivityReport
 import fr.babeuloula.photoswipe.domain.model.MonthlyActivity
+import fr.babeuloula.photoswipe.domain.model.Streak
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.ui.deck.fileSizeLabel
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -119,6 +120,30 @@ class ProgressScreenTest {
             .performScrollTo()
             .assertExists()
         composeRule.onNodeWithText("Historique depuis le 4 juin 2026").performScrollTo().assertExists()
+    }
+
+    @Test
+    fun `shows the current and best streaks, and what keeps a streak going`() {
+        show(
+            ProgressUiState.Loaded(
+                UsageStatistics(LocalDate.of(2026, 3, 2)),
+                EMPTY_ACTIVITY,
+                Streak(current = 4, best = 12),
+            ),
+        )
+
+        composeRule.onNodeWithText("4 days in a row", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.progress_streak_rule), substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("12 days in a row").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun `explains in French how to start a streak`() {
+        show(ProgressUiState.Loaded(UsageStatistics(LocalDate.of(2026, 3, 2)), EMPTY_ACTIVITY))
+
+        composeRule.onNodeWithText("Triez tous les souvenirs d'aujourd'hui pour en commencer une.").assertIsDisplayed()
+        composeRule.onNodeWithText("Aucune pour l'instant").assertIsDisplayed()
     }
 
     @Test

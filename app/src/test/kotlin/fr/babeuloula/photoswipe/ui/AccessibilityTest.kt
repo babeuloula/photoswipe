@@ -27,6 +27,7 @@ import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
+import fr.babeuloula.photoswipe.domain.model.Streak
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.crash.CrashReportDialog
@@ -156,6 +157,7 @@ class AccessibilityTest {
                     ProgressUiState.Loaded(
                         UsageStatistics(today, deletedCount = 12, freedBytes = 40_000_000),
                         PREVIEW_ACTIVITY,
+                        Streak(current = 4, best = 9),
                     ),
                 onEvent = {},
             )
@@ -182,6 +184,7 @@ class AccessibilityTest {
                                 )
                             },
                         pendingDeletionCount = 2,
+                        streak = 3,
                     ),
                 onEvent = {},
             )

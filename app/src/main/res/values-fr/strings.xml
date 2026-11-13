@@ -19,6 +19,12 @@
     <string name="home_open_progress">Progression</string>
     <string name="progress_title">Progression</string>
     <string name="progress_error">Impossible de charger vos statistiques.</string>
+    <string name="progress_streak_section">Série</string>
+    <string name="progress_streak_current">Série en cours</string>
+    <string name="progress_streak_none">Triez tous les souvenirs d\'aujourd\'hui pour en commencer une.</string>
+    <string name="progress_streak_rule">Elle tient tant qu\'aucun jour ne reste à trier. Un jour sans souvenir ne la casse pas.</string>
+    <string name="progress_streak_best">Meilleure série</string>
+    <string name="progress_streak_best_none">Aucune pour l\'instant</string>
     <string name="progress_activity_section">Les %1$d derniers mois</string>
     <string name="progress_activity_empty">Ce que vous triez apparaîtra ici, mois par mois.</string>
     <string name="progress_activity_sorted">Médias triés</string>

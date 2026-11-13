@@ -50,6 +50,7 @@ sealed interface HomeUiState {
      * d'Android a déjà été validé, le conseil n'a pas été fermé et l'accès n'est pas donné (ADR 0023).
      * @property showRatingInvitation vrai pour inviter, une seule fois, à noter l'application et à
      * soutenir son développeur, au troisième jour où la pile du jour est entièrement triée (PS-121).
+     * @property streak série de jours en cours (PS-155), rappelée sur le bouton « Progression ».
      */
     data class Loaded(
         val today: ReviewDay,
@@ -57,6 +58,7 @@ sealed interface HomeUiState {
         val pendingDeletionCount: Int = 0,
         val showManageMediaTip: Boolean = false,
         val showRatingInvitation: Boolean = false,
+        val streak: Int = 0,
     ) : HomeUiState {
         /**
          * Vrai si au moins un souvenir existe sur la fenêtre, trié ou non, ou si un jour a été vidé
@@ -176,10 +178,16 @@ class HomeViewModel
         private val settingsRepository: SettingsRepository,
         private val mediaManagement: MediaManagementReader,
         private val reopenDay: ReopenDay,
-        private val rating: RatingInvitationActions,
+        private val sortedDay: SortedDayActions,
     ) : ViewModel() {
         /** Invitation à noter l'application à montrer (PS-121). */
         private val ratingInvitation = MutableStateFlow(false)
+
+        /** Série de jours en cours (PS-155), recomptée à chaque lecture des jours. */
+        private val streak = MutableStateFlow(0)
+
+        /** Derniers jours passés au calcul de la série, pour ne pas le refaire sans changement. */
+        private var streakDays: List<ReviewDay>? = null
 
         /** Dernier jour dont le tri complet a été compté, pour ne le compter qu'une fois par process. */
         private var countedDay: LocalDate? = null
@@ -192,9 +200,15 @@ class HomeViewModel
         val uiState: StateFlow<HomeUiState> =
             reloads
                 .flatMapLatest { showLoading -> loadDays(showLoading) }
-                .onEach { state -> if (state is HomeUiState.Loaded) countTodaySorted(state.today) }
-                .combine(ratingInvitation) { state, invite ->
+                .onEach { state ->
+                    if (state is HomeUiState.Loaded) {
+                        countTodaySorted(state.today)
+                        countStreak(listOf(state.today) + state.previousDays)
+                    }
+                }.combine(ratingInvitation) { state, invite ->
                     if (state is HomeUiState.Loaded) state.copy(showRatingInvitation = invite) else state
+                }.combine(streak) { state, days ->
+                    if (state is HomeUiState.Loaded) state.copy(streak = days) else state
                 }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), HomeUiState.Loading)
 
         /** Navigations à exécuter, chacune livrée une seule fois. */
@@ -310,14 +324,30 @@ class HomeViewModel
             if (today.memoryCount == 0 || today.remainingCount > 0 || countedDay == today.date) return
             countedDay = today.date
             viewModelScope.launch {
-                if (runCatching { rating.recordTodaySorted() }.getOrDefault(false)) ratingInvitation.value = true
+                if (runCatching { sortedDay.recordTodaySorted() }.getOrDefault(false)) ratingInvitation.value = true
+            }
+        }
+
+        /**
+         * Recompte la série de jours (PS-155) quand les jours de la fenêtre ont changé. Un échec de
+         * lecture ou d'écriture des réglages garde la série affichée.
+         */
+        private fun countStreak(days: List<ReviewDay>) {
+            if (days == streakDays) return
+            streakDays = days
+            viewModelScope.launch {
+                runCatching {
+                    sortedDay.updateStreak(
+                        days,
+                    )
+                }.onSuccess { streak.value = it.current }
             }
         }
 
         /** Ferme l'invitation pour de bon, quel que soit le choix. */
         private fun closeRatingInvitation() {
             ratingInvitation.value = false
-            viewModelScope.launch { runCatching { rating.markRatingAsked() } }
+            viewModelScope.launch { runCatching { sortedDay.markRatingAsked() } }
         }
 
         /** Marquages à confirmer : le même nombre que le résumé annoncera (ADR 0011). */

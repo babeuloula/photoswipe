@@ -6,9 +6,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import fr.babeuloula.photoswipe.domain.model.DayStatus
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.domain.model.Streak
+import fr.babeuloula.photoswipe.domain.model.StreakState
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.model.Tutorial
 import kotlinx.coroutines.CoroutineScope
@@ -147,6 +150,31 @@ class DataStoreSettingsRepositoryTest {
             repository.saveManageMediaTip(ManageMediaTip.DISMISSED)
 
             assertEquals(ManageMediaTip.DISMISSED, repository.observeManageMediaTip().first())
+        }
+
+    @Test
+    fun `stores the streak of days, empty by default`() =
+        runTest {
+            val repository = DataStoreSettingsRepository(dataStore())
+            assertEquals(StreakState(), repository.streakState())
+
+            val saved =
+                StreakState(
+                    runStart = LocalDate.of(2026, 11, 1),
+                    settledThrough = LocalDate.of(2026, 11, 6),
+                    recent =
+                        mapOf(
+                            LocalDate.of(2026, 11, 7) to DayStatus.SORTED,
+                            LocalDate.of(2026, 11, 8) to DayStatus.EMPTY,
+                            LocalDate.of(2026, 11, 9) to DayStatus.PENDING,
+                        ),
+                    streak = Streak(current = 8, best = 12),
+                )
+            repository.saveStreakState(saved)
+
+            assertEquals(saved, repository.streakState())
+            repository.saveStreakState(StreakState())
+            assertEquals(StreakState(), repository.streakState())
         }
 
     @Test

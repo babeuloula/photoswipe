@@ -86,6 +86,7 @@ fun ProgressScreen(
                             modifier = Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
+                            StreakSection(state.streak)
                             StatisticsSection(state.statistics)
                             ActivitySection(state.activity)
                         }

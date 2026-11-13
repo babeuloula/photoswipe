@@ -105,4 +105,14 @@
         <item quantity="many">%d d\'années</item>
         <item quantity="other">%d années</item>
     </plurals>
+    <plurals name="progress_streak_days">
+        <item quantity="one">%d jour de suite</item>
+        <item quantity="many">%d de jours de suite</item>
+        <item quantity="other">%d jours de suite</item>
+    </plurals>
+    <plurals name="home_open_progress_streak">
+        <item quantity="one">Progression, %d jour de suite</item>
+        <item quantity="many">Progression, %d de jours de suite</item>
+        <item quantity="other">Progression, %d jours de suite</item>
+    </plurals>
 </resources>

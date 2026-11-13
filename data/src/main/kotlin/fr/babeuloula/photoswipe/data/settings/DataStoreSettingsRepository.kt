@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
+import fr.babeuloula.photoswipe.domain.model.StreakState
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.model.Tutorial
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
@@ -33,7 +34,8 @@ import javax.inject.Inject
  * par son nom ; un nom inconnu retombe sur [ThemeMode.DEFAULT], le thème du téléphone. De même pour
  * le conseil « Gestion des médias » ([ManageMediaTip.DEFAULT]). La version du tutoriel vue vaut
  * [Tutorial.NEVER_SEEN] tant que rien n'est enregistré, l'invitation à noter l'application
- * [RatingInvitation.DEFAULT] (jour trié stocké en jours depuis l'epoch).
+ * [RatingInvitation.DEFAULT] (jour trié stocké en jours depuis l'epoch). La série de jours (PS-155)
+ * est lue et écrite par `StreakPreferences.kt`.
  *
  * @param dataStore magasin de préférences, unique pour son fichier : il est fourni par l'injection
  * de dépendances, jamais créé ici.
@@ -98,6 +100,12 @@ class DataStoreSettingsRepository
                     ?: preferences.remove(RATING_LAST_SORTED_DAY)
                 preferences[RATING_ASKED] = invitation.asked
             }
+        }
+
+        override suspend fun streakState(): StreakState = preferences().first().toStreakState()
+
+        override suspend fun saveStreakState(state: StreakState) {
+            dataStore.edit { preferences -> preferences.putStreakState(state) }
         }
 
         /** Préférences enregistrées ; un fichier illisible se lit comme vide. */

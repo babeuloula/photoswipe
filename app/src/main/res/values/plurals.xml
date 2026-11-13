@@ -94,4 +94,12 @@
         <item quantity="one">%d year</item>
         <item quantity="other">%d years</item>
     </plurals>
+    <plurals name="progress_streak_days">
+        <item quantity="one">%d day in a row</item>
+        <item quantity="other">%d days in a row</item>
+    </plurals>
+    <plurals name="home_open_progress_streak">
+        <item quantity="one">Progress, %d day in a row</item>
+        <item quantity="other">Progress, %d days in a row</item>
+    </plurals>
 </resources>
