@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.ui.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,13 +32,14 @@ import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.ui.common.segmentShape
+import fr.babeuloula.photoswipe.ui.theme.isDark
 
 // Réglage du thème de l'application (SPEC §4.5, §8) : celui du téléphone, clair ou sombre.
 
 /**
  * Section « Apparence » : le thème de l'application, en boutons radio dans la liste (ADR 0025) :
  * « Celui du téléphone », « Clair », « Sombre », appliqué dès qu'on touche un thème ; puis
- * l'interrupteur « Noir pur » (PS-176), qui ne change que le thème sombre, l'interrupteur
+ * l'interrupteur « Noir pur » (PS-176), affiché seulement quand l'app est sombre, l'interrupteur
  * « Animations » (PS-146), à couper sur un téléphone ancien, et « Célébrer la fin d'une pile »
  * (PS-174), désactivé par défaut.
  */
@@ -75,23 +77,29 @@ internal fun AppearanceSection(
             }
         }
         Spacer(Modifier.height(8.dp))
+        // « Noir pur » ne change que le thème sombre : il n'est proposé que lorsque l'app est sombre.
+        val dark = themeMode.isDark(isSystemInDarkTheme())
+        val switches = if (dark) APPEARANCE_SWITCHES else APPEARANCE_SWITCHES - 1
+        val first = switches - (APPEARANCE_SWITCHES - 1)
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            if (dark) {
+                SwitchRow(
+                    shape = segmentShape(0, switches),
+                    title = stringResource(R.string.settings_pure_black),
+                    summary = stringResource(R.string.settings_pure_black_summary),
+                    checked = toggles.pureBlack,
+                    onCheckedChange = { onEvent(SettingsEvent.PureBlackToggled(it)) },
+                )
+            }
             SwitchRow(
-                shape = segmentShape(0, APPEARANCE_SWITCHES),
-                title = stringResource(R.string.settings_pure_black),
-                summary = stringResource(R.string.settings_pure_black_summary),
-                checked = toggles.pureBlack,
-                onCheckedChange = { onEvent(SettingsEvent.PureBlackToggled(it)) },
-            )
-            SwitchRow(
-                shape = segmentShape(1, APPEARANCE_SWITCHES),
+                shape = segmentShape(first, switches),
                 title = stringResource(R.string.settings_animations),
                 summary = stringResource(R.string.settings_animations_summary),
                 checked = toggles.animationsEnabled,
                 onCheckedChange = { onEvent(SettingsEvent.AnimationsToggled(it)) },
             )
             SwitchRow(
-                shape = segmentShape(2, APPEARANCE_SWITCHES),
+                shape = segmentShape(first + 1, switches),
                 title = stringResource(R.string.settings_celebration),
                 summary = stringResource(R.string.settings_celebration_summary),
                 checked = toggles.celebrationEnabled,

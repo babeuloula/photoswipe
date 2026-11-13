@@ -382,6 +382,17 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `offers pure black only when the app is dark`() {
+        show(SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.LIGHT))
+
+        composeRule
+            .onNodeWithText(text(R.string.settings_animations))
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.settings_pure_black)).assertDoesNotExist()
+    }
+
+    @Test
     fun `shows pure black turned on`() {
         show(SettingsUiState(reminder = ReminderSettings.DEFAULT, themeMode = ThemeMode.DARK, pureBlack = true))
 
