@@ -42,6 +42,18 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Liens profonds photoswipe://today, summary, day/AAAA-MM-JJ (PS-171, ADR 0038) : ils
+                 ouvrent seulement un écran, sans rien modifier ni renvoyer. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="photoswipe" />
+            </intent-filter>
+            <!-- Raccourcis de l'appui long sur l'icône : « Trier aujourd'hui » et « Résumé ». -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
 
         <!-- Reprogrammation du rappel d'aujourd'hui, ouverte par l'action de la notification : un

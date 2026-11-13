@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icône du raccourci « Trier aujourd'hui » (PS-171) : le symbole blanc sur le fond ambre de l'icône de l'application. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/launcher_background" />
+    <foreground>
+        <inset
+            android:drawable="@drawable/ic_swipe"
+            android:inset="33%" />
+    </foreground>
+    <monochrome>
+        <inset
+            android:drawable="@drawable/ic_swipe"
+            android:inset="33%" />
+    </monochrome>
+</adaptive-icon>

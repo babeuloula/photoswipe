@@ -21,6 +21,24 @@ Gradle est fourni par le wrapper (`./gradlew`) : rien d'autre à installer.
 
 L'APK seul se construit avec `./gradlew assembleDebug` (dans `app/build/outputs/apk/debug/`). Il s'installe par-dessus la version précédente, sans désinstaller ni perdre les décisions : les builds debug sont signés par la clé partagée `app/debug.keystore` et leur `versionCode` est le nombre de commits Git (PS-110). Depuis Android Studio, ouvrir le dossier du projet puis lancer la configuration `app`.
 
+## Liens profonds et raccourcis
+
+PhotoSwipe s'ouvre sur un écran précis par un lien `photoswipe://`, par exemple depuis une routine d'automatisation (Tasker, Raccourcis) ou `adb` :
+
+| Lien | Écran ouvert |
+|---|---|
+| `photoswipe://today` | La pile du jour ; l'accueil s'il n'y reste rien à trier |
+| `photoswipe://summary` | Le résumé du tri d'aujourd'hui |
+| `photoswipe://day/2026-07-15` | La vue d'ensemble de cette date (format `AAAA-MM-JJ`) ; l'accueil si elle n'a aucun souvenir |
+
+Un lien invalide ouvre l'accueil. Comme un lancement ordinaire, le lien passe d'abord par le tutoriel (premier lancement) et par l'accès aux photos. « Retour » ramène à l'accueil. Un lien ne fait qu'ouvrir un écran : il ne change rien et ne renvoie aucune donnée.
+
+```bash
+adb shell am start -a android.intent.action.VIEW -d "photoswipe://today"
+```
+
+L'appui long sur l'icône propose les raccourcis « Trier aujourd'hui » et « Résumé ». Décision : [ADR 0038](docs/decisions/0038-deep-links-and-shortcuts.md).
+
 ## Lancer les tests
 
 ```bash

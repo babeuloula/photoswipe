@@ -17,6 +17,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import fr.babeuloula.photoswipe.link.LaunchRequest
 import fr.babeuloula.photoswipe.ui.common.LocalNavAnimatedScope
 import fr.babeuloula.photoswipe.ui.common.LocalSharedTransitionScope
 import fr.babeuloula.photoswipe.ui.common.rememberReducedMotion
@@ -25,7 +26,6 @@ import fr.babeuloula.photoswipe.ui.home.HomeNavigation
 import fr.babeuloula.photoswipe.ui.licenses.LicensesScreen
 import fr.babeuloula.photoswipe.ui.settings.SettingsNavigation
 import fr.babeuloula.photoswipe.ui.tutorial.TutorialScreen
-import java.time.LocalDate
 import fr.babeuloula.photoswipe.ui.dayoverview.DayOverviewRoute as DayOverviewDestination
 import fr.babeuloula.photoswipe.ui.deck.DeckRoute as DeckDestination
 import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
@@ -35,10 +35,15 @@ import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
 
 /**
  * Graphe de navigation de l'application (SPEC §5.4), en routes typées : accueil, pile d'un jour,
- * vue d'ensemble d'un jour, résumé, progression, réglages, licences, tutoriel revu depuis les réglages. Le rappel quotidien peut demander d'ouvrir directement une pile
- * ([deckToOpen]), qui s'empile au-dessus de l'accueil. Les écrans s'enchaînent en axe partagé
+ * vue d'ensemble d'un jour, résumé, progression, réglages, licences, tutoriel revu depuis les réglages.
+ * Le rappel quotidien, un lien profond, un raccourci ou la tuile des réglages rapides peuvent
+ * demander un écran au lancement ([launchRequest], ADR 0038) : il s'empile au-dessus de l'accueil. Les écrans s'enchaînent en axe partagé
  * avec zoom ([ScreenTransitions]), et les photos passent d'un écran à l'autre en grandissant
  * (éléments partagés, `SharedTransitionLayout`, PS-141).
+ *
+ * @param launchRequest écran demandé au lancement, `null` sans demande.
+ * @param resolveLaunch traduit cette demande en route (`LaunchRequestResolver`), [HomeRoute] pour l'accueil.
+ * @param onLaunchHandled appelé une fois l'écran demandé ouvert.
  *
  * L'accès aux médias n'est pas une destination : `MediaAccessGate` entoure ce graphe, pour qu'un
  * accès retiré ramène à l'explication quel que soit l'écran (ADR 0014).
@@ -49,10 +54,11 @@ import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
 fun PhotoSwipeNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    deckToOpen: LocalDate? = null,
-    onDeckOpened: () -> Unit = {},
+    launchRequest: LaunchRequest? = null,
+    resolveLaunch: suspend (LaunchRequest) -> Any = { HomeRoute },
+    onLaunchHandled: () -> Unit = {},
 ) {
-    OpenRequestedDeck(navController, deckToOpen, onDeckOpened)
+    OpenLaunchRequest(navController, launchRequest, resolveLaunch, onLaunchHandled)
     val transitions = rememberScreenTransitions()
     SharedTransitionLayout(modifier = modifier) {
         CompositionLocalProvider(LocalSharedTransitionScope provides this) {
@@ -118,17 +124,29 @@ private fun PhotoSwipeGraph(
 /** Clé du nombre de médias envoyés à la corbeille, transmis du résumé à l'accueil. */
 private const val TRASHED_COUNT_KEY = "trashed_count"
 
-/** Notification du rappel : la pile [deckToOpen] s'ouvre au-dessus de l'accueil, que « Retour » retrouve. */
+/**
+ * Écran demandé au lancement : il s'ouvre au-dessus de l'accueil, que « Retour » retrouve, à la
+ * place de la navigation en cours ; l'accueil seul pour un lien invalide ou un jour sans souvenir.
+ */
 @Composable
-private fun OpenRequestedDeck(
+private fun OpenLaunchRequest(
     navController: NavHostController,
-    deckToOpen: LocalDate?,
-    onDeckOpened: () -> Unit,
+    launchRequest: LaunchRequest?,
+    resolveLaunch: suspend (LaunchRequest) -> Any,
+    onLaunchHandled: () -> Unit,
 ) {
-    LaunchedEffect(deckToOpen) {
-        if (deckToOpen != null) {
-            navController.navigate(DeckRoute.of(deckToOpen)) { launchSingleTop = true }
-            onDeckOpened()
+    LaunchedEffect(launchRequest) {
+        if (launchRequest != null) {
+            val route = resolveLaunch(launchRequest)
+            if (route == HomeRoute) {
+                navController.popBackStack(HomeRoute, inclusive = false)
+            } else {
+                navController.navigate(route) {
+                    popUpTo<HomeRoute> { inclusive = false }
+                    launchSingleTop = true
+                }
+            }
+            onLaunchHandled()
         }
     }
 }

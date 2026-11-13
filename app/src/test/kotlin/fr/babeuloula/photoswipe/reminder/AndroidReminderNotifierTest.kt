@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Intent
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.link.LaunchRequest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -28,8 +29,8 @@ class AndroidReminderNotifierTest {
 
     @Test
     fun `reads no deck to open from an ordinary launch`() {
-        assertNull(MainActivity.deckDayOf(Intent(application, MainActivity::class.java)))
-        assertNull(MainActivity.deckDayOf(null))
+        assertNull(MainActivity.launchRequestOf(Intent(application, MainActivity::class.java)))
+        assertNull(MainActivity.launchRequestOf(null))
     }
 
     private val day = LocalDate.of(2026, 11, 6)
@@ -43,7 +44,7 @@ class AndroidReminderNotifierTest {
         assertEquals("3 memories to sort today", notification.extras.getString(Notification.EXTRA_TITLE))
         val tap = shadowOf(notification.contentIntent).savedIntent
         assertEquals(MainActivity::class.java.name, tap.component?.className)
-        assertEquals(day, MainActivity.deckDayOf(tap))
+        assertEquals(LaunchRequest.Deck(day), MainActivity.launchRequestOf(tap))
         assertTrue(notification.flags and Notification.FLAG_AUTO_CANCEL != 0)
         assertEquals("Daily reminder", manager.getNotificationChannel(AndroidReminderNotifier.CHANNEL_ID).name)
     }

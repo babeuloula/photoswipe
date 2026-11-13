@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Raccourcis statiques de l'appui long sur l'icône (PS-171, ADR 0038) : ils ouvrent les liens
+    profonds de DeepLinks dans MainActivity, sans compteur ni donnée.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/shortcut_sort_today"
+        android:shortcutId="sort_today"
+        android:shortcutLongLabel="@string/shortcut_sort_today_long"
+        android:shortcutShortLabel="@string/shortcut_sort_today_short">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="photoswipe://today"
+            android:targetClass="fr.babeuloula.photoswipe.MainActivity"
+            android:targetPackage="fr.babeuloula.photoswipe" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/shortcut_summary"
+        android:shortcutId="summary"
+        android:shortcutLongLabel="@string/shortcut_summary"
+        android:shortcutShortLabel="@string/shortcut_summary">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="photoswipe://summary"
+            android:targetClass="fr.babeuloula.photoswipe.MainActivity"
+            android:targetPackage="fr.babeuloula.photoswipe" />
+    </shortcut>
+</shortcuts>
