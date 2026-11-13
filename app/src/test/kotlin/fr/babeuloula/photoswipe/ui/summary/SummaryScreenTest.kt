@@ -93,8 +93,11 @@ class SummaryScreenTest {
 
         composeRule.onNodeWithText(text(R.string.summary_freed_today)).assertIsDisplayed()
         composeRule.onNodeWithText("25 MB").assertIsDisplayed()
-        composeRule.onNodeWithText("10 items moved to the trash today").assertIsDisplayed()
-        composeRule.onNodeWithText("10 items deleted (25 MB)").performScrollTo().assertIsDisplayed()
+        composeRule
+            .onNodeWithText(
+                "10 items, their space freed in 30 days or sooner from the trash",
+            ).assertIsDisplayed()
+        composeRule.onNodeWithText("10 items sent to the trash (25 MB)").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.summary_freed_space)).assertDoesNotExist()
     }
 
@@ -103,8 +106,13 @@ class SummaryScreenTest {
     fun `keeps the estimate first and lists what was already deleted today in French`() {
         show(SummaryUiState.Loaded(summary.copy(trashedTodayCount = 1, trashedTodayBytes = 2_400_000)))
 
-        composeRule.onNodeWithText("Espace libéré estimé").assertIsDisplayed()
-        composeRule.onNodeWithText("1 média supprimé (", substring = true).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Espace à libérer").assertIsDisplayed()
+        composeRule
+            .onNodeWithText(
+                "1 média mis à la corbeille (",
+                substring = true,
+            ).performScrollTo()
+            .assertIsDisplayed()
     }
 
     @Test
@@ -156,7 +164,7 @@ class SummaryScreenTest {
         composeRule.onNodeWithText("2 médias marqués pour suppression").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("0 favori").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Trié aujourd'hui").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Espace libéré estimé").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Espace à libérer").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -164,7 +172,7 @@ class SummaryScreenTest {
         val previews = (1L..5L).map { aMediaItem(id = it) }
         show(SummaryUiState.Loaded(summary.copy(markedForDeletionCount = 12), markedPreviews = previews))
 
-        composeRule.onNodeWithText("If you confirm the 12 marked items").assertIsDisplayed()
+        composeRule.onNodeWithText("If you confirm the 12 marked items, once they leave the trash").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("and 7 more").performScrollTo().assertIsDisplayed()
     }
 
@@ -302,5 +310,14 @@ class SummaryScreenTest {
         composeRule.onNodeWithText(composeRule.activity.getString(android.R.string.cancel)).performClick()
 
         assertEquals(listOf(SummaryEvent.TrashConfirmationAccepted, SummaryEvent.TrashConfirmationDismissed), events)
+    }
+
+    @Test
+    fun `opens the trash of PhotoSwipe`() {
+        show(SummaryUiState.Loaded(summary))
+
+        composeRule.onNodeWithText(text(R.string.summary_open_trash)).performScrollTo().performClick()
+
+        assertEquals(listOf<SummaryEvent>(SummaryEvent.OpenTrash), events)
     }
 }

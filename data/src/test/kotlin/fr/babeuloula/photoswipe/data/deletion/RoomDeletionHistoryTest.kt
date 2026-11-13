@@ -4,6 +4,7 @@ import androidx.room.Room
 import fr.babeuloula.photoswipe.data.database.PhotoSwipeDatabase
 import fr.babeuloula.photoswipe.domain.fixtures.aConfirmedDeletion
 import fr.babeuloula.photoswipe.domain.model.ConfirmedDeletion
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -62,5 +63,21 @@ class RoomDeletionHistoryTest {
                     .map(ConfirmedDeletion::mediaId)
                     .map { it.value },
             )
+        }
+
+    @Test
+    fun `forgets every deletion of the restored media only`() =
+        runTest {
+            history.record(
+                listOf(
+                    aConfirmedDeletion(mediaId = 1),
+                    aConfirmedDeletion(mediaId = 2),
+                    aConfirmedDeletion(mediaId = 1),
+                ),
+            )
+
+            history.forget(setOf(MediaId(1), MediaId(9)))
+
+            assertEquals(listOf(MediaId(2)), history.observe().first().map { it.mediaId })
         }
 }

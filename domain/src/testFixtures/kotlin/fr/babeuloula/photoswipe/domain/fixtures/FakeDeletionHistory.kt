@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
 import fr.babeuloula.photoswipe.domain.model.ConfirmedDeletion
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.port.DeletionHistory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,5 +28,9 @@ class FakeDeletionHistory(
 
     override suspend fun forgetConfirmedBefore(instant: Instant) {
         state.value = state.value.filterNot { it.confirmedAt.isBefore(instant) }
+    }
+
+    override suspend fun forget(mediaIds: Set<MediaId>) {
+        state.value = state.value.filterNot { it.mediaId in mediaIds }
     }
 }

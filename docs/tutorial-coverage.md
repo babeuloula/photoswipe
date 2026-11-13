@@ -17,6 +17,7 @@ Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été inc
 | Résumé de fin de tri, espace libéré estimé | PS-53, PS-88 | Page 5 « Rien n'est définitif » (animation) |
 | Confirmation groupée, corbeille du système restaurable environ 30 jours | PS-54, PS-55 | Page 5 (animation du dialogue et texte) ; aucune promesse sur Google Photos (SPEC §16.7) |
 | Revoir les médias marqués en grand depuis le résumé | PS-112 | Page 5 (texte) |
+| Page « Corbeille » : restaurer ou supprimer définitivement ce que PhotoSwipe a supprimé | PS-168 | Page 5 (texte : restaurable environ 30 jours) ; la page elle-même n'est pas montrée, elle s'ouvre depuis le résumé |
 | Essai sans risque des gestes | PS-80 | Page 6 « Essayez » (cartes d'exemple) |
 | Accès aux photos, accès partiel d'Android 14+ | epic 4 | Hors tutoriel : écrans d'accès, juste après lui |
 | Lecture des vidéos (muette au départ, son au ▶) | epic 6, PS-105 | Non détaillé : découvert sur la carte même, sans risque |

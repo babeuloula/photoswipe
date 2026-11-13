@@ -24,13 +24,17 @@ class FakeMediaActionRequestFactory(
 
     override fun unfavoriteRequests(media: List<MediaItem>): List<MediaActionRequest> = requests(Kind.UNFAVORITE, media)
 
+    override fun restoreRequests(media: List<MediaItem>): List<MediaActionRequest> = requests(Kind.RESTORE, media)
+
+    override fun deleteRequests(media: List<MediaItem>): List<MediaActionRequest> = requests(Kind.DELETE, media)
+
     private fun requests(
         kind: Kind,
         media: List<MediaItem>,
     ): List<MediaActionRequest> =
         media.chunked(batchSize) { batch -> FakeMediaActionRequest(kind, batch.mapTo(LinkedHashSet()) { it.id }) }
 
-    /** Nature d'une demande : corbeille ou favori. */
+    /** Nature d'une demande : corbeille, favori, restauration ou suppression définitive. */
     enum class Kind {
         /** Mise à la corbeille. */
         TRASH,
@@ -40,6 +44,12 @@ class FakeMediaActionRequestFactory(
 
         /** Retrait des favoris. */
         UNFAVORITE,
+
+        /** Sortie de la corbeille (PS-168). */
+        RESTORE,
+
+        /** Suppression définitive (PS-168). */
+        DELETE,
     }
 
     /**

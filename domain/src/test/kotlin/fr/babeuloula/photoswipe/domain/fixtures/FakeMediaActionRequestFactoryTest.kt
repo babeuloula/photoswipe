@@ -31,6 +31,20 @@ class FakeMediaActionRequestFactoryTest {
     }
 
     @Test
+    fun `builds restore and permanent deletion requests the same way`() {
+        val media = listOf(aMediaItem(id = 1))
+
+        assertEquals(
+            listOf(FakeMediaActionRequest(Kind.RESTORE, ids(1))),
+            FakeMediaActionRequestFactory().restoreRequests(media),
+        )
+        assertEquals(
+            listOf(FakeMediaActionRequest(Kind.DELETE, ids(1))),
+            FakeMediaActionRequestFactory().deleteRequests(media),
+        )
+    }
+
+    @Test
     fun `returns no request for no media`() {
         assertEquals(emptyList<FakeMediaActionRequest>(), FakeMediaActionRequestFactory().trashRequests(emptyList()))
     }

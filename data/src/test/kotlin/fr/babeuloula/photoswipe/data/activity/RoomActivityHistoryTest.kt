@@ -54,4 +54,17 @@ class RoomActivityHistoryTest {
             assertEquals(listOf(july15), history.since(july15).map { it.day })
             assertEquals(july14, history.firstDay())
         }
+
+    @Test
+    fun `removes restored media from the day they were confirmed, never below zero`() =
+        runTest {
+            history.recordTrashed(july15, count = 3, bytes = 3_000)
+
+            history.removeTrashed(july15, count = 1, bytes = 1_000)
+            assertEquals(listOf(DailyActivity(july15, trashedCount = 2, freedBytes = 2_000)), history.since(july15))
+
+            history.removeTrashed(july15, count = 5, bytes = 9_000)
+            history.removeTrashed(july14, count = 1, bytes = 10)
+            assertEquals(listOf(DailyActivity(july15)), history.since(july14))
+        }
 }

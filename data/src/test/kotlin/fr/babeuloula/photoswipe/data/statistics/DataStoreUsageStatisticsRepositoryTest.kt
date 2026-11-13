@@ -62,6 +62,19 @@ class DataStoreUsageStatisticsRepositoryTest {
             assertEquals(UsageStatistics(LocalDate.of(2026, 3, 2)), repository.statistics())
         }
 
+    @Test
+    fun `removes a restored deletion without going below zero`() =
+        runTest {
+            val repository = repository()
+            repository.recordDeletion(3, 3_000)
+
+            repository.removeDeletion(1, 1_000)
+            assertEquals(UsageStatistics(LocalDate.of(2026, 3, 2), 2, 2_000), repository.statistics())
+
+            repository.removeDeletion(5, 9_000)
+            assertEquals(UsageStatistics(LocalDate.of(2026, 3, 2)), repository.statistics())
+        }
+
     private fun TestScope.dataStore(): DataStore<Preferences> =
         PreferenceDataStoreFactory.create(
             scope = backgroundScope,

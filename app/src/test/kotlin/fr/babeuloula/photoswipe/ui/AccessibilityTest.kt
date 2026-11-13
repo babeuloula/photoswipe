@@ -38,6 +38,8 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDecision
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.model.Streak
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
+import fr.babeuloula.photoswipe.domain.model.Trash
+import fr.babeuloula.photoswipe.domain.model.TrashItem
 import fr.babeuloula.photoswipe.domain.model.UsageStatistics
 import fr.babeuloula.photoswipe.domain.model.YearMemories
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
@@ -67,6 +69,8 @@ import fr.babeuloula.photoswipe.ui.settings.SettingsUiState
 import fr.babeuloula.photoswipe.ui.summary.SummaryScreen
 import fr.babeuloula.photoswipe.ui.summary.SummaryUiState
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
+import fr.babeuloula.photoswipe.ui.trash.TrashScreen
+import fr.babeuloula.photoswipe.ui.trash.TrashUiState
 import fr.babeuloula.photoswipe.ui.tutorial.PracticePage
 import fr.babeuloula.photoswipe.ui.tutorial.TutorialScreen
 import fr.babeuloula.photoswipe.ui.whatsnew.WHATS_NEW
@@ -80,6 +84,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 
 /**
@@ -219,6 +224,19 @@ class AccessibilityTest {
         }
     }
 
+    /** Corbeille (PS-168) : avec des médias, vide, et la confirmation de suppression définitive. */
+    private fun trashScreens() {
+        val item =
+            TrashItem(
+                aMediaItem(id = 1),
+                Instant.parse("2026-11-13T10:00:00Z"),
+                Instant.parse("2026-12-13T10:00:00Z"),
+            )
+        check { TrashScreen(state = TrashUiState.Loaded(Trash(listOf(item))), onEvent = {}) }
+        check { TrashScreen(state = TrashUiState.Loaded(Trash()), onEvent = {}) }
+        check { TrashScreen(state = TrashUiState.Loaded(Trash(listOf(item)), confirmingDeletion = item), onEvent = {}) }
+    }
+
     private fun everyScreen() {
         check { TutorialScreen(onDone = {}) }
         check { PracticePage() }
@@ -274,6 +292,7 @@ class AccessibilityTest {
                 onEvent = {},
             )
         }
+        trashScreens()
         settingsScreen()
         progressScreen()
         smallScreens()

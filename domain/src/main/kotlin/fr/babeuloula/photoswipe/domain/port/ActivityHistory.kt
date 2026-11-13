@@ -19,6 +19,16 @@ interface ActivityHistory {
         bytes: Long,
     )
 
+    /**
+     * Retire du jour [day] [count] médias pesant [bytes] octets, confirmés ce jour-là puis restaurés
+     * depuis la corbeille (PS-168). Les totaux ne descendent jamais sous zéro.
+     */
+    suspend fun removeTrashed(
+        day: LocalDate,
+        count: Int,
+        bytes: Long,
+    )
+
     /** Jours enregistrés depuis [day] compris, du plus ancien au plus récent ; les jours sans tri sont absents. */
     suspend fun since(day: LocalDate): List<DailyActivity>
 

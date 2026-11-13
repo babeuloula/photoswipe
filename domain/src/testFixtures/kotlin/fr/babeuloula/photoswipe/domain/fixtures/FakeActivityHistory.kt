@@ -27,6 +27,19 @@ class FakeActivityHistory(
             current.copy(trashedCount = current.trashedCount + count, freedBytes = current.freedBytes + bytes)
     }
 
+    override suspend fun removeTrashed(
+        day: LocalDate,
+        count: Int,
+        bytes: Long,
+    ) {
+        val current = byDay[day] ?: return
+        byDay[day] =
+            current.copy(
+                trashedCount = (current.trashedCount - count).coerceAtLeast(0),
+                freedBytes = (current.freedBytes - bytes).coerceAtLeast(0),
+            )
+    }
+
     override suspend fun since(day: LocalDate): List<DailyActivity> = byDay.tailMap(day).values.toList()
 
     override suspend fun firstDay(): LocalDate? = if (byDay.isEmpty()) null else byDay.firstKey()

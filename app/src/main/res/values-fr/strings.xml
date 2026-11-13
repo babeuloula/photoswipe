@@ -116,7 +116,7 @@
     <string name="deck_open_with_summary">Le voir ou le retoucher dans une autre application</string>
     <string name="deck_open_with_failed">Ce média ne peut pas être ouvert dans une autre application.</string>
     <string name="summary_title">Résumé</string>
-    <string name="summary_freed_space">Espace libéré estimé</string>
+    <string name="summary_freed_space">Espace à libérer</string>
     <string name="summary_nothing_deleted_yet">Rien n\'est encore supprimé : vos choix sont enregistrés et attendent votre confirmation.</string>
     <string name="summary_back_home">Retour à l\'accueil</string>
     <string name="summary_later">Plus tard</string>
@@ -266,7 +266,7 @@
     <string name="crash_report_send">Voir et envoyer</string>
     <string name="crash_report_ignore">Ignorer</string>
     <!-- Résumé quand tout est confirmé : place libérée aujourd'hui (ADR 0034). -->
-    <string name="summary_freed_today">Espace libéré aujourd\'hui</string>
+    <string name="summary_freed_today">Envoyé à la corbeille aujourd\'hui</string>
     <!-- Pile : place de la carte parmi les souvenirs de son année (PS-138). -->
     <string name="deck_year_progress">%1$d · souvenir %2$d sur %3$d</string>
     <string name="deck_year_single">%1$d · seul souvenir de cette année</string>
@@ -341,4 +341,22 @@
     <string name="widget_settings_show_photo">Montrer une photo</string>
     <string name="widget_settings_show_photo_summary">À couper si d\'autres voient votre écran d\'accueil : le widget n\'affiche alors que la date et le nombre</string>
     <string name="widget_settings_done">Terminé</string>
+    <!-- Page « Corbeille » (PS-168). -->
+    <string name="trash_title">Corbeille</string>
+    <string name="trash_occupied">Encore occupé dans la corbeille</string>
+    <string name="trash_notice">Seul ce que vous avez supprimé avec PhotoSwipe apparaît ici. Android le garde 30 jours dans la corbeille du téléphone, puis le supprime définitivement et rend la place.</string>
+    <string name="trash_empty">Rien de ce que PhotoSwipe a supprimé n\'est dans la corbeille.</string>
+    <string name="trash_error">La corbeille n\'a pas pu être lue.</string>
+    <string name="trash_photo">Photo</string>
+    <string name="trash_video">Vidéo</string>
+    <string name="trash_purge_on">Supprimé définitivement le %1$s</string>
+    <string name="trash_restore">Restaurer</string>
+    <string name="trash_delete_forever">Supprimer définitivement</string>
+    <string name="trash_delete_confirm_title">Supprimer définitivement ?</string>
+    <string name="trash_delete_confirm_text">Il est supprimé tout de suite et ne pourra plus être restauré.</string>
+    <string name="trash_restored">Restauré : il est de nouveau dans votre galerie, parmi les souvenirs à trier.</string>
+    <string name="trash_deleted_forever">Supprimé définitivement : sa place est rendue.</string>
+    <string name="trash_nothing_changed">Rien n\'a changé : il est toujours dans la corbeille.</string>
+    <string name="summary_open_trash">Corbeille</string>
+    <string name="summary_open_trash_detail">Restaurer ou supprimer définitivement ce que PhotoSwipe a supprimé</string>
 </resources>

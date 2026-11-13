@@ -125,7 +125,7 @@
     <string name="deck_open_with_failed">This media can\'t be opened in another app.</string>
     <string name="summary_title">Summary</string>
     <!-- Résumé avant confirmation (SPEC §3.5). -->
-    <string name="summary_freed_space">Estimated space freed</string>
+    <string name="summary_freed_space">Space to free up</string>
     <string name="summary_nothing_deleted_yet">Nothing has been deleted yet: your decisions are saved and wait for your confirmation.</string>
     <string name="summary_back_home">Back to home</string>
     <string name="summary_later">Later</string>
@@ -277,7 +277,7 @@
     <string name="crash_report_send">View and send</string>
     <string name="crash_report_ignore">Ignore</string>
     <!-- Résumé quand tout est confirmé : place libérée aujourd'hui (ADR 0034). -->
-    <string name="summary_freed_today">Space freed today</string>
+    <string name="summary_freed_today">Sent to the trash today</string>
     <!-- Pile : place de la carte parmi les souvenirs de son année (PS-138). -->
     <string name="deck_year_progress">%1$d · memory %2$d of %3$d</string>
     <string name="deck_year_single">%1$d · the only memory from that year</string>
@@ -352,4 +352,22 @@
     <string name="widget_settings_show_photo">Show a photo</string>
     <string name="widget_settings_show_photo_summary">Turn it off if others can see your home screen: the widget then only shows the date and the count</string>
     <string name="widget_settings_done">Done</string>
+    <!-- Page « Corbeille » (PS-168). -->
+    <string name="trash_title">Trash</string>
+    <string name="trash_occupied">Still taking up space</string>
+    <string name="trash_notice">Only what you deleted with PhotoSwipe shows here. Android keeps it in your phone\'s trash for 30 days, then deletes it for good and frees the space.</string>
+    <string name="trash_empty">Nothing deleted with PhotoSwipe is in the trash.</string>
+    <string name="trash_error">The trash could not be read.</string>
+    <string name="trash_photo">Photo</string>
+    <string name="trash_video">Video</string>
+    <string name="trash_purge_on">Deleted for good on %1$s</string>
+    <string name="trash_restore">Restore</string>
+    <string name="trash_delete_forever">Delete for good</string>
+    <string name="trash_delete_confirm_title">Delete for good?</string>
+    <string name="trash_delete_confirm_text">It is deleted right away and can no longer be restored.</string>
+    <string name="trash_restored">Restored: it is back in your gallery, among the memories to sort.</string>
+    <string name="trash_deleted_forever">Deleted for good: its space is freed.</string>
+    <string name="trash_nothing_changed">Nothing changed: it is still in the trash.</string>
+    <string name="summary_open_trash">Trash</string>
+    <string name="summary_open_trash_detail">Restore or delete for good what PhotoSwipe deleted</string>
 </resources>

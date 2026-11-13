@@ -32,10 +32,11 @@ import fr.babeuloula.photoswipe.ui.home.HomeRoute as HomeDestination
 import fr.babeuloula.photoswipe.ui.progress.ProgressRoute as ProgressDestination
 import fr.babeuloula.photoswipe.ui.settings.SettingsRoute as SettingsDestination
 import fr.babeuloula.photoswipe.ui.summary.SummaryRoute as SummaryDestination
+import fr.babeuloula.photoswipe.ui.trash.TrashRoute as TrashDestination
 
 /**
  * Graphe de navigation de l'application (SPEC §5.4), en routes typées : accueil, pile d'un jour,
- * vue d'ensemble d'un jour, résumé, progression, réglages, licences, tutoriel revu depuis les réglages.
+ * vue d'ensemble d'un jour, résumé, corbeille, progression, réglages, licences, tutoriel revu depuis les réglages.
  * Le rappel quotidien, un lien profond, un raccourci ou la tuile des réglages rapides peuvent
  * demander un écran au lancement ([launchRequest], ADR 0038) : il s'empile au-dessus de l'accueil. Les écrans s'enchaînent en axe partagé
  * avec zoom ([ScreenTransitions]), et les photos passent d'un écran à l'autre en grandissant
@@ -115,7 +116,11 @@ private fun PhotoSwipeGraph(
                 },
                 onBack = navController::popBackStack,
                 onOpenMarkedDeck = { first -> navController.navigate(DeckRoute.marked(first)) },
+                onOpenTrash = { navController.navigate(TrashRoute) },
             )
+        }
+        composable<TrashRoute> {
+            TrashDestination(onBack = navController::popBackStack)
         }
         settingsDestinations(navController)
     }

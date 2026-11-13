@@ -183,6 +183,7 @@ private fun SummaryContent(
                 }
                 NothingDeletedYet()
             }
+            TrashLink(onOpen = { onEvent(SummaryEvent.OpenTrash) })
         }
         SummaryActions(
             nothingMarked = summary.markedForDeletionCount == 0,

@@ -27,15 +27,24 @@ class MediaStoreActionRequestFactoryTest {
     /** Valeur demandée pour chaque lot de favoris : vrai pour un ajout, faux pour un retrait. */
     private val favoriteValues = mutableListOf<Boolean>()
 
+    /** Valeur demandée pour chaque lot de corbeille : vrai pour un envoi, faux pour une restauration. */
+    private val trashValues = mutableListOf<Boolean>()
+    private val deleteBatches = mutableListOf<List<Uri>>()
+
     private fun factory(batchSize: Int = MediaStoreActionRequestFactory.BATCH_SIZE) =
         MediaStoreActionRequestFactory(
-            createTrash = {
-                trashBatches += it
+            createTrash = { uris, trashed ->
+                trashBatches += uris
+                trashValues += trashed
                 intentSender
             },
             createFavorite = { uris, favorite ->
                 favoriteBatches += uris
                 favoriteValues += favorite
+                intentSender
+            },
+            createDelete = {
+                deleteBatches += it
                 intentSender
             },
             batchSize = batchSize,
@@ -49,6 +58,7 @@ class MediaStoreActionRequestFactoryTest {
 
         assertEquals(listOf(500, 500, 200), requests.map { it.mediaIds.size })
         assertEquals(listOf(500, 500, 200), trashBatches.map { it.size })
+        assertEquals(listOf(true, true, true), trashValues)
         assertTrue(favoriteBatches.isEmpty())
     }
 
@@ -88,5 +98,16 @@ class MediaStoreActionRequestFactoryTest {
     fun `asks nothing for no media`() {
         assertTrue(factory().trashRequests(emptyList()).isEmpty())
         assertTrue(trashBatches.isEmpty())
+    }
+
+    @Test
+    fun `restores from the trash and deletes for good, in batches too`() {
+        val restore = factory().restoreRequests(media)
+        val delete = factory().deleteRequests(media.take(2))
+
+        assertEquals(listOf(500, 500, 200), restore.map { it.mediaIds.size })
+        assertEquals(listOf(false, false, false), trashValues)
+        assertEquals(setOf(MediaId(1), MediaId(2)), delete.single().mediaIds)
+        assertEquals(media.take(2).map { Uri.parse(it.uri) }, deleteBatches.single())
     }
 }

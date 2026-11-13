@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.summary
 
 import android.app.Activity
+import android.content.res.Resources
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -34,6 +35,7 @@ fun SummaryRoute(
     onBack: () -> Unit,
     onOpenMarkedDeck: (first: MediaId?) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenTrash: () -> Unit = {},
     viewModel: SummaryViewModel = hiltViewModel(),
 ) {
     // De retour de la pile des marqués (PS-112), le résumé relit les marquages.
@@ -61,6 +63,10 @@ fun SummaryRoute(
                     onOpenMarkedDeck(effect.first)
                 }
 
+                SummaryEffect.OpenTrash -> {
+                    onOpenTrash()
+                }
+
                 is SummaryEffect.LaunchSystemRequest -> {
                     systemDialog.launch(IntentSenderRequest.Builder(effect.intentSender).build())
                 }
@@ -71,13 +77,7 @@ fun SummaryRoute(
                 }
 
                 is SummaryEffect.NothingApplied -> {
-                    val message =
-                        listOfNotNull(
-                            resources.getString(R.string.summary_nothing_applied),
-                            effect.stillMarkedCount.takeIf { it > 0 }?.let {
-                                resources.getQuantityString(R.plurals.summary_still_marked, it, it)
-                            },
-                        ).joinToString(" ")
+                    val message = nothingAppliedMessage(resources, effect.stillMarkedCount)
                     val retry = resources.getString(R.string.summary_retry)
                     scope.launch {
                         val result =
@@ -99,3 +99,13 @@ fun SummaryRoute(
         snackbarHostState = snackbarHostState,
     )
 }
+
+/** « Rien n'a changé… », suivi du nombre de médias toujours marqués s'il y en a. */
+private fun nothingAppliedMessage(
+    resources: Resources,
+    stillMarkedCount: Int,
+): String =
+    listOfNotNull(
+        resources.getString(R.string.summary_nothing_applied),
+        stillMarkedCount.takeIf { it > 0 }?.let { resources.getQuantityString(R.plurals.summary_still_marked, it, it) },
+    ).joinToString(" ")

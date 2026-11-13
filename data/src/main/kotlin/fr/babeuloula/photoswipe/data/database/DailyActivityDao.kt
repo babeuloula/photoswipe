@@ -21,6 +21,20 @@ abstract class DailyActivityDao {
         increaseTrashed(day, count, bytes)
     }
 
+    /**
+     * Retire du jour [day] [count] médias pesant [bytes] octets, restaurés depuis la corbeille
+     * (PS-168), sans descendre sous zéro ; un jour absent reste absent.
+     */
+    @Query(
+        "UPDATE daily_activity SET trashed_count = MAX(0, trashed_count - :count), " +
+            "freed_bytes = MAX(0, freed_bytes - :bytes) WHERE day = :day",
+    )
+    abstract suspend fun removeTrashed(
+        day: Long,
+        count: Int,
+        bytes: Long,
+    )
+
     /** Jours enregistrés depuis [day] compris, du plus ancien au plus récent. */
     @Query("SELECT * FROM daily_activity WHERE day >= :day ORDER BY day")
     abstract suspend fun since(day: Long): List<DailyActivityEntity>

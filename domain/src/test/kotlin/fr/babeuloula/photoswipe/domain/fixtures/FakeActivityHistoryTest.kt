@@ -46,4 +46,21 @@ class FakeActivityHistoryTest {
             assertEquals(listOf(july15), history.since(july15).map { it.day })
             assertEquals(july14, history.firstDay())
         }
+
+    @Test
+    fun `removes restored media from the day they were confirmed, never below zero`() =
+        runTest {
+            val history = FakeActivityHistory(listOf(DailyActivity(july15, keptCount = 4)))
+            history.recordTrashed(july15, count = 3, bytes = 3_000)
+
+            history.removeTrashed(july15, count = 1, bytes = 1_000)
+            assertEquals(
+                listOf(DailyActivity(july15, keptCount = 4, trashedCount = 2, freedBytes = 2_000)),
+                history.days,
+            )
+
+            history.removeTrashed(july15, count = 5, bytes = 9_000)
+            history.removeTrashed(july14, count = 1, bytes = 10)
+            assertEquals(listOf(DailyActivity(july15, keptCount = 4)), history.days)
+        }
 }

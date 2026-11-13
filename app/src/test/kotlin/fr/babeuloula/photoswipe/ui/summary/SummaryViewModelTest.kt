@@ -499,4 +499,15 @@ class SummaryViewModelTest {
 
             assertEquals(ManageMediaTip.NOT_OFFERED, settings.manageMediaTip)
         }
+
+    @Test
+    fun `opens the trash`() =
+        runTest {
+            val viewModel = summaryViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SummaryEvent.OpenTrash)
+
+            assertEquals(listOf<SummaryEffect>(SummaryEffect.OpenTrash), effects)
+        }
 }

@@ -68,6 +68,16 @@ class DataStoreUsageStatisticsRepository(
         }
     }
 
+    override suspend fun removeDeletion(
+        count: Int,
+        bytes: Long,
+    ) {
+        dataStore.edit { preferences ->
+            preferences[DELETED_COUNT] = ((preferences[DELETED_COUNT] ?: 0) - count).coerceAtLeast(0)
+            preferences[FREED_BYTES] = ((preferences[FREED_BYTES] ?: 0L) - bytes).coerceAtLeast(0)
+        }
+    }
+
     override suspend fun clear() {
         dataStore.edit { preferences ->
             preferences.remove(DELETED_COUNT)

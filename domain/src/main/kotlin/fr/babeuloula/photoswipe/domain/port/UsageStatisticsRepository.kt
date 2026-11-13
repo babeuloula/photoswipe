@@ -19,6 +19,12 @@ interface UsageStatisticsRepository {
         bytes: Long,
     )
 
+    /** Retire une suppression de [count] médias pesant [bytes] octets, restaurés depuis la corbeille (PS-168). */
+    suspend fun removeDeletion(
+        count: Int,
+        bytes: Long,
+    )
+
     /** Remet les totaux à zéro (outils développeur, avec la remise à zéro des décisions). */
     suspend fun clear()
 }

@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
 import fr.babeuloula.photoswipe.domain.model.ConfirmedDeletion
+import fr.babeuloula.photoswipe.domain.model.MediaId
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -34,6 +35,22 @@ class FakeDeletionHistoryTest {
             )
 
             history.forgetConfirmedBefore(limit)
+
+            assertEquals(listOf(2L), history.observe().first().map { it.mediaId.value })
+        }
+
+    @Test
+    fun `forgets every deletion of the restored media only`() =
+        runTest {
+            history.record(
+                listOf(
+                    aConfirmedDeletion(mediaId = 1),
+                    aConfirmedDeletion(mediaId = 2),
+                    aConfirmedDeletion(mediaId = 1),
+                ),
+            )
+
+            history.forget(setOf(MediaId(1), MediaId(9)))
 
             assertEquals(listOf(2L), history.observe().first().map { it.mediaId.value })
         }
