@@ -25,6 +25,7 @@ import fr.babeuloula.photoswipe.domain.model.Tutorial
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.usecase.MarkTutorialSeen
 import fr.babeuloula.photoswipe.domain.usecase.ShouldShowTutorial
+import fr.babeuloula.photoswipe.link.LaunchRequest
 import fr.babeuloula.photoswipe.permission.MEDIA_PERMISSIONS
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -121,7 +122,11 @@ class PhotoSwipeNavHostTest {
         composeRule.activity.setContent {
             CompositionLocalProvider(LocalImageLoader provides composeRule.activity.imageLoader) {
                 PhotoSwipeTheme {
-                    PhotoSwipeNavHost(deckToOpen = LocalDate.now(), onDeckOpened = { opened++ })
+                    PhotoSwipeNavHost(
+                        launchRequest = LaunchRequest.Deck(LocalDate.now()),
+                        resolveLaunch = composeRule.activity.launchRequestResolver::routeFor,
+                        onLaunchHandled = { opened++ },
+                    )
                 }
             }
         }

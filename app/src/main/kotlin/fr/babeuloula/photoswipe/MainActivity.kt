@@ -20,6 +20,9 @@ import coil3.ImageLoader
 import dagger.hilt.android.AndroidEntryPoint
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.port.SettingsRepository
+import fr.babeuloula.photoswipe.link.DeepLinks
+import fr.babeuloula.photoswipe.link.LaunchRequest
+import fr.babeuloula.photoswipe.link.LaunchRequestResolver
 import fr.babeuloula.photoswipe.ui.PhotoSwipeApp
 import fr.babeuloula.photoswipe.ui.common.LocalAnimationsDisabled
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
@@ -44,7 +47,9 @@ import javax.inject.Inject
  * Le chargeur d'images injecté est transmis aux écrans par [LocalImageLoader] (ADR 0016).
  *
  * Lancée par la notification du rappel ([openDeckIntent]), elle ouvre directement la pile du jour
- * à trier. Le jour n'est lu qu'au premier lancement : une activité recréée garde sa navigation.
+ * à trier ; lancée par un lien profond `photoswipe://…` ([DeepLinks]) ou un raccourci de l'icône,
+ * l'écran qu'il demande ([launchRequestOf], ADR 0038). La demande n'est lue qu'au premier
+ * lancement ou à la réception d'un nouvel intent : une activité recréée garde sa navigation.
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -56,13 +61,17 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var settingsRepository: SettingsRepository
 
-    /** Pile à ouvrir dès que la navigation est affichée, `null` une fois ouverte. */
-    private var deckToOpen by mutableStateOf<LocalDate?>(null)
+    /** Traduit l'écran demandé au lancement en route de navigation. */
+    @Inject
+    lateinit var launchRequestResolver: LaunchRequestResolver
+
+    /** Écran à ouvrir dès que la navigation est affichée, `null` une fois ouvert. */
+    private var launchRequest by mutableStateOf<LaunchRequest?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        if (savedInstanceState == null) deckToOpen = deckDayOf(intent)
+        if (savedInstanceState == null) launchRequest = launchRequestOf(intent)
         val themeModes = settingsRepository.observeThemeMode().catch { emit(ThemeMode.DEFAULT) }
         // Lecture courte d'un petit fichier local, une fois au démarrage : évite un éclair du mauvais thème.
         val savedThemeMode = runBlocking { themeModes.first() }
@@ -97,7 +106,11 @@ class MainActivity : ComponentActivity() {
                 PhotoSwipeTheme(darkTheme = darkTheme, pureBlack = pureBlack) {
                     // Portrait, sauf le plein écran vidéo et la photo en grand (ADR 0028).
                     RotationPolicy {
-                        PhotoSwipeApp(deckToOpen = deckToOpen, onDeckOpened = { deckToOpen = null })
+                        PhotoSwipeApp(
+                            launchRequest = launchRequest,
+                            resolveLaunch = launchRequestResolver::routeFor,
+                            onLaunchHandled = { launchRequest = null },
+                        )
                     }
                 }
             }
@@ -106,7 +119,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        deckDayOf(intent)?.let { deckToOpen = it }
+        launchRequestOf(intent)?.let { launchRequest = it }
     }
 
     companion object {
@@ -126,10 +139,25 @@ class MainActivity : ComponentActivity() {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 .putExtra(EXTRA_DECK_EPOCH_DAY, day.toEpochDay())
 
-        /** Jour de pile porté par [intent], `null` pour un lancement ordinaire. */
-        fun deckDayOf(intent: Intent?): LocalDate? =
-            intent
-                ?.takeIf { it.hasExtra(EXTRA_DECK_EPOCH_DAY) }
-                ?.let { LocalDate.ofEpochDay(it.getLongExtra(EXTRA_DECK_EPOCH_DAY, 0)) }
+        /**
+         * Écran demandé par [intent] : la pile du rappel, ou celui d'un lien `photoswipe://` (l'accueil
+         * s'il est invalide) ; `null` pour un lancement ordinaire.
+         */
+        fun launchRequestOf(intent: Intent?): LaunchRequest? =
+            when {
+                intent == null -> {
+                    null
+                }
+
+                intent.hasExtra(EXTRA_DECK_EPOCH_DAY) -> {
+                    LaunchRequest.Deck(LocalDate.ofEpochDay(intent.getLongExtra(EXTRA_DECK_EPOCH_DAY, 0)))
+                }
+
+                else -> {
+                    intent.data
+                        ?.takeIf { it.scheme.equals(DeepLinks.SCHEME, ignoreCase = true) }
+                        ?.let { DeepLinks.parse(it.toString()) }
+                }
+            }
     }
 }

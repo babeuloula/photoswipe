@@ -294,4 +294,8 @@
     <!-- Réglage du noir pur du thème sombre (PS-176). -->
     <string name="settings_pure_black">Pure black</string>
     <string name="settings_pure_black_summary">Black backgrounds in the dark theme, to save battery on an OLED screen</string>
+    <!-- Raccourcis de l'appui long sur l'icône (PS-171). -->
+    <string name="shortcut_sort_today_short">Sort today</string>
+    <string name="shortcut_sort_today_long">Sort today</string>
+    <string name="shortcut_summary">Summary</string>
 </resources>
