@@ -19,6 +19,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -63,6 +64,9 @@ class SettingsScreenTest {
     }
 
     private fun text(id: Int): String = composeRule.activity.getString(id)
+
+    private fun days(count: Int): String =
+        composeRule.activity.resources.getQuantityString(R.plurals.settings_catch_up_days_option, count, count)
 
     /** Nœud du dialogue ouvert qui porte [label]. */
 
@@ -292,6 +296,24 @@ class SettingsScreenTest {
             .onNodeWithText(text(R.string.settings_pure_black))
             .performScrollTo()
             .assertIsOn()
+    }
+
+    @Test
+    fun `picks how many days to catch up among 7, 14 and 30, right in the list`() {
+        show(
+            SettingsUiState(
+                reminder = ReminderSettings.DEFAULT,
+                themeMode = ThemeMode.LIGHT,
+                catchUpWindow = CatchUpWindow.WEEK,
+            ),
+        )
+
+        composeRule.onNodeWithText(text(R.string.settings_catch_up_days)).performScrollTo().assertExists()
+        composeRule.onNodeWithText(days(7)).performScrollTo().assertIsSelected()
+        composeRule.onNodeWithText(days(14)).performScrollTo().assertIsNotSelected()
+        composeRule.onNodeWithText(days(30)).performScrollTo().performClick()
+
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.CatchUpWindowPicked(CatchUpWindow.MONTH)), events)
     }
 
     @Test

@@ -150,6 +150,10 @@
     <string name="settings_language">App language</string>
     <string name="settings_language_system">Phone language (%1$s)</string>
     <string name="settings_appearance_section">Appearance</string>
+    <string name="settings_catch_up_section">Catch-up</string>
+    <string name="settings_catch_up_days">Days to catch up</string>
+    <string name="settings_catch_up_days_summary">Previous days offered on the home screen, in the reminder and in the summary. Choose more after time away.</string>
+    <string name="home_hide_older_days">Hide older days</string>
     <string name="settings_theme">Theme</string>
     <string name="settings_theme_system">Same as the phone</string>
     <string name="settings_theme_light">Light</string>
@@ -199,7 +203,7 @@
     <string name="home_today_no_memories">No memories today</string>
     <string name="home_today_no_memories_body">No photo or video taken on %1$s in previous years. There are still days to catch up on.</string>
     <string name="home_today_with_date">Today · %1$s</string>
-    <string name="home_empty_title">No memories this week</string>
+    <string name="home_empty_title">No memories to catch up</string>
     <string name="home_empty_body">No photo or video taken from %1$s to %2$s in previous years. Come back tomorrow.</string>
     <string name="home_start_sorting">Start sorting</string>
     <string name="home_resort">Sort again</string>
@@ -248,7 +252,7 @@
     <string name="tutorial_swipe_up_title">Favorite or share</string>
     <string name="tutorial_swipe_up_body">Swipe up to open the menu: add the memory to your favorites, which also keeps it, or share it.</string>
     <string name="tutorial_catch_up_title">Catch up on missed days</string>
-    <string name="tutorial_catch_up_body">Missed a day? On the home screen, below today\'s card, the “Catch up” list keeps the 6 previous days, and a day already sorted can be sorted again. A daily reminder, which you can turn on in the settings, lets you know only when memories are left to sort.</string>
+    <string name="tutorial_catch_up_body">Missed a day? On the home screen, below today\'s card, the “Catch up” list keeps the previous days (a week by default, up to 30 days in the settings), and a day already sorted can be sorted again. A daily reminder, which you can turn on in the settings, lets you know only when memories are left to sort.</string>
     <string name="tutorial_confirmation_title">Nothing is final</string>
     <string name="tutorial_confirmation_body">Marked media are deleted together, once you confirm at the end of sorting; tap them in the summary to review them full size first. They go to the system trash, where you can restore them for about 30 days.</string>
     <string name="tutorial_practice_title">Give it a try</string>

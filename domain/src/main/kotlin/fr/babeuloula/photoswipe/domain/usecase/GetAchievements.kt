@@ -31,14 +31,19 @@ class GetAchievements(
     suspend operator fun invoke(): Achievements {
         val usage = statistics.statistics()
         val streak = settings.streakState()
-        val window = streak.recent.values
+        // La semaine la plus récente, quelle que soit la durée de la fenêtre de rattrapage (PS-169).
+        val window =
+            streak.recent
+                .toSortedMap(compareByDescending { it })
+                .values
+                .take(WEEK_DAYS)
         val measures =
             BadgeMeasures(
                 sorted = usage.deletedCount + activity.since(LocalDate.EPOCH).sumOf { it.keptCount.toLong() },
                 bestStreak = streak.streak.best.toLong(),
                 freedBytes = usage.freedBytes,
                 weekCaughtUp =
-                    window.size >= WINDOW_DAYS && DayStatus.PENDING !in window && DayStatus.SORTED in window,
+                    window.size >= WEEK_DAYS && DayStatus.PENDING !in window && DayStatus.SORTED in window,
             )
         val alreadyEarned = achievements.earnedBadges()
         val reached = Badge.entries.filterTo(HashSet()) { measures.valueOf(it.kind) >= it.threshold }
@@ -60,7 +65,7 @@ class GetAchievements(
     }
 
     private companion object {
-        /** Jours de la fenêtre de rattrapage à avoir tous triés. */
-        const val WINDOW_DAYS = 7
+        /** Jours les plus récents à avoir tous triés pour « Semaine rattrapée ». */
+        const val WEEK_DAYS = 7
     }
 }

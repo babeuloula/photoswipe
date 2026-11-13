@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.fixtures
 
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * @param animationsEnabled animations actives au départ.
  * @param pureBlack noir pur du thème sombre au départ.
  * @param whatsNewVersionSeen dernière version des nouveautés vue au départ, `null` pour aucune.
+ * @param catchUpWindow durée de la fenêtre de rattrapage au départ.
  */
 class FakeSettingsRepository(
     reminder: ReminderSettings = ReminderSettings.DEFAULT,
@@ -36,7 +38,13 @@ class FakeSettingsRepository(
     animationsEnabled: Boolean = true,
     pureBlack: Boolean = false,
     whatsNewVersionSeen: String? = null,
+    catchUpWindow: CatchUpWindow = CatchUpWindow.DEFAULT,
 ) : SettingsRepository {
+    private val storedCatchUpWindow = MutableStateFlow(catchUpWindow)
+
+    /** Durée de la fenêtre de rattrapage enregistrée, pour les vérifications du test. */
+    val catchUpWindow: CatchUpWindow get() = storedCatchUpWindow.value
+
     private val storedAnimations = MutableStateFlow(animationsEnabled)
     private val storedPureBlack = MutableStateFlow(pureBlack)
 
@@ -92,6 +100,12 @@ class FakeSettingsRepository(
 
     override suspend fun savePureBlack(enabled: Boolean) {
         storedPureBlack.value = enabled
+    }
+
+    override fun observeCatchUpWindow(): Flow<CatchUpWindow> = storedCatchUpWindow.asStateFlow()
+
+    override suspend fun saveCatchUpWindow(window: CatchUpWindow) {
+        storedCatchUpWindow.value = window
     }
 
     override fun observeManageMediaTip(): Flow<ManageMediaTip> = storedTip.asStateFlow()

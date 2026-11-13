@@ -45,7 +45,8 @@ sealed interface HomeUiState {
      * Jours de la fenêtre calculés.
      *
      * @property today aujourd'hui et son nombre de médias à trier.
-     * @property previousDays les 6 jours précédents, du plus récent au plus ancien, à rattraper.
+     * @property previousDays les jours précédents de la fenêtre de rattrapage (6, 13 ou 29, PS-169), du
+     * plus récent au plus ancien, tous, y compris ceux sans souvenir (la série de jours les compte).
      * @property pendingDeletionCount médias marqués pour suppression et pas encore confirmés, toutes
      * sessions confondues (SPEC §3.4) ; 0 masque la bannière.
      * @property showManageMediaTip vrai pour proposer l'accès « Gestion des médias » : un dialogue
@@ -72,6 +73,21 @@ sealed interface HomeUiState {
          */
         val hasMemories: Boolean
             get() = (listOf(today) + previousDays).any { it.memoryCount > 0 || it.deletedCount > 0 }
+
+        /**
+         * Jours listés sous « À rattraper » (PS-169) : les 6 premiers toujours, pour montrer qu'on n'a
+         * rien manqué ; au-delà, seulement ceux qui ont eu des souvenirs ou des suppressions.
+         */
+        val listedPreviousDays: List<ReviewDay>
+            get() =
+                previousDays.filterIndexed { index, day ->
+                    index < ALWAYS_LISTED_PREVIOUS_DAYS || day.memoryCount > 0 || day.deletedCount > 0
+                }
+
+        private companion object {
+            /** Jours précédents toujours listés, même sans souvenir : la semaine d'aujourd'hui. */
+            const val ALWAYS_LISTED_PREVIOUS_DAYS = 6
+        }
     }
 }
 
@@ -173,7 +189,7 @@ sealed interface HomeEffect {
 }
 
 /**
- * ViewModel de l'accueil : la carte « Aujourd'hui » et les 6 jours précédents, chacun avec son
+ * ViewModel de l'accueil : la carte « Aujourd'hui » et les jours précédents de la fenêtre de rattrapage (PS-169), chacun avec son
  * nombre de médias à trier (SPEC §4.2).
  *
  * Les nombres suivent les décisions en direct (`GetReviewDays` est un flux). Ils sont recalculés

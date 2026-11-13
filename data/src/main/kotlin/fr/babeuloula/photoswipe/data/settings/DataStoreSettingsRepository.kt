@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
@@ -32,7 +33,8 @@ import javax.inject.Inject
  * (ADR 0007). L'heure est stockée en minutes depuis minuit ; une valeur hors limites, ou un fichier
  * illisible, retombe sur la valeur par défaut au lieu de faire échouer l'écran. Le thème est stocké
  * par son nom ; un nom inconnu retombe sur [ThemeMode.DEFAULT], le thème du téléphone. De même pour
- * le conseil « Gestion des médias » ([ManageMediaTip.DEFAULT]). La version du tutoriel vue vaut
+ * le conseil « Gestion des médias » ([ManageMediaTip.DEFAULT]) et de la fenêtre de
+ * rattrapage ([CatchUpWindow.DEFAULT], une semaine). La version du tutoriel vue vaut
  * [Tutorial.NEVER_SEEN] tant que rien n'est enregistré, l'invitation à noter l'application
  * [RatingInvitation.DEFAULT] (jour trié stocké en jours depuis l'epoch). La série de jours (PS-155)
  * est lue et écrite par `StreakPreferences.kt`. La dernière version des nouveautés vue (PS-173) est
@@ -73,6 +75,16 @@ class DataStoreSettingsRepository
 
         override suspend fun savePureBlack(enabled: Boolean) {
             dataStore.edit { it[PURE_BLACK] = enabled }
+        }
+
+        override fun observeCatchUpWindow(): Flow<CatchUpWindow> =
+            preferences()
+                .map { preferences ->
+                    CatchUpWindow.entries.find { it.name == preferences[CATCH_UP_WINDOW] } ?: CatchUpWindow.DEFAULT
+                }.distinctUntilChanged()
+
+        override suspend fun saveCatchUpWindow(window: CatchUpWindow) {
+            dataStore.edit { it[CATCH_UP_WINDOW] = window.name }
         }
 
         override fun observeManageMediaTip(): Flow<ManageMediaTip> =
@@ -150,6 +162,7 @@ class DataStoreSettingsRepository
             val THEME_MODE = stringPreferencesKey("theme_mode")
             val ANIMATIONS_ENABLED = booleanPreferencesKey("animations_enabled")
             val PURE_BLACK = booleanPreferencesKey("pure_black")
+            val CATCH_UP_WINDOW = stringPreferencesKey("catch_up_window")
             val MANAGE_MEDIA_TIP = stringPreferencesKey("manage_media_tip")
             val TUTORIAL_VERSION_SEEN = intPreferencesKey("tutorial_version_seen")
             val RATING_SORTED_DAYS = intPreferencesKey("rating_sorted_days")

@@ -150,4 +150,14 @@
         <item quantity="many">%d de souvenirs marqués pour suppression</item>
         <item quantity="other">%d souvenirs marqués pour suppression</item>
     </plurals>
+    <plurals name="settings_catch_up_days_option">
+        <item quantity="one">%d jour</item>
+        <item quantity="many">%d jours</item>
+        <item quantity="other">%d jours</item>
+    </plurals>
+    <plurals name="home_show_older_days">
+        <item quantity="one">Voir le jour plus ancien (%d)</item>
+        <item quantity="many">Voir les %d jours plus anciens</item>
+        <item quantity="other">Voir les %d jours plus anciens</item>
+    </plurals>
 </resources>

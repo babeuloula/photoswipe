@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.domain.port
 
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.RatingInvitation
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
@@ -57,6 +58,16 @@ interface SettingsRepository {
 
     /** Enregistre si le thème sombre est en noir pur. */
     suspend fun savePureBlack(enabled: Boolean)
+
+    /**
+     * Durée de la fenêtre de rattrapage (PS-169), observée par la fenêtre de revue et les réglages :
+     * la valeur actuelle dès la collecte ([CatchUpWindow.DEFAULT] si rien n'est enregistré), puis
+     * chaque nouvelle valeur.
+     */
+    fun observeCatchUpWindow(): Flow<CatchUpWindow>
+
+    /** Enregistre la durée de la fenêtre de rattrapage. */
+    suspend fun saveCatchUpWindow(window: CatchUpWindow)
 
     /**
      * Conseil « Gestion des médias » de l'accueil : la valeur actuelle dès la collecte

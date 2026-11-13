@@ -46,7 +46,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -87,7 +91,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 /**
- * Accueil (SPEC §4.2) : carte « Aujourd'hui » et les 6 jours précédents, chacun avec son nombre de
+ * Accueil (SPEC §4.2) : carte « Aujourd'hui » et les jours précédents à rattraper (PS-169), chacun avec son nombre de
  * médias à trier ; un tap ouvre la pile du jour. Une bannière signale les suppressions en attente
  * et ouvre le résumé ; un conseil propose l'accès « Gestion des médias » après un premier dialogue
  * d'Android validé. Gère le chargement et l'erreur.
@@ -157,12 +161,14 @@ fun HomeScreen(
 }
 
 /**
- * Carte « Aujourd'hui », puis les 6 jours précédents à rattraper.
+ * Carte « Aujourd'hui », puis les jours précédents à rattraper.
  *
  * Un jour sans média à trier reste dans la liste, grisé et sans action : la semaine garde ses
- * 7 jours, et l'utilisateur voit qu'il n'a rien manqué (choix de PS-38). Sans aucun souvenir sur
- * les 7 jours, la carte du jour le dit pour toute la semaine (PS-40). Sur grand écran ou en
- * paysage, la carte et la liste sont côte à côte ; en largeur moyenne, la liste est centrée.
+ * 7 jours, et l'utilisateur voit qu'il n'a rien manqué (choix de PS-38) ; au-delà, sur une fenêtre
+ * de 14 ou 30 jours, seuls les jours qui ont eu des souvenirs sont listés, repliés au-delà de
+ * 7 lignes (PS-169). Sans aucun souvenir sur la fenêtre, la carte du jour le dit (PS-40). Sur
+ * grand écran ou en paysage, la liste à gauche (jour, bannières, jours à rattraper), le détail du
+ * jour à droite ; en largeur moyenne, la liste est centrée.
  */
 @Composable
 private fun HomeDays(
@@ -170,47 +176,9 @@ private fun HomeDays(
     onEvent: (HomeEvent) -> Unit,
 ) {
     val onOpenDay = { day: LocalDate -> onEvent(HomeEvent.OpenDay(day)) }
-    val today = @Composable { TodayCard(state, onOpenDay = { onOpenDay(state.today.date) }, onEvent = onEvent) }
+    val catchUpDays = rememberCatchUpDays(state, onOpenDay, onEvent)
     if (currentWindowLayout().isTwoPane) {
-        // Grand écran ou paysage : la liste à gauche (jour, bannières, jours à rattraper), le détail du jour à droite.
-        val withDetail = state.today.memoryCount > 0
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(24.dp),
-        ) {
-            LazyColumn(
-                modifier = Modifier.weight(LIST_PANE_WEIGHT),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                item {
-                    Box(Modifier.padding(bottom = 10.dp)) {
-                        TodayCard(
-                            state,
-                            onOpenDay = { onOpenDay(state.today.date) },
-                            onEvent = onEvent,
-                            compact = withDetail,
-                        )
-                    }
-                }
-                if (state.showManageMediaTip || state.pendingDeletionCount > 0) {
-                    item { Box(Modifier.padding(bottom = 10.dp)) { HomeBanners(state, onEvent) } }
-                }
-                item { PreviousDaysTitle() }
-                previousDays(state.previousDays, onOpenDay, onResortDay = { onEvent(HomeEvent.ResortDay(it)) })
-            }
-            if (withDetail) {
-                TodayDetailPane(
-                    today = state.today,
-                    onOpenDay = { onOpenDay(state.today.date) },
-                    onSummary = { onEvent(HomeEvent.OpenPendingDeletions) },
-                    onResort = { onEvent(HomeEvent.ResortDay(state.today.date)) },
-                    modifier = Modifier.weight(DETAIL_PANE_WEIGHT).fillMaxHeight(),
-                )
-            }
-        }
+        TwoPaneHomeDays(state, onEvent, onOpenDay, catchUpDays)
         return
     }
     CenteredContent {
@@ -219,13 +187,87 @@ private fun HomeDays(
             verticalArrangement = Arrangement.spacedBy(2.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
-            item { Box(Modifier.padding(bottom = 10.dp)) { today() } }
+            item {
+                Box(Modifier.padding(bottom = 10.dp)) {
+                    TodayCard(state, onOpenDay = { onOpenDay(state.today.date) }, onEvent = onEvent)
+                }
+            }
             if (state.showManageMediaTip || state.pendingDeletionCount > 0) {
                 item { Box(Modifier.padding(bottom = 10.dp)) { HomeBanners(state, onEvent) } }
             }
             item { PreviousDaysTitle() }
-            previousDays(state.previousDays, onOpenDay, onResortDay = { onEvent(HomeEvent.ResortDay(it)) })
+            catchUpDays()
         }
+    }
+}
+
+/** Grand écran ou paysage : la liste à gauche (jour, bannières, jours à rattraper), le détail du jour à droite. */
+@Composable
+private fun TwoPaneHomeDays(
+    state: HomeUiState.Loaded,
+    onEvent: (HomeEvent) -> Unit,
+    onOpenDay: (LocalDate) -> Unit,
+    catchUpDays: LazyListScope.() -> Unit,
+) {
+    val withDetail = state.today.memoryCount > 0
+    Row(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(24.dp),
+    ) {
+        LazyColumn(
+            modifier = Modifier.weight(LIST_PANE_WEIGHT),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            item {
+                Box(Modifier.padding(bottom = 10.dp)) {
+                    TodayCard(
+                        state,
+                        onOpenDay = { onOpenDay(state.today.date) },
+                        onEvent = onEvent,
+                        compact = withDetail,
+                    )
+                }
+            }
+            if (state.showManageMediaTip || state.pendingDeletionCount > 0) {
+                item { Box(Modifier.padding(bottom = 10.dp)) { HomeBanners(state, onEvent) } }
+            }
+            item { PreviousDaysTitle() }
+            catchUpDays()
+        }
+        if (withDetail) {
+            TodayDetailPane(
+                today = state.today,
+                onOpenDay = { onOpenDay(state.today.date) },
+                onSummary = { onEvent(HomeEvent.OpenPendingDeletions) },
+                onResort = { onEvent(HomeEvent.ResortDay(state.today.date)) },
+                modifier = Modifier.weight(DETAIL_PANE_WEIGHT).fillMaxHeight(),
+            )
+        }
+    }
+}
+
+/**
+ * Liste « À rattraper », repliée au-delà de quelques jours (PS-169) ; le pliage est gardé à la
+ * rotation.
+ */
+@Composable
+private fun rememberCatchUpDays(
+    state: HomeUiState.Loaded,
+    onOpenDay: (LocalDate) -> Unit,
+    onEvent: (HomeEvent) -> Unit,
+): LazyListScope.() -> Unit {
+    var olderDaysShown by rememberSaveable { mutableStateOf(false) }
+    return {
+        previousDays(
+            state.listedPreviousDays,
+            olderDaysShown,
+            onToggleOlderDays = { olderDaysShown = !olderDaysShown },
+            onOpenDay = onOpenDay,
+            onResortDay = { onEvent(HomeEvent.ResortDay(it)) },
+        )
     }
 }
 

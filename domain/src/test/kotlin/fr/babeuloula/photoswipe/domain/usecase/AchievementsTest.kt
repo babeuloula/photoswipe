@@ -78,6 +78,31 @@ class AchievementsTest {
         }
 
     @Test
+    fun `counts the most recent week as caught up on a thirty-day catch-up window`() =
+        runTest {
+            // Fenêtre de 30 jours (PS-169) : un jour en retard il y a 20 jours n'empêche pas la semaine rattrapée.
+            val month =
+                (0L..29L).associate {
+                    LocalDate.of(2026, 7, 15).minusDays(it) to if (it == 20L) DayStatus.PENDING else DayStatus.SORTED
+                }
+            settings.saveStreakState(StreakState(recent = month))
+
+            assertTrue(getAchievements().badges.single { it.badge == Badge.WEEK_CAUGHT_UP }.earned)
+        }
+
+    @Test
+    fun `does not count a thirty-day window as caught up when a day of the last week is left to sort`() =
+        runTest {
+            val month =
+                (0L..29L).associate {
+                    LocalDate.of(2026, 7, 15).minusDays(it) to if (it == 2L) DayStatus.PENDING else DayStatus.SORTED
+                }
+            settings.saveStreakState(StreakState(recent = month))
+
+            assertFalse(getAchievements().badges.single { it.badge == Badge.WEEK_CAUGHT_UP }.earned)
+        }
+
+    @Test
     fun `counts a goal from the moment it is set, until it is removed`() =
         runTest {
             statistics.recordDeletion(10, GIGABYTE)

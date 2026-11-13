@@ -8,6 +8,7 @@ import fr.babeuloula.photoswipe.domain.port.DecisionJournal
 import fr.babeuloula.photoswipe.domain.port.DeletionHistory
 import fr.babeuloula.photoswipe.domain.port.MediaSource
 import fr.babeuloula.photoswipe.domain.port.ReviewRepository
+import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.service.DeckOrdering
 import fr.babeuloula.photoswipe.domain.service.RecentYearsFirstOrdering
 import fr.babeuloula.photoswipe.domain.service.ReviewWindowProvider
@@ -31,8 +32,12 @@ object DomainModule {
     @Provides
     fun provideSameDayMatcher(): SameDayMatcher = SameDayMatcher()
 
+    /** Fenêtre de revue qui suit la durée choisie dans les réglages (PS-169). */
     @Provides
-    fun provideReviewWindowProvider(clock: Clock): ReviewWindowProvider = ReviewWindowProvider(clock)
+    fun provideReviewWindowProvider(
+        clock: Clock,
+        settingsRepository: SettingsRepository,
+    ): ReviewWindowProvider = ReviewWindowProvider(clock, settingsRepository)
 
     // Un paramètre par dépendance du use case, que Hilt fournit : rien à regrouper ici.
     @Suppress("LongParameterList")

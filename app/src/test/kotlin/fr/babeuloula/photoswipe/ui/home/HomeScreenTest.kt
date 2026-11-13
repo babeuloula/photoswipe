@@ -2,10 +2,12 @@ package fr.babeuloula.photoswipe.ui.home
 
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -239,6 +241,46 @@ class HomeScreenTest {
         )
 
         composeRule.onNodeWithText("Retrier").assertIsDisplayed()
+    }
+
+    @Test
+    fun `folds a thirty-day catch-up list after seven rows, without the older days that had no memory`() {
+        // Fenêtre de 30 jours (PS-169) : au-delà des 6 jours précédents, un jour sur deux a des souvenirs.
+        val previous =
+            (1L..29L).map {
+                val memories = if (it > 6 && it % 2 == 1L) 2 else 0
+                ReviewDay(LocalDate.of(2026, 7, 15).minusDays(it), remainingCount = memories, memoryCount = memories)
+            }
+        show(
+            HomeUiState.Loaded(
+                today = ReviewDay(LocalDate.of(2026, 7, 15), remainingCount = 1),
+                previousDays = previous,
+            ),
+        )
+        val showOlder = "Show 11 older days"
+
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText(showOlder))
+        composeRule.onNodeWithText("Wednesday, July 8").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Monday, July 6").assertCountEquals(0)
+
+        composeRule.onNodeWithText(showOlder).performClick()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Tuesday, June 16"))
+        composeRule.onNodeWithText("Tuesday, June 16").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Tuesday, July 7").assertCountEquals(0)
+
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText(text(R.string.home_hide_older_days)))
+        composeRule.onNodeWithText(text(R.string.home_hide_older_days)).performClick()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText(showOlder))
+        composeRule.onAllNodesWithText("Tuesday, June 16").assertCountEquals(0)
+        assertEquals(emptyList<HomeEvent>(), events)
+    }
+
+    @Test
+    fun `does not fold the catch-up list of a one-week window`() {
+        show(loaded(todayCount = 1))
+
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Thursday, July 9"))
+        composeRule.onAllNodesWithText(text(R.string.home_hide_older_days)).assertCountEquals(0)
     }
 
     @Test

@@ -6,7 +6,7 @@ Chaque jour, PhotoSwipe vous montre les photos et vidéos prises ce même jour l
 
 En fin de tri, un résumé vous montre l'espace que vous allez libérer. Une seule confirmation, et les médias marqués partent dans la corbeille du téléphone, d'où vous pouvez les restaurer pendant environ 30 jours.
 
-Un jour de manqué ? Les 7 derniers jours restent à rattraper sur l'accueil, et un rappel quotidien, si vous le souhaitez, vous prévient quand il reste des souvenirs à trier.
+Un jour de manqué ? Les derniers jours restent à rattraper sur l'accueil (une semaine par défaut, jusqu'à 30 jours après une absence), et un rappel quotidien, si vous le souhaitez, vous prévient quand il reste des souvenirs à trier.
 
 Vos photos restent chez vous : PhotoSwipe n'a pas accès à Internet, ne demande aucun compte et ne collecte aucune donnée.
 

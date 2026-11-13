@@ -11,6 +11,7 @@ import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aConfirmedDeletion
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.ConfirmedDeletion
 import fr.babeuloula.photoswipe.domain.model.DailyActivity
 import fr.babeuloula.photoswipe.domain.model.MediaId
@@ -185,6 +186,21 @@ class TrashTest {
         }
 
     @Test
+    fun `keeps the deletions of the whole month in the history on a month-long catch-up window`() =
+        runTest {
+            val repository = FakeReviewRepository(listOf(marked(1)))
+            val old = aConfirmedDeletion(mediaId = 9, confirmedAt = Instant.parse("2026-07-01T10:00:00Z"))
+            val history = FakeDeletionHistory(listOf(old))
+
+            recordTrashResult(repository, history = history, window = CatchUpWindow.MONTH)(
+                prepareTrash(repository)().single(),
+                confirmed = true,
+            )
+
+            assertEquals(listOf(MediaId(9), MediaId(1)), history.deletions.map { it.mediaId })
+        }
+
+    @Test
     fun `records nothing in the history when the request is refused`() =
         runTest {
             val repository = FakeReviewRepository(listOf(marked(1)))
@@ -260,8 +276,17 @@ class TrashTest {
         history: FakeDeletionHistory = FakeDeletionHistory(),
         journal: FakeDecisionJournal = FakeDecisionJournal(repository),
         activity: FakeActivityHistory = FakeActivityHistory(),
+        window: CatchUpWindow = CatchUpWindow.DEFAULT,
     ): RecordTrashResult =
-        RecordTrashResult(repository, journal, statistics, history, activity, ReviewWindowProvider(clock), clock)
+        RecordTrashResult(
+            repository,
+            journal,
+            statistics,
+            history,
+            activity,
+            ReviewWindowProvider(clock, window),
+            clock,
+        )
 
     private fun prepareTrash(
         repository: FakeReviewRepository,

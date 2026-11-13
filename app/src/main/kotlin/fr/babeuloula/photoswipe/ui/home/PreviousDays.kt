@@ -88,18 +88,52 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-/** Les jours à rattraper, en liste segmentée : coins larges en haut et en bas, serrés entre deux jours. */
+/**
+ * Les jours à rattraper, en liste segmentée : coins larges en haut et en bas, serrés entre deux jours.
+ * Au-delà de [COLLAPSED_DAYS] lignes (fenêtre de 14 ou 30 jours, PS-169), la liste est repliée :
+ * « Voir les 8 jours plus anciens » la déplie ([olderDaysShown]), « Masquer les jours plus anciens »
+ * la replie.
+ */
 internal fun LazyListScope.previousDays(
     days: List<ReviewDay>,
+    olderDaysShown: Boolean,
+    onToggleOlderDays: () -> Unit,
     onOpenDay: (LocalDate) -> Unit,
     onResortDay: (LocalDate) -> Unit,
 ) {
-    itemsIndexed(days, key = { _, day -> day.date.toEpochDay() }) { index, day ->
+    val shown = if (olderDaysShown) days else days.take(COLLAPSED_DAYS)
+    itemsIndexed(shown, key = { _, day -> day.date.toEpochDay() }) { index, day ->
         PreviousDay(
             day,
-            shape = segmentShape(index, days.size),
+            shape = segmentShape(index, shown.size),
             onClick = { if (day.remainingCount > 0) onOpenDay(day.date) else onResortDay(day.date) },
         )
+    }
+    val olderCount = days.size - COLLAPSED_DAYS
+    if (olderCount > 0) {
+        item(key = OLDER_DAYS_KEY) {
+            OlderDaysButton(olderCount, olderDaysShown, onToggleOlderDays)
+        }
+    }
+}
+
+/** « Voir les 8 jours plus anciens » ou « Masquer les jours plus anciens », sous la liste. */
+@Composable
+private fun OlderDaysButton(
+    olderCount: Int,
+    shown: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(Modifier.fillMaxWidth().padding(top = 4.dp), contentAlignment = Alignment.Center) {
+        TextButton(onClick = onClick) {
+            Text(
+                if (shown) {
+                    stringResource(R.string.home_hide_older_days)
+                } else {
+                    pluralStringResource(R.plurals.home_show_older_days, olderCount, olderCount)
+                },
+            )
+        }
     }
 }
 
@@ -233,6 +267,12 @@ private fun DayThumbnail(
         Thumbnail(media, thumbnailModifier)
     }
 }
+
+/** Lignes de la liste « À rattraper » visibles quand elle est repliée (PS-169). */
+internal const val COLLAPSED_DAYS = 7
+
+/** Clé du bouton qui déplie ou replie les jours plus anciens. */
+private const val OLDER_DAYS_KEY = "older_days"
 
 /** Opacité d'un jour sans média, celle des contenus désactivés de Material 3. */
 internal const val DISABLED_ALPHA = 0.38f

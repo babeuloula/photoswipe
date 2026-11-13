@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.DayStatus
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
 import fr.babeuloula.photoswipe.domain.model.RatingInvitation
@@ -129,6 +130,26 @@ class DataStoreSettingsRepositoryTest {
             repository.saveWhatsNewVersionSeen("1.4.0")
 
             assertEquals("1.4.0", repository.whatsNewVersionSeen())
+        }
+
+    @Test
+    fun `catches up one week when nothing is stored, then reads back the saved duration`() =
+        runTest {
+            val repository = DataStoreSettingsRepository(dataStore())
+            assertEquals(CatchUpWindow.WEEK, repository.observeCatchUpWindow().first())
+
+            repository.saveCatchUpWindow(CatchUpWindow.TWO_WEEKS)
+
+            assertEquals(CatchUpWindow.TWO_WEEKS, repository.observeCatchUpWindow().first())
+        }
+
+    @Test
+    fun `falls back to one week when the stored catch-up window is unknown`() =
+        runTest {
+            val dataStore = dataStore()
+            dataStore.edit { it[stringPreferencesKey("catch_up_window")] = "YEAR" }
+
+            assertEquals(CatchUpWindow.WEEK, DataStoreSettingsRepository(dataStore).observeCatchUpWindow().first())
         }
 
     @Test

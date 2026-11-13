@@ -4,9 +4,11 @@ import fr.babeuloula.photoswipe.domain.fixtures.FakeDeletionHistory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReminderNotifier
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
+import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
+import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
 import fr.babeuloula.photoswipe.domain.model.ReviewEntry
@@ -15,6 +17,8 @@ import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime.NOON
@@ -26,11 +30,12 @@ class SendDailyReminderTest {
     private fun sendDailyReminder(
         media: List<MediaItem>,
         entries: List<ReviewEntry> = emptyList(),
+        window: CatchUpWindow = CatchUpWindow.DEFAULT,
     ): SendDailyReminder {
         val clock = FixedClock.at(today.atTime(NOON))
         val getReviewDays =
             GetReviewDays(
-                ReviewWindowProvider(clock),
+                ReviewWindowProvider(clock, FakeSettingsRepository(catchUpWindow = window)),
                 SameDayMatcher(),
                 FakeMediaSource(media),
                 FakeReviewRepository(entries),
@@ -94,5 +99,20 @@ class SendDailyReminderTest {
             sendDailyReminder(media)()
 
             assertEquals(listOf(2 to LocalDate.of(2026, 7, 12)), notifier.sent.map { it.toSortCount to it.dayToSort })
+        }
+
+    @ParameterizedTest
+    @EnumSource(CatchUpWindow::class)
+    fun `counts the media left to sort on the chosen catch-up window`(window: CatchUpWindow) =
+        runTest {
+            // Un souvenir à la limite de chaque durée : le dernier jour de la fenêtre de 7, 14 et 30 jours.
+            val media =
+                CatchUpWindow.entries.mapIndexed { index, each ->
+                    takenOn(index + 1L, today.minusDays(each.days - 1L).minusYears(1))
+                }
+
+            val sent = sendDailyReminder(media, window = window)()
+
+            assertEquals(CatchUpWindow.entries.count { it.days <= window.days }, sent)
         }
 }

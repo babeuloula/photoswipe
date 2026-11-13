@@ -10,6 +10,11 @@ import java.time.LocalDate
 class StreakStateTest {
     private val today = LocalDate.of(2026, 7, 15)
 
+    private companion object {
+        const val SEVEN_DAYS = 7
+        const val THIRTY_DAYS = 30
+    }
+
     /** Fenêtre de sept jours finissant [on], états donnés du plus ancien à ce jour-là. */
     private fun window(
         vararg statuses: DayStatus,
@@ -99,6 +104,29 @@ class StreakStateTest {
         val state = before.updated(later, window(SORTED, SORTED, SORTED, SORTED, EMPTY, EMPTY, SORTED, on = later))
 
         assertEquals(10, state.streak.current)
+    }
+
+    @Test
+    fun `keeps the streak when the catch-up window grows to thirty days, then shrinks back to seven`() {
+        val sorted = Array(SEVEN_DAYS) { SORTED }
+        var state = StreakState()
+        (0L..9L).forEach { offset ->
+            val day = today.plusDays(offset)
+            state = state.updated(day, window(*sorted, on = day))
+        }
+        assertEquals(16, state.streak.current)
+
+        // Fenêtre portée à 30 jours (PS-169) : les jours plus anciens que la série n'ont jamais été triés.
+        val grown = today.plusDays(10)
+        val month = Array(THIRTY_DAYS) { index -> if (index < THIRTY_DAYS - 17) PENDING else SORTED }
+        state = state.updated(grown, window(*month, on = grown))
+        assertEquals(17, state.streak.current)
+
+        // Puis revenue à 7 jours : la série continue.
+        val shrunk = today.plusDays(11)
+        state = state.updated(shrunk, window(*sorted, on = shrunk))
+
+        assertEquals(Streak(current = 18, best = 18), state.streak)
     }
 
     @Test
