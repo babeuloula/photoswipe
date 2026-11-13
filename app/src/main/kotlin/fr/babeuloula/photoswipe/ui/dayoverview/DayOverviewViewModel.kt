@@ -11,8 +11,8 @@ import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.QualityHint
 import fr.babeuloula.photoswipe.domain.model.ReviewSession
 import fr.babeuloula.photoswipe.domain.usecase.GetDayOverview
-import fr.babeuloula.photoswipe.domain.usecase.GetQualityHints
 import fr.babeuloula.photoswipe.domain.usecase.SortInBatch
+import fr.babeuloula.photoswipe.ui.deck.CardHints
 import fr.babeuloula.photoswipe.ui.deck.MediaCardUiState
 import fr.babeuloula.photoswipe.ui.navigation.DayOverviewRoute
 import kotlinx.coroutines.channels.Channel
@@ -42,12 +42,14 @@ sealed interface DayOverviewUiState {
      * @property openPhoto photo déjà triée ouverte en grand, `null` sinon.
      * @property selected souvenirs sélectionnés pour un tri par lot (PS-159) ; vide hors sélection.
      * @property quality photos peut-être floues ou très sombres (PS-164).
+     * @property motionPhotos photos animées (PS-167).
      */
     data class Loaded(
         val overview: DayOverview,
         val openPhoto: MediaCardUiState? = null,
         val selected: Set<MediaId> = emptySet(),
         val quality: Map<MediaId, QualityHint> = emptyMap(),
+        val motionPhotos: Set<MediaId> = emptySet(),
     ) : DayOverviewUiState {
         /** Vrai pendant une sélection : un appui coche ou décoche au lieu d'ouvrir. */
         val selecting: Boolean get() = selected.isNotEmpty()
@@ -159,7 +161,7 @@ class DayOverviewViewModel
         private val getDayOverview: GetDayOverview,
         private val sortInBatch: SortInBatch,
         private val clock: Clock,
-        private val getQualityHints: GetQualityHints,
+        private val hints: CardHints,
     ) : ViewModel() {
         /** Jour affiché. */
         val day: LocalDate = savedStateHandle.toRoute<DayOverviewRoute>().day
@@ -336,6 +338,7 @@ class DayOverviewViewModel
                                 overview,
                                 selected = selected intersect ids,
                                 quality = previous?.quality.orEmpty(),
+                                motionPhotos = previous?.motionPhotos.orEmpty(),
                             )
                         },
                         onFailure = { DayOverviewUiState.Error },
@@ -343,7 +346,8 @@ class DayOverviewViewModel
                 // Après l'affichage : une photo jamais mesurée lit sa vignette (PS-164).
                 val loaded = state.value as? DayOverviewUiState.Loaded ?: return@launch
                 val media = loaded.overview.years.flatMap { year -> year.memories.map { it.media } }
-                val quality = runCatching { getQualityHints(media) }.getOrDefault(emptyMap())
+                val quality = hints.quality(media)
+                val motionPhotos = hints.motionVideos(media).keys
                 // Les empreintes viennent d'être mesurées : les doublons rejoignent leurs groupes (PS-165).
                 val overview = runCatching { getDayOverview(day) }.getOrDefault(loaded.overview)
                 state.update {
@@ -351,6 +355,7 @@ class DayOverviewViewModel
                         it.copy(
                             overview = overview,
                             quality = quality,
+                            motionPhotos = motionPhotos,
                         )
                     } else {
                         it

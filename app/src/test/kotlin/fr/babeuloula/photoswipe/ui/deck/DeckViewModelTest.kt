@@ -8,12 +8,14 @@ import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
+import fr.babeuloula.photoswipe.domain.fixtures.FakeMotionPhotoReader
 import fr.babeuloula.photoswipe.domain.fixtures.FakePhotoAnalyzer
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FakeSettingsRepository
 import fr.babeuloula.photoswipe.domain.fixtures.FixedClock
 import fr.babeuloula.photoswipe.domain.fixtures.aFlatImage
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
+import fr.babeuloula.photoswipe.domain.fixtures.aMotionPhoto
 import fr.babeuloula.photoswipe.domain.fixtures.aReviewEntry
 import fr.babeuloula.photoswipe.domain.model.DecisionRecord
 import fr.babeuloula.photoswipe.domain.model.ManageMediaTip
@@ -84,6 +86,20 @@ class DeckViewModelTest : DeckViewModelTestBase() {
                         null
                 },
             )
+        }
+
+    @Test
+    fun `gives the video of a motion photo to its card, read within the photo file`() =
+        runTest {
+            motionPhotoReader =
+                FakeMotionPhotoReader(mapOf(MediaId(2) to aMotionPhoto(videoStart = 900, videoLength = 300)))
+
+            val viewModel = deckViewModel(FakeMediaSource(listOf(takenOn(1, 2020), takenOn(2, 2021))))
+
+            val cards = (viewModel.uiState.value as DeckUiState.Loaded).cards.associateBy { it.id }
+            assertEquals(null, cards.getValue(MediaId(1)).motionVideo)
+            val range = MotionVideoRange.of(cards.getValue(MediaId(2)).motionVideo!!)
+            assertEquals(MotionVideoRange(cards.getValue(MediaId(2)).uri, 900, 300), range)
         }
 
     @Test

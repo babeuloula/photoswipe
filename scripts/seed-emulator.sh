@@ -5,7 +5,8 @@
 #
 # Usage :
 #   scripts/seed-emulator.sh            # une photo par année sur 5 ans, aujourd'hui et les 6 jours précédents,
-#                                       # des rafales (aujourd'hui, J-4) et une seule photo à J-2
+#                                       # des rafales (aujourd'hui, J-4), une seule photo à J-2 et
+#                                       # deux photos animées (Google aujourd'hui, Samsung à J-1)
 #   scripts/seed-emulator.sh --years 3  # options passées à seed_photos.py (--years, --days)
 #   scripts/seed-emulator.sh --remove   # retire les photos poussées
 #

@@ -8,6 +8,7 @@ import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.FakeDecisionJournal
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaActionRequestFactory
 import fr.babeuloula.photoswipe.domain.fixtures.FakeMediaSource
+import fr.babeuloula.photoswipe.domain.fixtures.FakeMotionPhotoReader
 import fr.babeuloula.photoswipe.domain.fixtures.FakePhotoAnalyzer
 import fr.babeuloula.photoswipe.domain.fixtures.FakePhotoMeasureCache
 import fr.babeuloula.photoswipe.domain.fixtures.FakeReviewRepository
@@ -32,6 +33,7 @@ import fr.babeuloula.photoswipe.domain.usecase.FavoriteMedia
 import fr.babeuloula.photoswipe.domain.usecase.GetDaySession
 import fr.babeuloula.photoswipe.domain.usecase.GetDeckForDay
 import fr.babeuloula.photoswipe.domain.usecase.GetMarkedDeck
+import fr.babeuloula.photoswipe.domain.usecase.GetMotionPhotos
 import fr.babeuloula.photoswipe.domain.usecase.GetPendingFavorites
 import fr.babeuloula.photoswipe.domain.usecase.GetPreviousDecisions
 import fr.babeuloula.photoswipe.domain.usecase.GetQualityHints
@@ -109,7 +111,11 @@ abstract class DeckViewModelTestBase {
                     getPreviousDecisions = GetPreviousDecisions(repository),
                     getMarkedDeck = GetMarkedDeck(repository, source, SameDayMatcher(), clock),
                     getSimilarMemories = GetSimilarMemories(SameDayMatcher(), source, clock),
-                    getQualityHints = GetQualityHints(photoAnalyzer, FakePhotoMeasureCache(), settings),
+                    hints =
+                        CardHints(
+                            GetQualityHints(photoAnalyzer, FakePhotoMeasureCache(), settings),
+                            GetMotionPhotos(motionPhotoReader),
+                        ),
                 ),
             decisions =
                 DeckDecisions(
@@ -145,6 +151,9 @@ abstract class DeckViewModelTestBase {
 
     /** Vignettes des photos à mesurer (PS-164) : aucune par défaut, rien n'est signalé. */
     protected var photoAnalyzer = FakePhotoAnalyzer()
+
+    /** Photos animées (PS-167) : aucune par défaut. */
+    protected var motionPhotoReader = FakeMotionPhotoReader()
 
     /** Dernière application choisie pour partager (PS-163), aucune par défaut. */
     protected val shareTargets = FakeShareTargetRepository()

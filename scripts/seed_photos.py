@@ -5,7 +5,10 @@ Une photo par année sur YEARS_BACK ans, pour aujourd'hui et les 6 jours précé
 de l'ordinateur, avec de quoi essayer les retours d'utilisateurs du 2026-11-11 :
 - aujourd'hui et il y a BURST_DAYS[1] jours, une rafale de BURST_SIZE photos prises à BURST_GAP
   secondes d'intervalle il y a BURST_YEARS_AGO ans (photos proches, PS-140 ; vue d'ensemble, PS-139) ;
-- il y a SINGLE_PHOTO_DAY jours, une seule photo, de l'an dernier : la supprimer vide le jour (PS-136).
+- il y a SINGLE_PHOTO_DAY jours, une seule photo, de l'an dernier : la supprimer vide le jour (PS-136) ;
+- des photos animées (PS-167, MOTION_PHOTOS) : aujourd'hui, celle de l'an dernier au format de Google
+  (XMP GCamera:MicroVideo) ; hier, celle d'il y a 2 ans au format de Samsung (trailer SEFT). Leur
+  courte vidéo est tirée de la photo elle-même par ffmpeg (un lent travelling), rien d'autre n'est ajouté.
 Les images sont de vraies photos (scripts/fixtures/photos, photos de Jérémy, PS-145) prises tour à tour :
 portrait, paysage, carré et panorama ; chaque photo d'une rafale est la même image un peu plus
 recadrée. ffmpeg les réencode (sans leurs métadonnées d'origine) ; l'EXIF (DateTimeOriginal et son décalage horaire, que MediaStore lit pour remplir DATE_TAKEN) est
@@ -20,6 +23,7 @@ import pathlib
 import struct
 import subprocess
 import sys
+import tempfile
 
 YEARS_BACK = 5
 WINDOW_DAYS = 7
@@ -32,6 +36,13 @@ BURST_HOUR = 15
 SINGLE_PHOTO_DAY = 2
 FIXTURES = pathlib.Path(__file__).resolve().parent / "fixtures" / "photos"
 BURST_ZOOM = 0.06
+# Photos animées : jours en arrière -> (format, années en arrière).
+MOTION_PHOTOS = {0: ("google", 1), 1: ("samsung", 2)}
+MOTION_SECONDS = 2
+MOTION_WIDTH = 720
+SAMSUNG_VIDEO_NAME = b"MotionPhoto_Data"
+SAMSUNG_VIDEO_TYPE = b"\x00\x00\x30\x0a"
+SEF_VERSION = 106
 
 TAG_EXIF_IFD = 0x8769
 TAG_DATETIME_ORIGINAL = 0x9003
@@ -150,6 +161,59 @@ def photo_jpeg(path, shot):
     ).stdout
 
 
+def motion_format(taken, today):
+    """Format de photo animée de la prise de vue [taken] (google, samsung), None pour une photo ordinaire."""
+    for days_ago, (kind, years_ago) in MOTION_PHOTOS.items():
+        day = minus_years(today - datetime.timedelta(days=days_ago), years_ago)
+        if taken.date() == day and taken.hour == FIRST_PHOTO_HOUR + years_ago:
+            return kind
+    return None
+
+
+def xmp_segment(video_length):
+    """Segment APP1 XMP d'une photo animée de Google : la vidéo occupe les [video_length] derniers octets."""
+    xmp = (
+        '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+        '<rdf:Description rdf:about="" xmlns:GCamera="http://ns.google.com/photos/1.0/camera/" '
+        f'GCamera:MicroVideo="1" GCamera:MicroVideoVersion="1" GCamera:MicroVideoOffset="{video_length}" '
+        'GCamera:MicroVideoPresentationTimestampUs="0"/></rdf:RDF></x:xmpmeta>'
+    )
+    payload = b"http://ns.adobe.com/xap/1.0/\0" + xmp.encode("utf-8")
+    return b"\xff\xe1" + struct.pack(">H", len(payload) + 2) + payload
+
+
+def samsung_trailer(video):
+    """Trailer de Samsung : bloc MotionPhoto_Data avec [video], répertoire SEFH, sa taille et SEFT."""
+    block = SAMSUNG_VIDEO_TYPE + struct.pack("<I", len(SAMSUNG_VIDEO_NAME)) + SAMSUNG_VIDEO_NAME + video
+    directory = b"SEFH" + struct.pack("<II", SEF_VERSION, 1) + SAMSUNG_VIDEO_TYPE + struct.pack("<II", len(block), len(block))
+    return block + directory + struct.pack("<I", len(directory)) + b"SEFT"
+
+
+def with_motion(jpeg, kind, video):
+    """[jpeg] devenu photo animée de format [kind] : le XMP de Google après le premier segment, ou le trailer de Samsung."""
+    if kind == "google":
+        (length,) = struct.unpack(">H", jpeg[4:6])
+        end = 4 + length
+        return jpeg[:end] + xmp_segment(len(video)) + jpeg[end:] + video
+    return jpeg + samsung_trailer(video)
+
+
+def motion_video(path):
+    """Courte vidéo MP4 tirée de la photo [path] par ffmpeg : un lent travelling de gauche à droite."""
+    with tempfile.TemporaryDirectory() as folder:
+        output = pathlib.Path(folder) / "motion.mp4"
+        subprocess.run(
+            [
+                "ffmpeg", "-loglevel", "error", "-loop", "1", "-i", str(path), "-t", str(MOTION_SECONDS), "-r", "30",
+                "-vf", f"crop=iw*0.8:ih*0.8:(iw-ow)*t/{MOTION_SECONDS}:(ih-oh)/2,scale={MOTION_WIDTH}:-2,format=yuv420p",
+                "-map_metadata", "-1", "-an", "-c:v", "libx264", "-movflags", "+faststart", str(output),
+            ],
+            check=True,
+            capture_output=True,
+        )
+        return output.read_bytes()
+
+
 def main(arguments):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("folder", type=pathlib.Path)
@@ -157,10 +221,14 @@ def main(arguments):
     parser.add_argument("--days", type=int, default=WINDOW_DAYS)
     options = parser.parse_args(arguments)
     options.folder.mkdir(parents=True, exist_ok=True)
-    photos = plan(datetime.date.today(), options.years, options.days)
+    today = datetime.date.today()
+    photos = plan(today, options.years, options.days)
     for taken, source in zip(photos, assign(photos, fixtures())):
-        jpeg = photo_jpeg(source, taken.second // BURST_GAP)
-        (options.folder / file_name(taken)).write_bytes(with_exif(jpeg, taken))
+        jpeg = with_exif(photo_jpeg(source, taken.second // BURST_GAP), taken)
+        kind = motion_format(taken, today)
+        if kind is not None:
+            jpeg = with_motion(jpeg, kind, motion_video(source))
+        (options.folder / file_name(taken)).write_bytes(jpeg)
     print(len(photos))
 
 

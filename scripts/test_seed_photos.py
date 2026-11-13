@@ -1,6 +1,7 @@
 """Tests de seed_photos.py : python3 -m unittest discover -s scripts"""
 
 import datetime
+import struct
 import unittest
 
 import seed_photos
@@ -62,6 +63,40 @@ class ExifTest(unittest.TestCase):
     def test_rejects_a_file_that_is_not_a_jpeg(self):
         with self.assertRaises(ValueError):
             seed_photos.with_exif(b"\x89PNG", datetime.datetime(2021, 7, 15, tzinfo=PARIS_SUMMER))
+
+class MotionPhotoTest(unittest.TestCase):
+    VIDEO = b"\x00\x00\x00\x18ftypmp42" + bytes(32)
+
+    def test_makes_last_year_photo_of_today_and_the_photo_of_2_years_ago_of_yesterday_motion_photos(self):
+        today = datetime.date(2026, 11, 6)
+
+        kinds = {photo: seed_photos.motion_format(photo, today) for photo in seed_photos.plan(today)}
+
+        motion = sorted((photo.date(), kind) for photo, kind in kinds.items() if kind is not None)
+        self.assertEqual([(datetime.date(2024, 11, 5), "samsung"), (datetime.date(2025, 11, 6), "google")], motion)
+
+    def test_writes_a_google_motion_photo_whose_xmp_points_to_the_video_at_the_end(self):
+        jpeg = seed_photos.with_exif(JPEG, datetime.datetime(2025, 11, 6, 10, tzinfo=PARIS_SUMMER))
+
+        motion = seed_photos.with_motion(jpeg, "google", self.VIDEO)
+
+        self.assertTrue(motion.endswith(self.VIDEO))
+        self.assertIn(f'GCamera:MicroVideoOffset="{len(self.VIDEO)}"'.encode(), motion)
+        self.assertEqual(("2025:11:06 10:00:00", "+02:00"), seed_photos.exif_dates(motion))
+        self.assertLess(motion.index(b"Exif"), motion.index(b"http://ns.adobe.com/xap/1.0/"))
+
+    def test_writes_a_samsung_trailer_whose_directory_points_to_the_video_block(self):
+        motion = seed_photos.with_motion(JPEG, "samsung", self.VIDEO)
+
+        self.assertTrue(motion.startswith(JPEG))
+        self.assertTrue(motion.endswith(b"SEFT"))
+        (directory_length,) = struct.unpack("<I", motion[-8:-4])
+        directory_start = len(motion) - 8 - directory_length
+        self.assertEqual(b"SEFH", motion[directory_start:directory_start + 4])
+        offset, length = struct.unpack("<II", motion[directory_start + 16:directory_start + 24])
+        block = motion[directory_start - offset:directory_start - offset + length]
+        self.assertEqual(b"MotionPhoto_Data" + self.VIDEO, block[8:])
+
 
 class PhotosTest(unittest.TestCase):
     def test_ships_portrait_landscape_square_and_panorama_test_photos(self):

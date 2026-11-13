@@ -51,6 +51,7 @@ import fr.babeuloula.photoswipe.ui.dayoverview.DayOverviewUiState
 import fr.babeuloula.photoswipe.ui.deck.DeckScreen
 import fr.babeuloula.photoswipe.ui.deck.DeckUiState
 import fr.babeuloula.photoswipe.ui.deck.FullscreenVideoContent
+import fr.babeuloula.photoswipe.ui.deck.LocalCardVideoPlayer
 import fr.babeuloula.photoswipe.ui.deck.PREVIEW_CARD
 import fr.babeuloula.photoswipe.ui.deck.PhotoViewerContent
 import fr.babeuloula.photoswipe.ui.deck.RecordingVideoPlayer
@@ -157,6 +158,19 @@ class AccessibilityTest {
                 videoPlayer = videoPlayer,
                 onExit = {},
             )
+        }
+        // Photo animée (PS-167) : pastille et bouton de lecture sur la carte du dessus.
+        check {
+            CompositionLocalProvider(LocalCardVideoPlayer provides videoPlayer) {
+                DeckScreen(
+                    day = today,
+                    state =
+                        DeckUiState.Loaded(
+                            listOf(PREVIEW_CARD.copy(motionVideo = "${PREVIEW_CARD.uri}#photoswipe-motion=1-2")),
+                        ),
+                    onEvent = {},
+                )
+            }
         }
         videoPlayer.release()
         // Aperçu de la carte postale (PS-177), prête puis en préparation.
@@ -325,7 +339,14 @@ class AccessibilityTest {
 
     /** Vue d'ensemble d'un jour, puis la même pendant une sélection (PS-159). */
     private fun dayOverviewScreens() {
-        check { DayOverviewScreen(day = today, state = DayOverviewUiState.Loaded(sampleOverview()), onEvent = {}) }
+        check {
+            DayOverviewScreen(
+                day = today,
+                // Case d'une photo animée (PS-167).
+                state = DayOverviewUiState.Loaded(sampleOverview(), motionPhotos = setOf(MediaId(1))),
+                onEvent = {},
+            )
+        }
         check {
             DayOverviewScreen(
                 day = today,
