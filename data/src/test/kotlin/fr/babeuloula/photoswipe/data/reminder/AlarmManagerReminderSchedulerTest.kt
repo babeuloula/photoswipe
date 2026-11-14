@@ -54,7 +54,7 @@ class AlarmManagerReminderSchedulerTest {
 
         val alarm = alarms().single()
         assertEquals(millis(LocalDateTime.of(2026, 11, 7, 18, 0)), alarm.triggerAtMs)
-        assertEquals(AlarmManager.RTC_WAKEUP, alarm.type)
+        assertEquals(AlarmManager.RTC_WAKEUP, alarm.getType())
         assertTrue(alarm.isAllowWhileIdle)
         assertTrue(work(WorkManagerReminderScheduler.WORK_NAME).isEmpty())
     }

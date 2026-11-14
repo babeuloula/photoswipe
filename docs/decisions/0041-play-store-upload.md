@@ -10,7 +10,7 @@ Le workflow `Release` construit l'AAB signé par la clé d'upload et le joint à
 ## Décision
 - **Envoi par l'action `r0adkll/upload-google-play`** (épinglée sur `v1.1.5`) plutôt que par `fastlane supply` : une action Node, sans Ruby ni fastlane à installer sur le runner pour un seul envoi. Elle appelle l'API Google Play Developer avec un compte de service dont la clé JSON vit dans le secret `PHOTOSWIPE_PLAY_SERVICE_ACCOUNT_JSON`, jamais dans le dépôt.
 - **Après la release GitHub, sans bloquer** : l'envoi part une fois le tag et la release publiés ; un échec (ou un secret absent) ne donne qu'un avertissement, et l'AAB joint à la release s'envoie alors à la main.
-- **Piste choisie au lancement** (`play_track`) : `internal` par défaut, `alpha` pour le test fermé, `production` quand l'accès sera ouvert, `none` pour ne rien envoyer. Statut `completed` : la version est aussitôt proposée aux testeurs de la piste.
+- **Piste choisie au lancement** (`play_track`) : `alpha` (le test fermé, où l'app est diffusée) par défaut, `internal` pour le test interne, `production` quand l'accès sera ouvert, `none` pour ne rien envoyer. Statut `completed` : la version est aussitôt proposée aux testeurs de la piste.
 - **Notes reprises des notes F-Droid** (`scripts/play_whatsnew.py`) : le même texte anglais pour `en-US` et `fr-FR`, comme sur F-Droid, coupé en lignes entières sous 500 caractères.
 - **Mapping R8 joint** : les plantages remontés par Android vitals sont lisibles.
 

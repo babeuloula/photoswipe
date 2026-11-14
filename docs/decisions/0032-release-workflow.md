@@ -18,7 +18,7 @@ F-Droid compile le commit du tag et y lit les notes de version (`fastlane/…/ch
 ## Conséquences
 - Réglages du dépôt requis : « Allow auto-merge » ; « Allow GitHub Actions to create and approve pull requests » pour le cas sans jeton.
 - Le jeton expire : le renouveler (et mettre à jour le secret) avant, sinon la PR repasse au merge à la main.
-- Les branches `release/v*` sont protégées contre la suppression, sans contournement (ruleset « release branches: no deletion ») : elles restent après le merge de leur PR.
+- Les branches `release/v*` sont supprimées au merge de leur PR (« Automatically delete head branches ») : le tag pointe sur leur commit, gardé dans `main` par le merge commit, et suffit. Le ruleset « release branches: no deletion », qui les gardait, a été retiré le 2026-11-14.
 - Une release ratée avant la publication ne laisse ni tag, ni branche, ni release ; une release réussie dont la PR n'est pas ouverte ou pas mergée reste valable, seuls les noms des builds debug suivants restent sur l'ancienne version.
 - Un événement `push` lance le workflow du commit tagué : un tag posé à la main sur un commit d'avant PS-130 lance l'ancien workflow, qui publiait tout tag `v*`. Le contrôle ne vaut que pour les commits qui contiennent ce workflow.
 - La clé de debug (`app/debug.keystore`) est publique depuis que le dépôt l'est : n'importe qui peut signer un APK qu'un téléphone ayant une version debug acceptera en mise à jour. Les APK debug des pré-versions sont destinés aux tests, pas à un usage quotidien.

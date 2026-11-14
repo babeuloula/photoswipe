@@ -6,7 +6,7 @@
 # notes de version F-Droid (scripts/fdroid-changelog.sh), construit l'AAB et l'APK signés par la clé
 # d'upload, pose le tag vX.Y.Z sur ce commit et crée la release GitHub (notes générées, AAB, APK,
 # version.properties pour F-Droid). Si une étape échoue, rien n'est tagué ni publié. Il envoie ensuite
-# l'AAB sur la piste Play Store choisie (play_track, test interne par défaut, PS-152, ADR 0041) ; un
+# l'AAB sur la piste Play Store choisie (play_track, test fermé par défaut, PS-152, ADR 0041) ; un
 # échec de cet envoi laisse le tag et la release GitHub, avec un avertissement. Enfin, il ouvre
 # la PR vers main avec le jeton PHOTOSWIPE_RELEASE_TOKEN : la vraie CI y tourne, et l'auto-merge la
 # merge en merge commit (pour garder le commit tagué dans l'historique de main) une fois verte.
@@ -42,13 +42,13 @@ on:
         required: true
         type: string
       play_track:
-        description: "Piste du Play Store : internal (test interne), alpha (test fermé), production, ou none pour ne rien envoyer"
+        description: "Piste du Play Store : alpha (test fermé, là où l'app est diffusée), internal (test interne), production, ou none pour ne rien envoyer"
         required: true
-        default: internal
+        default: alpha
         type: choice
         options:
-          - internal
           - alpha
+          - internal
           - production
           - none
   # Tous les tags, pour que le contrôle des tags poussés à la main voie aussi ceux sans « v ».
@@ -210,7 +210,8 @@ jobs:
           packageName: fr.babeuloula.photoswipe
           releaseFiles: dist/photoswipe-${{ inputs.version }}.aab
           releaseName: ${{ inputs.version }}
-          track: ${{ inputs.play_track }}
+          # « tracks » remplace « track », déprécié par l'action ; une seule piste ici.
+          tracks: ${{ inputs.play_track }}
           status: completed
           whatsNewDirectory: dist/whatsnew
           # R8 est actif en release : plantages lisibles dans Android vitals.
