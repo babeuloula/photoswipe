@@ -1,10 +1,1 @@
-• Add the progress page, opened from the home top bar
-• Chart the sorting activity of the last six months
-• Show the streak of sorted days
-• Count the memories of every day of the year
-• Add a year calendar that opens any day
-• Add badges and a space goal
-• Add a pure black option for the dark theme
-• Liens profonds et raccourcis vers la pile du jour
-• Tuile des réglages rapides vers la pile du jour
-• And more: see the release notes on GitHub.
+• Video card shape and details, progress button without counter (PS-178, PS-179, PS-180)
