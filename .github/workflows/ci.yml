@@ -166,7 +166,11 @@ jobs:
           disk-size: 2048M
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -no-metrics
           disable-animations: true
-          script: ./gradlew connectedDebugAndroidTest --console=plain
+          # Le journal des plantages d'Android suit les tests : un processus qui plante pendant une
+          # exécution instrumentée y laisse sa pile, même quand Gradle ne le compte pas en échec.
+          script: |
+            ./gradlew connectedDebugAndroidTest --console=plain
+            adb logcat -d -b crash
 
       - name: Test summary
         if: ${{ !cancelled() }}
