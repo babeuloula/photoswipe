@@ -146,20 +146,18 @@ fun MediaCard(
                 val playback = cardPlayback(card, active, onRatio)
                 val video = playback.video
                 // Repère et pastilles : pas sur les cartes du dessous de la pile, dont seuls les bords dépassent.
-                if (details) {
-                    TopRow(
-                        card = card,
-                        modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(CARD_PADDING),
-                    ) {
-                        if (video != null) VideoCornerButtons(video)
-                        playback.motionPhoto?.let { MotionPhotoButton(it) }
-                    }
-                    CardBottom(
-                        card = card,
-                        video = video,
-                        modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(CARD_PADDING),
-                    )
-                }
+                CardDetails(
+                    shown = details && rememberCardDetailsShown(video),
+                    top = {
+                        TopRow(card = card, modifier = Modifier.fillMaxWidth().padding(CARD_PADDING)) {
+                            if (video != null) VideoCornerButtons(video)
+                            playback.motionPhoto?.let { MotionPhotoButton(it) }
+                        }
+                    },
+                    bottom = {
+                        CardBottom(card = card, video = video, modifier = Modifier.fillMaxWidth().padding(CARD_PADDING))
+                    },
+                )
                 overlay()
             }
         }
