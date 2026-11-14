@@ -15,7 +15,7 @@ Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été inc
 | Retrier un jour déjà trié | PS-108, PS-111 | Page 4 (texte) |
 | Rappel quotidien, seulement s'il reste des souvenirs, à activer dans les réglages | epic 8 | Page 4 (texte et notification d'exemple) ; le tutoriel ne l'active pas |
 | Résumé de fin de tri, espace libéré estimé | PS-53, PS-88 | Page 5 « Rien n'est définitif » (animation) |
-| Confirmation groupée, corbeille du système restaurable environ 30 jours | PS-54, PS-55 | Page 5 (animation du dialogue et texte) ; aucune promesse sur Google Photos (SPEC §16.7) |
+| Confirmation groupée, corbeille du système restaurable environ 30 jours | PS-54, PS-55 | Page 5 (animation du dialogue et texte) ; aucune promesse sur Google Photos (SPEC §16.7). Sans corbeille (Android 10), page « Vous décidez à la fin » : suppression définitive une fois confirmée, dialogue « Supprimer définitivement » (`TutorialPage.texts`, PS-185) |
 | Revoir les médias marqués en grand depuis le résumé | PS-112 | Page 5 (texte) |
 | Page « Corbeille » : restaurer ou supprimer définitivement ce que PhotoSwipe a supprimé | PS-168 | Page 5 (texte : restaurable environ 30 jours, depuis la page « Corbeille », icône en haut de l'accueil, 2026-11-13) ; la page elle-même n'est pas montrée, elle s'ouvre depuis le résumé, l'icône de la barre de l'accueil ou les réglages |
 | Essai sans risque des gestes | PS-80 | Page 6 « Essayez » (cartes d'exemple) |

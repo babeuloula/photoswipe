@@ -97,6 +97,31 @@ class TutorialScreenTest {
     }
 
     @Test
+    fun `promises a restorable trash where the gallery has one`() {
+        show(pages = listOf(TutorialPage.CONFIRMATION))
+
+        composeRule.onNodeWithText(text(R.string.tutorial_confirmation_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.summary_trash_confirm_text), useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun `says the deletion is for good on android 10, without promising any trash`() {
+        show(features = PlatformFeatures.forSdk(Build.VERSION_CODES.Q), pages = listOf(TutorialPage.CONFIRMATION))
+
+        composeRule.onNodeWithText(text(R.string.tutorial_confirmation_no_trash_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.tutorial_confirmation_no_trash_body)).assertIsDisplayed()
+        composeRule
+            .onNodeWithContentDescription(text(R.string.tutorial_confirmation_no_trash_illustration))
+            .assertExists()
+        composeRule.onNodeWithText(text(R.string.summary_delete_confirm_text), useUnmergedTree = true).assertExists()
+        composeRule
+            .onNodeWithText(
+                text(R.string.summary_trash_confirm_text),
+                useUnmergedTree = true,
+            ).assertDoesNotExist()
+    }
+
+    @Test
     fun `next shows the following page`() {
         show()
 

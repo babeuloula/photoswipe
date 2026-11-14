@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -40,7 +39,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -51,15 +49,14 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.GetMarkedPreviews
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.common.Thumbnail
 import fr.babeuloula.photoswipe.ui.common.segmentShape
-import fr.babeuloula.photoswipe.ui.deck.fileSizeLabel
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import fr.babeuloula.photoswipe.ui.theme.monoLabel
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
@@ -136,6 +133,8 @@ private fun SummaryContent(
     state: SummaryUiState.Loaded,
     onEvent: (SummaryEvent) -> Unit,
 ) {
+    // Corbeille de la galerie (Android 11+) ; sans elle, la suppression est définitive (PS-185).
+    val trash = LocalPlatformFeatures.current.systemTrash
     val summary = state.summary
     Column(Modifier.fillMaxSize()) {
         Column(
@@ -146,34 +145,7 @@ private fun SummaryContent(
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            when {
-                summary.markedForDeletionCount > 0 -> {
-                    FreedSpace(
-                        title = stringResource(R.string.summary_freed_space),
-                        bytes = summary.estimatedFreedBytes,
-                        detail =
-                            pluralStringResource(
-                                R.plurals.summary_if_confirmed,
-                                summary.markedForDeletionCount,
-                                summary.markedForDeletionCount,
-                            ),
-                    )
-                }
-
-                // Tout est confirmé : la place libérée aujourd'hui plutôt qu'une estimation à zéro (ADR 0034).
-                summary.trashedTodayCount > 0 -> {
-                    FreedSpace(
-                        title = stringResource(R.string.summary_freed_today),
-                        bytes = summary.trashedTodayBytes,
-                        detail =
-                            pluralStringResource(
-                                R.plurals.summary_trashed_today_detail,
-                                summary.trashedTodayCount,
-                                summary.trashedTodayCount,
-                            ),
-                    )
-                }
-            }
+            SummaryFreedSpace(summary, trash)
             SortedToday(summary)
             // Rien n'attend : ni groupe « En attente », ni mention d'une suppression à venir.
             if (summary.markedForDeletionCount > 0) {
@@ -183,7 +155,8 @@ private fun SummaryContent(
                 }
                 NothingDeletedYet()
             }
-            TrashLink(onOpen = { onEvent(SummaryEvent.OpenTrash) })
+            // La page « Corbeille » n'existe qu'avec la corbeille de la galerie (Android 11+, PS-185).
+            if (trash) TrashLink(onOpen = { onEvent(SummaryEvent.OpenTrash) })
         }
         SummaryActions(
             nothingMarked = summary.markedForDeletionCount == 0,
@@ -258,44 +231,6 @@ internal fun SummaryHeading(text: String) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp).semantics { heading() },
     )
-}
-
-/**
- * Espace libéré, mis en avant sans carte (ADR 0025) : le nombre en grand, en chasse fixe, sous son
- * [title] (« Espace libéré estimé » ou « Espace libéré aujourd'hui »), et ce dont il dépend ([detail]).
- */
-@Composable
-private fun FreedSpace(
-    title: String,
-    bytes: Long,
-    detail: String,
-) {
-    Column(
-        modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.semantics { heading() },
-        )
-        // Une seule ligne : la taille du texte descend du displayLarge jusqu'à une taille lisible.
-        val style = MaterialTheme.typography.displayLarge
-        Text(
-            text = fileSizeLabel(LocalContext.current, bytes),
-            style = style,
-            maxLines = 1,
-            softWrap = false,
-            autoSize = TextAutoSize.StepBased(minFontSize = FREED_SPACE_MIN_FONT_SIZE, maxFontSize = style.fontSize),
-            modifier = Modifier.testTag(FREED_SPACE_TAG),
-        )
-        Text(
-            text = detail,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
 }
 
 /**
@@ -422,9 +357,6 @@ private fun SummaryScreenPreview() {
         )
     }
 }
-
-/** Taille la plus petite de l'espace libéré, encore lisible, quand le displayLarge ne tient pas. */
-private val FREED_SPACE_MIN_FONT_SIZE = 24.sp
 
 /** Repère de test de l'espace libéré. */
 internal const val FREED_SPACE_TAG = "summary_freed_space"

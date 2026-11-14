@@ -75,6 +75,7 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
 import fr.babeuloula.photoswipe.ui.theme.IbmPlexMono
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -256,15 +257,20 @@ private fun rememberCatchUpDays(
     }
 }
 
-/** Boutons de la barre du haut : « Progression » (PS-153), « Corbeille » (PS-168) et réglages. */
+/**
+ * Boutons de la barre du haut : « Progression » (PS-153), « Corbeille » (PS-168), seulement avec la
+ * corbeille de la galerie (Android 11+, PS-185), et réglages.
+ */
 @Composable
 private fun TopBarActions(onEvent: (HomeEvent) -> Unit) {
     // Sans pastille : un nombre sur l'icône se lisait comme des notifications non lues.
     IconButton(onClick = { onEvent(HomeEvent.OpenProgress) }) {
         Icon(painterResource(R.drawable.ic_progress), contentDescription = stringResource(R.string.home_open_progress))
     }
-    IconButton(onClick = { onEvent(HomeEvent.OpenTrash) }) {
-        Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.home_open_trash))
+    if (LocalPlatformFeatures.current.systemTrash) {
+        IconButton(onClick = { onEvent(HomeEvent.OpenTrash) }) {
+            Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.home_open_trash))
+        }
     }
     IconButton(onClick = { onEvent(HomeEvent.OpenSettings) }) {
         Icon(painterResource(R.drawable.ic_settings), contentDescription = stringResource(R.string.home_open_settings))

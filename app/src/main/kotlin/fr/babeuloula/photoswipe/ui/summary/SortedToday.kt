@@ -52,7 +52,12 @@ internal fun SortedToday(summary: SessionSummary) {
                     tint = colors.delete,
                     text =
                         pluralStringResource(
-                            R.plurals.summary_deleted_today,
+                            // Sans corbeille (Android 10), la suppression est définitive (PS-185).
+                            if (LocalPlatformFeatures.current.systemTrash) {
+                                R.plurals.summary_deleted_today
+                            } else {
+                                R.plurals.summary_deleted_for_good_today
+                            },
                             summary.trashedTodayCount,
                             summary.trashedTodayCount,
                             fileSizeLabel(LocalContext.current, summary.trashedTodayBytes),

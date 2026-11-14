@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.deck.fileSizeLabel
 import fr.babeuloula.photoswipe.ui.theme.motion
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
@@ -117,9 +118,13 @@ private fun SummaryLine(
     }
 }
 
-/** Dialogue de corbeille d'exemple, comme celui du résumé : icône, question, délai de restauration, action. */
+/**
+ * Dialogue de corbeille d'exemple, comme celui du résumé : icône, question, délai de restauration,
+ * action ; sans corbeille (Android 10), celui de la suppression définitive (PS-185).
+ */
 @Composable
 private fun SampleTrashDialog() {
+    val trash = LocalPlatformFeatures.current.systemTrash
     Column(
         modifier =
             Modifier
@@ -137,18 +142,22 @@ private fun SampleTrashDialog() {
             tint = MaterialTheme.colorScheme.secondary,
         )
         Text(
-            pluralStringResource(R.plurals.summary_trash_confirm_title, MARKED, MARKED),
+            pluralStringResource(
+                if (trash) R.plurals.summary_trash_confirm_title else R.plurals.summary_delete_confirm_title,
+                MARKED,
+                MARKED,
+            ),
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
         )
         Text(
-            stringResource(R.string.summary_trash_confirm_text),
+            stringResource(if (trash) R.string.summary_trash_confirm_text else R.string.summary_delete_confirm_text),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
         Text(
-            stringResource(R.string.summary_trash_confirm_action),
+            stringResource(if (trash) R.string.summary_trash_confirm_action else R.string.trash_delete_forever),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.align(Alignment.End),

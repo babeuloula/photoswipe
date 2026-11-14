@@ -73,6 +73,7 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDay
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.common.SharedScreenKey
 import fr.babeuloula.photoswipe.ui.common.Thumbnail
 import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
@@ -231,7 +232,12 @@ internal fun DeletedLabel(
     Text(
         text =
             pluralStringResource(
-                R.plurals.home_day_deleted,
+                // Sans corbeille (Android 10), la suppression est définitive (PS-185).
+                if (LocalPlatformFeatures.current.systemTrash) {
+                    R.plurals.home_day_deleted
+                } else {
+                    R.plurals.home_day_deleted_for_good
+                },
                 day.deletedCount,
                 day.deletedCount,
                 fileSizeLabel(LocalContext.current, day.freedBytes),

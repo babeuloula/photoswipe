@@ -272,6 +272,8 @@
     <string name="tutorial_catch_up_body">Missed a day? On the home screen, below today\'s card, the “Catch up” list keeps the previous days (a week by default, up to 30 days in the settings), and a day already sorted can be sorted again. Tap the thumbnails of a day to see all its memories, then long press to sort several at once. A daily reminder, which you can turn on in the settings, lets you know only when memories are left to sort.</string>
     <string name="tutorial_confirmation_title">Nothing is final</string>
     <string name="tutorial_confirmation_body">Marked media are deleted together, once you confirm at the end of sorting; tap them in the summary to review them full size first. They go to the system trash, where you can restore them for about 30 days, from the “Trash” page (icon at the top of the home screen).</string>
+    <string name="tutorial_confirmation_no_trash_title">You decide at the end</string>
+    <string name="tutorial_confirmation_no_trash_body">Marked media are deleted together, only once you confirm at the end of sorting; tap them in the summary to review them full size first. Your phone has no gallery trash: once confirmed, they are deleted for good.</string>
     <string name="tutorial_practice_title">Give it a try</string>
     <string name="tutorial_practice_body">These sample cards are not your photos: swipe them or use the buttons, nothing is saved.</string>
     <string name="tutorial_practice_kept">Kept: it would come back next year.</string>
@@ -287,6 +289,7 @@
     <string name="tutorial_swipe_up_illustration">Animation: a photo slides up under a blue veil with a heart, then the menu opens with Add to favorites and Share.</string>
     <string name="tutorial_catch_up_illustration">Animation: the list of days on the home screen, today at the top then the 6 previous days, each with its number of memories to sort; they get sorted one after another, and the reminder counts what is left.</string>
     <string name="tutorial_confirmation_illustration">Animation: the summary shows the estimated space freed, then a dialog asks to move the marked items to the trash.</string>
+    <string name="tutorial_confirmation_no_trash_illustration">Animation: the summary shows the estimated space freed, then a dialog asks to delete the marked items for good.</string>
     <string name="tutorial_swipes_illustration">Animation: a photo slides right under a green veil with a check mark, Keep, then left under a red veil with a trash can, Delete.</string>
     <!-- Rapport de plantage proposé au lancement suivant (ADR 0033). -->
     <string name="crash_report_title">PhotoSwipe closed unexpectedly</string>
@@ -295,6 +298,7 @@
     <string name="crash_report_ignore">Ignore</string>
     <!-- Résumé quand tout est confirmé : place libérée aujourd'hui (ADR 0034). -->
     <string name="summary_freed_today">Sent to the trash today</string>
+    <string name="summary_deleted_for_good_today">Freed today</string>
     <!-- Pile : place de la carte parmi les souvenirs de son année (PS-138). -->
     <string name="deck_year_progress">%1$d · memory %2$d of %3$d</string>
     <string name="deck_year_single">%1$d · the only memory from that year</string>
