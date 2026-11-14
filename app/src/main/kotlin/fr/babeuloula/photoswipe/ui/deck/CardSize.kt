@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -11,6 +12,8 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -53,17 +56,18 @@ internal fun fittedCardSize(
 /**
  * Place la carte du média [uri] dans tout l'espace donné, à la forme de son image (PS-142) :
  * [content] reçoit la taille de la carte et de quoi retenir les proportions de l'image une fois
- * chargée.
+ * chargée. [knownRatio], lu dans la galerie, lui donne sa forme dès le départ.
  */
 @Composable
 internal fun FittedCardBox(
     uri: String,
     modifier: Modifier = Modifier,
+    knownRatio: Float? = null,
     content: @Composable (size: DpSize, onRatio: (Float) -> Unit) -> Unit,
 ) {
     val ownRatio = remember(uri) { mutableStateOf<Float?>(null) }
     val ratios = LocalCardAspectRatios.current
-    val ratio = ratios?.get(uri) ?: ownRatio.value
+    val ratio = ratios?.get(uri) ?: ownRatio.value ?: knownRatio
     BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.Center) {
         val target = fittedCardSize(maxWidth, maxHeight, ratio)
         // Une image tout juste chargée : la carte prend sa forme en douceur, sans sauter.
@@ -90,3 +94,31 @@ internal val MIN_CARD_WIDTH = 280.dp
 
 /** Hauteur minimale d'une carte : le repère en haut et les pastilles en bas y tiennent, un 2:1 aussi. */
 internal val MIN_CARD_HEIGHT = 180.dp
+
+/**
+ * Donne à la carte de [uri] les proportions de sa vidéo dès que sa première image est affichée
+ * ([shown]) : la miniature peut en donner d'autres (rotation ignorée, image non décodée), et la
+ * vidéo laisserait alors voir la miniature autour d'elle.
+ */
+@Composable
+internal fun ReportVideoRatio(
+    uri: String,
+    videoSize: Size?,
+    shown: Boolean,
+    onRatio: (Float) -> Unit,
+) {
+    LaunchedEffect(uri, videoSize, shown) {
+        val ratio = videoSize?.let(::aspectRatioOf)
+        if (shown && ratio != null) onRatio(ratio)
+    }
+}
+
+/** Proportions (largeur sur hauteur) d'une taille connue (image, vidéo), `null` sinon. */
+internal fun aspectRatioOf(size: Size): Float? =
+    if (size.isSpecified &&
+        size.height > 0f
+    ) {
+        size.width / size.height
+    } else {
+        null
+    }

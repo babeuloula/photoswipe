@@ -31,6 +31,13 @@ class MediaCardUiStateTest {
     }
 
     @Test
+    fun `gives the card the aspect ratio read in the gallery`() {
+        val media = aMediaItem().copy(width = 1080, height = 1920)
+
+        assertEquals(0.5625f, MediaCardUiState.of(media, LocalDate.of(2026, 5, 14), paris).aspectRatio)
+    }
+
+    @Test
     fun `counts the years from the day of the deck`() {
         val media = aMediaItem(takenAt = takenAt(LocalDateTime.of(2023, 5, 14, 18, 0)))
 

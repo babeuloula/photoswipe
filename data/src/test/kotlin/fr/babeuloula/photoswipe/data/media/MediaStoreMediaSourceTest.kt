@@ -198,6 +198,31 @@ class MediaStoreMediaSourceTest {
         }
 
     @Test
+    fun `reads the displayed size of a media, swapped by a quarter turn`() =
+        runTest {
+            // Vidéo filmée en portrait : fichier en 1920 × 1080, tourné d'un quart de tour.
+            provider.addVideo(id = 1, dateTaken = july15th2025.toEpochMilli())
+            provider.setDimensions(id = 1, width = 1920, height = 1080, orientation = 90)
+            provider.addImage(id = 2, dateTaken = july15th2025.toEpochMilli())
+            provider.setDimensions(id = 2, width = 4000, height = 3000, orientation = 180)
+
+            val media = source.mediaByIds(setOf(MediaId(1), MediaId(2))).associateBy { it.id.value }
+
+            assertEquals(1080 to 1920, media.getValue(1).width to media.getValue(1).height)
+            assertEquals(4000 to 3000, media.getValue(2).width to media.getValue(2).height)
+        }
+
+    @Test
+    fun `leaves the size of a media unknown when the gallery has not measured it`() =
+        runTest {
+            provider.addImage(id = 1, dateTaken = july15th2025.toEpochMilli())
+            provider.setDimensions(id = 1, width = 0, height = 0)
+            provider.addImage(id = 2, dateTaken = july15th2025.toEpochMilli())
+
+            source.mediaByIds(setOf(MediaId(1), MediaId(2))).forEach { assertNull(it.aspectRatio) }
+        }
+
+    @Test
     fun `leaves the duration of a video unknown when it is missing`() =
         runTest {
             provider.addVideo(id = 1, dateTaken = july15th2025.toEpochMilli(), duration = null)
