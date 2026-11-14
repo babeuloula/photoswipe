@@ -1,1 +1,5 @@
-• Video card shape and details, progress button without counter (PS-178, PS-179, PS-180)
+• Install PhotoSwipe on Android 10
+• Settings that match each Android version
+• Hide gallery favorites on Android 10
+• Delete marked media for good on Android 10
+• No trash page nor restore promise on Android 10
