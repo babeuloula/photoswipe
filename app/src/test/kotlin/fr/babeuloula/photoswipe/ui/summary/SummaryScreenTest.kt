@@ -342,6 +342,24 @@ class SummaryScreenTest {
     }
 
     @Test
+    fun `warns that the deletion is for good on android 10, which has no trash`() {
+        show(
+            SummaryUiState.Loaded(summary, askingTrashConfirmation = true),
+            features = PlatformFeatures.forSdk(Build.VERSION_CODES.Q),
+        )
+
+        composeRule
+            .onNodeWithText(
+                composeRule.activity.resources.getQuantityString(R.plurals.summary_delete_confirm_title, 4, 4),
+            ).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.summary_delete_confirm_text)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.summary_trash_confirm_text)).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.trash_delete_forever)).performClick()
+
+        assertEquals(listOf<SummaryEvent>(SummaryEvent.TrashConfirmationAccepted), events)
+    }
+
+    @Test
     fun `opens the trash of PhotoSwipe`() {
         show(SummaryUiState.Loaded(summary))
 

@@ -116,12 +116,40 @@ class MediaStoreActionRequestFactoryTest {
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.Q])
-    fun `refuses to prepare gallery requests on android 10, which has none`() {
+    fun `prepares permanent deletions without any dialog on android 10, which has no trash`() {
+        val factory = MediaStoreActionRequestFactory(RuntimeEnvironment.getApplication().contentResolver)
+        val media = listOf(aMediaItem(id = 1), aMediaItem(id = 2))
+
+        val request = factory.trashRequests(media).single() as DirectDeletionRequest
+
+        assertEquals(setOf(MediaId(1), MediaId(2)), request.mediaIds)
+        assertEquals(media.map { Uri.parse(it.uri) }, request.uris)
+    }
+
+    @Test
+    fun `splits permanent deletions into batches too`() {
+        val factory =
+            MediaStoreActionRequestFactory(
+                createTrash = { _, _ -> intentSender },
+                createFavorite = { _, _ -> intentSender },
+                createDelete = { intentSender },
+                batchSize = 2,
+                permanentDeletion = true,
+            )
+
+        val requests = factory.trashRequests((1L..5L).map { aMediaItem(id = it) })
+
+        assertEquals(listOf(2, 2, 1), requests.map { it.mediaIds.size })
+        assertTrue(requests.all { it is DirectDeletionRequest })
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.Q])
+    fun `refuses the other gallery requests on android 10, which has none`() {
         val factory = MediaStoreActionRequestFactory(RuntimeEnvironment.getApplication().contentResolver)
         val media = listOf(aMediaItem(id = 1))
 
         listOf<() -> Unit>(
-            { factory.trashRequests(media) },
             { factory.restoreRequests(media) },
             { factory.deleteRequests(media) },
             { factory.favoriteRequests(media) },

@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.data.media
 
 import android.content.ContentProvider
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
@@ -170,11 +171,23 @@ class FakeMediaStoreProvider : ContentProvider() {
         values: ContentValues?,
     ): Uri? = throw UnsupportedOperationException()
 
+    /** Médias qu'Android refuse de supprimer : leur suppression lève une `SecurityException`. */
+    val protectedIds = mutableSetOf<Long>()
+
+    /** Supprime le média de [uri] (`…/media/ID`), comme MediaStore ; renvoie le nombre de lignes supprimées. */
     override fun delete(
         uri: Uri,
         selection: String?,
         selectionArgs: Array<out String>?,
-    ): Int = throw UnsupportedOperationException()
+    ): Int {
+        val id = ContentUris.parseId(uri)
+        if (id in protectedIds) throw SecurityException("not allowed to delete $uri")
+        return database.delete(
+            table(uri.buildUpon().path(uri.path?.substringBeforeLast('/')).build()),
+            "${MediaStore.MediaColumns._ID} = ?",
+            arrayOf(id.toString()),
+        )
+    }
 
     override fun update(
         uri: Uri,

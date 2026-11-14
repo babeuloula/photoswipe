@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.ui.summary
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.IntentSender
+import android.os.Build
 import fr.babeuloula.photoswipe.MainDispatcherRule
 import fr.babeuloula.photoswipe.domain.fixtures.DEFAULT_SIZE_BYTES
 import fr.babeuloula.photoswipe.domain.fixtures.FakeActivityHistory
@@ -33,6 +34,7 @@ import fr.babeuloula.photoswipe.domain.usecase.OfferManageMediaTip
 import fr.babeuloula.photoswipe.domain.usecase.PrepareTrash
 import fr.babeuloula.photoswipe.domain.usecase.RecordTrashResult
 import fr.babeuloula.photoswipe.permission.OrphanCleanup
+import fr.babeuloula.photoswipe.platform.PlatformFeatures
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -107,8 +109,13 @@ class SummaryViewModelTest {
                         ),
                     offerManageMediaTip = OfferManageMediaTip(settings),
                 ),
-            mediaActionIntents = { intentSender },
-            mediaManagement = { mediaManagementGranted },
+            gallery =
+                SummaryGallery(
+                    mediaActionIntents = { intentSender },
+                    mediaManagement = { mediaManagementGranted },
+                    directDeletion = NoDirectDeletion,
+                    platform = PlatformFeatures.forSdk(Build.VERSION_CODES.UPSIDE_DOWN_CAKE),
+                ),
         )
 
     private suspend fun mark(vararg ids: Long) {

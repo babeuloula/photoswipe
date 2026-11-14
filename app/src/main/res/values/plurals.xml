@@ -36,6 +36,10 @@
         <item quantity="one">%d item moved to the trash. You can restore it from your gallery\'s trash for about 30 days.</item>
         <item quantity="other">%d items moved to the trash. You can restore them from your gallery\'s trash for about 30 days.</item>
     </plurals>
+    <plurals name="summary_deleted_for_good">
+        <item quantity="one">%d item deleted for good.</item>
+        <item quantity="other">%d items deleted for good.</item>
+    </plurals>
     <plurals name="summary_still_marked">
         <item quantity="one">%d item stays marked for deletion.</item>
         <item quantity="other">%d items stay marked for deletion.</item>
@@ -47,6 +51,10 @@
     <plurals name="summary_trash_confirm_title">
         <item quantity="one">Move %d item to the trash?</item>
         <item quantity="other">Move %d items to the trash?</item>
+    </plurals>
+    <plurals name="summary_delete_confirm_title">
+        <item quantity="one">Delete %d item for good?</item>
+        <item quantity="other">Delete %d items for good?</item>
     </plurals>
     <plurals name="summary_favorites">
         <item quantity="one">%d favorite</item>

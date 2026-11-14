@@ -49,8 +49,11 @@ class AndroidMediaAccessReaderTest {
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.Q])
-    fun `reads full access with the storage permission on android 10`() {
-        shadowOf(application).grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
+    fun `reads full access with the storage permissions on android 10`() {
+        shadowOf(application).grantPermissions(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        )
 
         assertEquals(MediaAccess.FULL, reader.currentAccess())
     }
