@@ -72,6 +72,7 @@ class MediaStoreMediaSource
             return buildList {
                 while (moveToNext()) {
                     val id = getLong(columns.id)
+                    val size = displaySize(columns)
                     add(
                         MediaItem(
                             id = MediaId(id),
@@ -83,6 +84,8 @@ class MediaStoreMediaSource
                             isFavorite = getInt(columns.favorite) == 1,
                             fileName = columns.fileName?.takeUnless { isNull(it) }?.let { getString(it) },
                             folder = columns.folder?.takeUnless { isNull(it) }?.let { getString(it) },
+                            width = size?.first,
+                            height = size?.second,
                         ),
                     )
                 }
@@ -100,6 +103,25 @@ class MediaStoreMediaSource
                 Instant.ofEpochSecond(getLong(columns.dateAdded))
             }
         }
+
+        /**
+         * Largeur et hauteur affichées : `WIDTH` et `HEIGHT` sont celles du fichier, échangées
+         * quand `ORIENTATION` le tourne d'un quart de tour. `null` si l'une manque (fichier pas
+         * encore indexé) : la carte prend alors la forme de l'image une fois chargée.
+         */
+        private fun Cursor.displaySize(columns: Columns): Pair<Int, Int>? {
+            val width = positiveInt(columns.width)
+            val height = positiveInt(columns.height)
+            val orientation = columns.orientation?.takeUnless { isNull(it) }?.let { getInt(it) } ?: 0
+            return when {
+                width == null || height == null -> null
+                orientation % HALF_TURN_DEGREES == QUARTER_TURN_DEGREES -> height to width
+                else -> width to height
+            }
+        }
+
+        private fun Cursor.positiveInt(column: Int?): Int? =
+            column?.takeUnless { isNull(it) }?.let { getInt(it) }?.takeIf { it > 0 }
 
         private fun Cursor.nonNegativeLong(column: Int): Long? =
             if (isNull(column)) {
@@ -123,6 +145,9 @@ class MediaStoreMediaSource
             val duration = cursor.getColumnIndex(MediaStore.MediaColumns.DURATION).takeIf { it >= 0 }
             val fileName = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME).takeIf { it >= 0 }
             val folder = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH).takeIf { it >= 0 }
+            val width = cursor.getColumnIndex(MediaStore.MediaColumns.WIDTH).takeIf { it >= 0 }
+            val height = cursor.getColumnIndex(MediaStore.MediaColumns.HEIGHT).takeIf { it >= 0 }
+            val orientation = cursor.getColumnIndex(MediaStore.MediaColumns.ORIENTATION).takeIf { it >= 0 }
         }
 
         /** Collections MediaStore lues, avec leurs colonnes. */
@@ -146,6 +171,12 @@ class MediaStoreMediaSource
         private companion object {
             /** Nombre maximal d'identifiants par requête, loin sous la limite de paramètres de SQLite. */
             const val MAX_IDS_PER_QUERY = 500
+
+            /** Un quart de tour, en degrés : la largeur devient la hauteur. */
+            const val QUARTER_TURN_DEGREES = 90
+
+            /** Un demi-tour, en degrés : les proportions ne changent pas. */
+            const val HALF_TURN_DEGREES = 180
         }
     }
 
@@ -159,4 +190,7 @@ private val COMMON_PROJECTION =
         MediaStore.MediaColumns.IS_FAVORITE,
         MediaStore.MediaColumns.DISPLAY_NAME,
         MediaStore.MediaColumns.RELATIVE_PATH,
+        MediaStore.MediaColumns.WIDTH,
+        MediaStore.MediaColumns.HEIGHT,
+        MediaStore.MediaColumns.ORIENTATION,
     )

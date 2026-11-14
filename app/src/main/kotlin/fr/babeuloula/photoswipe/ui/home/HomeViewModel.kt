@@ -53,7 +53,6 @@ sealed interface HomeUiState {
      * d'Android a déjà été validé, le conseil n'a pas été fermé et l'accès n'est pas donné (ADR 0023).
      * @property showRatingInvitation vrai pour inviter, une seule fois, à noter l'application et à
      * soutenir son développeur, au troisième jour où la pile du jour est entièrement triée (PS-121).
-     * @property streak série de jours en cours (PS-155), rappelée sur le bouton « Progression ».
      * @property whatsNew nouveautés des versions manquées depuis la dernière mise à jour (PS-173),
      * de la plus récente à la plus ancienne ; vide pour ne pas afficher la feuille. Jamais en même
      * temps que l'invitation à noter l'application, qui passe avant.
@@ -64,7 +63,6 @@ sealed interface HomeUiState {
         val pendingDeletionCount: Int = 0,
         val showManageMediaTip: Boolean = false,
         val showRatingInvitation: Boolean = false,
-        val streak: Int = 0,
         val whatsNew: List<WhatsNewRelease> = emptyList(),
     ) : HomeUiState {
         /**
@@ -225,9 +223,6 @@ class HomeViewModel
          */
         private val notices = MutableStateFlow(HomeNotices())
 
-        /** Série de jours en cours (PS-155), recomptée à chaque lecture des jours. */
-        private val streak = MutableStateFlow(0)
-
         /** Derniers jours passés au calcul de la série, pour ne pas le refaire sans changement. */
         private var streakDays: List<ReviewDay>? = null
 
@@ -255,8 +250,6 @@ class HomeViewModel
                     } else {
                         state
                     }
-                }.combine(streak) { state, days ->
-                    if (state is HomeUiState.Loaded) state.copy(streak = days) else state
                 }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), HomeUiState.Loading)
 
         /** Navigations à exécuter, chacune livrée une seule fois. */
@@ -386,18 +379,14 @@ class HomeViewModel
         }
 
         /**
-         * Recompte la série de jours (PS-155) quand les jours de la fenêtre ont changé. Un échec de
-         * lecture ou d'écriture des réglages garde la série affichée.
+         * Recompte et enregistre la série de jours (PS-155), lue par la page « Progression », quand
+         * les jours de la fenêtre ont changé. Un échec de lecture ou d'écriture des réglages est ignoré.
          */
         private fun countStreak(days: List<ReviewDay>) {
             if (days == streakDays) return
             streakDays = days
             viewModelScope.launch {
-                runCatching {
-                    sortedDay.updateStreak(
-                        days,
-                    )
-                }.onSuccess { streak.value = it.current }
+                runCatching { sortedDay.updateStreak(days) }
             }
         }
 

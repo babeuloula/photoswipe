@@ -28,6 +28,7 @@ import fr.babeuloula.photoswipe.ui.whatsnew.WhatsNewRelease
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -370,10 +371,11 @@ class HomeViewModelTest {
             val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
 
-            val state = viewModel.uiState.first { it is HomeUiState.Loaded && it.streak > 0 } as HomeUiState.Loaded
+            loaded(viewModel)
+            advanceUntilIdle()
 
             // Aujourd'hui trié, les six jours précédents sans souvenir : un seul jour de série.
-            assertEquals(1, state.streak)
+            assertEquals(1, settings.streakState.streak.current)
             assertEquals(1, settings.streakState.streak.best)
         }
 
@@ -382,9 +384,10 @@ class HomeViewModelTest {
         runTest {
             val viewModel = homeViewModel(FakeMediaSource(listOf(takenOn(1, 2025))))
 
-            val state = loaded(viewModel) as HomeUiState.Loaded
+            loaded(viewModel)
+            advanceUntilIdle()
 
-            assertEquals(0, state.streak)
+            assertEquals(0, settings.streakState.streak.current)
         }
 
     @Test

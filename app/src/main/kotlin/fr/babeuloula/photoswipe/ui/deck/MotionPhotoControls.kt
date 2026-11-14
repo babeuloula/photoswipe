@@ -131,17 +131,34 @@ internal class CardPlayback(
     val motionPhoto: MotionPhotoPlayback? = null,
 )
 
-/** Lecture de [card] : rien sans le lecteur de la pile (aperçus, tests) ni sous la carte du dessus. */
+/**
+ * Lecture de [card] : rien sans le lecteur de la pile (aperçus, tests) ni sous la carte du dessus.
+ * [onRatio] reçoit les proportions d'une vidéo dès sa première image : la carte prend sa forme.
+ */
 @Composable
 internal fun BoxScope.cardPlayback(
     card: MediaCardUiState,
     active: Boolean,
+    onRatio: (Float) -> Unit = {},
 ): CardPlayback {
     val videoPlayer = LocalCardVideoPlayer.current
     return when {
-        !active || videoPlayer == null -> CardPlayback()
-        card.type == MediaType.VIDEO -> CardPlayback(video = activeVideo(card = card, videoPlayer = videoPlayer))
-        card.motionVideo != null -> CardPlayback(motionPhoto = motionPhotoPlayback(card.motionVideo, videoPlayer))
-        else -> CardPlayback()
+        !active || videoPlayer == null -> {
+            CardPlayback()
+        }
+
+        card.type == MediaType.VIDEO -> {
+            CardPlayback(
+                video = activeVideo(card = card, videoPlayer = videoPlayer, onRatio = onRatio),
+            )
+        }
+
+        card.motionVideo != null -> {
+            CardPlayback(motionPhoto = motionPhotoPlayback(card.motionVideo, videoPlayer))
+        }
+
+        else -> {
+            CardPlayback()
+        }
     }
 }

@@ -51,6 +51,19 @@ class MediaItemTest {
     }
 
     @Test
+    fun `gives the displayed aspect ratio when both dimensions are known`() {
+        assertEquals(0.5625f, anImage().copy(width = 1080, height = 1920).aspectRatio)
+        assertEquals(null, anImage().copy(width = 1080).aspectRatio)
+        assertEquals(null, anImage().aspectRatio)
+    }
+
+    @Test
+    fun `rejects a dimension that is not positive`() {
+        assertThrows<IllegalArgumentException> { anImage().copy(width = 0, height = 100) }
+        assertThrows<IllegalArgumentException> { anImage().copy(width = 100, height = -1) }
+    }
+
+    @Test
     fun `items with the same values are equal`() {
         assertEquals(anImage(), anImage())
     }

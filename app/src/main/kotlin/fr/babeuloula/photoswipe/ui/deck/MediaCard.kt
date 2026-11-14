@@ -108,7 +108,7 @@ fun MediaCard(
     overlay: @Composable BoxScope.() -> Unit = {},
     details: Boolean = true,
 ) {
-    FittedCardBox(uri = card.uri, modifier = modifier) { size, onRatio ->
+    FittedCardBox(uri = card.uri, modifier = modifier, knownRatio = card.aspectRatio) { size, onRatio ->
         Card(
             modifier = Modifier.size(size),
             shape = MaterialTheme.shapes.extraLarge,
@@ -128,12 +128,13 @@ fun MediaCard(
                     contentScale = ContentScale.Crop,
                     onSuccess = { success ->
                         failed = false
+                        // Une photo prend la forme de son image, rotation EXIF comprise. Pour une
+                        // vidéo, les proportions de la galerie priment : sa miniature peut sortir
+                        // sans sa rotation ; seule la vidéo elle-même les corrige.
                         val intrinsic = success.painter.intrinsicSize
-                        if (intrinsic.isSpecified &&
-                            intrinsic.height > 0f
-                        ) {
-                            onRatio(intrinsic.width / intrinsic.height)
-                        }
+                        val loaded = if (intrinsic.isSpecified) aspectRatioOf(intrinsic) else null
+                        val ratio = if (card.type == MediaType.VIDEO) card.aspectRatio ?: loaded else loaded
+                        ratio?.let(onRatio)
                     },
                     onError = { failed = true },
                     modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen, compare.takeIf { active }),
@@ -142,23 +143,21 @@ fun MediaCard(
                 if (failed) {
                     Unavailable(type = card.type, modifier = Modifier.align(Alignment.Center))
                 }
-                val playback = cardPlayback(card, active)
+                val playback = cardPlayback(card, active, onRatio)
                 val video = playback.video
                 // Repère et pastilles : pas sur les cartes du dessous de la pile, dont seuls les bords dépassent.
-                if (details) {
-                    TopRow(
-                        card = card,
-                        modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(CARD_PADDING),
-                    ) {
-                        if (video != null) VideoCornerButtons(video)
-                        playback.motionPhoto?.let { MotionPhotoButton(it) }
-                    }
-                    CardBottom(
-                        card = card,
-                        video = video,
-                        modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(CARD_PADDING),
-                    )
-                }
+                CardDetails(
+                    shown = details && rememberCardDetailsShown(video),
+                    top = {
+                        TopRow(card = card, modifier = Modifier.fillMaxWidth().padding(CARD_PADDING)) {
+                            if (video != null) VideoCornerButtons(video)
+                            playback.motionPhoto?.let { MotionPhotoButton(it) }
+                        }
+                    },
+                    bottom = {
+                        CardBottom(card = card, video = video, modifier = Modifier.fillMaxWidth().padding(CARD_PADDING))
+                    },
+                )
                 overlay()
             }
         }
@@ -181,6 +180,7 @@ fun MediaCard(
 internal fun BoxScope.activeVideo(
     card: MediaCardUiState,
     videoPlayer: CardVideoPlayer,
+    onRatio: (Float) -> Unit = {},
 ): ActiveVideoState {
     LaunchedEffect(card.uri, videoPlayer) {
         if (!videoPlayer.resumesImmediately(card.uri)) delay(AUTOPLAY_DELAY.toMillis())
@@ -205,6 +205,13 @@ internal fun BoxScope.activeVideo(
         }
     }
     val presentation = rememberPresentationState(videoPlayer.player)
+    // La carte prend la forme de la vidéo elle-même, dès sa première image.
+    ReportVideoRatio(
+        uri = card.uri,
+        videoSize = presentation.videoSizeDp,
+        shown = !presentation.coverSurface && playing,
+        onRatio = onRatio,
+    )
     Box(
         modifier = Modifier.matchParentSize().alpha(if (presentation.coverSurface) 0f else 1f),
         contentAlignment = Alignment.Center,
@@ -214,7 +221,8 @@ internal fun BoxScope.activeVideo(
             PlayerSurface(
                 player = videoPlayer.player,
                 surfaceType = SURFACE_TYPE_TEXTURE_VIEW,
-                modifier = Modifier.resizeWithContentScale(ContentScale.Fit, presentation.videoSizeDp),
+                // Comme la miniature : la vidéo remplit toute la carte, sans bande ni miniature autour.
+                modifier = Modifier.resizeWithContentScale(ContentScale.Crop, presentation.videoSizeDp),
             )
         }
     }

@@ -266,7 +266,7 @@ internal fun FullscreenButton(
 private val BIG_CONTROL_SIZE = 72.dp
 
 /** Temps d'affichage des commandes pendant la lecture, en millisecondes. */
-private const val CONTROLS_VISIBLE_MILLIS = 3_000L
+internal const val CONTROLS_VISIBLE_MILLIS = 3_000L
 
 /** Rafraîchissement de la position pendant la lecture, en millisecondes. */
 private const val PROGRESS_TICK_MILLIS = 250L

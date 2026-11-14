@@ -289,7 +289,6 @@ class AccessibilityTest {
                                 )
                             },
                         pendingDeletionCount = 2,
-                        streak = 3,
                     ),
                 onEvent = {},
             )

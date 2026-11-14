@@ -111,11 +111,6 @@
         <item quantity="many">%d de jours de suite</item>
         <item quantity="other">%d jours de suite</item>
     </plurals>
-    <plurals name="home_open_progress_streak">
-        <item quantity="one">Progression, %d jour de suite</item>
-        <item quantity="many">Progression, %d de jours de suite</item>
-        <item quantity="other">Progression, %d jours de suite</item>
-    </plurals>
     <plurals name="progress_calendar_day_remaining">
         <item quantity="one">%1$s, %2$d média à trier</item>
         <item quantity="many">%1$s, %2$d de médias à trier</item>

@@ -37,7 +37,10 @@ class FakeMediaStoreProvider : ContentProvider() {
                     "${MediaStore.MediaColumns.IS_TRASHED} INTEGER NOT NULL DEFAULT 0, " +
                     "${MediaStore.MediaColumns.IS_FAVORITE} INTEGER NOT NULL DEFAULT 0, " +
                     "${MediaStore.MediaColumns.DISPLAY_NAME} TEXT, " +
-                    "${MediaStore.MediaColumns.RELATIVE_PATH} TEXT)",
+                    "${MediaStore.MediaColumns.RELATIVE_PATH} TEXT, " +
+                    "${MediaStore.MediaColumns.WIDTH} INTEGER, " +
+                    "${MediaStore.MediaColumns.HEIGHT} INTEGER, " +
+                    "${MediaStore.MediaColumns.ORIENTATION} INTEGER)",
             )
         }
         return true
@@ -60,6 +63,22 @@ class FakeMediaStoreProvider : ContentProvider() {
                 "UPDATE $IMAGES SET ${MediaStore.MediaColumns.DISPLAY_NAME} = ?, " +
                     "${MediaStore.MediaColumns.RELATIVE_PATH} = ? WHERE ${MediaStore.MediaColumns._ID} = ?",
                 arrayOf<Any?>(fileName, folder, id),
+            )
+        }
+    }
+
+    /** Donne au média [id] (photo ou vidéo) les dimensions de son fichier et sa rotation. */
+    fun setDimensions(
+        id: Long,
+        width: Int?,
+        height: Int?,
+        orientation: Int? = null,
+    ) {
+        listOf(IMAGES, VIDEOS).forEach { table ->
+            database.execSQL(
+                "UPDATE $table SET ${MediaStore.MediaColumns.WIDTH} = ?, ${MediaStore.MediaColumns.HEIGHT} = ?, " +
+                    "${MediaStore.MediaColumns.ORIENTATION} = ? WHERE ${MediaStore.MediaColumns._ID} = ?",
+                arrayOf<Any?>(width, height, orientation, id),
             )
         }
     }

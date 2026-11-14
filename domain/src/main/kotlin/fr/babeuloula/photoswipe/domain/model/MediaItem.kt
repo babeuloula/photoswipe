@@ -19,6 +19,9 @@ import java.time.Instant
  * @property folder dossier du fichier (`RELATIVE_PATH`), `null` s'il est inconnu.
  * @property rawCompanion fichier RAW de la même prise de vue qu'une photo JPEG (PS-166) : la paire
  * se trie comme une seule photo, et chaque décision vaut pour les deux fichiers ; `null` sinon.
+ * @property width largeur affichée en pixels, rotation comprise (une vidéo tournée d'un quart de
+ * tour a sa hauteur pour largeur) ; `null` si elle est inconnue.
+ * @property height hauteur affichée en pixels, rotation comprise ; `null` si elle est inconnue.
  */
 data class MediaItem(
     val id: MediaId,
@@ -31,7 +34,20 @@ data class MediaItem(
     val fileName: String? = null,
     val folder: String? = null,
     val rawCompanion: MediaItem? = null,
+    val width: Int? = null,
+    val height: Int? = null,
 ) {
+    /**
+     * Proportions affichées (largeur sur hauteur), connues sans ouvrir le fichier : la carte prend
+     * sa forme avant que l'image soit chargée. `null` si une dimension manque.
+     */
+    val aspectRatio: Float?
+        get() {
+            val w = width ?: return null
+            val h = height ?: return null
+            return w.toFloat() / h
+        }
+
     /** Poids de la photo et de son fichier RAW s'il en a un : ce que libère sa suppression. */
     val totalSizeBytes: Long get() = sizeBytes + (rawCompanion?.sizeBytes ?: 0)
 
@@ -39,5 +55,7 @@ data class MediaItem(
         require(sizeBytes >= 0) { "sizeBytes must not be negative: $sizeBytes" }
         require(type == MediaType.VIDEO || duration == null) { "an image has no duration" }
         require(duration == null || !duration.isNegative) { "duration must not be negative: $duration" }
+        require(width == null || width > 0) { "width must be positive: $width" }
+        require(height == null || height > 0) { "height must be positive: $height" }
     }
 }

@@ -31,6 +31,8 @@ import java.time.ZoneId
  * @property raw vrai pour une paire RAW + JPEG (PS-166) : [sizeBytes] compte alors les deux fichiers.
  * @property motionVideo URI de la vidéo d'une photo animée (PS-167), à donner au lecteur de la
  * pile ; `null` pour une photo ordinaire ou une vidéo.
+ * @property aspectRatio proportions du média lues dans la galerie (largeur sur hauteur, rotation
+ * comprise), qui donnent sa forme à la carte avant le chargement de l'image ; `null` si inconnues.
  */
 data class MediaCardUiState(
     val id: MediaId,
@@ -46,6 +48,7 @@ data class MediaCardUiState(
     val qualityHint: QualityHint? = null,
     val raw: Boolean = false,
     val motionVideo: String? = null,
+    val aspectRatio: Float? = null,
 ) {
     companion object {
         /**
@@ -77,6 +80,7 @@ data class MediaCardUiState(
                 similar = similar,
                 qualityHint = qualityHint,
                 raw = media.rawCompanion != null,
+                aspectRatio = media.aspectRatio,
             )
         }
     }

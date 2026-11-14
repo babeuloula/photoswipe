@@ -328,7 +328,9 @@ private fun CardStack(
         modifier = modifier.padding(bottom = STACK_OFFSET_STEP * (DeckUiState.Loaded.VISIBLE_CARDS - 1)),
     ) {
         // Hauteur de la carte du dessus : le bas de chaque carte du dessous se cale sur le sien.
-        val topHeight = fittedCardSize(maxWidth, maxHeight, ratios[state.current.uri]).height
+        // Proportions de l'image chargée, sinon celles lues dans la galerie.
+        fun ratioOf(card: MediaCardUiState) = ratios[card.uri] ?: card.aspectRatio
+        val topHeight = fittedCardSize(maxWidth, maxHeight, ratioOf(state.current)).height
         CompositionLocalProvider(LocalCardAspectRatios provides ratios) {
             // Une vraie pile (PS-147) : du fond vers le dessus. Chaque carte garde sa composition, et
             // son image, du fond jusqu'au dessus ; seule celle du dessus se glisse.
@@ -339,7 +341,7 @@ private fun CardStack(
                         card = card,
                         depth = depth,
                         // Chaque carte garde sa forme ; le bas de celles du dessous suit celui de la carte du dessus.
-                        bottomAlign = (topHeight - fittedCardSize(maxWidth, maxHeight, ratios[card.uri]).height) / 2,
+                        bottomAlign = (topHeight - fittedCardSize(maxWidth, maxHeight, ratioOf(card)).height) / 2,
                         // Plus haute que la carte du dessus, elle est réduite pour ne pas dépasser au-dessus.
                         fitScale =
                             (
@@ -347,7 +349,7 @@ private fun CardStack(
                                     fittedCardSize(
                                         maxWidth,
                                         maxHeight,
-                                        ratios[card.uri],
+                                        ratioOf(card),
                                     ).height
                             ).coerceAtMost(1f),
                         ready = card.uri in ratios,
