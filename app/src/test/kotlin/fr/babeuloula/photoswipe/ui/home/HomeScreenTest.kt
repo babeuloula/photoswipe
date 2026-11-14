@@ -433,20 +433,11 @@ class HomeScreenTest {
     }
 
     @Test
-    fun `shows the streak on the progress button, read with it by TalkBack, from two days on`() {
-        show(loaded(todayCount = 0).copy(streak = 5))
-
-        // La pastille est lue avec le bouton, pas à part.
-        composeRule.onNodeWithContentDescription("Progress, 5 days in a row").assertIsDisplayed().performClick()
-        assertEquals(listOf<HomeEvent>(HomeEvent.OpenProgress), events)
-    }
-
-    @Test
-    fun `shows no streak badge for a single day`() {
-        show(loaded(todayCount = 0).copy(streak = 1))
+    fun `shows no counter on the progress button, which reads like unread notifications`() {
+        show(loaded(todayCount = 0))
 
         composeRule.onNodeWithContentDescription(text(R.string.home_open_progress)).assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Progress, 1 day in a row").assertDoesNotExist()
+        composeRule.onNodeWithText("5").assertDoesNotExist()
     }
 
     @Test
