@@ -127,7 +127,7 @@ class MediaStoreSeeder
         /** Supprime [uri] ; faux si le média n'appartient pas à l'app. */
         private fun delete(uri: Uri): Boolean =
             try {
-                resolver.delete(uri, null) > 0
+                resolver.delete(uri, null, null) > 0
             } catch (_: SecurityException) {
                 false
             }

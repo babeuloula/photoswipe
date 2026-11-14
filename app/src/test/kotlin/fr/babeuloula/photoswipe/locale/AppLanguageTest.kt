@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.locale
 
 import android.app.LocaleManager
+import android.os.Build
 import android.os.LocaleList
 import android.provider.Settings
 import org.junit.Assert.assertEquals
@@ -9,6 +10,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 import java.util.Locale
 
 /** Langue de l'application et réglage d'Android 13+ (Robolectric, API 34). */
@@ -37,5 +39,11 @@ class AppLanguageTest {
 
         assertEquals(Settings.ACTION_APP_LOCALE_SETTINGS, intent.action)
         assertEquals("package:${application.packageName}", intent.dataString)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.Q])
+    fun `follows the phone language on android 10, which has no app language setting`() {
+        assertNull(appLanguage(application))
     }
 }

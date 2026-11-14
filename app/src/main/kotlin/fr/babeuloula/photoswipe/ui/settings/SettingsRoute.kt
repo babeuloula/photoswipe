@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -182,7 +183,8 @@ private fun otherScreenIntent(
 ): Intent? =
     when (effect) {
         SettingsEffect.OpenLanguageSettings -> {
-            appLanguageSettingsIntent(context)
+            // Le réglage de langue par application n'existe qu'à partir d'Android 13 (PS-181).
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) appLanguageSettingsIntent(context) else null
         }
 
         SettingsEffect.OpenDeveloperTools -> {

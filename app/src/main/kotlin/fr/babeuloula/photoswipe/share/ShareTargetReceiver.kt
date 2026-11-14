@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import androidx.core.content.IntentCompat
 import dagger.hilt.android.AndroidEntryPoint
 import fr.babeuloula.photoswipe.domain.port.ShareTargetRepository
 import kotlinx.coroutines.CoroutineScope
@@ -41,7 +42,9 @@ class ShareTargetReceiver : BroadcastReceiver() {
     companion object {
         /** Application choisie que porte [intent] (`paquet/classe`), `null` si Android ne la donne pas. */
         internal fun chosenTarget(intent: Intent): String? =
-            intent.getParcelableExtra(Intent.EXTRA_CHOSEN_COMPONENT, ComponentName::class.java)?.flattenToString()
+            IntentCompat
+                .getParcelableExtra(intent, Intent.EXTRA_CHOSEN_COMPONENT, ComponentName::class.java)
+                ?.flattenToString()
 
         /**
          * Rappel à passer à la feuille de partage : Android y ajoute l'application choisie

@@ -43,7 +43,7 @@ Détection de doublons, statistiques, widget, synchronisation cloud, édition de
 | Sujet | Décision |
 |---|---|
 | Plateforme | Android natif, Kotlin + Jetpack Compose |
-| Version minimale | Android 13 (API 33) |
+| Version minimale | Android 10 (API 29) ; une fonction absente de la version n'est pas proposée (epic 14) |
 | Cible | Usage perso d'abord, Play Store ensuite (à garder compatible) |
 | Contenu | Photos + vidéos |
 | Suppression | Marquage pendant le tri, puis confirmation groupée en fin de session |
@@ -242,7 +242,7 @@ Clé primaire / index unique : `(media_id, review_year)`.
 | Qualité | ktlint + detekt, Android Lint |
 | CI | GitHub Actions : lint + tests unitaires + build à chaque push |
 
-`compileSdk` / `targetSdk` : dernière version stable (le Play Store impose une cible récente). `minSdk` : 33.
+`compileSdk` / `targetSdk` : dernière version stable (le Play Store impose une cible récente). `minSdk` : 29 (Android 10, epic 14).
 `applicationId` suggéré : `fr.babeuloula.photoswipe` (à confirmer).
 
 ---
@@ -317,7 +317,7 @@ Objectifs : couverture du domaine **≥ 90 %**, tous les ViewModels testés, cha
 
 ## 13. Permissions et Play Store
 
-Permissions déclarées : `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_MEDIA_VISUAL_USER_SELECTED`, `POST_NOTIFICATIONS`. **Aucune** autre, en particulier pas `INTERNET` ni `MANAGE_EXTERNAL_STORAGE`.
+Permissions déclarées : `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_MEDIA_VISUAL_USER_SELECTED`, `READ_EXTERNAL_STORAGE` (Android 10 à 12 seulement, `maxSdkVersion` 32), `POST_NOTIFICATIONS`. **Aucune** autre, en particulier pas `INTERNET` ni `MANAGE_EXTERNAL_STORAGE`.
 
 Pour une publication future : Google encadre l'accès large aux photos et vidéos. Il faudra une **déclaration d'usage** justifiant que le tri de la bibliothèque est la fonction principale de l'app, une politique de confidentialité (même sans collecte de données) et le formulaire « Sécurité des données ». Rien de cela ne bloque la v1 perso, mais ne pas prendre de raccourci qui l'empêcherait (le sélecteur de photos système ne convient pas ici, car il faut interroger par date).
 

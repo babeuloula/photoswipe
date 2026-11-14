@@ -8,7 +8,7 @@ Application Android qui fait revoir chaque jour les photos et vidéos prises le 
 
 - **JDK 17**. Sur macOS avec Homebrew : `brew install openjdk@17`, puis `export JAVA_HOME=/opt/homebrew/opt/openjdk@17`. Le JDK embarqué d'Android Studio est trop récent.
 - **SDK Android** (installé avec [Android Studio](https://developer.android.com/studio)). Le fichier `local.properties`, non commité, indique son emplacement : `sdk.dir=/Users/<vous>/Library/Android/sdk`.
-- Un téléphone ou un émulateur sous **Android 13** (API 33) ou plus récent.
+- Un téléphone ou un émulateur sous **Android 10** (API 29) ou plus récent. Certaines fonctions demandent une version plus récente (corbeille et favoris de la galerie : Android 11 ; langue de l'application : Android 13) : ailleurs, elles ne sont pas proposées.
 
 Gradle est fourni par le wrapper (`./gradlew`) : rien d'autre à installer.
 

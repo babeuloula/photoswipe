@@ -15,6 +15,8 @@ composeBom = "2026.09.00"
 robolectric = "4.17"
 # Jar Android (API 34) que Robolectric 4.17 charge ; le suffixe -iN suit la version de Robolectric.
 robolectric-androidAll = "14-robolectric-10818077-i7"
+# Jar Android 10 (API 29, notre minSdk) : tests des chemins propres aux anciennes versions (PS-181).
+robolectric-androidAll-q = "10-robolectric-5803371-i7"
 ktlintGradle = "14.2.0"
 ktlint = "1.8.0"
 detekt = "1.23.8"
@@ -88,6 +90,7 @@ robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectr
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestExtJunit" }
 robolectric-androidAll = { module = "org.robolectric:android-all-instrumented", version.ref = "robolectric-androidAll" }
+robolectric-androidAll-q = { module = "org.robolectric:android-all-instrumented", version.ref = "robolectric-androidAll-q" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }

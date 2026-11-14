@@ -5,8 +5,12 @@ package fr.babeuloula.photoswipe.buildlogic
  * Une seule source de vérité : les modules ne répètent jamais ces nombres.
  */
 object ProjectConfig {
-    /** Android 13 : permissions médias granulaires et langue par application (SPEC §2). */
-    const val MIN_SDK = 33
+    /**
+     * Android 10 : `MediaStore` et `RELATIVE_PATH`, sur lesquels repose la lecture de la galerie.
+     * Les fonctions plus récentes (corbeille et favoris d'Android 11, langue par application
+     * d'Android 13…) ne sont proposées que là où elles existent (epic 14, PS-181).
+     */
+    const val MIN_SDK = 29
 
     /** Dernière API stable (Android 17), maximum supporté par AGP 9.5. */
     const val COMPILE_SDK = 37

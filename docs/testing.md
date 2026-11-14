@@ -61,7 +61,8 @@ Les modules Android restent sur JUnit 4 en attendant une décision ADR sur JUnit
 
 - Il simule Android sur la JVM. Il est réglé sur l'**API 34** (`src/test/resources/robolectric.properties` de chaque module) : les API 35 et plus demandent Java 21 (ADR [0002](decisions/0002-robolectric-api-level.md)).
 - La convention `photoswipe.android.robolectric` l'ajoute à un module et le configure.
-- Il tourne **hors ligne** : son jar Android (`android-all-instrumented`) est résolu par Gradle, donc mis en cache, au lieu d'être téléchargé à chaque exécution. Monter la version de Robolectric impose de mettre à jour `robolectric-androidAll` dans `gradle/libs.versions.toml`, sinon les tests échouent avec « Path is not a file ».
+- Un test du comportement d'Android 10 (notre `minSdk`) s'annote `@Config(sdk = [Build.VERSION_CODES.Q])` ; les versions entre deux se testent en passant `PlatformFeatures.forSdk(…)` au code (PS-181). Le faux MediaStore de `:data` (`FakeMediaStoreProvider`) prend alors le schéma d'Android 10, sans `is_favorite` ni `is_trashed`.
+- Il tourne **hors ligne** : ses jars Android (`android-all-instrumented`, API 34 et API 29) sont résolus par Gradle, donc mis en cache, au lieu d'être téléchargé à chaque exécution. Monter la version de Robolectric impose de mettre à jour `robolectric-androidAll` et `robolectric-androidAll-q` dans `gradle/libs.versions.toml`, sinon les tests échouent avec « Path is not a file ».
 - Base Room : `Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), PhotoSwipeDatabase::class.java)`, fermée dans `@After`.
 - Tests qui ont besoin de Hilt : `@HiltAndroidTest`, `HiltAndroidRule` et `@Config(application = HiltTestApplication::class)`.
 - Mesure du texte : en mode graphique par défaut, Robolectric ne mesure pas vraiment le texte (tout tient sur une ligne). Un test de retour à la ligne ou d'`autoSize` s'annote `@GraphicsMode(GraphicsMode.Mode.NATIVE)` (exemple : l'espace libéré de `SummaryScreenTest`, vérifié sur une ligne en police normale et à 200 %).
@@ -73,7 +74,7 @@ Les modules Android restent sur JUnit 4 en attendant une décision ADR sur JUnit
 
 ### Tests instrumentés (`:data`, `src/androidTest`)
 
-- JUnit 4 avec `AndroidJUnit4` et `AndroidJUnitRunner` (réglé par la convention Android commune). Les noms entre backticks avec espaces fonctionnent comme ailleurs : le format DEX les accepte depuis l'API 30, et le `minSdk` est 33.
+- JUnit 4 avec `AndroidJUnit4` et `AndroidJUnitRunner` (réglé par la convention Android commune). Les noms sont en lowerCamelCase, sans espaces (`readsThePhotosOfADayOfPreviousYearsFromTheRealMediaStore`) : le format DEX n'accepte les espaces qu'à partir de l'API 30, et le `minSdk` est 29 (PS-181). Les tests unitaires, eux, gardent leurs noms entre backticks.
 - `MediaStoreMediaSourceInstrumentedTest` : le test insère ses propres photos JPEG, datées par leur EXIF (`DateTimeOriginal` et décalage horaire) comme de vraies photos, puis les supprime. MediaStore recalcule `DATE_TAKEN` depuis le fichier : un `DATE_TAKEN` posé à la main serait écrasé. L'application lit sans permission les médias qu'elle a ajoutés, ceux de l'appareil restent invisibles.
 - `PhotoSwipeDatabaseMigrationTest` : `MigrationTestHelper` crée la base depuis le schéma exporté (`data/schemas/`, ajouté aux assets des tests par le plugin Room) et vérifie qu'il correspond à l'entité. Chaque nouvelle version de la base y ajoute sa migration.
 

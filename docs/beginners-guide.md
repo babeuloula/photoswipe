@@ -14,8 +14,8 @@ Le **langage de programmation** dans lequel l'application est écrite. Google le
 Les outils qui compilent et exécutent du code pour la JVM. Il faut un JDK installé pour construire le projet. Nous utilisons la version 17.
 
 ### Android SDK et niveaux d'API
-Le **SDK** (Software Development Kit) Android contient les bibliothèques du système et les outils pour construire une application. Chaque version d'Android a un numéro d'**API** : Android 13 = API 33, Android 17 = API 37.
-- `minSdk = 33` : l'application ne s'installe pas sur une version plus ancienne qu'Android 13.
+Le **SDK** (Software Development Kit) Android contient les bibliothèques du système et les outils pour construire une application. Chaque version d'Android a un numéro d'**API** : Android 10 = API 29, Android 13 = API 33, Android 17 = API 37.
+- `minSdk = 29` : l'application ne s'installe pas sur une version plus ancienne qu'Android 10. Les fonctions plus récentes (corbeille de la galerie, langue par application…) ne sont proposées que sur les versions qui les ont : `PlatformFeatures` dit lesquelles.
 - `targetSdk = 37` : l'application déclare être testée pour Android 17 et en adopte les comportements.
 - `compileSdk = 37` : la version du SDK utilisée pour compiler.
 

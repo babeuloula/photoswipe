@@ -6,6 +6,7 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.CancellationSignal
 import android.provider.MediaStore
@@ -17,6 +18,10 @@ import android.provider.MediaStore
  *
  * Comme MediaStore, il exclut les médias de la corbeille (`is_trashed`) sauf si la requête demande
  * `MATCH_INCLUDE` ou `MATCH_ONLY`.
+ *
+ * Sous Android 11 (`@Config(sdk = [29])`), il a le schéma d'Android 10 : ni `is_trashed` ni
+ * `is_favorite`, et il ignore `QUERY_ARG_MATCH_TRASHED` ; demander ces colonnes fait échouer la
+ * requête, comme sur un vrai téléphone (PS-181).
  */
 class FakeMediaStoreProvider : ContentProvider() {
     private lateinit var database: SQLiteDatabase
@@ -34,8 +39,7 @@ class FakeMediaStoreProvider : ContentProvider() {
                     "${MediaStore.MediaColumns.DATE_ADDED} INTEGER NOT NULL, " +
                     "${MediaStore.MediaColumns.SIZE} INTEGER, " +
                     "${MediaStore.MediaColumns.DURATION} INTEGER, " +
-                    "${MediaStore.MediaColumns.IS_TRASHED} INTEGER NOT NULL DEFAULT 0, " +
-                    "${MediaStore.MediaColumns.IS_FAVORITE} INTEGER NOT NULL DEFAULT 0, " +
+                    trashAndFavoriteColumns +
                     "${MediaStore.MediaColumns.DISPLAY_NAME} TEXT, " +
                     "${MediaStore.MediaColumns.RELATIVE_PATH} TEXT, " +
                     "${MediaStore.MediaColumns.WIDTH} INTEGER, " +
@@ -113,8 +117,10 @@ class FakeMediaStoreProvider : ContentProvider() {
                 put(MediaStore.MediaColumns.DATE_ADDED, dateAdded)
                 put(MediaStore.MediaColumns.SIZE, size)
                 put(MediaStore.MediaColumns.DURATION, duration)
-                put(MediaStore.MediaColumns.IS_TRASHED, if (trashed) 1 else 0)
-                put(MediaStore.MediaColumns.IS_FAVORITE, if (favorite) 1 else 0)
+                if (hasTrash) {
+                    put(MediaStore.MediaColumns.IS_TRASHED, if (trashed) 1 else 0)
+                    put(MediaStore.MediaColumns.IS_FAVORITE, if (favorite) 1 else 0)
+                }
             }
         database.insertOrThrow(table, null, values)
     }
@@ -127,11 +133,11 @@ class FakeMediaStoreProvider : ContentProvider() {
     ): Cursor {
         val arguments = queryArgs ?: Bundle()
         queries += arguments
-        val trashed = arguments.getInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_EXCLUDE)
+        val match = arguments.getInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_EXCLUDE)
         val trashFilter =
-            when (trashed) {
-                MediaStore.MATCH_INCLUDE -> null
-                MediaStore.MATCH_ONLY -> "${MediaStore.MediaColumns.IS_TRASHED} = 1"
+            when {
+                !hasTrash || match == MediaStore.MATCH_INCLUDE -> null
+                match == MediaStore.MATCH_ONLY -> "${MediaStore.MediaColumns.IS_TRASHED} = 1"
                 else -> "${MediaStore.MediaColumns.IS_TRASHED} = 0"
             }
         val selection =
@@ -180,5 +186,17 @@ class FakeMediaStoreProvider : ContentProvider() {
     private companion object {
         const val IMAGES = "images"
         const val VIDEOS = "video"
+
+        /** Corbeille et favoris : colonnes d'Android 11 et plus. */
+        val hasTrash: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+
+        val trashAndFavoriteColumns: String
+            get() =
+                if (hasTrash) {
+                    "${MediaStore.MediaColumns.IS_TRASHED} INTEGER NOT NULL DEFAULT 0, " +
+                        "${MediaStore.MediaColumns.IS_FAVORITE} INTEGER NOT NULL DEFAULT 0, "
+                } else {
+                    ""
+                }
     }
 }

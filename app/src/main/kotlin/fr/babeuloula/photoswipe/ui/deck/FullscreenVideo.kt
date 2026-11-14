@@ -1,7 +1,5 @@
 package fr.babeuloula.photoswipe.ui.deck
 
-import android.view.WindowInsets
-import android.view.WindowInsetsController
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -45,6 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.compose.PlayerSurface
 import androidx.media3.ui.compose.SURFACE_TYPE_TEXTURE_VIEW
@@ -229,9 +230,10 @@ internal fun fixedButtonColors() =
 private fun ImmersiveWindow() {
     val window = (LocalView.current.parent as? DialogWindowProvider)?.window ?: return
     DisposableEffect(window) {
-        window.insetsController?.let { controller ->
-            controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            controller.hide(WindowInsets.Type.systemBars())
+        // Version compat : `Window.insetsController` n'existe qu'à partir d'Android 11 (PS-181).
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.systemBars())
         }
         onDispose {}
     }
