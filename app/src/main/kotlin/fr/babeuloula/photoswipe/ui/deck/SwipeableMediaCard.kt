@@ -1,5 +1,7 @@
 package fr.babeuloula.photoswipe.ui.deck
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector2D
@@ -26,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -37,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.theme.motion
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
 import kotlinx.coroutines.launch
@@ -203,17 +207,14 @@ internal fun SwipeIndicator(
     modifier: Modifier = Modifier,
 ) {
     if (indication == null) return
-    val colors = MaterialTheme.swipeColors
-    val (veil, container, onContainer) =
-        when (indication.side) {
-            CardSide.RIGHT -> Triple(colors.keep, colors.keepContainer, colors.onKeepContainer)
-            CardSide.LEFT -> Triple(colors.delete, colors.deleteContainer, colors.onDeleteContainer)
-            CardSide.TOP -> Triple(colors.favorite, colors.favoriteContainer, colors.onFavoriteContainer)
-        }
+    // Sans favoris de la galerie (Android 10), le haut n'ouvre que « Plus d'actions » : voile neutre (PS-183).
+    val favorites = LocalPlatformFeatures.current.galleryFavorites
+    val look = indicatorLook(indication.side, favorites)
+    val (veil, container, onContainer) = look.colors
     Column(
         modifier =
             modifier
-                .testTag(indicatorTag(indication.side))
+                .testTag(indicatorTag(indication.side, favorites))
                 .graphicsLayer { alpha = indication.progress }
                 .clip(MaterialTheme.shapes.extraLarge)
                 .background(veil.copy(alpha = MAX_VEIL_ALPHA)),
@@ -226,26 +227,13 @@ internal fun SwipeIndicator(
         ) {
             Icon(
                 painter =
-                    painterResource(
-                        when (indication.side) {
-                            CardSide.RIGHT -> R.drawable.ic_check
-                            CardSide.LEFT -> R.drawable.ic_delete
-                            CardSide.TOP -> R.drawable.ic_favorite_filled
-                        },
-                    ),
+                    painterResource(look.icon),
                 contentDescription = null,
                 tint = onContainer,
             )
         }
         Text(
-            text =
-                stringResource(
-                    when (indication.side) {
-                        CardSide.RIGHT -> R.string.deck_keep
-                        CardSide.LEFT -> R.string.deck_delete
-                        CardSide.TOP -> R.string.deck_indicator_menu
-                    },
-                ),
+            text = stringResource(look.label),
             style = MaterialTheme.typography.labelLarge,
             color = onContainer,
             modifier =
@@ -257,12 +245,68 @@ internal fun SwipeIndicator(
     }
 }
 
-/** Étiquette de test de l'indicateur du côté [side]. */
-internal fun indicatorTag(side: CardSide): String =
+/**
+ * Couleurs (voile, pastille, contenu), icône et libellé de l'indicateur d'un geste.
+ */
+private class IndicatorLook(
+    val colors: Triple<Color, Color, Color>,
+    @param:DrawableRes val icon: Int,
+    @param:StringRes val label: Int,
+)
+
+/** Aspect de l'indicateur du côté [side] ; vers le haut, neutre et « Plus d'actions » sans [favorites]. */
+@Composable
+private fun indicatorLook(
+    side: CardSide,
+    favorites: Boolean,
+): IndicatorLook {
+    val colors = MaterialTheme.swipeColors
+    val scheme = MaterialTheme.colorScheme
+    return when (side) {
+        CardSide.RIGHT -> {
+            IndicatorLook(
+                Triple(colors.keep, colors.keepContainer, colors.onKeepContainer),
+                R.drawable.ic_check,
+                R.string.deck_keep,
+            )
+        }
+
+        CardSide.LEFT -> {
+            IndicatorLook(
+                Triple(colors.delete, colors.deleteContainer, colors.onDeleteContainer),
+                R.drawable.ic_delete,
+                R.string.deck_delete,
+            )
+        }
+
+        CardSide.TOP if favorites -> {
+            IndicatorLook(
+                Triple(colors.favorite, colors.favoriteContainer, colors.onFavoriteContainer),
+                R.drawable.ic_favorite_filled,
+                R.string.deck_indicator_menu,
+            )
+        }
+
+        CardSide.TOP -> {
+            IndicatorLook(
+                Triple(scheme.inverseSurface, scheme.secondaryContainer, scheme.onSecondaryContainer),
+                R.drawable.ic_more_horiz,
+                R.string.deck_menu,
+            )
+        }
+    }
+}
+
+/** Étiquette de test de l'indicateur du côté [side] ; vers le haut, « Plus d'actions » sans [favorites]. */
+internal fun indicatorTag(
+    side: CardSide,
+    favorites: Boolean = true,
+): String =
     when (side) {
         CardSide.RIGHT -> KEEP_INDICATOR_TAG
         CardSide.LEFT -> DELETE_INDICATOR_TAG
-        CardSide.TOP -> FAVORITE_INDICATOR_TAG
+        CardSide.TOP if favorites -> FAVORITE_INDICATOR_TAG
+        CardSide.TOP -> MENU_INDICATOR_TAG
     }
 
 /**
@@ -352,6 +396,9 @@ internal const val DELETE_INDICATOR_TAG = "delete_indicator"
 
 /** Étiquette de test de l'indicateur « favori ». */
 internal const val FAVORITE_INDICATOR_TAG = "favorite_indicator"
+
+/** Étiquette de test de l'indicateur « Plus d'actions », vers le haut sans favoris de la galerie (PS-183). */
+internal const val MENU_INDICATOR_TAG = "menu_indicator"
 
 /** Opacité maximale du voile coloré : la photo reste visible dessous. */
 private const val MAX_VEIL_ALPHA = 0.42f

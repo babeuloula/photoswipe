@@ -23,10 +23,12 @@ import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.link.DeepLinks
 import fr.babeuloula.photoswipe.link.LaunchRequest
 import fr.babeuloula.photoswipe.link.LaunchRequestResolver
+import fr.babeuloula.photoswipe.platform.PlatformFeatures
 import fr.babeuloula.photoswipe.ui.PhotoSwipeApp
 import fr.babeuloula.photoswipe.ui.common.CelebrationHost
 import fr.babeuloula.photoswipe.ui.common.LocalAnimationsDisabled
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.common.RotationPolicy
 import fr.babeuloula.photoswipe.ui.deck.LocalShakeToUndo
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
@@ -72,6 +74,10 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var launchRequestResolver: LaunchRequestResolver
 
+    /** Fonctions d'Android du téléphone, fournies aux écrans par [LocalPlatformFeatures] (epic 14). */
+    @Inject
+    lateinit var platformFeatures: PlatformFeatures
+
     /** Écran à ouvrir dès que la navigation est affichée, `null` une fois ouvert. */
     private var launchRequest by mutableStateOf<LaunchRequest?>(null)
 
@@ -111,6 +117,7 @@ class MainActivity : ComponentActivity() {
             }
             CompositionLocalProvider(
                 LocalImageLoader provides imageLoader,
+                LocalPlatformFeatures provides platformFeatures,
                 // Animations coupées dans les réglages, pour les téléphones anciens (PS-146).
                 LocalAnimationsDisabled provides !animationsEnabled,
                 // Secouer pour annuler sur la pile (PS-175).

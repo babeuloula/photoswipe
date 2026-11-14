@@ -32,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.theme.motion
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
 import kotlinx.coroutines.delay
@@ -39,7 +40,8 @@ import kotlinx.coroutines.delay
 /**
  * Page « favori ou partage » : devant deux tirages inclinés (ceux des pages précédentes), le tirage glisse vers le haut sous le voile bleu du favori, puis la
  * feuille « Ajouter aux favoris » / « Partager » de la pile monte du bas. Statique ([animate] faux) :
- * tirage relevé et feuille ouverte.
+ * tirage relevé et feuille ouverte. Sans favoris de la galerie (Android 10), voile neutre et
+ * feuille « Partager » / « Ouvrir avec » (PS-183).
  */
 @Composable
 internal fun SwipeUpIllustration(
@@ -78,10 +80,12 @@ internal fun SwipeUpIllustration(
                 showIcon = false,
             )
         }
-        LiftedPrint(lift = { lift.value }, liftPx = liftPx)
+        val favorites = LocalPlatformFeatures.current.galleryFavorites
+        LiftedPrint(lift = { lift.value }, liftPx = liftPx, favorites = favorites)
         // La feuille n'existe qu'une fois sortie : fermée, elle n'est ni dessinée ni lue.
         if (sheet.value > 0f) {
             SampleMenuSheet(
+                favorites = favorites,
                 modifier =
                     Modifier
                         .align(Alignment.BottomCenter)
@@ -91,13 +95,21 @@ internal fun SwipeUpIllustration(
     }
 }
 
-/** Tirage relevé de [lift] (0 à 1) fois [liftPx], sous le voile bleu et le cœur du favori. */
+/**
+ * Tirage relevé de [lift] (0 à 1) fois [liftPx], sous le voile bleu et le cœur du favori, ou sous un
+ * voile neutre et « Plus d'actions » sans [favorites].
+ */
 @Composable
 private fun LiftedPrint(
     lift: () -> Float,
     liftPx: Float,
+    favorites: Boolean,
 ) {
     val colors = MaterialTheme.swipeColors
+    val scheme = MaterialTheme.colorScheme
+    val veil = if (favorites) colors.favorite else scheme.inverseSurface
+    val container = if (favorites) colors.favoriteContainer else scheme.secondaryContainer
+    val onContainer = if (favorites) colors.onFavoriteContainer else scheme.onSecondaryContainer
     Box(
         modifier =
             Modifier
@@ -111,7 +123,7 @@ private fun LiftedPrint(
                 .size(PRINT_WIDTH, PRINT_HEIGHT)
                 .graphicsLayer { alpha = lift() * VEIL_ALPHA }
                 .clip(MaterialTheme.shapes.large)
-                .background(colors.favorite),
+                .background(veil),
         )
         Box(
             modifier =
@@ -119,17 +131,24 @@ private fun LiftedPrint(
                     .graphicsLayer { alpha = lift() }
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(colors.favoriteContainer),
+                    .background(container),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(painterResource(R.drawable.ic_favorite_filled), null, tint = colors.onFavoriteContainer)
+            Icon(
+                painterResource(if (favorites) R.drawable.ic_favorite_filled else R.drawable.ic_more_horiz),
+                null,
+                tint = onContainer,
+            )
         }
     }
 }
 
-/** Feuille « Plus d'actions » d'exemple, comme celle de la pile : favori et partage. */
+/** Feuille « Plus d'actions » d'exemple, comme celle de la pile : favori et partage, ou partage et « Ouvrir avec ». */
 @Composable
-private fun SampleMenuSheet(modifier: Modifier = Modifier) {
+private fun SampleMenuSheet(
+    favorites: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier =
             modifier
@@ -146,8 +165,9 @@ private fun SampleMenuSheet(modifier: Modifier = Modifier) {
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.outlineVariant),
         )
-        SheetRow(R.drawable.ic_favorite, stringResource(R.string.deck_favorite))
+        if (favorites) SheetRow(R.drawable.ic_favorite, stringResource(R.string.deck_favorite))
         SheetRow(R.drawable.ic_share, stringResource(R.string.deck_share))
+        if (!favorites) SheetRow(R.drawable.ic_open_in_new, stringResource(R.string.deck_open_with))
     }
 }
 

@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.tutorial
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,6 +42,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.ui.common.CenteredContent
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.common.rememberReducedMotion
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import kotlinx.coroutines.launch
@@ -122,6 +124,8 @@ private fun TutorialPageContent(
     page: TutorialPage,
     animate: Boolean,
 ) {
+    // Textes adaptés aux fonctions du téléphone (sans favoris sur Android 10, PS-183).
+    val texts = page.texts(LocalPlatformFeatures.current)
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -134,15 +138,15 @@ private fun TutorialPageContent(
                     .illustrationFrame()
                     .clip(MaterialTheme.shapes.extraLarge)
                     .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .then(illustrationSemantics(page)),
+                    .then(illustrationSemantics(texts.illustration)),
         )
         Text(
-            text = stringResource(page.title),
+            text = stringResource(texts.title),
             style = MaterialTheme.typography.headlineLarge,
             modifier = Modifier.semantics { heading() },
         )
         Text(
-            text = stringResource(page.body),
+            text = stringResource(texts.body),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -159,10 +163,12 @@ internal fun Modifier.illustrationFrame(): Modifier {
     return fillMaxWidth().aspectRatio(ILLUSTRATION_RATIO / max(1f, fontScale))
 }
 
-/** TalkBack lit la description de l'animation de [page] comme une image ; sans animation, rien. */
+/** TalkBack lit la description de l'animation ([illustration]) comme une image ; sans animation, rien. */
 @Composable
-private fun illustrationSemantics(page: TutorialPage): Modifier {
-    val description = page.illustration?.let { stringResource(it) }
+private fun illustrationSemantics(
+    @StringRes illustration: Int?,
+): Modifier {
+    val description = illustration?.let { stringResource(it) }
     return Modifier.clearAndSetSemantics {
         if (description != null) {
             contentDescription = description

@@ -38,6 +38,7 @@ import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.domain.model.ReviewDecision
+import fr.babeuloula.photoswipe.platform.PlatformFeatures
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import kotlinx.coroutines.launch

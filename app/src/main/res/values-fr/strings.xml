@@ -253,6 +253,9 @@
     <string name="tutorial_swipes_body">Glissez à droite pour garder un souvenir : il reviendra l\'année prochaine. Glissez à gauche pour le marquer pour suppression : rien n\'est supprimé sans votre confirmation. Changé d\'avis ? « Annuler » ramène la carte.</string>
     <string name="tutorial_swipe_up_title">Favori ou partage</string>
     <string name="tutorial_swipe_up_body">Glissez vers le haut pour ouvrir le menu : ajoutez le souvenir à vos favoris, ce qui le garde aussi, ou partagez-le.</string>
+    <string name="tutorial_more_actions_title">Plus d\'actions</string>
+    <string name="tutorial_more_actions_body">Glissez vers le haut pour ouvrir le menu : partagez le souvenir, ouvrez-le avec une autre application ou envoyez-le en carte postale. La carte reste à sa place.</string>
+    <string name="tutorial_more_actions_illustration">Animation : une photo glisse vers le haut, puis le menu s\'ouvre avec Partager et Ouvrir avec.</string>
     <string name="tutorial_catch_up_title">Rattrapez les jours manqués</string>
     <string name="tutorial_catch_up_body">Un jour de manqué ? Sur l\'accueil, sous la carte d\'aujourd\'hui, la liste « À rattraper » garde les jours précédents (une semaine par défaut, jusqu\'à 30 jours dans les réglages), et un jour déjà trié peut être retrié. Touchez les vignettes d\'un jour pour voir tous ses souvenirs, puis faites un appui long pour en trier plusieurs d\'un coup. Un rappel quotidien, à activer dans les réglages, vous prévient seulement s\'il reste des souvenirs à trier.</string>
     <string name="tutorial_confirmation_title">Rien n\'est définitif</string>
