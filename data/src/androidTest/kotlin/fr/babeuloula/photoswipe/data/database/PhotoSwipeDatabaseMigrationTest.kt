@@ -23,7 +23,7 @@ class PhotoSwipeDatabaseMigrationTest {
     val helper = MigrationTestHelper(InstrumentationRegistry.getInstrumentation(), PhotoSwipeDatabase::class.java)
 
     @Test
-    fun `creates version 1 from the exported schema and keeps its rows`() {
+    fun createsVersion1FromTheExportedSchemaAndKeepsItsRows() {
         helper.createDatabase(DATABASE, 1).use { database ->
             database.execSQL(
                 "INSERT INTO review_entry " +
@@ -43,7 +43,7 @@ class PhotoSwipeDatabaseMigrationTest {
     }
 
     @Test
-    fun `migrates version 1 to 2 with the decision journal and keeps the decisions`() {
+    fun migratesVersion1To2WithTheDecisionJournalAndKeepsTheDecisions() {
         helper.createDatabase(DATABASE, 1).use { database ->
             database.execSQL(
                 "INSERT INTO review_entry " +
@@ -67,7 +67,7 @@ class PhotoSwipeDatabaseMigrationTest {
     }
 
     @Test
-    fun `migrates version 2 to 3 with the reopened flag and keeps missing replaced entries missing`() {
+    fun migratesVersion2To3WithTheReopenedFlagAndKeepsMissingReplacedEntriesMissing() {
         helper.createDatabase(DATABASE, 2).use { database ->
             database.execSQL(
                 "INSERT INTO review_entry " +
@@ -106,7 +106,7 @@ class PhotoSwipeDatabaseMigrationTest {
     }
 
     @Test
-    fun `migrates version 3 to 4 with an empty deletion history and keeps the decisions`() {
+    fun migratesVersion3To4WithAnEmptyDeletionHistoryAndKeepsTheDecisions() {
         helper.createDatabase(DATABASE, 3).use { database ->
             database.execSQL(
                 "INSERT INTO review_entry " +
@@ -129,7 +129,7 @@ class PhotoSwipeDatabaseMigrationTest {
     }
 
     @Test
-    fun `migrates version 4 to 5 with an empty activity history and keeps the deletion history`() {
+    fun migratesVersion4To5WithAnEmptyActivityHistoryAndKeepsTheDeletionHistory() {
         helper.createDatabase(DATABASE, 4).use { database ->
             database.execSQL(
                 "INSERT INTO confirmed_deletion (id, media_id, day, size_bytes, confirmed_at) " +
@@ -151,7 +151,7 @@ class PhotoSwipeDatabaseMigrationTest {
     }
 
     @Test
-    fun `migrates version 5 to 6 with no photo measure and keeps the activity`() {
+    fun migratesVersion5To6WithNoPhotoMeasureAndKeepsTheActivity() {
         helper.createDatabase(DATABASE, 5).use { database ->
             database.execSQL(
                 "INSERT INTO daily_activity (day, kept_count, favorite_count, trashed_count, freed_bytes) " +
@@ -172,7 +172,7 @@ class PhotoSwipeDatabaseMigrationTest {
     }
 
     @Test
-    fun `migrates version 6 to 7 with no fingerprint on the measures already taken`() {
+    fun migratesVersion6To7WithNoFingerprintOnTheMeasuresAlreadyTaken() {
         helper.createDatabase(DATABASE, 6).use { database ->
             database.execSQL("INSERT INTO photo_measure (media_id, sharpness, brightness) VALUES (42, 120.0, 90.0)")
         }

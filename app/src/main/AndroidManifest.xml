@@ -4,6 +4,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Lecture de la galerie d'Android 10 à 12, où les permissions par type n'existent pas (PS-181). -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
     <!-- Lecture des photos et vidéos de la galerie (Android 13+, SPEC §4.1). -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
@@ -12,7 +16,7 @@
     <!-- Rappel quotidien : demandée seulement quand l'utilisateur l'active (SPEC §3.6). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Rappel à l'heure pile : alarmes exactes, autorisées par l'utilisateur dans « Alarmes et
-         rappels » (Android 14+) ; sans elles, WorkManager et une heure approximative (PS-125, ADR 0031). -->
+         rappels » (Android 12+, permises d'office avant) ; sans elles, WorkManager et une heure approximative (PS-125, ADR 0031). -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <!-- Les alarmes ne survivent pas à un redémarrage : le rappel est replanifié au démarrage. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />

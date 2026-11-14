@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.ContentUris
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import fr.babeuloula.photoswipe.data.di.IoDispatcher
@@ -37,6 +38,14 @@ class MediaStoreSystemTrash
         @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : SystemTrash {
         override suspend fun trashed(ids: Set<MediaId>): List<TrashedMedia> =
+            // Pas de corbeille avant Android 11 : aucun média n'y est jamais (PS-181).
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                emptyList()
+            } else {
+                trashedIn(ids)
+            }
+
+        private suspend fun trashedIn(ids: Set<MediaId>): List<TrashedMedia> =
             withContext(ioDispatcher) {
                 ids.map { it.value }.chunked(MAX_IDS_PER_QUERY).flatMap { batch ->
                     Collection.entries.flatMap { query(it, idsSelection(batch)) }

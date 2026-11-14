@@ -75,7 +75,7 @@ class TrashInstrumentedTest {
     }
 
     @Test
-    fun `reads the size and the purge date of a trashed photo that the gallery no longer sees`() {
+    fun readsTheSizeAndThePurgeDateOfATrashedPhotoThatTheGalleryNoLongerSees() {
         val trashed = runBlocking { systemTrash.trashed(setOf(MediaId(photoId))) }.single()
 
         assertEquals(MediaId(photoId), trashed.media.id)
@@ -89,7 +89,7 @@ class TrashInstrumentedTest {
     }
 
     @Test
-    fun `restores a trashed photo by its identifier without any dialog with media management`() {
+    fun restoresATrashedPhotoByItsIdentifierWithoutAnyDialogWithMediaManagement() {
         val request = factory().restoreRequests(listOf(trashedPhoto())).single()
 
         launch((request as IntentSenderMediaActionRequest).intentSender)
@@ -102,7 +102,7 @@ class TrashInstrumentedTest {
     }
 
     @Test
-    fun `deletes a trashed photo for good without any dialog with media management`() {
+    fun deletesATrashedPhotoForGoodWithoutAnyDialogWithMediaManagement() {
         val request = factory().deleteRequests(listOf(trashedPhoto())).single()
 
         launch((request as IntentSenderMediaActionRequest).intentSender)
@@ -112,7 +112,7 @@ class TrashInstrumentedTest {
     }
 
     @Test
-    fun `leaves out without error a photo that is no longer in the trash`() {
+    fun leavesOutWithoutErrorAPhotoThatIsNoLongerInTheTrash() {
         assertNull(runBlocking { systemTrash.trashed(setOf(MediaId(Long.MAX_VALUE))) }.firstOrNull())
     }
 

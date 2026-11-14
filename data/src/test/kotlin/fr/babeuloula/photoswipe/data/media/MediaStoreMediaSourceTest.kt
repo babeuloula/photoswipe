@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.data.media
 
 import android.content.ContentResolver
+import android.os.Build
 import android.provider.MediaStore
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.MediaItem
@@ -11,11 +12,13 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -84,6 +87,30 @@ class MediaStoreMediaSourceTest {
             val ranges = SameDayMatcher().rangesFor(LocalDate.of(2026, 7, 15), paris)
 
             assertEquals(listOf(1L, 2L), source.mediaTakenIn(ranges).map { it.id.value }.sorted())
+        }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.Q])
+    fun `reads photos and videos on android 10, which has neither favorites nor trash`() =
+        runTest {
+            provider.addImage(id = 1, dateTaken = july15th2025.toEpochMilli())
+            provider.addVideo(id = 2, dateTaken = july15th2025.toEpochMilli(), duration = 3_000)
+
+            val media = source.mediaTakenIn(listOf(july15th2025..<july15th2025.plusSeconds(1)))
+
+            assertEquals(listOf(1L, 2L), media.map { it.id.value }.sorted())
+            assertTrue(media.none { it.isFavorite })
+            assertEquals(Duration.ofSeconds(3), media.single { it.id.value == 2L }.duration)
+            assertFalse(provider.queries.any { it.containsKey(MediaStore.QUERY_ARG_MATCH_TRASHED) })
+        }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.Q])
+    fun `reads media by id on android 10`() =
+        runTest {
+            provider.addImage(id = 7, dateTaken = july15th2025.toEpochMilli())
+
+            assertEquals(listOf(7L), source.mediaByIds(setOf(MediaId(7))).map { it.id.value })
         }
 
     @Test

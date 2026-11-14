@@ -48,7 +48,7 @@ class MediaStoreMediaSourceInstrumentedTest {
     }
 
     @Test
-    fun `reads the photos of a day of previous years from the real MediaStore`() =
+    fun readsThePhotosOfADayOfPreviousYearsFromTheRealMediaStore() =
         runTest {
             val july15th1995 = insertPhoto("ps30-a.jpg", takenAt(LocalDate.of(1995, 7, 15)))
             val july15th1998 = insertPhoto("ps30-b.jpg", takenAt(LocalDate.of(1998, 7, 15)))
@@ -64,7 +64,7 @@ class MediaStoreMediaSourceInstrumentedTest {
         }
 
     @Test
-    fun `maps a photo of the real MediaStore to a media item`() =
+    fun mapsAPhotoOfTheRealMediaStoreToAMediaItem() =
         runTest {
             val takenAt = takenAt(LocalDate.of(1996, 3, 2))
             val id = insertPhoto("ps30-d.jpg", takenAt)

@@ -1,8 +1,10 @@
 package fr.babeuloula.photoswipe.permission
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.MediaStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import fr.babeuloula.photoswipe.platform.PlatformFeatures
 import javax.inject.Inject
 
 /**
@@ -15,11 +17,16 @@ fun interface MediaManagementReader {
     fun isGranted(): Boolean
 }
 
-/** [MediaManagementReader] sur `MediaStore.canManageMedia` (Android 12+, sous notre `minSdk`). */
+/**
+ * [MediaManagementReader] sur `MediaStore.canManageMedia` ; jamais accordé avant Android 12, où
+ * l'accès n'existe pas (PS-181).
+ */
 class AndroidMediaManagementReader
     @Inject
     constructor(
         @param:ApplicationContext private val context: Context,
+        private val features: PlatformFeatures,
     ) : MediaManagementReader {
-        override fun isGranted(): Boolean = MediaStore.canManageMedia(context)
+        @SuppressLint("NewApi") // Appelé seulement quand l'accès existe (Android 12+).
+        override fun isGranted(): Boolean = features.mediaManagement && MediaStore.canManageMedia(context)
     }

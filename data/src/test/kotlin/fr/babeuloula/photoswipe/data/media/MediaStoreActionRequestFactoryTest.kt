@@ -4,15 +4,18 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.IntentSender
 import android.net.Uri
+import android.os.Build
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
 /** Découpage en lots des demandes système ; la création réelle par MediaStore est vérifiée à la main. */
 @RunWith(RobolectricTestRunner::class)
@@ -109,5 +112,20 @@ class MediaStoreActionRequestFactoryTest {
         assertEquals(listOf(false, false, false), trashValues)
         assertEquals(setOf(MediaId(1), MediaId(2)), delete.single().mediaIds)
         assertEquals(media.take(2).map { Uri.parse(it.uri) }, deleteBatches.single())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.Q])
+    fun `refuses to prepare gallery requests on android 10, which has none`() {
+        val factory = MediaStoreActionRequestFactory(RuntimeEnvironment.getApplication().contentResolver)
+        val media = listOf(aMediaItem(id = 1))
+
+        listOf<() -> Unit>(
+            { factory.trashRequests(media) },
+            { factory.restoreRequests(media) },
+            { factory.deleteRequests(media) },
+            { factory.favoriteRequests(media) },
+            { factory.unfavoriteRequests(media) },
+        ).forEach { prepare -> assertThrows(UnsupportedOperationException::class.java) { prepare() } }
     }
 }

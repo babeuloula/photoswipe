@@ -25,7 +25,7 @@ class ConventionPluginsTest {
 
         val android = project.extensions.getByType(ApplicationExtension::class.java)
         assertEquals(37, android.compileSdk)
-        assertEquals(33, android.defaultConfig.minSdk)
+        assertEquals(29, android.defaultConfig.minSdk)
         assertEquals(37, android.defaultConfig.targetSdk)
         assertKotlinToolchainIs17(project)
     }
@@ -37,7 +37,7 @@ class ConventionPluginsTest {
 
         val android = project.extensions.getByType(LibraryExtension::class.java)
         assertEquals(37, android.compileSdk)
-        assertEquals(33, android.defaultConfig.minSdk)
+        assertEquals(29, android.defaultConfig.minSdk)
         assertKotlinToolchainIs17(project)
     }
 

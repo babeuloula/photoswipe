@@ -16,6 +16,7 @@ class AndroidRobolectricConventionPluginTest {
 
         assertEquals(listOf("libs:robolectric"), project.coordinatesOf("testImplementation"))
         assertEquals(listOf("libs:robolectric-androidAll"), project.coordinatesOf("robolectricRuntime"))
+        assertEquals(listOf("libs:robolectric-androidAll-q"), project.coordinatesOf("robolectricRuntimeQ"))
         assertTrue(project.tasks.getByName("syncRobolectricJars") is Sync)
     }
 

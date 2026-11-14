@@ -46,7 +46,7 @@ class MediaStoreSeederInstrumentedTest {
     private suspend fun mediaOfTheDay() = source.mediaTakenIn(SameDayMatcher().rangesFor(day.plusYears(1), zone))
 
     @Test
-    fun `seeds photos and videos that the gallery reads at their date`() =
+    fun seedsPhotosAndVideosThatTheGalleryReadsAtTheirDate() =
         runTest {
             val plan =
                 listOf(
@@ -67,7 +67,7 @@ class MediaStoreSeederInstrumentedTest {
         }
 
     @Test
-    fun `removes every seeded media`() =
+    fun removesEverySeededMedia() =
         runTest {
             seeder.seed(listOf(SeedMedia(MediaType.IMAGE, day.atTime(11, 0).atZone(zone))))
 

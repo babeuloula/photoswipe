@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.ContentUris
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import fr.babeuloula.photoswipe.data.di.IoDispatcher
@@ -58,7 +59,8 @@ class MediaStoreMediaSource
                 Bundle().apply {
                     putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection.sql)
                     putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selection.args.toTypedArray())
-                    putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_EXCLUDE)
+                    // La corbeille n'existe qu'à partir d'Android 11 : avant, rien n'est à exclure (PS-181).
+                    if (HAS_TRASH_AND_FAVORITES) putInt(MediaStore.QUERY_ARG_MATCH_TRASHED, MediaStore.MATCH_EXCLUDE)
                 }
             return contentResolver
                 .query(collection.uri, collection.projection, arguments, null)
@@ -81,7 +83,7 @@ class MediaStoreMediaSource
                             takenAt = takenAt(columns),
                             sizeBytes = nonNegativeLong(columns.size) ?: 0,
                             duration = columns.duration?.let { nonNegativeLong(it) }?.let { Duration.ofMillis(it) },
-                            isFavorite = getInt(columns.favorite) == 1,
+                            isFavorite = columns.favorite?.let { getInt(it) == 1 } ?: false,
                             fileName = columns.fileName?.takeUnless { isNull(it) }?.let { getString(it) },
                             folder = columns.folder?.takeUnless { isNull(it) }?.let { getString(it) },
                             width = size?.first,
@@ -133,7 +135,7 @@ class MediaStoreMediaSource
                 }
             }
 
-        /** Index des colonnes lues ; la durée n'existe que pour les vidéos. */
+        /** Index des colonnes lues ; la durée n'existe que pour les vidéos, le favori qu'à partir d'Android 11. */
         private class Columns(
             cursor: Cursor,
         ) {
@@ -141,7 +143,7 @@ class MediaStoreMediaSource
             val dateTaken = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_TAKEN)
             val dateAdded = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_ADDED)
             val size = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)
-            val favorite = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.IS_FAVORITE)
+            val favorite = cursor.getColumnIndex(MediaStore.MediaColumns.IS_FAVORITE).takeIf { it >= 0 }
             val duration = cursor.getColumnIndex(MediaStore.MediaColumns.DURATION).takeIf { it >= 0 }
             val fileName = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME).takeIf { it >= 0 }
             val folder = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH).takeIf { it >= 0 }
@@ -154,18 +156,22 @@ class MediaStoreMediaSource
         private enum class Collection(
             val uri: Uri,
             val type: MediaType,
-            val projection: Array<String>,
+            private val extraColumns: List<String>,
         ) {
             IMAGES(
                 MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL),
                 MediaType.IMAGE,
-                COMMON_PROJECTION,
+                emptyList(),
             ),
             VIDEOS(
                 MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL),
                 MediaType.VIDEO,
-                COMMON_PROJECTION + MediaStore.MediaColumns.DURATION,
+                listOf(MediaStore.MediaColumns.DURATION),
             ),
+            ;
+
+            /** Colonnes demandées, selon la version d'Android. */
+            val projection: Array<String> get() = COMMON_PROJECTION + extraColumns
         }
 
         private companion object {
@@ -180,17 +186,26 @@ class MediaStoreMediaSource
         }
     }
 
-/** Colonnes lues dans les deux collections. */
-private val COMMON_PROJECTION =
-    arrayOf(
-        MediaStore.MediaColumns._ID,
-        MediaStore.MediaColumns.DATE_TAKEN,
-        MediaStore.MediaColumns.DATE_ADDED,
-        MediaStore.MediaColumns.SIZE,
-        MediaStore.MediaColumns.IS_FAVORITE,
-        MediaStore.MediaColumns.DISPLAY_NAME,
-        MediaStore.MediaColumns.RELATIVE_PATH,
-        MediaStore.MediaColumns.WIDTH,
-        MediaStore.MediaColumns.HEIGHT,
-        MediaStore.MediaColumns.ORIENTATION,
-    )
+/**
+ * Corbeille et favoris de la galerie : à partir d'Android 11. Sur Android 10, la colonne
+ * `IS_FAVORITE` n'existe pas (la demander ferait échouer la requête) et rien n'est jamais à la
+ * corbeille (PS-181).
+ */
+private val HAS_TRASH_AND_FAVORITES: Boolean
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+
+/** Colonnes lues dans les deux collections ; `IS_FAVORITE` seulement là où elle existe. */
+private val COMMON_PROJECTION: Array<String>
+    get() =
+        listOfNotNull(
+            MediaStore.MediaColumns._ID,
+            MediaStore.MediaColumns.DATE_TAKEN,
+            MediaStore.MediaColumns.DATE_ADDED,
+            MediaStore.MediaColumns.SIZE,
+            MediaStore.MediaColumns.IS_FAVORITE.takeIf { HAS_TRASH_AND_FAVORITES },
+            MediaStore.MediaColumns.DISPLAY_NAME,
+            MediaStore.MediaColumns.RELATIVE_PATH,
+            MediaStore.MediaColumns.WIDTH,
+            MediaStore.MediaColumns.HEIGHT,
+            MediaStore.MediaColumns.ORIENTATION,
+        ).toTypedArray()

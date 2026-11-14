@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
 import fr.babeuloula.photoswipe.domain.port.ReminderScheduler
 import java.time.Clock
@@ -32,7 +33,7 @@ class AlarmManagerReminderScheduler
         private val alarmManager: AlarmManager get() = context.getSystemService(AlarmManager::class.java)
 
         override fun schedule(time: LocalTime) {
-            if (alarmManager.canScheduleExactAlarms()) {
+            if (canScheduleExact()) {
                 fallback.cancelDaily()
                 setExact(ReminderAlarm.DAILY, nextOccurrence(time, clock).toInstant().toEpochMilli())
             } else {
@@ -42,7 +43,7 @@ class AlarmManagerReminderScheduler
         }
 
         override fun scheduleOnce(at: LocalDateTime) {
-            if (alarmManager.canScheduleExactAlarms()) {
+            if (canScheduleExact()) {
                 fallback.cancelOnce()
                 setExact(ReminderAlarm.SNOOZE, at.atZone(clock.zone).toInstant().toEpochMilli())
             } else {
@@ -55,6 +56,10 @@ class AlarmManagerReminderScheduler
             ReminderAlarm.entries.forEach { alarmManager.cancel(pendingIntent(it)) }
             fallback.cancel()
         }
+
+        /** Alarmes exactes permises : autorisation donnée (Android 12+), ou d'office avant (PS-181). */
+        private fun canScheduleExact(): Boolean =
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
 
         private fun setExact(
             alarm: ReminderAlarm,

@@ -2,6 +2,7 @@ package fr.babeuloula.photoswipe.data.reminder
 
 import android.app.AlarmManager
 import android.content.Context
+import android.os.Build
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
@@ -15,6 +16,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlarmManager
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -125,5 +127,22 @@ class AlarmManagerReminderSchedulerTest {
 
         assertEquals(1, alarms().size)
         assertTrue(work(WorkManagerReminderScheduler.WORK_NAME).isEmpty())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.Q])
+    fun `rings at the exact minute on android 10, where exact alarms need no permission`() {
+        ShadowAlarmManager.setCanScheduleExactAlarms(false)
+
+        scheduler.schedule(LocalTime.of(18, 0))
+        scheduler.scheduleOnce(LocalDateTime.of(2026, 11, 7, 9, 5))
+
+        // WorkManager programme aussi sa propre alarme sur Android 10 : seules celles du rappel comptent.
+        assertEquals(
+            setOf(millis(LocalDateTime.of(2026, 11, 7, 18, 0)), millis(LocalDateTime.of(2026, 11, 7, 9, 5))),
+            alarms().filter { it.isAllowWhileIdle }.map { it.triggerAtMs }.toSet(),
+        )
+        assertTrue(work(WorkManagerReminderScheduler.WORK_NAME).isEmpty())
+        assertTrue(work(WorkManagerReminderScheduler.SNOOZE_WORK_NAME).isEmpty())
     }
 }

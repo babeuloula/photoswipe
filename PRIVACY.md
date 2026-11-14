@@ -12,8 +12,8 @@ PhotoSwipe est une application Android qui vous fait revoir et trier les photos 
 
 **Ce que l'application lit sur votre téléphone.**
 
-- **Photos et vidéos** (`READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, ou votre sélection avec l'accès partiel d'Android 14+) : pour retrouver les souvenirs d'un jour, les afficher et estimer l'espace libéré. Ils restent sur l'appareil.
-- **Notifications** (`POST_NOTIFICATIONS`), seulement si vous activez le rappel quotidien.
+- **Photos et vidéos** (`READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, ou votre sélection avec l'accès partiel d'Android 14+ ; `READ_EXTERNAL_STORAGE` d'Android 10 à 12, lue seulement pour les photos et vidéos) : pour retrouver les souvenirs d'un jour, les afficher et estimer l'espace libéré. Ils restent sur l'appareil.
+- **Notifications** (`POST_NOTIFICATIONS`, Android 13+), seulement si vous activez le rappel quotidien.
 - **Alarmes et rappels** (`SCHEDULE_EXACT_ALARM`) et **démarrage du téléphone** (`RECEIVE_BOOT_COMPLETED`) : pour envoyer le rappel quotidien à l'heure choisie, y compris après un redémarrage.
 - **Gestion des médias** (`MANAGE_MEDIA`), seulement si vous l'accordez dans les réglages d'Android : la corbeille et les favoris s'appliquent alors sans dialogue système, après la confirmation de PhotoSwipe.
 - **Accéléromètre** (sans autorisation), seulement si vous activez « Secouer pour annuler » : lu pendant que la pile de tri est à l'écran, pour reconnaître une secousse ; rien n'en est enregistré.
@@ -42,8 +42,8 @@ PhotoSwipe is an Android app that lets you review and sort the photos and videos
 
 **What the app reads on your phone.**
 
-- **Photos and videos** (`READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, or your selection with Android 14+ partial access): to find the memories of a day, show them and estimate the space you can free. They stay on the device.
-- **Notifications** (`POST_NOTIFICATIONS`), only if you turn on the daily reminder.
+- **Photos and videos** (`READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, or your selection with Android 14+ partial access; `READ_EXTERNAL_STORAGE` on Android 10 to 12, read only for photos and videos): to find the memories of a day, show them and estimate the space you can free. They stay on the device.
+- **Notifications** (`POST_NOTIFICATIONS`, Android 13+), only if you turn on the daily reminder.
 - **Alarms and reminders** (`SCHEDULE_EXACT_ALARM`) and **phone startup** (`RECEIVE_BOOT_COMPLETED`): to send the daily reminder at the time you chose, including after a restart.
 - **Media management** (`MANAGE_MEDIA`), only if you grant it in Android settings: the trash and favorites then apply without a system dialog, after PhotoSwipe's own confirmation.
 - **Accelerometer** (no permission needed), only if you turn on "Shake to undo": read while the sorting deck is on screen, to recognize a shake; nothing from it is stored.

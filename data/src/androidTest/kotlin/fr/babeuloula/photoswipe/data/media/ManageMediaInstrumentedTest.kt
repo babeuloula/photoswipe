@@ -69,7 +69,7 @@ class ManageMediaInstrumentedTest {
     }
 
     @Test
-    fun `trashes a gallery photo without any dialog once media management is allowed`() {
+    fun trashesAGalleryPhotoWithoutAnyDialogOnceMediaManagementIsAllowed() {
         allowMediaManagement(true)
 
         launch(MediaStore.createTrashRequest(resolver, listOf(photoUri()), true).intentSender)
@@ -78,7 +78,7 @@ class ManageMediaInstrumentedTest {
     }
 
     @Test
-    fun `adds a gallery photo to the favorites without any dialog once media management is allowed`() {
+    fun addsAGalleryPhotoToTheFavoritesWithoutAnyDialogOnceMediaManagementIsAllowed() {
         allowMediaManagement(true)
 
         launch(MediaStore.createFavoriteRequest(resolver, listOf(photoUri()), true).intentSender)
@@ -90,7 +90,7 @@ class ManageMediaInstrumentedTest {
     }
 
     @Test
-    fun `waits for the user before trashing without media management`() {
+    fun waitsForTheUserBeforeTrashingWithoutMediaManagement() {
         allowMediaManagement(false)
 
         launch(MediaStore.createTrashRequest(resolver, listOf(photoUri()), true).intentSender)
