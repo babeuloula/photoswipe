@@ -113,7 +113,11 @@ class TutorialScreenTest {
         composeRule
             .onNodeWithContentDescription(text(R.string.tutorial_confirmation_no_trash_illustration))
             .assertExists()
-        composeRule.onNodeWithText(text(R.string.summary_delete_confirm_text), useUnmergedTree = true).assertExists()
+        composeRule
+            .onNodeWithText(
+                text(R.string.summary_delete_confirm_text),
+                useUnmergedTree = true,
+            ).assertExists()
         composeRule
             .onNodeWithText(
                 text(R.string.summary_trash_confirm_text),

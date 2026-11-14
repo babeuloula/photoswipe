@@ -223,7 +223,7 @@
     <string name="home_manage_media_tip">Marre des confirmations ? Activez la gestion des médias dans les %1$s.</string>
     <string name="home_manage_media_tip_link">paramètres</string>
     <string name="home_manage_media_tip_dismiss">Fermer le conseil</string>
-    <string name="summary_delete_confirm_text">Votre téléphone n\'a pas de corbeille dans sa galerie : ils seront supprimés tout de suite et ne pourront pas être restaurés.</string>
+    <string name="summary_delete_confirm_text">Votre téléphone n\'a pas de corbeille dans sa galerie : la suppression est immédiate et définitive.</string>
     <string name="summary_trash_confirm_text">Vous pourrez les restaurer depuis la corbeille de votre galerie pendant 30 jours.</string>
     <string name="summary_trash_confirm_action">Mettre à la corbeille</string>
     <string name="deck_previously_kept">Gardé la dernière fois</string>

@@ -234,7 +234,7 @@
     <string name="home_manage_media_tip">Tired of confirming every time? Turn on media management in the %1$s.</string>
     <string name="home_manage_media_tip_link">settings</string>
     <string name="home_manage_media_tip_dismiss">Close the tip</string>
-    <string name="summary_delete_confirm_text">Your phone has no gallery trash: they will be deleted right away and can\'t be restored.</string>
+    <string name="summary_delete_confirm_text">Your phone has no gallery trash: the deletion is immediate and can\'t be undone.</string>
     <string name="summary_trash_confirm_text">You can restore them from your gallery trash for 30 days.</string>
     <string name="summary_trash_confirm_action">Move to trash</string>
     <string name="deck_previously_kept">Kept last time</string>
