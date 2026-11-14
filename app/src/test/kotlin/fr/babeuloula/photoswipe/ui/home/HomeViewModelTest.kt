@@ -23,6 +23,7 @@ import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.ReopenDay
+import fr.babeuloula.photoswipe.permission.MediaManagementReader
 import fr.babeuloula.photoswipe.ui.whatsnew.WHATS_NEW
 import fr.babeuloula.photoswipe.ui.whatsnew.WhatsNewRelease
 import kotlinx.coroutines.flow.first
@@ -217,6 +218,17 @@ class HomeViewModelTest {
             val state = loaded(homeViewModel(FakeMediaSource())) as HomeUiState.Loaded
 
             assertEquals(false, state.showManageMediaTip)
+        }
+
+    @Test
+    fun `never shows the media management tip on a phone without that access`() =
+        runTest {
+            settings.saveManageMediaTip(ManageMediaTip.OFFERED)
+            mediaManagementAvailable = false
+            val viewModel = homeViewModel(FakeMediaSource())
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+
+            assertEquals(false, (loaded(viewModel) as HomeUiState.Loaded).showManageMediaTip)
         }
 
     @Test
@@ -453,12 +465,20 @@ class HomeViewModelTest {
     /** Accès « Gestion des médias » simulé, refusé par défaut. */
     private var mediaManagementGranted = false
 
+    /** Accès « Gestion des médias » proposé par le téléphone (Android 12+), vrai par défaut. */
+    private var mediaManagementAvailable = true
+
     private fun homeViewModel(source: MediaSource): HomeViewModel =
         HomeViewModel(
             GetReviewDays(ReviewWindowProvider(clock), SameDayMatcher(), source, repository, history, clock),
             GetSessionSummary(repository, FakeDecisionJournal(repository), history, ReviewWindowProvider(clock), clock),
             settings,
-            mediaManagement = { mediaManagementGranted },
+            mediaManagement =
+                object : MediaManagementReader {
+                    override fun isGranted() = mediaManagementGranted
+
+                    override fun isAvailable() = mediaManagementAvailable
+                },
             reopenDay = ReopenDay(SameDayMatcher(), source, repository, FakeDecisionJournal(repository), clock),
             announcements = homeAnnouncements(settings, clock, widgetRefresher = { widgetRefreshes++ }),
         )

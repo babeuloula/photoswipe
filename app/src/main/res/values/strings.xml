@@ -153,6 +153,7 @@
     <string name="settings_reminder_exact_summary">Without the \"Alarms &amp; reminders\" permission, Android may send it a few minutes late. Allow it in Android settings.</string>
     <string name="settings_reminder_time_picker">Choose the reminder time</string>
     <string name="settings_reminder_permission_denied">Without notification permission, PhotoSwipe can\'t remind you: the reminder stays off.</string>
+    <string name="settings_reminder_notifications_off">Notifications are turned off for PhotoSwipe: turn them on in Android settings to get the reminder.</string>
     <string name="settings_reminder_open_settings">Settings</string>
     <string name="settings_language_section">Language</string>
     <string name="settings_language">App language</string>

@@ -268,6 +268,23 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `hides the language section on a phone without an app language setting`() {
+        composeRule.activity.setContent {
+            PhotoSwipeTheme {
+                SettingsScreen(
+                    state = SettingsUiState(reminder = ReminderSettings.DEFAULT),
+                    onEvent = { events += it },
+                    environment = SettingsEnvironment(languageLabel = null),
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(text(R.string.settings_language_section)).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.settings_language)).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.settings_sorting_help_section)).performScrollTo().assertExists()
+    }
+
+    @Test
     fun `shows the developer tools entry only when the variant has them`() {
         show(SettingsUiState(reminder = ReminderSettings.DEFAULT))
         composeRule.onNodeWithText(text(R.string.settings_developer_tools)).assertDoesNotExist()
