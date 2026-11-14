@@ -113,9 +113,19 @@ jobs:
           retention-days: 7
 
   instrumented:
-    name: Instrumented tests (emulator)
+    name: Instrumented tests (${{ matrix.label }})
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # L'émulateur actuel (API 34) garde son nom de check ; Android 10 (API 29, notre minSdk) vérifie
+    # MediaStore sans favoris ni corbeille et la suppression directe (PS-186, ADR 0042).
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - api-level: 34
+            label: emulator
+          - api-level: 29
+            label: Android 10 emulator
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -145,11 +155,12 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # Tests src/androidTest de tous les modules (MediaStore réel, migrations Room) sur un émulateur API 34.
+      # Tests src/androidTest de tous les modules (MediaStore réel, migrations Room) sur un émulateur de la
+      # matrice ; les tests propres à une version plus récente s'y ignorent (assumeTrue).
       - name: Instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: ${{ matrix.api-level }}
           arch: x86_64
           target: google_apis
           disk-size: 2048M
@@ -171,7 +182,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: instrumented-reports
+          name: instrumented-reports-api-${{ matrix.api-level }}
           path: |
             **/build/reports/androidTests/
             **/build/outputs/androidTest-results/

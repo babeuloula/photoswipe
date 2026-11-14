@@ -133,6 +133,7 @@ Objectifs de la SPEC : couverture du domaine **≥ 90 %** (pas encore mesurée a
 
 - **Quality, unit tests and debug build** (check obligatoire du ruleset, ADR 0004) : `./gradlew test quality assembleDebug --continue` en une seule invocation parallèle ;
 - **Instrumented tests (emulator)** : `./gradlew connectedDebugAndroidTest` sur un émulateur API 34 (`reactivecircus/android-emulator-runner`, accélération KVM).
+- **Instrumented tests (Android 10 emulator)** : les mêmes tests sur un émulateur API 29, notre `minSdk` (PS-186) : MediaStore sans favoris ni corbeille, suppression directe de `LegacyMediaDeleterInstrumentedTest` (ADR 0042). Les tests propres à une version plus récente (corbeille, « Gestion des médias ») s'y ignorent par `assumeTrue`, et `LegacyMediaDeleterInstrumentedTest` ne tourne que sur Android 10. L'image arm64 d'Android 10 se fige sur un Mac Apple Silicon : ces chemins se vérifient en CI ou sur un vrai téléphone.
 
 Le job obligatoire lance aussi, avant Gradle, les tests Python de `scripts/`, `shellcheck scripts/*.sh` et les tests JavaScript de la page des rapports de plantage (`node --test pages/crash/*.test.mjs`).
 
