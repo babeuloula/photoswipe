@@ -144,6 +144,7 @@
     <string name="settings_reminder_exact_summary">Sans l\'autorisation « Alarmes et rappels », Android peut l\'envoyer avec quelques minutes de retard. Autorisez-la dans les réglages d\'Android.</string>
     <string name="settings_reminder_time_picker">Choisir l\'heure du rappel</string>
     <string name="settings_reminder_permission_denied">Sans autorisation de notification, PhotoSwipe ne peut pas vous le rappeler : le rappel reste désactivé.</string>
+    <string name="settings_reminder_notifications_off">Les notifications de PhotoSwipe sont désactivées : activez-les dans les réglages d\'Android pour recevoir le rappel.</string>
     <string name="settings_reminder_open_settings">Réglages</string>
     <string name="settings_language_section">Langue</string>
     <string name="settings_language">Langue de l\'application</string>

@@ -88,6 +88,14 @@ fun SettingsRoute(
                     }
                 }
 
+                SettingsEffect.NotificationsTurnedOff -> {
+                    scope.launch {
+                        if (snackbarHostState.showTurnedOff(resources)) {
+                            viewModel.onEvent(SettingsEvent.OpenNotificationSettings)
+                        }
+                    }
+                }
+
                 else -> {
                     Unit
                 }
@@ -144,6 +152,14 @@ private suspend fun SnackbarHostState.showDenied(
     showSnackbar(
         resources.getString(R.string.settings_reminder_permission_denied),
         actionLabel = resources.getString(R.string.settings_reminder_open_settings).takeUnless { canAskAgain },
+        duration = SnackbarDuration.Long,
+    ) == SnackbarResult.ActionPerformed
+
+/** Notifications coupées dans les réglages d'Android (avant Android 13) ; vrai si « Réglages » est choisi. */
+private suspend fun SnackbarHostState.showTurnedOff(resources: Resources): Boolean =
+    showSnackbar(
+        resources.getString(R.string.settings_reminder_notifications_off),
+        actionLabel = resources.getString(R.string.settings_reminder_open_settings),
         duration = SnackbarDuration.Long,
     ) == SnackbarResult.ActionPerformed
 
@@ -212,7 +228,8 @@ private fun otherScreenIntent(
 private fun rememberEnvironment(viewModel: SettingsViewModel): SettingsEnvironment {
     val context = LocalContext.current
     return SettingsEnvironment(
-        languageLabel = rememberLanguageLabel(),
+        // Le réglage de langue par application n'existe qu'à partir d'Android 13 (PS-182).
+        languageLabel = if (viewModel.platform.appLanguageSetting) rememberLanguageLabel() else null,
         showDeveloperTools = remember(viewModel) { viewModel.developerTools.intent(context) != null },
         exactAlarmAllowed = rememberExactAlarmAllowed(viewModel.exactAlarms),
         shakeAvailable = remember(context) { hasAccelerometer(context) },

@@ -7,6 +7,7 @@ import fr.babeuloula.photoswipe.domain.model.CatchUpWindow
 import fr.babeuloula.photoswipe.domain.model.ReminderSettings
 import fr.babeuloula.photoswipe.domain.model.ThemeMode
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
+import fr.babeuloula.photoswipe.platform.PlatformFeatures
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -31,13 +32,14 @@ class SettingsViewModelTest {
     /** Permission de notification simulée, accordée par défaut. */
     private var notificationsAllowed = true
 
-    private fun settingsViewModel() =
+    private fun settingsViewModel(platform: PlatformFeatures = PlatformFeatures.forSdk(ANDROID_14)) =
         SettingsViewModel(
             settingsRepository = repository,
             updateReminderSettings = UpdateReminderSettings(repository, scheduler),
             notificationPermission = { notificationsAllowed },
             developerTools = { null },
             exactAlarms = { true },
+            platform = platform,
         )
 
     private fun TestScope.collectEffects(viewModel: SettingsViewModel): List<SettingsEffect> {
@@ -126,6 +128,32 @@ class SettingsViewModelTest {
         assertFalse(viewModel.uiState.value.timePickerOpen)
         assertEquals(ReminderSettings.DEFAULT, repository.reminder)
     }
+
+    @Test
+    fun `says notifications are turned off before android 13, where there is no permission to ask`() =
+        runTest {
+            notificationsAllowed = false
+            val viewModel = settingsViewModel(PlatformFeatures.forSdk(ANDROID_10))
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SettingsEvent.ReminderToggled(enabled = true))
+
+            assertEquals(listOf<SettingsEffect>(SettingsEffect.NotificationsTurnedOff), effects)
+            assertFalse(repository.reminder.enabled)
+            assertNull(scheduler.scheduledTime)
+        }
+
+    @Test
+    fun `enables the reminder right away before android 13 when notifications are on`() =
+        runTest {
+            val viewModel = settingsViewModel(PlatformFeatures.forSdk(ANDROID_10))
+            val effects = collectEffects(viewModel)
+
+            viewModel.onEvent(SettingsEvent.ReminderToggled(enabled = true))
+
+            assertTrue(effects.isEmpty())
+            assertTrue(repository.reminder.enabled)
+        }
 
     @Test
     fun `asks for the notification permission before enabling the reminder`() =
@@ -370,3 +398,7 @@ class SettingsViewModelTest {
         assertEquals(CatchUpWindow.MONTH, viewModel.uiState.value.catchUpWindow)
     }
 }
+
+/** Android 10 et Android 14, en niveaux d'API. */
+private const val ANDROID_10 = 29
+private const val ANDROID_14 = 34

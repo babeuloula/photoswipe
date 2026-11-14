@@ -355,7 +355,8 @@ class HomeViewModel
         private fun manageMediaTipShown(): Flow<Boolean> =
             settingsRepository
                 .observeManageMediaTip()
-                .map { it == ManageMediaTip.OFFERED && !mediaManagement.isGranted() }
+                // Avant Android 12, l'accès n'existe pas : jamais de conseil (PS-182).
+                .map { it == ManageMediaTip.OFFERED && mediaManagement.isAvailable() && !mediaManagement.isGranted() }
                 .catch { emit(false) }
 
         /**

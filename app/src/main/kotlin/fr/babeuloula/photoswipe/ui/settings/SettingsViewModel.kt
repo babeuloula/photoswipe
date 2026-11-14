@@ -10,6 +10,7 @@ import fr.babeuloula.photoswipe.domain.port.SettingsRepository
 import fr.babeuloula.photoswipe.domain.usecase.UpdateReminderSettings
 import fr.babeuloula.photoswipe.permission.ExactAlarmPermissionReader
 import fr.babeuloula.photoswipe.permission.NotificationPermissionReader
+import fr.babeuloula.photoswipe.platform.PlatformFeatures
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -267,6 +268,12 @@ sealed interface SettingsEffect {
         val canAskAgain: Boolean,
     ) : SettingsEffect
 
+    /**
+     * Notifications coupées dans les réglages d'Android, avant Android 13 où il n'y a pas de
+     * permission à demander : le rappel reste désactivé, le message propose les réglages (PS-182).
+     */
+    data object NotificationsTurnedOff : SettingsEffect
+
     /** Ouvrir les réglages de notification de l'application. */
     data object OpenNotificationSettings : SettingsEffect
 
@@ -301,6 +308,8 @@ class SettingsViewModel
         val developerTools: DeveloperToolsEntry,
         /** Autorisation des alarmes exactes, relue par l'écran à chaque retour au premier plan (PS-125). */
         val exactAlarms: ExactAlarmPermissionReader,
+        /** Fonctions d'Android de ce téléphone : langue par application, permission de notification (PS-182). */
+        val platform: PlatformFeatures,
     ) : ViewModel() {
         private val state = MutableStateFlow(SettingsUiState())
         private val effects = Channel<SettingsEffect>(Channel.BUFFERED)
@@ -430,10 +439,19 @@ class SettingsViewModel
             }
         }
 
-        /** Active le rappel si les notifications sont permises, sinon les demande d'abord ; le désactive. */
+        /**
+         * Active le rappel si les notifications sont permises, sinon les demande d'abord (Android 13+)
+         * ou explique qu'elles sont coupées (avant) ; le désactive.
+         */
         private fun toggleReminder(enabled: Boolean) {
             if (enabled && !notificationPermission.isGranted()) {
-                effects.trySend(SettingsEffect.RequestNotificationPermission)
+                effects.trySend(
+                    if (platform.notificationPermission) {
+                        SettingsEffect.RequestNotificationPermission
+                    } else {
+                        SettingsEffect.NotificationsTurnedOff
+                    },
+                )
             } else {
                 save { it.copy(enabled = enabled) }
             }

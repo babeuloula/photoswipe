@@ -15,6 +15,12 @@ import javax.inject.Inject
 fun interface MediaManagementReader {
     /** Vrai si l'accès est donné à cet instant ; il change depuis les réglages d'Android. */
     fun isGranted(): Boolean
+
+    /**
+     * Vrai si le téléphone propose cet accès (Android 12+) : sinon, ni conseil ni lien vers ses
+     * réglages (PS-182).
+     */
+    fun isAvailable(): Boolean = true
 }
 
 /**
@@ -29,4 +35,6 @@ class AndroidMediaManagementReader
     ) : MediaManagementReader {
         @SuppressLint("NewApi") // Appelé seulement quand l'accès existe (Android 12+).
         override fun isGranted(): Boolean = features.mediaManagement && MediaStore.canManageMedia(context)
+
+        override fun isAvailable(): Boolean = features.mediaManagement
     }

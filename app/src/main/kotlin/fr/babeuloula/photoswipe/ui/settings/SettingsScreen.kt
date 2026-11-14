@@ -104,7 +104,7 @@ fun SettingsScreen(
                         ReminderSection(reminder, environment.exactAlarmAllowed, onEvent)
                         state.catchUpWindow?.let { CatchUpSection(it, onEvent) }
                         SortingHelpSection(state.qualityHints, onEvent)
-                        LanguageSection(environment.languageLabel, onEvent)
+                        environment.languageLabel?.let { LanguageSection(it, onEvent) }
                         // Seulement avec un accéléromètre (PS-175).
                         if (environment.shakeAvailable) ShakeSection(state.shakeToUndo, onEvent)
                         state.themeMode?.let {
@@ -190,7 +190,8 @@ private const val REMINDER_ROWS = 2
 /**
  * Ce que les réglages lisent hors de leur ViewModel.
  *
- * @property languageLabel langue de l'application, lue dans le système (SPEC §9).
+ * @property languageLabel langue de l'application, lue dans le système (SPEC §9) ; `null` sans
+ * réglage de langue par application (avant Android 13) : la section « Langue » n'est pas affichée (PS-182).
  * @property showDeveloperTools vrai si la variante a des outils développeur (debug, SPEC §10).
  * @property exactAlarmAllowed vrai si les alarmes exactes sont autorisées : le rappel arrive à
  * l'heure pile (PS-125).
@@ -198,7 +199,7 @@ private const val REMINDER_ROWS = 2
  * proposé (PS-175).
  */
 data class SettingsEnvironment(
-    val languageLabel: String = "",
+    val languageLabel: String? = "",
     val showDeveloperTools: Boolean = false,
     val exactAlarmAllowed: Boolean = true,
     val shakeAvailable: Boolean = false,
