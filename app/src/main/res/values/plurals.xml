@@ -65,6 +65,11 @@
         <item quantity="one">If you confirm the %d marked item, once it leaves the trash</item>
         <item quantity="other">If you confirm the %d marked items, once they leave the trash</item>
     </plurals>
+    <!-- Sans corbeille (Android 10), la suppression est définitive (PS-185). -->
+    <plurals name="summary_if_confirmed_now">
+        <item quantity="one">If you confirm the %d marked item</item>
+        <item quantity="other">If you confirm the %d marked items</item>
+    </plurals>
     <!-- Poids d'un fichier de moins d'un kilo-octet (SPEC §3.5, §4.3). -->
     <plurals name="file_size_bytes">
         <item quantity="one">%d byte</item>
@@ -79,15 +84,30 @@
         <item quantity="one">%d item, its space freed in 30 days or sooner from the trash</item>
         <item quantity="other">%d items, their space freed in 30 days or sooner from the trash</item>
     </plurals>
+    <!-- Sans corbeille (Android 10), la suppression est définitive (PS-185). -->
+    <plurals name="summary_deleted_for_good_detail">
+        <item quantity="one">%d item deleted for good</item>
+        <item quantity="other">%d items deleted for good</item>
+    </plurals>
     <!-- Ligne « Trié aujourd'hui » du résumé : suppressions confirmées et leur poids (ADR 0034). -->
     <plurals name="summary_deleted_today">
         <item quantity="one">%1$d item sent to the trash (%2$s)</item>
         <item quantity="other">%1$d items sent to the trash (%2$s)</item>
     </plurals>
+    <!-- Sans corbeille (Android 10), la suppression est définitive (PS-185). -->
+    <plurals name="summary_deleted_for_good_today">
+        <item quantity="one">%1$d item deleted for good (%2$s)</item>
+        <item quantity="other">%1$d items deleted for good (%2$s)</item>
+    </plurals>
     <!-- Accueil : ce qui a été supprimé ce jour-là, même s'il n'en reste rien (ADR 0034). -->
     <plurals name="home_day_deleted">
         <item quantity="one">%1$d item sent to the trash · %2$s</item>
         <item quantity="other">%1$d items sent to the trash · %2$s</item>
+    </plurals>
+    <!-- Sans corbeille (Android 10), la suppression est définitive (PS-185). -->
+    <plurals name="home_day_deleted_for_good">
+        <item quantity="one">%1$d item deleted for good · %2$s</item>
+        <item quantity="other">%1$d items deleted for good · %2$s</item>
     </plurals>
     <!-- Vue d'ensemble d'un jour (PS-139). -->
     <plurals name="day_overview_memories">

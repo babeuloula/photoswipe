@@ -261,6 +261,8 @@
     <string name="tutorial_catch_up_body">Un jour de manqué ? Sur l\'accueil, sous la carte d\'aujourd\'hui, la liste « À rattraper » garde les jours précédents (une semaine par défaut, jusqu\'à 30 jours dans les réglages), et un jour déjà trié peut être retrié. Touchez les vignettes d\'un jour pour voir tous ses souvenirs, puis faites un appui long pour en trier plusieurs d\'un coup. Un rappel quotidien, à activer dans les réglages, vous prévient seulement s\'il reste des souvenirs à trier.</string>
     <string name="tutorial_confirmation_title">Rien n\'est définitif</string>
     <string name="tutorial_confirmation_body">Les médias marqués sont supprimés ensemble, quand vous confirmez à la fin du tri ; touchez-les dans le résumé pour les revoir en grand avant. Ils partent dans la corbeille du système, d\'où vous pouvez les restaurer pendant environ 30 jours, depuis la page « Corbeille » (icône en haut de l\'accueil).</string>
+    <string name="tutorial_confirmation_no_trash_title">Vous décidez à la fin</string>
+    <string name="tutorial_confirmation_no_trash_body">Les médias marqués sont supprimés ensemble, seulement quand vous confirmez à la fin du tri ; touchez-les dans le résumé pour les revoir en grand avant. Votre téléphone n\'a pas de corbeille dans sa galerie : une fois confirmés, ils sont supprimés définitivement.</string>
     <string name="tutorial_practice_title">Essayez</string>
     <string name="tutorial_practice_body">Ces cartes d\'exemple ne sont pas vos photos : glissez-les ou utilisez les boutons, rien n\'est enregistré.</string>
     <string name="tutorial_practice_kept">Gardée : elle reviendrait l\'année prochaine.</string>
@@ -276,6 +278,7 @@
     <string name="tutorial_swipe_up_illustration">Animation : une photo glisse vers le haut sous un voile bleu avec un cœur, puis le menu s\'ouvre avec Ajouter aux favoris et Partager.</string>
     <string name="tutorial_catch_up_illustration">Animation : la liste des jours de l\'accueil, aujourd\'hui en haut puis les 6 jours précédents, chacun avec son nombre de souvenirs à trier ; ils sont triés l\'un après l\'autre, et le rappel compte ce qui reste.</string>
     <string name="tutorial_confirmation_illustration">Animation : le résumé montre l\'espace libéré estimé, puis un dialogue propose de mettre les médias marqués à la corbeille.</string>
+    <string name="tutorial_confirmation_no_trash_illustration">Animation : le résumé montre l\'espace libéré estimé, puis un dialogue propose de supprimer définitivement les médias marqués.</string>
     <string name="tutorial_swipes_illustration">Animation : une photo glisse à droite sous un voile vert avec une coche, Garder, puis à gauche sous un voile rouge avec une corbeille, Supprimer.</string>
     <!-- Rapport de plantage proposé au lancement suivant (ADR 0033). -->
     <string name="crash_report_title">PhotoSwipe s\'est fermé de façon inattendue</string>
@@ -284,6 +287,7 @@
     <string name="crash_report_ignore">Ignorer</string>
     <!-- Résumé quand tout est confirmé : place libérée aujourd'hui (ADR 0034). -->
     <string name="summary_freed_today">Envoyé à la corbeille aujourd\'hui</string>
+    <string name="summary_deleted_for_good_today">Libéré aujourd\'hui</string>
     <!-- Pile : place de la carte parmi les souvenirs de son année (PS-138). -->
     <string name="deck_year_progress">%1$d · souvenir %2$d sur %3$d</string>
     <string name="deck_year_single">%1$d · seul souvenir de cette année</string>

@@ -29,4 +29,16 @@ class TutorialPageTextsTest {
             TutorialPage.SWIPE_UP.texts(android10),
         )
     }
+
+    @Test
+    fun `says the deletion is for good on android 10, which has no trash`() {
+        assertEquals(
+            TutorialTexts(
+                R.string.tutorial_confirmation_no_trash_title,
+                R.string.tutorial_confirmation_no_trash_body,
+                R.string.tutorial_confirmation_no_trash_illustration,
+            ),
+            TutorialPage.CONFIRMATION.texts(android10),
+        )
+    }
 }

@@ -80,7 +80,8 @@ data class TutorialTexts(
 
 /**
  * Textes de la page sur un téléphone qui a [features] : sans favoris de la galerie (Android 10),
- * la page du glissement vers le haut ne parle que de « Plus d'actions » (PS-183).
+ * la page du glissement vers le haut ne parle que de « Plus d'actions » (PS-183) ; sans corbeille,
+ * la page de la confirmation dit que la suppression est définitive (PS-185).
  */
 fun TutorialPage.texts(features: PlatformFeatures): TutorialTexts =
     when {
@@ -89,6 +90,14 @@ fun TutorialPage.texts(features: PlatformFeatures): TutorialTexts =
                 R.string.tutorial_more_actions_title,
                 R.string.tutorial_more_actions_body,
                 R.string.tutorial_more_actions_illustration,
+            )
+        }
+
+        this == TutorialPage.CONFIRMATION && !features.systemTrash -> {
+            TutorialTexts(
+                R.string.tutorial_confirmation_no_trash_title,
+                R.string.tutorial_confirmation_no_trash_body,
+                R.string.tutorial_confirmation_no_trash_illustration,
             )
         }
 
