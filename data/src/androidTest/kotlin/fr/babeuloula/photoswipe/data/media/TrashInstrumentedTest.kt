@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.IntentSender
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.test.core.app.ActivityScenario
@@ -19,6 +20,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,6 +52,8 @@ class TrashInstrumentedTest {
 
     @Before
     fun trashPhotoOwnedByTheShell() {
+        // Corbeille (Android 11) et « Gestion des médias » (Android 12) : rien à vérifier avant (PS-186).
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
         shell("pm grant ${context.packageName} android.permission.READ_MEDIA_IMAGES")
         shell("appops set ${context.packageName} MANAGE_MEDIA allow")
         shell("screencap -p $photoPath")

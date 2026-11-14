@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.data.media
 import android.app.Activity
 import android.content.ContentUris
 import android.content.IntentSender
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.test.core.app.ActivityScenario
@@ -15,6 +16,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -43,6 +45,8 @@ class ManageMediaInstrumentedTest {
 
     @Before
     fun pushPhotoOwnedByTheShell() {
+        // « Gestion des médias » n'existe qu'à partir d'Android 12 (PS-186).
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
         shell("pm grant ${context.packageName} android.permission.READ_MEDIA_IMAGES")
         shell("screencap -p $photoPath")
         // Le scan est relancé pendant l'attente : sur un émulateur chargé, le premier peut passer avant l'écriture.
