@@ -121,4 +121,19 @@ class WithoutSystemTrashTest {
             .assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.summary_freed_today)).assertDoesNotExist()
     }
+
+    @Test
+    fun `asks to delete a single media for good`() {
+        val oneMarked =
+            SessionSummary(keptCount = 0, markedForDeletionCount = 1, favoriteCount = 0, estimatedFreedBytes = 1_000)
+
+        showOnAndroid10 {
+            SummaryScreen(state = SummaryUiState.Loaded(oneMarked, askingTrashConfirmation = true), onEvent = {})
+        }
+
+        composeRule.onNodeWithText(plural(R.plurals.summary_delete_confirm_title, 1)).assertIsDisplayed()
+        composeRule
+            .onNodeWithText(text(R.string.summary_delete_confirm_text))
+            .assertIsDisplayed()
+    }
 }

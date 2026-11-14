@@ -25,8 +25,19 @@ require() {
     }
 }
 
+# Fait relire le dossier par MediaStore. `scan_volume` n'existe qu'à partir d'Android 11 : sur
+# Android 10, chaque fichier poussé est indexé par la diffusion MEDIA_SCANNER_SCAN_FILE, et les
+# photos retirées sont effacées de MediaStore par leur dossier (PS-181).
 scan_media() {
-    adb shell content call --uri content://media --method scan_volume --arg external_primary >/dev/null
+    if adb shell content call --uri content://media --method scan_volume --arg external_primary 2>&1 |
+        grep -q "Exception"; then
+        adb shell content delete --uri content://media/external/images/media \
+            --where "relative_path=\'${DEVICE_FOLDER#/sdcard/}/\'" >/dev/null 2>&1 || true
+        adb shell ls "$DEVICE_FOLDER" 2>/dev/null | tr -d '\r' | while read -r file; do
+            adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE \
+                -d "file://$DEVICE_FOLDER/$file" </dev/null >/dev/null
+        done
+    fi
 }
 
 require adb "Android SDK platform-tools"

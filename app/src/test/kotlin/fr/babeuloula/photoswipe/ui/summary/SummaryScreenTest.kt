@@ -352,7 +352,10 @@ class SummaryScreenTest {
             .onNodeWithText(
                 composeRule.activity.resources.getQuantityString(R.plurals.summary_delete_confirm_title, 4, 4),
             ).assertIsDisplayed()
-        composeRule.onNodeWithText(text(R.string.summary_delete_confirm_text)).assertIsDisplayed()
+        composeRule
+            .onNodeWithText(
+                text(R.string.summary_delete_confirm_text),
+            ).assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.summary_trash_confirm_text)).assertDoesNotExist()
         composeRule.onNodeWithText(text(R.string.trash_delete_forever)).performClick()
 

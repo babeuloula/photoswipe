@@ -14,6 +14,8 @@ import fr.babeuloula.photoswipe.domain.model.ReviewDecision
  * entre avec sa décision et en sort si elle est annulée.
  */
 @Dao
+// Room : une requête par fonction, et SQLite 3.22 (Android 10) en demande deux pour compter un gardé.
+@Suppress("TooManyFunctions")
 abstract class DecisionJournalDao {
     /**
      * Écrit la décision de [record] et l'ajoute au journal ; renvoie l'identifiant de la ligne. Un
@@ -26,7 +28,10 @@ abstract class DecisionJournalDao {
         activityDay: Long,
     ): Long {
         upsertEntry(record.made)
-        if (record.made.decision == ReviewDecision.KEPT) addKept(activityDay, 1, record.made.favorites(1))
+        if (record.made.decision == ReviewDecision.KEPT) {
+            ensureActivityDay(activityDay)
+            addKept(activityDay, 1, record.made.favorites(1))
+        }
         return insert(record)
     }
 
@@ -41,7 +46,10 @@ abstract class DecisionJournalDao {
     ) {
         val previous = record.previous
         if (previous == null) deleteEntry(record.made.mediaId, record.made.reviewYear) else upsertEntry(previous)
-        if (record.made.decision == ReviewDecision.KEPT) addKept(activityDay, -1, record.made.favorites(-1))
+        if (record.made.decision == ReviewDecision.KEPT) {
+            ensureActivityDay(activityDay)
+            addKept(activityDay, -1, record.made.favorites(-1))
+        }
         delete(record.id)
     }
 
@@ -66,13 +74,19 @@ abstract class DecisionJournalDao {
     @Upsert
     protected abstract suspend fun upsertEntry(entry: ReviewEntryEntity)
 
-    // Crée le jour au besoin. Jamais sous zéro : une décision prise avant la version 5 peut être
-    // annulée sans avoir été comptée.
+    // Le jour d'activité est créé puis mis à jour en deux requêtes, comme `DailyActivityDao.addTrashed` :
+    // `INSERT … ON CONFLICT … DO UPDATE` demande SQLite 3.24, absent d'Android 10 (3.22), où garder un
+    // média échouait et figeait la pile.
     @Query(
-        "INSERT INTO daily_activity (day, kept_count, favorite_count, trashed_count, freed_bytes) " +
-            "VALUES (:day, MAX(0, :kept), MAX(0, :favorites), 0, 0) " +
-            "ON CONFLICT(day) DO UPDATE SET kept_count = MAX(0, kept_count + :kept), " +
-            "favorite_count = MAX(0, favorite_count + :favorites)",
+        "INSERT OR IGNORE INTO daily_activity (day, kept_count, favorite_count, trashed_count, freed_bytes) " +
+            "VALUES (:day, 0, 0, 0, 0)",
+    )
+    protected abstract suspend fun ensureActivityDay(day: Long)
+
+    // Jamais sous zéro : une décision prise avant la version 5 peut être annulée sans avoir été comptée.
+    @Query(
+        "UPDATE daily_activity SET kept_count = MAX(0, kept_count + :kept), " +
+            "favorite_count = MAX(0, favorite_count + :favorites) WHERE day = :day",
     )
     protected abstract suspend fun addKept(
         day: Long,
