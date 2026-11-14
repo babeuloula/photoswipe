@@ -175,7 +175,7 @@ Relevées le 2026-11-03 sur les sources officielles (Google Maven, Maven Central
 | Media3 (`exoplayer`, `ui-compose`) | 1.11.1 | Lecture des vidéos de la pile et de l'animation des photos animées (PS-167) |
 | Jetpack Glance (`appwidget`, `material3`, `appwidget-testing`) | 1.2.0 | Relevée le 2026-11-13 sur Google Maven, dernière stable (1.3.0 en alpha) ; widget « Ce jour-là » (PS-170) |
 | Polices Atkinson Hyperlegible Next (variable) et IBM Plex Mono (400, 500) | dépôt `google/fonts`, relevé le 2026-11-06 | Fichiers `.ttf` dans `app/src/main/res/font`, hors catalogue Gradle |
-| GitHub Actions | `checkout@v7`, `setup-java@v6`, `gradle/actions/setup-gradle@v6`, `upload-artifact@v7`, `mikepenz/action-junit-report@v6` | CI |
+| GitHub Actions | `checkout@v7`, `setup-java@v6`, `gradle/actions/setup-gradle@v6`, `upload-artifact@v7`, `mikepenz/action-junit-report@v6`, `r0adkll/upload-google-play@v1.1.5` (relevée le 2026-11-14, dernière version) | CI, release |
 
 ## 6. Bibliothèques et justification
 
@@ -223,6 +223,7 @@ SPEC §0.4 : aucune bibliothèque sans justification écrite ici.
 | ktlint (plugin `org.jlleitschuh.gradle.ktlint`) | tous (build) | Format du code imposé par la SPEC §12 ; le plugin crée les tâches `ktlintCheck` et `ktlintFormat` par source set |
 | detekt | tous (build) | Analyse statique imposée par la SPEC §12 (complexité, code mort, mauvaises pratiques) |
 | `mikepenz/action-junit-report` | CI | Affiche le récapitulatif des tests JUnit dans le résumé du run GitHub Actions, sans fouiller les logs |
+| `r0adkll/upload-google-play` | Release | Envoie l'AAB signé et ses notes sur une piste du Play Store par l'API Google Play Developer, sans Ruby ni Gradle (ADR 0041) |
 
 Prévues dans la SPEC mais pas ajoutées : MockK et Turbine. Les fakes de `:domain` (`testFixtures`) remplacent les mocks, et les `Flow` se testent avec `first()` ou une collecte dans `backgroundScope` (ADR 0008).
 
