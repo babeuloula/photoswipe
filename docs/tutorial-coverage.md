@@ -10,7 +10,7 @@ Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été inc
 | Glisser à droite : garder, le média revient l'année suivante | PS-42 | Page 2 « Garder ou supprimer » (animation : à droite avec le voile vert « Garder », puis à gauche avec le voile rouge « Supprimer », PS-76) ; mode entraînement |
 | Glisser à gauche : marquer, rien n'est supprimé sans confirmation | PS-43 | Page 2 ; mode entraînement |
 | Boutons équivalents aux gestes, « Annuler » | PS-45, PS-46 | Page 2 (« Annuler ») ; mode entraînement (mêmes boutons) |
-| Glisser vers le haut : favori (gardé et ajouté aux favoris) ou partage | PS-47, PS-48, PS-85 | Page 3 « Favori ou partage » (animation) ; mode entraînement |
+| Glisser vers le haut : favori (gardé et ajouté aux favoris) ou partage | PS-47, PS-48, PS-85 | Page 3 « Favori ou partage » (animation) ; mode entraînement. Sans favoris de la galerie (Android 10), page « Plus d'actions » : partage, « Ouvrir avec », carte postale (`TutorialPage.texts`, PS-183) |
 | Derniers jours à rattraper depuis l'accueil (7 par défaut, 14 ou 30 au choix dans les réglages, PS-169) | PS-38, PS-169 | Page 4 « Rattrapez les jours manqués » (liste verticale des jours, comme sur l'accueil, PS-137 : un utilisateur avait pris l'ancienne frise horizontale pour un widget) ; le texte dit « une semaine par défaut, jusqu'à 30 jours dans les réglages » ; l'animation garde une semaine d'exemple. Version du tutoriel inchangée (simple précision du texte) |
 | Retrier un jour déjà trié | PS-108, PS-111 | Page 4 (texte) |
 | Rappel quotidien, seulement s'il reste des souvenirs, à activer dans les réglages | epic 8 | Page 4 (texte et notification d'exemple) ; le tutoriel ne l'active pas |

@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.summary
 
+import android.os.Build
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.SemanticsActions
@@ -26,7 +27,9 @@ import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.fixtures.aMediaItem
 import fr.babeuloula.photoswipe.domain.model.MediaId
 import fr.babeuloula.photoswipe.domain.model.SessionSummary
+import fr.babeuloula.photoswipe.platform.PlatformFeatures
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -50,9 +53,15 @@ class SummaryScreenTest {
 
     private val events = mutableListOf<SummaryEvent>()
 
-    private fun show(state: SummaryUiState) {
+    private fun show(
+        state: SummaryUiState,
+        features: PlatformFeatures = PlatformFeatures.forSdk(Build.VERSION_CODES.UPSIDE_DOWN_CAKE),
+    ) {
         composeRule.activity.setContent {
-            CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
+            CompositionLocalProvider(
+                LocalImageLoader provides ImageLoader(composeRule.activity),
+                LocalPlatformFeatures provides features,
+            ) {
                 PhotoSwipeTheme { SummaryScreen(state = state, onEvent = { events += it }) }
             }
         }
@@ -60,8 +69,28 @@ class SummaryScreenTest {
 
     private fun text(id: Int): String = composeRule.activity.getString(id)
 
+    private fun plural(
+        id: Int,
+        count: Int,
+    ): String = composeRule.activity.resources.getQuantityString(id, count, count)
+
     private val summary =
         SessionSummary(keptCount = 12, markedForDeletionCount = 4, favoriteCount = 1, estimatedFreedBytes = 48_000_000)
+
+    @Test
+    fun `counts the favorites of the day where the gallery has favorites`() {
+        show(SummaryUiState.Loaded(summary))
+
+        composeRule.onNodeWithText(plural(R.plurals.summary_favorites, 1)).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun `leaves out the favorites line on android 10, which has no gallery favorites`() {
+        show(SummaryUiState.Loaded(summary), features = PlatformFeatures.forSdk(Build.VERSION_CODES.Q))
+
+        composeRule.onNodeWithText(plural(R.plurals.summary_kept, 12)).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText(plural(R.plurals.summary_favorites, 1)).assertDoesNotExist()
+    }
 
     @Test
     fun `puts the estimated freed space first`() {

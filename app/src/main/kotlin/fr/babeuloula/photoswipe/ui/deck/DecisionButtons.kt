@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.theme.motion
 import fr.babeuloula.photoswipe.ui.theme.swipeColors
 
@@ -91,7 +92,6 @@ private fun Buttons(
         onClick = { onClick(DeckButton.MARK_FOR_DELETION) },
     )
     UndoButton(enabled = canUndo, onClick = { onClick(DeckButton.UNDO) }, labeled = true)
-    val favoring = highlighted == CardSide.TOP
     LabeledButton(
         face =
             ButtonFace(
@@ -99,11 +99,7 @@ private fun Buttons(
                 stringResource(R.string.deck_menu),
                 stringResource(R.string.deck_menu),
             ),
-        look =
-            ButtonLook(
-                container = if (favoring) colors.favorite else scheme.surfaceContainerHigh,
-                content = if (favoring) colors.onFavorite else scheme.onSurfaceVariant,
-            ),
+        look = menuButtonLook(highlighted == CardSide.TOP),
         onClick = { onClick(DeckButton.MENU) },
     )
     val keeping = highlighted == CardSide.RIGHT
@@ -233,3 +229,20 @@ private val DECISION_HEIGHT = 72.dp
 
 /** Rayon des boutons de décision au repos. */
 private val DECISION_RADIUS = 20.dp
+
+/**
+ * Aspect du bouton « Plus d'actions » : bleu du favori pendant un glissement vers le haut
+ * ([favoring]), ou neutre sans favoris de la galerie (Android 10), le haut n'ouvrant alors que le
+ * menu (PS-183).
+ */
+@Composable
+private fun menuButtonLook(favoring: Boolean): ButtonLook {
+    val colors = MaterialTheme.swipeColors
+    val scheme = MaterialTheme.colorScheme
+    val favorites = LocalPlatformFeatures.current.galleryFavorites
+    return when {
+        !favoring -> ButtonLook(container = scheme.surfaceContainerHigh, content = scheme.onSurfaceVariant)
+        favorites -> ButtonLook(container = colors.favorite, content = colors.onFavorite)
+        else -> ButtonLook(container = scheme.secondaryContainer, content = scheme.onSecondaryContainer)
+    }
+}

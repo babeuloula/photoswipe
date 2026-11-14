@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.tutorial
 
+import android.os.Build
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
@@ -15,7 +16,9 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import fr.babeuloula.photoswipe.MainActivity
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.platform.PlatformFeatures
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -42,10 +45,16 @@ class TutorialScreenTest {
         vararg args: Any,
     ): String = composeRule.activity.getString(id, *args)
 
-    private fun show() {
+    private fun show(
+        features: PlatformFeatures = PlatformFeatures.forSdk(Build.VERSION_CODES.UPSIDE_DOWN_CAKE),
+        pages: List<TutorialPage> = TutorialPage.entries,
+    ) {
         composeRule.activity.setContent {
-            CompositionLocalProvider(LocalImageLoader provides composeRule.activity.imageLoader) {
-                PhotoSwipeTheme { TutorialScreen(onDone = { doneCount++ }) }
+            CompositionLocalProvider(
+                LocalImageLoader provides composeRule.activity.imageLoader,
+                LocalPlatformFeatures provides features,
+            ) {
+                PhotoSwipeTheme { TutorialScreen(onDone = { doneCount++ }, pages = pages, animate = false) }
             }
         }
         composeRule.waitForIdle()
@@ -64,6 +73,27 @@ class TutorialScreenTest {
             ).assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.tutorial_skip)).assertIsDisplayed()
         composeRule.onNodeWithText(text(R.string.tutorial_next)).assertIsDisplayed()
+    }
+
+    @Test
+    fun `explains the swipe up as favorite or share where the gallery has favorites`() {
+        show(pages = listOf(TutorialPage.SWIPE_UP))
+
+        composeRule.onNodeWithText(text(R.string.tutorial_swipe_up_title)).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(text(R.string.tutorial_swipe_up_illustration)).assertExists()
+        composeRule.onNodeWithText(text(R.string.deck_favorite), useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun `explains the swipe up as more actions, without favorites, on android 10`() {
+        show(features = PlatformFeatures.forSdk(Build.VERSION_CODES.Q), pages = listOf(TutorialPage.SWIPE_UP))
+
+        composeRule.onNodeWithText(text(R.string.tutorial_more_actions_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.tutorial_more_actions_body)).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(text(R.string.tutorial_more_actions_illustration)).assertExists()
+        composeRule.onNodeWithText(text(R.string.tutorial_swipe_up_title)).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.deck_favorite), useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.deck_open_with), useUnmergedTree = true).assertExists()
     }
 
     @Test

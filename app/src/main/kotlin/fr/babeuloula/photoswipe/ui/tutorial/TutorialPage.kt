@@ -3,6 +3,7 @@ package fr.babeuloula.photoswipe.ui.tutorial
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.platform.PlatformFeatures
 
 /**
  * Page du tutoriel (SPEC §4), dans l'ordre du carrousel : un titre, un texte court et une
@@ -63,3 +64,35 @@ enum class TutorialPage(
     /** Mode entraînement : trier des cartes d'exemple, jamais les vraies photos. */
     PRACTICE(R.string.tutorial_practice_title, R.string.tutorial_practice_body, R.drawable.ic_photo_library),
 }
+
+/**
+ * Textes d'une page tels que le téléphone les montre.
+ *
+ * @property title titre de la page.
+ * @property body explication de la page.
+ * @property illustration description de l'animation pour TalkBack, `null` sans animation.
+ */
+data class TutorialTexts(
+    @param:StringRes val title: Int,
+    @param:StringRes val body: Int,
+    @param:StringRes val illustration: Int?,
+)
+
+/**
+ * Textes de la page sur un téléphone qui a [features] : sans favoris de la galerie (Android 10),
+ * la page du glissement vers le haut ne parle que de « Plus d'actions » (PS-183).
+ */
+fun TutorialPage.texts(features: PlatformFeatures): TutorialTexts =
+    when {
+        this == TutorialPage.SWIPE_UP && !features.galleryFavorites -> {
+            TutorialTexts(
+                R.string.tutorial_more_actions_title,
+                R.string.tutorial_more_actions_body,
+                R.string.tutorial_more_actions_illustration,
+            )
+        }
+
+        else -> {
+            TutorialTexts(title, body, illustration)
+        }
+    }

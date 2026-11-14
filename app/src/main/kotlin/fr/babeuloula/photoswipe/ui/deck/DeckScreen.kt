@@ -74,6 +74,7 @@ import fr.babeuloula.photoswipe.R
 import fr.babeuloula.photoswipe.domain.model.MediaType
 import fr.babeuloula.photoswipe.ui.common.FilmEdgeLabel
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.common.SharedScreenKey
 import fr.babeuloula.photoswipe.ui.common.currentWindowLayout
 import fr.babeuloula.photoswipe.ui.common.sharedScreen
@@ -370,7 +371,8 @@ private fun CardStack(
 
 /**
  * Menu de la carte du dessus (SPEC §2), en feuille du bas Material 3 : « Ajouter aux favoris », ou
- * « Retirer des favoris » pour une carte déjà en favori (PS-124), « Partager », « Partager en
+ * « Retirer des favoris » pour une carte déjà en favori (PS-124), seulement avec les favoris de la
+ * galerie (Android 11+, PS-183), « Partager », « Partager en
  * carte postale » pour une photo (PS-177) et « Ouvrir avec » (PS-162) ; le fermer sans choisir laisse la carte en place.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -384,13 +386,15 @@ private fun CardMenu(
     ModalBottomSheet(onDismissRequest = { onEvent(DeckEvent.CloseMenu) }) {
         MenuPreview(card)
         // Carte déjà en favori (cœur) : le menu propose de l'en retirer, sans trier la carte (PS-124).
-        if (card.favorite) {
+        // Sans favoris de la galerie (Android 10), ni l'un ni l'autre (PS-183).
+        val favorites = LocalPlatformFeatures.current.galleryFavorites
+        if (favorites && card.favorite) {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.deck_unfavorite)) },
                 leadingContent = { Icon(painterResource(R.drawable.ic_favorite_filled), contentDescription = null) },
                 modifier = Modifier.clickable { onEvent(DeckEvent.Unfavorite) },
             )
-        } else {
+        } else if (favorites) {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.deck_favorite)) },
                 leadingContent = { Icon(painterResource(R.drawable.ic_favorite), contentDescription = null) },
