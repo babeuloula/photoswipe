@@ -49,7 +49,7 @@ Une release officielle se publie **uniquement** par le workflow `.github/workflo
 3. clé d'upload reconstituée depuis les secrets dans le dossier temporaire du runner, et `keystore.properties` qui la désigne ; tag `vX.Y.Z` posé en local sur ce commit (`versionName` = `X.Y.Z`, `versionCode` = nombre de commits) ;
 4. `./gradlew bundleRelease assembleRelease`, puis vérification des signatures (`jarsigner`, `apksigner`) ;
 5. seulement si tout est passé : branche poussée, PR « chore(release): vX.Y.Z » vers `main` (label `release`, exclu des notes générées par `.github/release.yml` pour qu'elle ne revienne pas dans les notes de la release suivante), tag poussé, release GitHub créée (notes générées depuis le dernier tag officiel, marquée « latest ») avec `photoswipe-vX.Y.Z.aab` (Play Store), `photoswipe-vX.Y.Z.apk` (installation directe) et `version.properties` (`versionCode` et `versionName` lus dans l'APK par `aapt2`, pour F-Droid) ;
-6. envoi de l'AAB sur la piste du Play Store choisie au lancement (`play_track`, test interne par défaut ; voir « Envoi au Play Store » plus bas) : un échec laisse le tag et la release, avec un avertissement ;
+6. envoi de l'AAB sur la piste du Play Store choisie au lancement (`play_track`, test fermé par défaut ; voir « Envoi au Play Store » plus bas) : un échec laisse le tag et la release, avec un avertissement ;
 7. clé et `keystore.properties` effacés, même en cas d'échec.
 
 La PR est ouverte avec le jeton `PHOTOSWIPE_RELEASE_TOKEN` : la vraie CI y tourne, et l'**auto-merge** la merge toute seule en **merge commit** une fois verte. Rien à faire après avoir lancé le workflow. Le merge commit garde le commit tagué dans l'historique de `main`, pour que les builds suivants s'appellent `X.Y.Z-dev.N`. Sans le jeton, la PR est ouverte par le workflow, ne lance pas la CI et se merge à la main en merge commit (contournement admin). Sans merge, la release reste valable (Play Store, F-Droid) ; seuls les noms des builds debug suivants restent sur l'ancienne version.
@@ -58,7 +58,7 @@ Créer le jeton (PS-133) : GitHub → Settings (du compte) → Developer setting
 
 Réglages du dépôt requis : « Allow auto-merge » (Settings → General) et, pour le cas sans jeton, « Allow GitHub Actions to create and approve pull requests » (Settings → Actions → General).
 
-Les branches `release/v*` ne peuvent pas être supprimées, admins compris (ruleset « release branches: no deletion », Settings → Rules → Rulesets) : elles gardent la trace de chaque release. Après le merge de la PR, GitHub ne supprime donc pas la branche malgré « Automatically delete head branches ».
+La branche `release/vX.Y.Z` est supprimée par GitHub au merge de sa PR (« Automatically delete head branches ») : le tag `vX.Y.Z` pointe sur son commit, que le merge commit garde dans l'historique de `main`, et suffit à retrouver la release.
 
 **Tag ou release créé à la main** (interface de GitHub ou `git push` d'un tag) : seul un tag de pré-version `vX.Y.Z-dev.N` est accepté, par exemple `v1.2.0-dev.3` (le nom affiché par l'application, préfixé de `v`). Le workflow construit alors la version **debug** (outils développeur compris, clé de debug partagée) et joint seulement `photoswipe-vX.Y.Z-dev.N-debug.apk` à une **pré-version**, jamais « latest » : F-Droid continue de lire la dernière release officielle. Tout autre tag poussé à la main (`v1.2.0`, `v1.2`…) est supprimé avec sa release, et le workflow échoue. Les tags `-dev` ne comptent pas dans le nom de version (`git describe --exclude "v*-dev*"`).
 
@@ -80,7 +80,7 @@ Sans ces secrets, le workflow s'arrête avant le build : aucune release non sign
 
 Le workflow `Release` envoie l'AAB signé au Play Store juste après la release GitHub (ADR [0041](../decisions/0041-play-store-upload.md)), avec l'action `r0adkll/upload-google-play` :
 
-- **Piste** : paramètre `play_track` du workflow. `internal` (test interne, par défaut), `alpha` (test fermé), `production`, ou `none` pour ne rien envoyer. La version est aussitôt proposée aux testeurs de la piste (statut `completed`).
+- **Piste** : paramètre `play_track` du workflow. `alpha` (test fermé, par défaut), `internal` (test interne), `production`, ou `none` pour ne rien envoyer. La version est aussitôt proposée aux testeurs de la piste (statut `completed`).
 - **État au 2026-11-14** : l'app est en test fermé. La production ne s'ouvre qu'après le test fermé exigé des comptes personnels (12 testeurs pendant 14 jours) : d'ici là, un envoi vers `production` échoue.
 - **Notes de version** : celles de F-Droid (`changelogs/default.txt`), reprises en `en-US` et `fr-FR` par `scripts/play_whatsnew.py`, 500 caractères au plus.
 - **Mapping R8** joint, pour des plantages lisibles dans Android vitals.

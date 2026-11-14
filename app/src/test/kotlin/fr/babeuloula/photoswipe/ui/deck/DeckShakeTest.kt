@@ -29,8 +29,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.SensorBuilder
 import org.robolectric.shadows.SensorEventBuilder
-import org.robolectric.shadows.ShadowSensor
 
 /** « Secouer pour annuler » (PS-175) : la vraie pile, reliée à son ViewModel, et un accéléromètre simulé. */
 @HiltAndroidTest
@@ -46,7 +46,7 @@ class DeckShakeTest : DeckViewModelTestBase() {
     private val sensorManager: SensorManager
         get() = composeRule.activity.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
-    private val accelerometer: Sensor = ShadowSensor.newInstance(Sensor.TYPE_ACCELEROMETER)
+    private val accelerometer: Sensor = SensorBuilder.newBuilder().setType(Sensor.TYPE_ACCELEROMETER).build()
 
     /** Instant de la prochaine mesure simulée, en nanosecondes. */
     private var clockNanos = 0L
@@ -90,9 +90,7 @@ class DeckShakeTest : DeckViewModelTestBase() {
             repeat(3) {
                 val event =
                     SensorEventBuilder
-                        .newBuilder()
-                        .setSensor(accelerometer)
-                        .setValues(floatArrayOf(0f, 3f * SensorManager.STANDARD_GRAVITY, 0f))
+                        .newBuilder(accelerometer, floatArrayOf(0f, 3f * SensorManager.STANDARD_GRAVITY, 0f))
                         .setTimestamp(clockNanos)
                         .build()
                 shadowOf(sensorManager).sendSensorEventToListeners(event)

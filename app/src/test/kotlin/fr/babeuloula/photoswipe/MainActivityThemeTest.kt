@@ -49,6 +49,14 @@ class MainActivityThemeTest {
         return !WindowCompat.getInsetsController(activity.window, activity.window.decorView).isAppearanceLightStatusBars
     }
 
+    /**
+     * Couleur posée par `enableEdgeToEdge` sur la barre de navigation. Dépréciée depuis l'API 35, où
+     * Android ne la peint plus ; elle reste la seule lecture possible de cette couleur, et les tests
+     * tournent sur l'API 34, où elle est toujours appliquée.
+     */
+    @Suppress("DEPRECATION")
+    private fun navigationBarColor(): Int = composeRule.activity.window.navigationBarColor
+
     private fun choose(mode: ThemeMode) {
         runBlocking { settings.saveThemeMode(mode) }
         composeRule.waitUntil { lightSystemBarIcons() == (mode == ThemeMode.DARK) }
@@ -70,13 +78,13 @@ class MainActivityThemeTest {
     fun `blackens the navigation bar as soon as pure black is chosen, in the dark theme only`() {
         runBlocking { settings.savePureBlack(true) }
         composeRule.waitForIdle()
-        assertNotEquals(Color.BLACK, composeRule.activity.window.navigationBarColor)
+        assertNotEquals(Color.BLACK, navigationBarColor())
 
         choose(ThemeMode.DARK)
-        composeRule.waitUntil { composeRule.activity.window.navigationBarColor == Color.BLACK }
+        composeRule.waitUntil { navigationBarColor() == Color.BLACK }
 
         runBlocking { settings.savePureBlack(false) }
-        composeRule.waitUntil { composeRule.activity.window.navigationBarColor != Color.BLACK }
+        composeRule.waitUntil { navigationBarColor() != Color.BLACK }
         assertTrue(lightSystemBarIcons())
     }
 
