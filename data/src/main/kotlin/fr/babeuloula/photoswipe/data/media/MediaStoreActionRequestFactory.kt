@@ -22,22 +22,40 @@ class IntentSenderMediaActionRequest(
 ) : MediaActionRequest
 
 /**
+ * Suppression définitive appliquée par PhotoSwipe lui-même, sans dialogue d'Android : sur Android 10,
+ * qui n'a ni corbeille ni demande groupée, avec l'accès au stockage hérité (PS-184, ADR 0042).
+ * Appliquée par [LegacyMediaDeleter].
+ *
+ * @property uris URI MediaStore des médias, dans l'ordre de [mediaIds].
+ */
+data class DirectDeletionRequest(
+    override val mediaIds: Set<MediaId>,
+    val uris: List<Uri>,
+) : MediaActionRequest
+
+/**
  * [MediaActionRequestFactory] sur `MediaStore.createTrashRequest`, `createFavoriteRequest` et
  * `createDeleteRequest` (SPEC §3.5, PS-168). Les médias sont découpés en lots de [batchSize] au plus,
  * dans l'ordre reçu, pour rester sous la taille maximale d'un Intent : chaque lot donne un dialogue
  * système. Avec l'accès « Gestion des médias », Android applique chaque demande sans dialogue
  * (ADR 0023, vérifié par `ManageMediaInstrumentedTest` et `TrashInstrumentedTest`).
  *
+ * Avec [permanentDeletion] (Android 10, sans corbeille), « mettre à la corbeille » donne des
+ * [DirectDeletionRequest] : PhotoSwipe supprime lui-même, pour de bon, après sa propre confirmation
+ * (PS-184, ADR 0042). Les autres demandes n'existent pas avant Android 11 et ne sont pas proposées.
+ *
  * @param createTrash crée la demande d'envoi à la corbeille (vrai) ou de sortie de la corbeille
  * (faux) des URI d'un lot.
  * @param createFavorite crée la demande d'ajout aux favoris (vrai) ou de retrait (faux) des URI d'un lot.
  * @param createDelete crée la demande de suppression définitive des URI d'un lot.
+ * @param permanentDeletion vrai sans corbeille de la galerie (Android 10) : suppression directe.
  */
 class MediaStoreActionRequestFactory(
     private val createTrash: (List<Uri>, Boolean) -> IntentSender,
     private val createFavorite: (List<Uri>, Boolean) -> IntentSender,
     private val createDelete: (List<Uri>) -> IntentSender,
     private val batchSize: Int = BATCH_SIZE,
+    private val permanentDeletion: Boolean = false,
 ) : MediaActionRequestFactory {
     @Inject
     constructor(contentResolver: ContentResolver) : this(
@@ -53,6 +71,7 @@ class MediaStoreActionRequestFactory(
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) throw unsupportedBeforeAndroid11()
             MediaStore.createDeleteRequest(contentResolver, uris).intentSender
         },
+        permanentDeletion = Build.VERSION.SDK_INT < Build.VERSION_CODES.R,
     )
 
     init {
@@ -60,7 +79,13 @@ class MediaStoreActionRequestFactory(
     }
 
     override fun trashRequests(media: List<MediaItem>): List<MediaActionRequest> =
-        requests(media) { uris -> createTrash(uris, true) }
+        if (permanentDeletion) {
+            media.chunked(batchSize) { batch ->
+                DirectDeletionRequest(batch.mapTo(LinkedHashSet()) { it.id }, batch.map { Uri.parse(it.uri) })
+            }
+        } else {
+            requests(media) { uris -> createTrash(uris, true) }
+        }
 
     override fun favoriteRequests(media: List<MediaItem>): List<MediaActionRequest> =
         requests(media) { uris -> createFavorite(uris, true) }

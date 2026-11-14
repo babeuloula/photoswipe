@@ -10,30 +10,47 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 
 /**
  * Confirmation de PhotoSwipe avant l'envoi à la corbeille, quand l'accès « Gestion des médias »
  * fait disparaître celle d'Android (ADR 0023) : rien ne part à la corbeille sans un dernier accord.
+ * Sans corbeille (Android 10), elle annonce une suppression définitive (PS-184).
  */
 @Composable
 internal fun TrashConfirmationDialog(
     count: Int,
     onEvent: (SummaryEvent) -> Unit,
 ) {
+    val permanent = !LocalPlatformFeatures.current.systemTrash
     AlertDialog(
         onDismissRequest = { onEvent(SummaryEvent.TrashConfirmationDismissed) },
         // Dialogue Material 3 avec icône (ADR 0025) : l'icône et le titre sont centrés.
         icon = { Icon(painterResource(R.drawable.ic_delete), contentDescription = null) },
         title = {
             Text(
-                pluralStringResource(R.plurals.summary_trash_confirm_title, count, count),
+                pluralStringResource(
+                    if (permanent) R.plurals.summary_delete_confirm_title else R.plurals.summary_trash_confirm_title,
+                    count,
+                    count,
+                ),
                 textAlign = TextAlign.Center,
             )
         },
-        text = { Text(stringResource(R.string.summary_trash_confirm_text)) },
+        text = {
+            Text(
+                stringResource(
+                    if (permanent) R.string.summary_delete_confirm_text else R.string.summary_trash_confirm_text,
+                ),
+            )
+        },
         confirmButton = {
             TextButton(onClick = { onEvent(SummaryEvent.TrashConfirmationAccepted) }) {
-                Text(stringResource(R.string.summary_trash_confirm_action))
+                Text(
+                    stringResource(
+                        if (permanent) R.string.trash_delete_forever else R.string.summary_trash_confirm_action,
+                    ),
+                )
             }
         },
         dismissButton = {

@@ -11,14 +11,24 @@ import javax.inject.Inject
 
 /**
  * Permissions qui donnent l'accès complet à la galerie (SPEC §4.1) : `READ_MEDIA_IMAGES` et
- * `READ_MEDIA_VIDEO` à partir d'Android 13, `READ_EXTERNAL_STORAGE` avant (PS-181).
+ * `READ_MEDIA_VIDEO` à partir d'Android 13, `READ_EXTERNAL_STORAGE` avant (PS-181). Sur Android 10,
+ * sans corbeille, aussi `WRITE_EXTERNAL_STORAGE`, du même groupe, accordée avec elle : PhotoSwipe
+ * supprime lui-même les médias marqués (PS-184, ADR 0042).
  */
 @SuppressLint("InlinedApi") // Les permissions d'Android 13 ne sont demandées qu'à partir d'Android 13.
 fun mediaPermissions(features: PlatformFeatures = PlatformFeatures.current()): Array<String> =
-    if (features.granularMediaPermissions) {
-        arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
-    } else {
-        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+    when {
+        features.granularMediaPermissions -> {
+            arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
+        }
+
+        features.systemTrash -> {
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+
+        else -> {
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
     }
 
 /**

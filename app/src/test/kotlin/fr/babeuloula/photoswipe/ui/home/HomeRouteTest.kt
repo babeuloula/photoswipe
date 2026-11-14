@@ -1,5 +1,6 @@
 package fr.babeuloula.photoswipe.ui.home
 
+import android.os.Build
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
@@ -25,7 +26,9 @@ import fr.babeuloula.photoswipe.domain.service.SameDayMatcher
 import fr.babeuloula.photoswipe.domain.usecase.GetReviewDays
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
 import fr.babeuloula.photoswipe.domain.usecase.ReopenDay
+import fr.babeuloula.photoswipe.platform.PlatformFeatures
 import fr.babeuloula.photoswipe.ui.common.LocalImageLoader
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.theme.PhotoSwipeTheme
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -57,6 +60,7 @@ class HomeRouteTest {
     /** Affiche l'accueil ; l'annonce disparaît une fois faite, comme dans le graphe de navigation. */
     private fun show(
         trashedCount: Int,
+        features: PlatformFeatures = PlatformFeatures.forSdk(Build.VERSION_CODES.UPSIDE_DOWN_CAKE),
         onAnnounced: () -> Unit,
     ) {
         val pending = mutableStateOf(trashedCount)
@@ -77,7 +81,10 @@ class HomeRouteTest {
                 announcements = homeAnnouncements(settings, clock),
             )
         composeRule.activity.setContent {
-            CompositionLocalProvider(LocalImageLoader provides ImageLoader(composeRule.activity)) {
+            CompositionLocalProvider(
+                LocalImageLoader provides ImageLoader(composeRule.activity),
+                LocalPlatformFeatures provides features,
+            ) {
                 PhotoSwipeTheme {
                     HomeRoute(
                         navigation =
@@ -117,6 +124,16 @@ class HomeRouteTest {
                 .isNotEmpty()
         }
         assertEquals(1, announced)
+    }
+
+    @Test
+    fun `announces the media deleted for good on android 10, which has no trash`() {
+        show(trashedCount = 2, features = PlatformFeatures.forSdk(Build.VERSION_CODES.Q)) {}
+
+        composeRule.waitUntil(TIMEOUT_MILLIS) {
+            composeRule.onAllNodesWithText("2 items deleted for good.").fetchSemanticsNodes().isNotEmpty()
+        }
+        assertEquals(0, composeRule.onAllNodesWithText("trash", substring = true).fetchSemanticsNodes().size)
     }
 
     @Test

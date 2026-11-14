@@ -13,6 +13,7 @@ PhotoSwipe est une application Android qui vous fait revoir et trier les photos 
 **Ce que l'application lit sur votre téléphone.**
 
 - **Photos et vidéos** (`READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, ou votre sélection avec l'accès partiel d'Android 14+ ; `READ_EXTERNAL_STORAGE` d'Android 10 à 12, lue seulement pour les photos et vidéos) : pour retrouver les souvenirs d'un jour, les afficher et estimer l'espace libéré. Ils restent sur l'appareil.
+- **Écriture du stockage** (`WRITE_EXTERNAL_STORAGE`), seulement sur Android 10, qui n'a pas de corbeille : pour supprimer les photos et vidéos que vous avez marquées, après votre confirmation. Rien d'autre n'est écrit ni modifié.
 - **Notifications** (`POST_NOTIFICATIONS`, Android 13+), seulement si vous activez le rappel quotidien.
 - **Alarmes et rappels** (`SCHEDULE_EXACT_ALARM`) et **démarrage du téléphone** (`RECEIVE_BOOT_COMPLETED`) : pour envoyer le rappel quotidien à l'heure choisie, y compris après un redémarrage.
 - **Gestion des médias** (`MANAGE_MEDIA`), seulement si vous l'accordez dans les réglages d'Android : la corbeille et les favoris s'appliquent alors sans dialogue système, après la confirmation de PhotoSwipe.
@@ -43,6 +44,7 @@ PhotoSwipe is an Android app that lets you review and sort the photos and videos
 **What the app reads on your phone.**
 
 - **Photos and videos** (`READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, or your selection with Android 14+ partial access; `READ_EXTERNAL_STORAGE` on Android 10 to 12, read only for photos and videos): to find the memories of a day, show them and estimate the space you can free. They stay on the device.
+- **Storage writing** (`WRITE_EXTERNAL_STORAGE`), only on Android 10, which has no trash: to delete the photos and videos you marked, after you confirm. Nothing else is written or changed.
 - **Notifications** (`POST_NOTIFICATIONS`, Android 13+), only if you turn on the daily reminder.
 - **Alarms and reminders** (`SCHEDULE_EXACT_ALARM`) and **phone startup** (`RECEIVE_BOOT_COMPLETED`): to send the daily reminder at the time you chose, including after a restart.
 - **Media management** (`MANAGE_MEDIA`), only if you grant it in Android settings: the trash and favorites then apply without a system dialog, after PhotoSwipe's own confirmation.

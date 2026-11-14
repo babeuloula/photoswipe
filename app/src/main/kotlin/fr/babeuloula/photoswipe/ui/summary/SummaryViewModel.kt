@@ -13,8 +13,6 @@ import fr.babeuloula.photoswipe.domain.model.SessionSummary
 import fr.babeuloula.photoswipe.domain.port.MediaActionRequest
 import fr.babeuloula.photoswipe.domain.usecase.GetMarkedPreviews
 import fr.babeuloula.photoswipe.domain.usecase.GetSessionSummary
-import fr.babeuloula.photoswipe.permission.MediaManagementReader
-import fr.babeuloula.photoswipe.ui.common.MediaActionIntents
 import fr.babeuloula.photoswipe.ui.navigation.SummaryRoute
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -182,9 +180,13 @@ class SummaryViewModel
         private val getSessionSummary: GetSessionSummary,
         private val getMarkedPreviews: GetMarkedPreviews,
         private val confirmation: ConfirmationActions,
-        private val mediaActionIntents: MediaActionIntents,
-        private val mediaManagement: MediaManagementReader,
+        private val gallery: SummaryGallery,
     ) : ViewModel() {
+        private val mediaActionIntents = gallery.mediaActionIntents
+        private val mediaManagement = gallery.mediaManagement
+        private val directDeletion = gallery.directDeletion
+        private val platform = gallery.platform
+
         private val state = MutableStateFlow<SummaryUiState>(SummaryUiState.Loading)
         private val effects = Channel<SummaryEffect>(Channel.BUFFERED)
 
@@ -239,12 +241,13 @@ class SummaryViewModel
         /**
          * Avec l'accès « Gestion des médias », Android n'affiche plus son dialogue de corbeille :
          * PhotoSwipe demande alors sa propre confirmation avant d'envoyer quoi que ce soit (ADR 0023).
-         * Sans lui, la confirmation commence tout de suite.
+         * Sans corbeille (Android 10), PhotoSwipe supprime lui-même et pour de bon : il demande aussi
+         * sa confirmation (PS-184). Sinon, la confirmation commence tout de suite.
          */
         private fun askThenConfirm() {
             val loaded = state.value as? SummaryUiState.Loaded ?: return
             if (!loaded.canConfirm) return
-            if (mediaManagement.isGranted()) {
+            if (mediaManagement.isGranted() || !platform.systemTrash) {
                 state.value = loaded.copy(askingTrashConfirmation = true)
             } else {
                 confirm()
@@ -286,15 +289,23 @@ class SummaryViewModel
             }
         }
 
-        /** Lance le dialogue du lot suivant, ou termine. */
+        /**
+         * Lance le dialogue du lot suivant, ou termine. Un lot à supprimer directement (Android 10)
+         * l'est sans dialogue, puis le suivant est traité (PS-184).
+         */
         private suspend fun launchNext() {
-            val request = pendingRequests.removeFirstOrNull()
-            if (request != null) {
-                currentRequest = request
+            while (true) {
+                val request = pendingRequests.removeFirstOrNull() ?: return finish()
                 presentedCount++
-                effects.trySend(SummaryEffect.LaunchSystemRequest(mediaActionIntents.intentSender(request)))
-            } else {
-                finish()
+                if (!directDeletion.handles(request)) {
+                    currentRequest = request
+                    effects.trySend(SummaryEffect.LaunchSystemRequest(mediaActionIntents.intentSender(request)))
+                    return
+                }
+                // Supprimé pour de bon ; ce qui ne l'a pas été demeure marqué.
+                val deleted = runCatching { directDeletion.delete(request) }.getOrNull() ?: continue
+                val recorded = runCatching { confirmation.recordTrashResult(deleted, true) }.isSuccess
+                if (recorded) trashedCount += deleted.mediaIds.size
             }
         }
 
@@ -309,7 +320,9 @@ class SummaryViewModel
                 // Les médias partis à la corbeille ne sont plus dans la galerie : leurs lignes sont purgées.
                 confirmation.orphanCleanup.run()
                 // Un dialogue d'Android vient d'être validé : l'accueil proposera de s'en passer.
-                if (!mediaManagement.isGranted()) runCatching { confirmation.offerManageMediaTip() }
+                if (platform.systemTrash && !mediaManagement.isGranted()) {
+                    runCatching { confirmation.offerManageMediaTip() }
+                }
                 effects.trySend(SummaryEffect.GoHome(trashedCount))
                 return
             }

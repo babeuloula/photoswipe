@@ -36,6 +36,11 @@
         <item quantity="many">%d de médias envoyés à la corbeille. Vous pouvez les restaurer depuis la corbeille de votre galerie pendant environ 30 jours.</item>
         <item quantity="other">%d médias envoyés à la corbeille. Vous pouvez les restaurer depuis la corbeille de votre galerie pendant environ 30 jours.</item>
     </plurals>
+    <plurals name="summary_deleted_for_good">
+        <item quantity="one">%d média supprimé définitivement.</item>
+        <item quantity="many">%d de médias supprimés définitivement.</item>
+        <item quantity="other">%d médias supprimés définitivement.</item>
+    </plurals>
     <plurals name="summary_still_marked">
         <item quantity="one">%d média reste marqué pour suppression.</item>
         <item quantity="many">%d de médias restent marqués pour suppression.</item>
@@ -50,6 +55,11 @@
         <item quantity="one">Mettre %d média à la corbeille ?</item>
         <item quantity="many">Mettre %d de médias à la corbeille ?</item>
         <item quantity="other">Mettre %d médias à la corbeille ?</item>
+    </plurals>
+    <plurals name="summary_delete_confirm_title">
+        <item quantity="one">Supprimer définitivement %d média ?</item>
+        <item quantity="many">Supprimer définitivement %d de médias ?</item>
+        <item quantity="other">Supprimer définitivement %d médias ?</item>
     </plurals>
     <plurals name="summary_favorites">
         <item quantity="one">%d favori</item>

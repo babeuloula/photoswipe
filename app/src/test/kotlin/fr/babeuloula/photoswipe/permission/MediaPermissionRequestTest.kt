@@ -33,8 +33,16 @@ class MediaPermissionRequestTest {
     }
 
     @Test
-    fun `requests the storage permission from android 10 to 12`() {
-        listOf(Build.VERSION_CODES.Q, Build.VERSION_CODES.R, Build.VERSION_CODES.S_V2).forEach { sdk ->
+    fun `requests reading and writing the storage on android 10, which deletes without a trash`() {
+        assertEquals(
+            listOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE),
+            mediaPermissionRequest(PlatformFeatures.forSdk(Build.VERSION_CODES.Q)).toList(),
+        )
+    }
+
+    @Test
+    fun `requests only reading the storage on android 11 and 12`() {
+        listOf(Build.VERSION_CODES.R, Build.VERSION_CODES.S_V2).forEach { sdk ->
             assertEquals(
                 listOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                 mediaPermissionRequest(PlatformFeatures.forSdk(sdk)).toList(),
@@ -45,7 +53,8 @@ class MediaPermissionRequestTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.Q])
     fun `requests the storage permission on an android 10 phone`() {
-        assertEquals(listOf(Manifest.permission.READ_EXTERNAL_STORAGE), MEDIA_PERMISSION_REQUEST.toList())
-        assertEquals(listOf(Manifest.permission.READ_EXTERNAL_STORAGE), MEDIA_PERMISSIONS.toList())
+        val storage = listOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        assertEquals(storage, MEDIA_PERMISSION_REQUEST.toList())
+        assertEquals(storage, MEDIA_PERMISSIONS.toList())
     }
 }

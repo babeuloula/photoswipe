@@ -317,7 +317,7 @@ Objectifs : couverture du domaine **≥ 90 %**, tous les ViewModels testés, cha
 
 ## 13. Permissions et Play Store
 
-Permissions déclarées : `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_MEDIA_VISUAL_USER_SELECTED`, `READ_EXTERNAL_STORAGE` (Android 10 à 12 seulement, `maxSdkVersion` 32), `POST_NOTIFICATIONS`. **Aucune** autre, en particulier pas `INTERNET` ni `MANAGE_EXTERNAL_STORAGE`.
+Permissions déclarées : `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_MEDIA_VISUAL_USER_SELECTED`, `READ_EXTERNAL_STORAGE` (Android 10 à 12 seulement, `maxSdkVersion` 32), `WRITE_EXTERNAL_STORAGE` (Android 10 seulement, suppression directe et définitive faute de corbeille, ADR 0042), `POST_NOTIFICATIONS`. **Aucune** autre, en particulier pas `INTERNET` ni `MANAGE_EXTERNAL_STORAGE`.
 
 Pour une publication future : Google encadre l'accès large aux photos et vidéos. Il faudra une **déclaration d'usage** justifiant que le tri de la bibliothèque est la fonction principale de l'app, une politique de confidentialité (même sans collecte de données) et le formulaire « Sécurité des données ». Rien de cela ne bloque la v1 perso, mais ne pas prendre de raccourci qui l'empêcherait (le sélecteur de photos système ne convient pas ici, car il faut interroger par date).
 

@@ -8,6 +8,11 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <!-- Suppression des médias marqués sur Android 10, qui n'a pas de corbeille : directe et
+         définitive, après la confirmation de PhotoSwipe (PS-184, ADR 0042). -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
     <!-- Lecture des photos et vidéos de la galerie (Android 13+, SPEC §4.1). -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
@@ -26,6 +31,8 @@
         android:name="android.permission.MANAGE_MEDIA"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- requestLegacyExternalStorage n'est lu que par Android 10 (la cible est plus récente) : il
+         permet la suppression directe des médias marqués, faute de corbeille (PS-184, ADR 0042). -->
     <application
         android:name=".PhotoSwipeApplication"
         android:allowBackup="false"
@@ -33,6 +40,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:localeConfig="@xml/locales_config"
+        android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.PhotoSwipe">

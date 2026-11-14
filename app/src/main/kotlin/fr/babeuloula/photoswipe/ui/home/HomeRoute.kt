@@ -20,6 +20,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.babeuloula.photoswipe.R
+import fr.babeuloula.photoswipe.ui.common.LocalPlatformFeatures
 import fr.babeuloula.photoswipe.ui.common.SupportLinks
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -109,10 +110,18 @@ private fun openSupportLink(
 ): Boolean =
     if (effect == HomeEffect.OpenRating) SupportLinks.openRating(context) else SupportLinks.openDonation(context)
 
-/** Message de l'annonce : les médias envoyés à la corbeille. */
+/** Message de l'annonce : les médias envoyés à la corbeille, ou supprimés pour de bon sans corbeille (PS-184). */
 @Composable
 private fun confirmationMessage(announcement: ConfirmationAnnouncement): String =
-    pluralStringResource(R.plurals.summary_trashed, announcement.trashedCount, announcement.trashedCount)
+    pluralStringResource(
+        if (LocalPlatformFeatures.current.systemTrash) {
+            R.plurals.summary_trashed
+        } else {
+            R.plurals.summary_deleted_for_good
+        },
+        announcement.trashedCount,
+        announcement.trashedCount,
+    )
 
 /**
  * Ce que la confirmation du résumé vient de changer dans la galerie, que l'accueil annonce une fois.
