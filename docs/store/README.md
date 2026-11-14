@@ -49,7 +49,8 @@ Une release officielle se publie **uniquement** par le workflow `.github/workflo
 3. clé d'upload reconstituée depuis les secrets dans le dossier temporaire du runner, et `keystore.properties` qui la désigne ; tag `vX.Y.Z` posé en local sur ce commit (`versionName` = `X.Y.Z`, `versionCode` = nombre de commits) ;
 4. `./gradlew bundleRelease assembleRelease`, puis vérification des signatures (`jarsigner`, `apksigner`) ;
 5. seulement si tout est passé : branche poussée, PR « chore(release): vX.Y.Z » vers `main` (label `release`, exclu des notes générées par `.github/release.yml` pour qu'elle ne revienne pas dans les notes de la release suivante), tag poussé, release GitHub créée (notes générées depuis le dernier tag officiel, marquée « latest ») avec `photoswipe-vX.Y.Z.aab` (Play Store), `photoswipe-vX.Y.Z.apk` (installation directe) et `version.properties` (`versionCode` et `versionName` lus dans l'APK par `aapt2`, pour F-Droid) ;
-6. clé et `keystore.properties` effacés, même en cas d'échec.
+6. envoi de l'AAB sur la piste du Play Store choisie au lancement (`play_track`, test interne par défaut ; voir « Envoi au Play Store » plus bas) : un échec laisse le tag et la release, avec un avertissement ;
+7. clé et `keystore.properties` effacés, même en cas d'échec.
 
 La PR est ouverte avec le jeton `PHOTOSWIPE_RELEASE_TOKEN` : la vraie CI y tourne, et l'**auto-merge** la merge toute seule en **merge commit** une fois verte. Rien à faire après avoir lancé le workflow. Le merge commit garde le commit tagué dans l'historique de `main`, pour que les builds suivants s'appellent `X.Y.Z-dev.N`. Sans le jeton, la PR est ouverte par le workflow, ne lance pas la CI et se merge à la main en merge commit (contournement admin). Sans merge, la release reste valable (Play Store, F-Droid) ; seuls les noms des builds debug suivants restent sur l'ancienne version.
 
@@ -69,10 +70,39 @@ Secrets du dépôt (Settings → Secrets and variables → Actions) :
 | `PHOTOSWIPE_UPLOAD_KEYSTORE_PASSWORD` | `storePassword` de `keystore.properties` |
 | `PHOTOSWIPE_UPLOAD_KEY_PASSWORD` | `keyPassword` de `keystore.properties` |
 | `PHOTOSWIPE_RELEASE_TOKEN` | jeton personnel à grain fin (voir plus haut) : ouvre la PR de release et active son auto-merge |
+| `PHOTOSWIPE_PLAY_SERVICE_ACCOUNT_JSON` | contenu de la clé JSON du compte de service Google (voir « Envoi au Play Store ») : sans elle, l'AAB n'est pas envoyé, la release se fait quand même |
 
 Sans ces secrets, le workflow s'arrête avant le build : aucune release non signée n'est publiée.
 
 **Seulement si les jobs GitHub Actions ne démarrent pas** (crédits épuisés : `gh run list` montre des échecs en quelques secondes ; sinon le contrôle des tags supprimerait le tag), faire à la main ce que fait le workflow : notes F-Droid (`scripts/fdroid-changelog.sh vX.Y.Z`) commitées par une PR sur `main`, tag `vX.Y.Z` sur ce commit, `./gradlew :app:bundleRelease :app:assembleRelease` sur ce commit, `version.properties` écrit comme dans le workflow, puis `gh release create vX.Y.Z …` avec les trois fichiers.
+
+## Envoi au Play Store (PS-152)
+
+Le workflow `Release` envoie l'AAB signé au Play Store juste après la release GitHub (ADR [0041](../decisions/0041-play-store-upload.md)), avec l'action `r0adkll/upload-google-play` :
+
+- **Piste** : paramètre `play_track` du workflow. `internal` (test interne, par défaut), `alpha` (test fermé), `production`, ou `none` pour ne rien envoyer. La version est aussitôt proposée aux testeurs de la piste (statut `completed`).
+- **État au 2026-11-14** : l'app est en test fermé. La production ne s'ouvre qu'après le test fermé exigé des comptes personnels (12 testeurs pendant 14 jours) : d'ici là, un envoi vers `production` échoue.
+- **Notes de version** : celles de F-Droid (`changelogs/default.txt`), reprises en `en-US` et `fr-FR` par `scripts/play_whatsnew.py`, 500 caractères au plus.
+- **Mapping R8** joint, pour des plantages lisibles dans Android vitals.
+- **Échec** (secret absent, droits manquants, `versionCode` déjà envoyé, production fermée…) : avertissement dans le run, le tag et la release GitHub restent. Envoyer alors à la main `photoswipe-vX.Y.Z.aab` de la release dans la Play Console.
+
+### Créer la clé d'accès (une seule fois)
+
+1. **Google Cloud Console** (<https://console.cloud.google.com>), avec le compte Google de la Play Console : créer un projet, par exemple `photoswipe-publisher`. Puis APIs & Services → Library → **Google Play Android Developer API** → Enable.
+2. IAM & Admin → **Service accounts** → Create service account : nom `github-release`, **aucun rôle** (les droits se donnent dans la Play Console) → Done.
+3. Ouvrir ce compte → onglet **Keys** → Add key → Create new key → **JSON**. Le fichier se télécharge : c'est la clé, à ne jamais commiter. Noter l'adresse du compte (`github-release@….iam.gserviceaccount.com`).
+4. **Play Console** → Users and permissions → **Invite new users** : coller l'adresse du compte de service. Onglet **App permissions** → Add app → PhotoSwipe, et cocher :
+   - View app information (read-only) ;
+   - Release apps to testing tracks ;
+   - Manage testing tracks and edit tester lists ;
+   - Release to production, exclude devices, and use Play App Signing.
+
+   Puis Invite user. Aucun droit au niveau du compte n'est nécessaire.
+5. **GitHub** → dépôt → Settings → Secrets and variables → Actions → New repository secret `PHOTOSWIPE_PLAY_SERVICE_ACCOUNT_JSON`, avec **tout** le contenu du fichier JSON (`pbcopy < fichier.json` sur macOS).
+6. Supprimer le fichier JSON du disque, ou le ranger dans le gestionnaire de mots de passe.
+7. Les droits peuvent mettre jusqu'à 24 h à s'appliquer : un premier envoi refusé (« The caller does not have permission ») juste après l'invitation n'est pas anormal.
+
+Pour révoquer l'accès : supprimer la clé dans Google Cloud (Keys) ou retirer le compte de service dans la Play Console, puis supprimer le secret.
 
 ## F-Droid (PS-128)
 

@@ -5,7 +5,9 @@
 # tests et qualité n'y sont donc pas relancés. Il crée la branche release/vX.Y.Z, y commite les
 # notes de version F-Droid (scripts/fdroid-changelog.sh), construit l'AAB et l'APK signés par la clé
 # d'upload, pose le tag vX.Y.Z sur ce commit et crée la release GitHub (notes générées, AAB, APK,
-# version.properties pour F-Droid). Si une étape échoue, rien n'est tagué ni publié. Enfin, il ouvre
+# version.properties pour F-Droid). Si une étape échoue, rien n'est tagué ni publié. Il envoie ensuite
+# l'AAB sur la piste Play Store choisie (play_track, test interne par défaut, PS-152, ADR 0041) ; un
+# échec de cet envoi laisse le tag et la release GitHub, avec un avertissement. Enfin, il ouvre
 # la PR vers main avec le jeton PHOTOSWIPE_RELEASE_TOKEN : la vraie CI y tourne, et l'auto-merge la
 # merge en merge commit (pour garder le commit tagué dans l'historique de main) une fois verte.
 #
@@ -22,6 +24,8 @@
 #   PHOTOSWIPE_UPLOAD_KEYSTORE_BASE64   clé d'upload (~/.android/photoswipe-upload.jks) encodée en base64
 #   PHOTOSWIPE_UPLOAD_KEYSTORE_PASSWORD mot de passe du magasin de clés
 #   PHOTOSWIPE_UPLOAD_KEY_PASSWORD      mot de passe de la clé (alias « upload »)
+#   PHOTOSWIPE_PLAY_SERVICE_ACCOUNT_JSON clé JSON du compte de service Google invité dans la Play
+#                                       Console (docs/store/README.md) ; sans elle, rien n'est envoyé
 #   PHOTOSWIPE_RELEASE_TOKEN            jeton personnel à grain fin (dépôt photoswipe seul : Contents et
 #                                       Pull requests en écriture) : une PR ouverte par GITHUB_TOKEN ne
 #                                       lance pas la CI. Sans lui, la PR est ouverte par le workflow,
@@ -37,6 +41,16 @@ on:
         description: "Version à publier, par exemple v1.2.0"
         required: true
         type: string
+      play_track:
+        description: "Piste du Play Store : internal (test interne), alpha (test fermé), production, ou none pour ne rien envoyer"
+        required: true
+        default: internal
+        type: choice
+        options:
+          - internal
+          - alpha
+          - production
+          - none
   # Tous les tags, pour que le contrôle des tags poussés à la main voie aussi ceux sans « v ».
   push:
     tags: ["**"]
@@ -60,6 +74,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       TAG: ${{ inputs.version }}
+      PLAY_TRACK: ${{ inputs.play_track }}
+      # Lu dans les conditions des étapes : un secret ne peut pas y être lu directement.
+      PLAY_CONFIGURED: ${{ secrets.PHOTOSWIPE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
     steps:
       - name: Check the version
         run: |
@@ -173,6 +190,45 @@ jobs:
           git push origin "refs/tags/$TAG"
           gh release create "$TAG" dist/* --title "PhotoSwipe ${TAG#v}" --generate-notes \
             ${previous:+--notes-start-tag "$previous"} --verify-tag --latest
+
+      # Envoi au Play Store (PS-152, ADR 0041), une fois la release GitHub publiée : un échec ne retire
+      # ni le tag ni la release, l'AAB qui y est joint s'envoie alors à la main. Notes de version
+      # reprises des notes F-Droid, en anglais et en français, 500 caractères au plus.
+      - name: Prepare the Play Store notes
+        id: play-notes
+        if: ${{ env.PLAY_TRACK != 'none' && env.PLAY_CONFIGURED == 'true' }}
+        continue-on-error: true
+        run: python3 scripts/play_whatsnew.py fastlane/metadata/android/en-US/changelogs/default.txt dist/whatsnew
+
+      - name: Upload to the Play Store
+        id: play
+        if: ${{ env.PLAY_TRACK != 'none' && env.PLAY_CONFIGURED == 'true' && steps.play-notes.outcome == 'success' }}
+        continue-on-error: true
+        uses: r0adkll/upload-google-play@v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PHOTOSWIPE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: fr.babeuloula.photoswipe
+          releaseFiles: dist/photoswipe-${{ inputs.version }}.aab
+          releaseName: ${{ inputs.version }}
+          track: ${{ inputs.play_track }}
+          status: completed
+          whatsNewDirectory: dist/whatsnew
+          # R8 est actif en release : plantages lisibles dans Android vitals.
+          mappingFile: app/build/outputs/mapping/release/mapping.txt
+
+      - name: Report the Play Store upload
+        if: ${{ env.PLAY_TRACK != 'none' }}
+        env:
+          NOTES_OUTCOME: ${{ steps.play-notes.outcome }}
+          UPLOAD_OUTCOME: ${{ steps.play.outcome }}
+        run: |
+          if [ "$PLAY_CONFIGURED" != "true" ]; then
+            echo "::warning::PHOTOSWIPE_PLAY_SERVICE_ACCOUNT_JSON is missing: upload photoswipe-$TAG.aab to the Play Console by hand (see docs/store/README.md)."
+          elif [ "$UPLOAD_OUTCOME" = "success" ]; then
+            echo "Uploaded $TAG to the $PLAY_TRACK track of the Play Store."
+          elif [ "$NOTES_OUTCOME" = "failure" ] || [ "$UPLOAD_OUTCOME" = "failure" ]; then
+            echo "::warning::Upload to the $PLAY_TRACK track of the Play Store failed: the tag and the GitHub release stay; upload photoswipe-$TAG.aab from the release to the Play Console by hand."
+          fi
 
       # La release est publiée : une PR impossible à ouvrir ne la fait pas échouer. Ouverte par le
       # jeton personnel, la PR lance la vraie CI et se merge seule (auto-merge, merge commit). Son
