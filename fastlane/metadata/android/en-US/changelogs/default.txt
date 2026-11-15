@@ -1,1 +1,3 @@
-• Android 10 — keeping a memory no longer freezes the deck
+• View trashed photos and videos in large
+• Pinch the top photo to open it full screen while zooming
+• Draw badge icons in their badge's content color
