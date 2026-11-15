@@ -1,6 +1,7 @@
 package fr.babeuloula.photoswipe.ui.trash
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,7 +65,7 @@ import java.time.format.FormatStyle
  * Page « Corbeille » (PS-168) : la place encore occupée, ce que la page montre (seulement les
  * suppressions de PhotoSwipe, gardées 30 jours par Android), puis chaque média encore restaurable,
  * avec sa vignette quand elle se lit, sa date de suppression définitive et ses boutons « Restaurer »
- * et « Supprimer définitivement ».
+ * et « Supprimer définitivement ». Un appui sur un média l'ouvre en grand (`TrashViewer`, PS-188).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,6 +111,7 @@ fun TrashScreen(
 
                 is TrashUiState.Loaded -> {
                     CenteredContent { TrashContent(state, onEvent) }
+                    TrashViewer(state = state, onEvent = onEvent, snackbarHostState = snackbarHostState)
                     state.confirmingDeletion?.let { DeleteForeverDialog(onEvent) }
                 }
             }
@@ -196,7 +198,6 @@ private fun TrashRow(
     shape: Shape,
     onEvent: (TrashEvent) -> Unit,
 ) {
-    val date = purgeDateLabel(item.purgeAt)
     Column(
         modifier =
             Modifier
@@ -206,27 +207,20 @@ private fun TrashRow(
                 .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 4.dp)
                 .testTag("$TRASH_ROW_TAG${item.media.id.value}"),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Un appui sur la vignette ou le texte ouvre le média en grand (PS-188).
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.small)
+                    .clickable(onClickLabel = stringResource(R.string.photo_viewer_open)) {
+                        onEvent(TrashEvent.View(item.media.id))
+                    }.testTag("$TRASH_OPEN_TAG${item.media.id.value}"),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
             Thumbnail(item.media, Modifier.size(64.dp).clip(MaterialTheme.shapes.small))
-            Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
-                Text(
-                    text =
-                        stringResource(
-                            if (item.media.type == MediaType.VIDEO) R.string.trash_video else R.string.trash_photo,
-                        ),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                Text(
-                    text = stringResource(R.string.trash_purge_on, date),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = fileSizeLabel(LocalContext.current, item.media.sizeBytes),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            TrashRowDetails(item, Modifier.weight(1f))
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             TextButton(
@@ -245,6 +239,34 @@ private fun TrashRow(
                 Text(stringResource(R.string.trash_restore))
             }
         }
+    }
+}
+
+/** Nature du média, date de sa suppression définitive et son poids. */
+@Composable
+private fun TrashRowDetails(
+    item: TrashItem,
+    modifier: Modifier = Modifier,
+) {
+    val date = purgeDateLabel(item.purgeAt)
+    Column(modifier) {
+        Text(
+            text =
+                stringResource(
+                    if (item.media.type == MediaType.VIDEO) R.string.trash_video else R.string.trash_photo,
+                ),
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Text(
+            text = stringResource(R.string.trash_purge_on, date),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = fileSizeLabel(LocalContext.current, item.media.sizeBytes),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -281,6 +303,9 @@ private fun DeleteForeverDialog(onEvent: (TrashEvent) -> Unit) {
 
 /** Préfixe du repère de test d'une ligne, suivi de l'identifiant du média. */
 internal const val TRASH_ROW_TAG = "trash_row_"
+
+/** Préfixe du repère de test de la zone qui ouvre un média en grand, suivi de son identifiant. */
+internal const val TRASH_OPEN_TAG = "trash_open_"
 
 /** Repère de test du message de la corbeille vide. */
 internal const val TRASH_EMPTY_TAG = "trash_empty"

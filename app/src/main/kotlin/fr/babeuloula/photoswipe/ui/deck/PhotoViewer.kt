@@ -96,10 +96,6 @@ internal fun PhotoViewerContent(
     onClose: () -> Unit,
 ) {
     val context = LocalContext.current
-    val zoom = remember(card.uri) { ZoomState() }
-    // Glissement vers le bas de la photo entière, qui la ferme au-delà du seuil.
-    val dismiss = remember(card.uri) { Animatable(0f) }
-    val scope = rememberCoroutineScope()
     Box(
         modifier =
             Modifier
@@ -107,26 +103,49 @@ internal fun PhotoViewerContent(
                 .background(Color.Black)
                 .testTag(PHOTO_VIEWER_TAG),
     ) {
-        AsyncImage(
-            model = card.uri,
+        ZoomablePhoto(
+            uri = card.uri,
             contentDescription = stringResource(R.string.deck_photo_description, localizedDate(context, card.takenOn)),
-            imageLoader = LocalImageLoader.current,
-            contentScale = ContentScale.Fit,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .onSizeChanged { zoom.size = Size(it.width.toFloat(), it.height.toFloat()) }
-                    .zoomOrDismiss(card.uri, zoom, dismiss, scope, onClose)
-                    .graphicsLayer {
-                        scaleX = zoom.scale
-                        scaleY = zoom.scale
-                        translationX = zoom.offset.x
-                        translationY = zoom.offset.y + dismiss.value
-                        alpha = 1f - (abs(dismiss.value) / size.height).coerceIn(0f, MAX_DISMISS_FADE)
-                    },
+            onClose = onClose,
         )
         ViewerTopBar(card = card, onClose = onClose, modifier = Modifier.align(Alignment.TopStart))
     }
+}
+
+/**
+ * Photo [uri] entière, zoomable : pincement (jusqu'à ×5), glissement de la photo zoomée, double
+ * appui pour zoomer ou revenir à la photo entière ; à la taille d'origine, un glissement vers le
+ * bas appelle [onClose]. Partagée par la photo en grand de la pile et celle de la corbeille (PS-188).
+ */
+@Composable
+internal fun ZoomablePhoto(
+    uri: String,
+    contentDescription: String,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val zoom = remember(uri) { ZoomState() }
+    // Glissement vers le bas de la photo entière, qui la ferme au-delà du seuil.
+    val dismiss = remember(uri) { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    AsyncImage(
+        model = uri,
+        contentDescription = contentDescription,
+        imageLoader = LocalImageLoader.current,
+        contentScale = ContentScale.Fit,
+        modifier =
+            modifier
+                .fillMaxSize()
+                .onSizeChanged { zoom.size = Size(it.width.toFloat(), it.height.toFloat()) }
+                .zoomOrDismiss(uri, zoom, dismiss, scope, onClose)
+                .graphicsLayer {
+                    scaleX = zoom.scale
+                    scaleY = zoom.scale
+                    translationX = zoom.offset.x
+                    translationY = zoom.offset.y + dismiss.value
+                    alpha = 1f - (abs(dismiss.value) / size.height).coerceIn(0f, MAX_DISMISS_FADE)
+                },
+    )
 }
 
 /** Haut de la vue : le repère « Il y a 3 ans · … » et « Fermer ». */
@@ -165,6 +184,8 @@ private fun ViewerTopBar(
 /**
  * Gestes de la vue : double appui pour zoomer ; pincement ou glissement de la photo zoomée pour
  * zoomer et se déplacer ; glissement vers le bas de la photo entière, qui la ferme au-delà du seuil.
+ * Sur la photo entière, un glissement plutôt horizontal n'est pas consommé : il reste à ce qui
+ * entoure la photo, comme le défilement de la corbeille (PS-188).
  */
 private fun Modifier.zoomOrDismiss(
     key: Any,
@@ -178,26 +199,62 @@ private fun Modifier.zoomOrDismiss(
     }.pointerInput(key) {
         awaitEachGesture {
             awaitFirstDown(requireUnconsumed = false)
+            // Direction choisie au-delà du seuil de glissement : fermeture (vers le bas) ou passage.
+            var dismissing: Boolean? = null
+            var travel = Offset.Zero
             do {
                 val event = awaitPointerEvent()
                 val pan = event.calculatePan()
                 val factor = event.calculateZoom()
-                if (pan != Offset.Zero || factor != 1f) {
-                    if (zoom.zoomed || factor != 1f || event.changes.size > 1) {
-                        zoom.transform(event.calculateCentroid(useCurrent = true), pan, factor)
-                    } else {
-                        scope.launch { dismiss.snapTo((dismiss.value + pan.y).coerceAtLeast(0f)) }
+                when {
+                    pan == Offset.Zero && factor == 1f -> {
+                        Unit
                     }
-                    event.changes.forEach { it.consume() }
+
+                    zoom.zoomed || factor != 1f || event.changes.size > 1 -> {
+                        zoom.transform(event.calculateCentroid(useCurrent = true), pan, factor)
+                        event.changes.forEach { it.consume() }
+                    }
+
+                    dismissing == null -> {
+                        travel += pan
+                        dismissing = dismissDirection(travel, viewConfiguration.touchSlop)
+                        if (dismissing == true) event.changes.forEach { it.consume() }
+                    }
+
+                    dismissing == true -> {
+                        scope.launch { dismiss.snapTo((dismiss.value + pan.y).coerceAtLeast(0f)) }
+                        event.changes.forEach { it.consume() }
+                    }
                 }
             } while (event.changes.any { it.pressed })
-            if (dismiss.value > size.height * DISMISS_FRACTION) {
-                onClose()
-            } else if (dismiss.value != 0f) {
-                scope.launch { dismiss.animateTo(0f) }
-            }
+            settleDismiss(dismiss, size.height, scope, onClose)
         }
     }
+
+/**
+ * Direction d'un glissement de la photo entière après un déplacement total [travel] : vrai s'il
+ * est plutôt vertical (fermeture), faux s'il est plutôt horizontal (laissé à ce qui l'entoure),
+ * `null` tant qu'il n'a pas dépassé le seuil [touchSlop].
+ */
+private fun dismissDirection(
+    travel: Offset,
+    touchSlop: Float,
+): Boolean? = if (travel.getDistance() > touchSlop) abs(travel.y) > abs(travel.x) else null
+
+/** Fin du glissement vers le bas : au-delà du seuil de [height], [onClose] ; sinon la photo revient. */
+private fun settleDismiss(
+    dismiss: Animatable<Float, *>,
+    height: Int,
+    scope: CoroutineScope,
+    onClose: () -> Unit,
+) {
+    if (dismiss.value > height * DISMISS_FRACTION) {
+        onClose()
+    } else if (dismiss.value != 0f) {
+        scope.launch { dismiss.animateTo(0f) }
+    }
+}
 
 /**
  * Appui sur une photo de la carte : [onOpen] l'ouvre en grand (PS-117). Sur la carte du dessus

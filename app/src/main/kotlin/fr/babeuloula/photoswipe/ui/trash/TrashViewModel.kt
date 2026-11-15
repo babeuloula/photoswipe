@@ -55,12 +55,37 @@ sealed interface TrashUiState {
      * @property busy vrai pendant une demande système : les boutons sont désactivés.
      * @property confirmingDeletion média dont la suppression définitive attend la confirmation de
      * PhotoSwipe, quand l'accès « Gestion des médias » fait disparaître celle d'Android (ADR 0023).
+     * @property viewing média ouvert en grand (PS-188), `null` si la liste est affichée.
      */
     data class Loaded(
         val trash: Trash,
         val busy: Boolean = false,
         val confirmingDeletion: TrashItem? = null,
-    ) : TrashUiState
+        val viewing: MediaId? = null,
+    ) : TrashUiState {
+        /** Place du média ouvert en grand dans la corbeille, `null` si aucun ne l'est. */
+        val viewedIndex: Int?
+            get() = viewing?.let { id -> trash.items.indexOfFirst { it.media.id == id }.takeIf { it >= 0 } }
+
+        /** Média ouvert en grand, `null` si aucun ne l'est. */
+        val viewed: TrashItem? get() = viewedIndex?.let(trash.items::get)
+
+        /** Même état avec [mediaId] ouvert en grand (`null` : la liste), s'il est encore dans la corbeille. */
+        fun showing(mediaId: MediaId?): Loaded =
+            if (mediaId == null || trash.items.any { it.media.id == mediaId }) copy(viewing = mediaId) else this
+
+        /**
+         * Média à garder ouvert en grand une fois la corbeille relue en [next] : le même s'il est
+         * encore là ; sinon, restauré ou supprimé, celui qui a pris sa place (le suivant), ou le
+         * dernier s'il était à la fin ; `null` si la corbeille est vide ou si rien n'était ouvert.
+         */
+        fun viewingAfter(next: Trash): MediaId? =
+            when {
+                viewing == null -> null
+                next.items.any { it.media.id == viewing } -> viewing
+                else -> viewedIndex?.let { (next.items.getOrNull(it) ?: next.items.lastOrNull())?.media?.id }
+            }
+    }
 }
 
 /** Action de l'utilisateur sur la page « Corbeille ». */
@@ -90,6 +115,14 @@ sealed interface TrashEvent {
      */
     data class DeleteForever(
         val mediaId: MediaId,
+    ) : TrashEvent
+
+    /**
+     * Appui sur un média de la liste ou flèche de la vue en grand : [mediaId] s'ouvre en grand
+     * (PS-188) ; `null` ferme la vue en grand et revient à la liste.
+     */
+    data class View(
+        val mediaId: MediaId?,
     ) : TrashEvent
 
     /** Suppression définitive acceptée dans la confirmation de PhotoSwipe. */
@@ -167,14 +200,41 @@ class TrashViewModel
         /** Traite une action de l'utilisateur. */
         fun onEvent(event: TrashEvent) {
             when (event) {
-                TrashEvent.Retry -> load()
-                TrashEvent.Back -> effects.trySend(TrashEffect.Close)
-                TrashEvent.Resumed -> refreshWhenIdle()
-                is TrashEvent.Restore -> itemOf(event.mediaId)?.let { start(it, restore = true) }
-                is TrashEvent.DeleteForever -> askThenDelete(event.mediaId)
-                TrashEvent.DeletionConfirmed -> confirmDeletion()
-                TrashEvent.DeletionDismissed -> loaded()?.let { state.value = it.copy(confirmingDeletion = null) }
-                is TrashEvent.SystemRequestAnswered -> recordAnswer(event.confirmed)
+                TrashEvent.Retry -> {
+                    load()
+                }
+
+                TrashEvent.Back -> {
+                    effects.trySend(TrashEffect.Close)
+                }
+
+                TrashEvent.Resumed -> {
+                    refreshWhenIdle()
+                }
+
+                is TrashEvent.Restore -> {
+                    itemOf(event.mediaId)?.let { start(it, restore = true) }
+                }
+
+                is TrashEvent.DeleteForever -> {
+                    askThenDelete(event.mediaId)
+                }
+
+                TrashEvent.DeletionConfirmed -> {
+                    confirmDeletion()
+                }
+
+                TrashEvent.DeletionDismissed -> {
+                    loaded()?.let { state.value = it.copy(confirmingDeletion = null) }
+                }
+
+                is TrashEvent.SystemRequestAnswered -> {
+                    recordAnswer(event.confirmed)
+                }
+
+                is TrashEvent.View -> {
+                    loaded()?.let { state.value = it.showing(event.mediaId) }
+                }
             }
         }
 
@@ -256,9 +316,10 @@ class TrashViewModel
         }
 
         private suspend fun refresh() {
+            val before = loaded()
             state.value =
                 runCatching { actions.getTrash() }.fold(
-                    onSuccess = { TrashUiState.Loaded(it) },
+                    onSuccess = { TrashUiState.Loaded(it, viewing = before?.viewingAfter(it)) },
                     onFailure = { TrashUiState.Error },
                 )
         }

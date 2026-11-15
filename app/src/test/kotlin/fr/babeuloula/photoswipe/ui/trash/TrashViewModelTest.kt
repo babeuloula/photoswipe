@@ -29,6 +29,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -230,5 +231,110 @@ class TrashViewModelTest {
             viewModel.onEvent(TrashEvent.Back)
 
             assertEquals(listOf(TrashEffect.Close), effects)
+        }
+
+    @Test
+    fun `opens a media in large and closes it back to the list`() =
+        runTest {
+            val viewModel = viewModel()
+
+            viewModel.onEvent(TrashEvent.View(MediaId(2)))
+            assertEquals(
+                MediaId(2),
+                viewModel
+                    .loaded()
+                    .viewed
+                    ?.media
+                    ?.id,
+            )
+            assertEquals(1, viewModel.loaded().viewedIndex)
+
+            viewModel.onEvent(TrashEvent.View(null))
+            assertNull(viewModel.loaded().viewed)
+        }
+
+    @Test
+    fun `ignores a media that is no longer in the trash`() =
+        runTest {
+            val viewModel = viewModel()
+
+            viewModel.onEvent(TrashEvent.View(MediaId(42)))
+
+            assertNull(viewModel.loaded().viewing)
+        }
+
+    @Test
+    fun `shows the next media once the one in large is restored`() =
+        runTest {
+            val viewModel = viewModel()
+            viewModel.onEvent(TrashEvent.View(MediaId(1)))
+
+            viewModel.onEvent(TrashEvent.Restore(MediaId(1)))
+            systemTrash.remove(listOf(MediaId(1)))
+            viewModel.onEvent(TrashEvent.SystemRequestAnswered(confirmed = true))
+
+            assertEquals(
+                MediaId(2),
+                viewModel
+                    .loaded()
+                    .viewed
+                    ?.media
+                    ?.id,
+            )
+        }
+
+    @Test
+    fun `shows the previous media once the last one in large is deleted for good`() =
+        runTest {
+            val viewModel = viewModel()
+            viewModel.onEvent(TrashEvent.View(MediaId(2)))
+
+            viewModel.onEvent(TrashEvent.DeleteForever(MediaId(2)))
+            systemTrash.remove(listOf(MediaId(2)))
+            viewModel.onEvent(TrashEvent.SystemRequestAnswered(confirmed = true))
+
+            assertEquals(
+                MediaId(1),
+                viewModel
+                    .loaded()
+                    .viewed
+                    ?.media
+                    ?.id,
+            )
+        }
+
+    @Test
+    fun `keeps the same media in large when the request is refused`() =
+        runTest {
+            val viewModel = viewModel()
+            viewModel.onEvent(TrashEvent.View(MediaId(1)))
+
+            viewModel.onEvent(TrashEvent.DeleteForever(MediaId(1)))
+            viewModel.onEvent(TrashEvent.SystemRequestAnswered(confirmed = false))
+
+            assertEquals(
+                MediaId(1),
+                viewModel
+                    .loaded()
+                    .viewed
+                    ?.media
+                    ?.id,
+            )
+        }
+
+    @Test
+    fun `closes the large view when the trash becomes empty`() =
+        runTest {
+            val viewModel = viewModel()
+            systemTrash.remove(listOf(MediaId(2)))
+            viewModel.onEvent(TrashEvent.Resumed)
+            viewModel.onEvent(TrashEvent.View(MediaId(1)))
+
+            viewModel.onEvent(TrashEvent.Restore(MediaId(1)))
+            systemTrash.remove(listOf(MediaId(1)))
+            viewModel.onEvent(TrashEvent.SystemRequestAnswered(confirmed = true))
+
+            assertTrue(viewModel.loaded().trash.isEmpty)
+            assertNull(viewModel.loaded().viewed)
         }
 }
