@@ -94,7 +94,8 @@ import java.time.LocalDate
  * pastilles : c'est une carte du dessous de la pile (PS-147).
  *
  * [onOpen], s'il est donné, est appelé par un appui sur une photo : la pile l'ouvre en grand
- * (PS-117). Sur une vidéo, l'appui garde son rôle de lecture et de pause.
+ * (PS-117). Sur une vidéo, l'appui garde son rôle de lecture et de pause. [pinch], s'il est donné,
+ * reçoit un pincement sur la photo, qui l'ouvre en grand en continuant le zoom (PS-190).
  *
  * Une photo animée (PS-167) porte la pastille « Photo animée » ; sur la carte du dessus, un bouton
  * dans le coin joue son animation une fois, par le même lecteur que les vidéos.
@@ -105,6 +106,7 @@ fun MediaCard(
     modifier: Modifier = Modifier,
     active: Boolean = false,
     onOpen: (() -> Unit)? = null,
+    pinch: PhotoPinch? = null,
     overlay: @Composable BoxScope.() -> Unit = {},
     details: Boolean = true,
 ) {
@@ -137,7 +139,11 @@ fun MediaCard(
                         ratio?.let(onRatio)
                     },
                     onError = { failed = true },
-                    modifier = Modifier.fillMaxSize().openOnTap(card.type, onOpen, compare.takeIf { active }),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .pinchToOpen(pinch.takeIf { active && card.type == MediaType.IMAGE })
+                            .openOnTap(card.type, onOpen, compare.takeIf { active }),
                 )
                 if (compare.showing && active) ComparedPhoto(card)
                 if (failed) {
