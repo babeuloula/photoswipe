@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
@@ -20,6 +21,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import coil3.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -124,6 +127,10 @@ class TrashScreenTest {
     /** Nœud de la vue en grand, dans sa fenêtre. */
     private fun inViewer(text: String) = hasText(text) and hasAnyAncestor(hasTestTag(TRASH_VIEWER_TAG))
 
+    /** Bouton à icône « Supprimer définitivement » de la vue en grand. */
+    private fun deleteIconInViewer() =
+        hasContentDescription(text(R.string.trash_delete_forever)) and hasAnyAncestor(hasTestTag(TRASH_VIEWER_TAG))
+
     @Test
     fun `opens a media in large when it is tapped`() {
         show(TrashUiState.Loaded(Trash(listOf(item))))
@@ -140,13 +147,13 @@ class TrashScreenTest {
     }
 
     @Test
-    fun `shows the media in large with its place, and goes to the next one`() {
+    fun `shows the media in large with its place, and scrolls to the next one`() {
         show(TrashUiState.Loaded(Trash(listOf(item, other)), viewing = MediaId(7)))
 
         composeRule.onNodeWithTag(TRASH_VIEWER_TAG).assertIsDisplayed()
         composeRule.onNode(inViewer("1 of 2")).assertIsDisplayed()
-        composeRule.onNodeWithContentDescription(text(R.string.trash_viewer_previous)).assertIsNotEnabled()
-        composeRule.onNodeWithContentDescription(text(R.string.trash_viewer_next)).performClick()
+        composeRule.onNodeWithTag(TRASH_VIEWER_PAGER_TAG).performTouchInput { swipeLeft() }
+        composeRule.waitForIdle()
 
         assertEquals(TrashEvent.View(MediaId(8)), events.last())
     }
@@ -156,14 +163,13 @@ class TrashScreenTest {
         show(TrashUiState.Loaded(Trash(listOf(item, other)), viewing = MediaId(8)))
 
         composeRule.onNode(inViewer(text(R.string.trash_restore))).performClick()
-        composeRule.onNode(inViewer(text(R.string.trash_delete_forever))).performClick()
+        composeRule.onNode(deleteIconInViewer()).performClick()
         composeRule.onNodeWithContentDescription(text(R.string.photo_viewer_close)).performClick()
 
         assertEquals(
             listOf(TrashEvent.Restore(MediaId(8)), TrashEvent.DeleteForever(MediaId(8)), TrashEvent.View(null)),
             events,
         )
-        composeRule.onNodeWithContentDescription(text(R.string.trash_viewer_next)).assertIsNotEnabled()
     }
 
     @Test
@@ -171,7 +177,7 @@ class TrashScreenTest {
         show(TrashUiState.Loaded(Trash(listOf(item)), busy = true, viewing = MediaId(7)))
 
         composeRule.onNode(inViewer(text(R.string.trash_restore))).assertIsNotEnabled()
-        composeRule.onNode(inViewer(text(R.string.trash_delete_forever))).assertIsNotEnabled()
+        composeRule.onNode(deleteIconInViewer()).assertIsNotEnabled()
     }
 
     @Test
