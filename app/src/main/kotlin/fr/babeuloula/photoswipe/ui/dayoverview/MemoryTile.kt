@@ -150,11 +150,7 @@ internal fun MemoryTile(
         qualityHint?.let { QualityHintBadge(it, Modifier.align(Alignment.BottomStart)) }
         // Photo animée (PS-167), dans le coin du ▶ des vidéos, libre sur une photo.
         if (motionPhoto) {
-            StateBadge(
-                R.drawable.ic_motion_photos_on,
-                MaterialTheme.colorScheme.primaryFixed,
-                Modifier.align(Alignment.TopStart),
-            )
+            FixedCornerBadge(R.drawable.ic_motion_photos_on)
         }
     }
 }
@@ -179,11 +175,7 @@ private fun BoxScope.MemoryTileContent(
     )
     memory.similar?.let { SimilarBadge(it, Modifier.align(Alignment.TopEnd)) }
     if (memory.media.type == MediaType.VIDEO) {
-        StateBadge(
-            R.drawable.ic_play_arrow_filled,
-            MaterialTheme.colorScheme.primaryFixed,
-            Modifier.align(Alignment.TopStart),
-        )
+        FixedCornerBadge(R.drawable.ic_play_arrow_filled)
     }
     if (selected) {
         Icon(
@@ -200,11 +192,21 @@ private fun BoxScope.MemoryTileContent(
     }
     Row(Modifier.align(Alignment.BottomEnd).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         val colors = MaterialTheme.swipeColors
-        if (memory.favorite) StateBadge(R.drawable.ic_favorite_filled, colors.favoriteContainer)
+        if (memory.favorite) {
+            StateBadge(R.drawable.ic_favorite_filled, colors.favoriteContainer, colors.onFavoriteContainer)
+        }
         when (memory.decision) {
-            ReviewDecision.KEPT -> StateBadge(R.drawable.ic_check, colors.keepContainer)
-            ReviewDecision.MARKED_FOR_DELETION -> StateBadge(R.drawable.ic_delete, colors.deleteContainer)
-            ReviewDecision.TRASHED, null -> Unit
+            ReviewDecision.KEPT -> {
+                StateBadge(R.drawable.ic_check, colors.keepContainer, colors.onKeepContainer)
+            }
+
+            ReviewDecision.MARKED_FOR_DELETION -> {
+                StateBadge(R.drawable.ic_delete, colors.deleteContainer, colors.onDeleteContainer)
+            }
+
+            ReviewDecision.TRASHED, null -> {
+                Unit
+            }
         }
     }
 }
@@ -263,11 +265,28 @@ private fun SimilarBadge(
     }
 }
 
-/** Pastille ronde d'un état, sur [container]. */
+/** Pastille du coin haut de la case (▶ d'une vidéo, photo animée), aux rôles fixes posés sur les photos. */
+@Composable
+private fun BoxScope.FixedCornerBadge(
+    @DrawableRes icon: Int,
+) {
+    StateBadge(
+        icon,
+        MaterialTheme.colorScheme.primaryFixed,
+        MaterialTheme.colorScheme.onPrimaryFixed,
+        Modifier.align(Alignment.TopStart),
+    )
+}
+
+/**
+ * Pastille ronde d'un état, sur [container], icône en [content] : jamais la couleur de contenu de
+ * l'écran, blanche en thème sombre alors que les pastilles posées sur les photos restent claires (PS-191).
+ */
 @Composable
 private fun StateBadge(
     @DrawableRes icon: Int,
     container: Color,
+    content: Color,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -279,7 +298,7 @@ private fun StateBadge(
                 .background(container),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(14.dp))
+        Icon(painterResource(icon), contentDescription = null, tint = content, modifier = Modifier.size(14.dp))
     }
 }
 
