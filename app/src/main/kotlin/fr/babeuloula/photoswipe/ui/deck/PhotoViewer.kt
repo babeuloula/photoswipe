@@ -96,10 +96,6 @@ internal fun PhotoViewerContent(
     onClose: () -> Unit,
 ) {
     val context = LocalContext.current
-    val zoom = remember(card.uri) { ZoomState() }
-    // Glissement vers le bas de la photo entière, qui la ferme au-delà du seuil.
-    val dismiss = remember(card.uri) { Animatable(0f) }
-    val scope = rememberCoroutineScope()
     Box(
         modifier =
             Modifier
@@ -107,26 +103,49 @@ internal fun PhotoViewerContent(
                 .background(Color.Black)
                 .testTag(PHOTO_VIEWER_TAG),
     ) {
-        AsyncImage(
-            model = card.uri,
+        ZoomablePhoto(
+            uri = card.uri,
             contentDescription = stringResource(R.string.deck_photo_description, localizedDate(context, card.takenOn)),
-            imageLoader = LocalImageLoader.current,
-            contentScale = ContentScale.Fit,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .onSizeChanged { zoom.size = Size(it.width.toFloat(), it.height.toFloat()) }
-                    .zoomOrDismiss(card.uri, zoom, dismiss, scope, onClose)
-                    .graphicsLayer {
-                        scaleX = zoom.scale
-                        scaleY = zoom.scale
-                        translationX = zoom.offset.x
-                        translationY = zoom.offset.y + dismiss.value
-                        alpha = 1f - (abs(dismiss.value) / size.height).coerceIn(0f, MAX_DISMISS_FADE)
-                    },
+            onClose = onClose,
         )
         ViewerTopBar(card = card, onClose = onClose, modifier = Modifier.align(Alignment.TopStart))
     }
+}
+
+/**
+ * Photo [uri] entière, zoomable : pincement (jusqu'à ×5), glissement de la photo zoomée, double
+ * appui pour zoomer ou revenir à la photo entière ; à la taille d'origine, un glissement vers le
+ * bas appelle [onClose]. Partagée par la photo en grand de la pile et celle de la corbeille (PS-188).
+ */
+@Composable
+internal fun ZoomablePhoto(
+    uri: String,
+    contentDescription: String,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val zoom = remember(uri) { ZoomState() }
+    // Glissement vers le bas de la photo entière, qui la ferme au-delà du seuil.
+    val dismiss = remember(uri) { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    AsyncImage(
+        model = uri,
+        contentDescription = contentDescription,
+        imageLoader = LocalImageLoader.current,
+        contentScale = ContentScale.Fit,
+        modifier =
+            modifier
+                .fillMaxSize()
+                .onSizeChanged { zoom.size = Size(it.width.toFloat(), it.height.toFloat()) }
+                .zoomOrDismiss(uri, zoom, dismiss, scope, onClose)
+                .graphicsLayer {
+                    scaleX = zoom.scale
+                    scaleY = zoom.scale
+                    translationX = zoom.offset.x
+                    translationY = zoom.offset.y + dismiss.value
+                    alpha = 1f - (abs(dismiss.value) / size.height).coerceIn(0f, MAX_DISMISS_FADE)
+                },
+    )
 }
 
 /** Haut de la vue : le repère « Il y a 3 ans · … » et « Fermer ». */

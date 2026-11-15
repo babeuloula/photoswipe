@@ -411,6 +411,8 @@
     <string name="trash_restored">Restored: it is back in your gallery, among the memories to sort.</string>
     <string name="trash_deleted_forever">Deleted for good: its space is freed.</string>
     <string name="trash_nothing_changed">Nothing changed: it is still in the trash.</string>
+    <string name="trash_viewer_previous">Previous item</string>
+    <string name="trash_viewer_next">Next item</string>
     <string name="summary_open_trash">Trash</string>
     <string name="summary_open_trash_detail">Restore or delete for good what PhotoSwipe deleted</string>
 </resources>

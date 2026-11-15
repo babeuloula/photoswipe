@@ -256,7 +256,7 @@ class AccessibilityTest {
         }
     }
 
-    /** Corbeille (PS-168) : avec des médias, vide, et la confirmation de suppression définitive. */
+    /** Corbeille (PS-168) : avec des médias, vide, la confirmation de suppression définitive et la vue en grand. */
     private fun trashScreens() {
         val item =
             TrashItem(
@@ -267,6 +267,11 @@ class AccessibilityTest {
         check { TrashScreen(state = TrashUiState.Loaded(Trash(listOf(item))), onEvent = {}) }
         check { TrashScreen(state = TrashUiState.Loaded(Trash()), onEvent = {}) }
         check { TrashScreen(state = TrashUiState.Loaded(Trash(listOf(item)), confirmingDeletion = item), onEvent = {}) }
+        // Vue en grand (PS-188) : une photo, puis une vidéo.
+        val video = item.copy(media = aMediaItem(id = 2, type = MediaType.VIDEO))
+        val both = Trash(listOf(item, video))
+        check { TrashScreen(state = TrashUiState.Loaded(both, viewing = item.media.id), onEvent = {}) }
+        check { TrashScreen(state = TrashUiState.Loaded(both, viewing = video.media.id), onEvent = {}) }
     }
 
     private fun everyScreen() {
