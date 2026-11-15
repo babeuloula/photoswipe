@@ -58,6 +58,7 @@ internal fun StackedCard(
         returningFrom = actions.returningFrom.takeIf { top },
         onIndicationChange = if (top) actions.onIndicationChange else { _ -> },
         onOpen = actions.onOpen.takeIf { top },
+        pinch = actions.pinch.takeIf { top },
         modifier =
             Modifier
                 .fillMaxSize()

@@ -319,8 +319,20 @@ private fun CardStack(
     // recrée l'activité (PS-123) ; à défaut, par la pile de cartes elle-même.
     val ownOpenPhoto = rememberSaveable { mutableStateOf<Long?>(null) }
     val openPhoto = LocalOpenPhoto.current ?: ownOpenPhoto
+    // Zoom de la photo en grand, partagé avec la carte : un pincement sur elle l'ouvre en grand et
+    // continue d'y zoomer sans lever les doigts (PS-190). Pincée puis ramenée à sa taille, elle se referme.
+    val zoom = remember(state.current.id) { ZoomState() }
+    val currentId = state.current.id.value
+    val pinch =
+        remember(zoom, openPhoto, currentId) {
+            PhotoPinch(
+                zoom = zoom,
+                onStart = { openPhoto.value = currentId },
+                onEnd = { if (!zoom.zoomed) openPhoto.value = null },
+            )
+        }
     if (openPhoto.value == state.current.id.value) {
-        PhotoViewer(card = state.current, onClose = { openPhoto.value = null })
+        PhotoViewer(card = state.current, onClose = { openPhoto.value = null }, zoom = zoom)
     }
     // Proportions des images, partagées par les cartes : chacune garde sa forme en montant (PS-142).
     val ratios = remember { mutableStateMapOf<String, Float>() }
@@ -360,7 +372,11 @@ private fun CardStack(
                                 requestedExit = requestedExit,
                                 returningFrom = state.returningFrom,
                                 onIndicationChange = onIndicationChange,
-                                onOpen = { openPhoto.value = card.id.value },
+                                onOpen = {
+                                    zoom.reset()
+                                    openPhoto.value = card.id.value
+                                },
+                                pinch = pinch,
                             ),
                     )
                 }
@@ -518,6 +534,7 @@ internal const val NEXT_CARD_TAG = "next_card"
  * @property returningFrom côté d'où revient une carte annulée.
  * @property onIndicationChange indicateur du geste en cours.
  * @property onOpen ouverture de la photo en grand.
+ * @property pinch pincement sur la photo, qui l'ouvre en grand en continuant le zoom (PS-190).
  */
 internal class TopCardActions(
     val onEvent: (DeckEvent) -> Unit,
@@ -525,4 +542,5 @@ internal class TopCardActions(
     val returningFrom: CardSide?,
     val onIndicationChange: (SwipeIndication?) -> Unit,
     val onOpen: () -> Unit,
+    val pinch: PhotoPinch? = null,
 )

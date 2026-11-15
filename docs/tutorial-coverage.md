@@ -40,6 +40,7 @@ Revue du 2026-11-06 (PS-83). Version du tutoriel : **1**. Elle n'a pas été inc
 | Célébration de fin de pile (confettis à la dernière carte triée d'un jour, désactivée par défaut) | PS-174 | Hors tutoriel : réglage de la section « Apparence », une surprise qu'on découvre en l'activant ; pas de confettis dans l'entraînement |
 | Vue d'ensemble d'un jour (tous ses souvenirs par année), avec tri par lot (appui long, garder ou supprimer plusieurs souvenirs, « Annuler ») | PS-139, PS-159 | Page 4 (texte : toucher les vignettes d'un jour, puis appui long pour en trier plusieurs d'un coup, 2026-11-13) ; ouverte en touchant les vignettes de la carte du jour ou l'icône de grille de la pile, découverte sans risque |
 | Page « Progression » (statistiques d'utilisation, graphiques des six derniers mois, série de jours), ouverte par le bouton de la barre de l'accueil, qui porte la série en pastille | PS-153, PS-154, PS-155 | Hors tutoriel : découverte depuis l'accueil ou les réglages, sans risque |
+| Photo de la pile en grand : appui (PS-117) ou pincement, qui l'ouvre en continuant le zoom (PS-190) | PS-117, PS-190 | Hors tutoriel : gestes attendus d'une photo, que l'entraînement (page 6) permet d'essayer sur ses cartes d'exemple |
 | Langue, thème, licences, revoir le tutoriel | epic 9, PS-81, PS-87 | Hors tutoriel : réglages |
 | Nouveautés après une mise à jour, relues dans « À propos » des réglages | PS-173 | Hors tutoriel : la feuille ne s'affiche qu'après une mise à jour, jamais à la première installation, où le tutoriel présente déjà tout |
 

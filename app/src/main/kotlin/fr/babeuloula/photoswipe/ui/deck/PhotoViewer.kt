@@ -67,18 +67,22 @@ import kotlin.math.abs
  *
  * Comme le plein écran vidéo, elle suit l'orientation du téléphone (PS-123, ADR 0028) ; le reste
  * de l'application reste en portrait. Une rotation repart de la photo entière.
+ *
+ * Elle s'ouvre aussi d'un pincement sur la carte (PS-190) : [zoom] est alors celui que le
+ * pincement fait avancer, sans lever les doigts.
  */
 @Composable
 fun PhotoViewer(
     card: MediaCardUiState,
     onClose: () -> Unit,
+    zoom: ZoomState = remember(card.uri) { ZoomState() },
 ) {
     Dialog(
         onDismissRequest = onClose,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
         AllowRotation()
-        PhotoViewerContent(card = card, onClose = onClose)
+        PhotoViewerContent(card = card, onClose = onClose, zoom = zoom)
     }
 }
 
@@ -94,6 +98,7 @@ val LocalOpenPhoto = staticCompositionLocalOf<MutableState<Long?>?> { null }
 internal fun PhotoViewerContent(
     card: MediaCardUiState,
     onClose: () -> Unit,
+    zoom: ZoomState = remember(card.uri) { ZoomState() },
 ) {
     val context = LocalContext.current
     Box(
@@ -107,6 +112,7 @@ internal fun PhotoViewerContent(
             uri = card.uri,
             contentDescription = stringResource(R.string.deck_photo_description, localizedDate(context, card.takenOn)),
             onClose = onClose,
+            zoom = zoom,
         )
         ViewerTopBar(card = card, onClose = onClose, modifier = Modifier.align(Alignment.TopStart))
     }
@@ -116,6 +122,7 @@ internal fun PhotoViewerContent(
  * Photo [uri] entière, zoomable : pincement (jusqu'à ×5), glissement de la photo zoomée, double
  * appui pour zoomer ou revenir à la photo entière ; à la taille d'origine, un glissement vers le
  * bas appelle [onClose]. Partagée par la photo en grand de la pile et celle de la corbeille (PS-188).
+ * [zoom] peut venir d'ailleurs : un pincement commencé sur la carte de la pile s'y poursuit (PS-190).
  */
 @Composable
 internal fun ZoomablePhoto(
@@ -123,8 +130,8 @@ internal fun ZoomablePhoto(
     contentDescription: String,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
+    zoom: ZoomState = remember(uri) { ZoomState() },
 ) {
-    val zoom = remember(uri) { ZoomState() }
     // Glissement vers le bas de la photo entière, qui la ferme au-delà du seuil.
     val dismiss = remember(uri) { Animatable(0f) }
     val scope = rememberCoroutineScope()
